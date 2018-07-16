@@ -15,7 +15,7 @@
 
 static int testp1();
 
-testp()
+int testp()
 {
 	testp1();
 	return(SUCCESS);

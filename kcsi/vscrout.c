@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies, Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*----
   	vscrout.c
@@ -47,7 +61,7 @@ static AKEY	blank_akey = { "     ", "   ", " "};
 **	Static data
 */
 /* CHANGE-COPYRIGHT-DATE */
-static char app[]="CREATE Utility - Version %s.%s (c) 1993-2002 KCSI/NEOM";
+static char app[]="CREATE Utility - Version %s.%s (c) 1993-2003 KCSI/NEOM";
 static char logo[81], message_field[81], m1_field[31], m2_field[31];
 static char recsize[5], errlist[4], output_org[2], output_format[2];
 static int screen_error;
@@ -624,7 +638,7 @@ static int split_key_screen(int key, char *dups)
 	if(key == 0)
 		{
 		sprintf(gpname,"PRIMARY ");
-		sprintf(duptext,"");
+		duptext[0] = '\0';
 		}
 	else
 		{
@@ -1025,8 +1039,14 @@ static int isblank(char *str, int len)
 /*
 **	History:
 **	$Log: vscrout.c,v $
-**	Revision 1.13.2.1  2002/11/12 15:56:42  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.25  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.24  2003/02/04 19:19:08  gsl
+**	fix header
+**	
+**	Revision 1.23  2003/01/24 20:38:53  gsl
+**	Change year to 2003
 **	
 **	Revision 1.22  2002/10/24 15:48:30  gsl
 **	Make globals unique

@@ -18,9 +18,6 @@
 #include "options.hpp"
 
 // Definitions and subprograms
-#if DOS || DOS_HOST
-#include <alloc.h>
-#endif
 #include <stdio.h>
 #include <string.h>
 #include "crt_io.hpp"
@@ -75,8 +72,8 @@ void show_memory(char *kind, void* ptr, size_t size) {
 //
 //	History:
 //	$Log: memory.cpp,v $
-//	Revision 1.9.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.10  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.9  1998/09/02 21:27:35  gsl
 //	Changed to use debug_trace instead of printf()

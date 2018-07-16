@@ -833,11 +833,11 @@ symbol *symbol_table::global_lookup(const char *a_name) {
 /*
 **	History:
 **	$Log: symbols.cpp,v $
-**	Revision 1.17.2.2  2003/02/11 19:12:59  gsl
+**	Revision 1.19  2003/02/11 19:12:44  gsl
 **	fix duplicate history
 **	
-**	Revision 1.17.2.1  2003/02/11 18:52:00  gsl
-**	Removed unneeded #ifdef code for AIX and DEBUG
+**	Revision 1.18  2003/02/11 19:05:26  gsl
+**	Remove unneeded #ifdef's for DEBUG
 **	
 **	Revision 1.17  1998/10/02 19:37:39  gsl
 **	Fix a debug trace of symbols flag
@@ -879,7 +879,6 @@ symbol *symbol_table::global_lookup(const char *a_name) {
 **
 **
 */
-
 //	----------------------------
 //	revision 1.7
 //	date: 1995-08-29 10:35:28-04;  author: gsl;  state: Exp;  lines: +18 -6

@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies, Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 #include <ctype.h>
@@ -355,7 +369,7 @@ static void val_index_start_key(void)
 
 	for(idx = 0; idx < keyflen; ++idx)
 	{
-		if(!isxdigit(start_key[idx]))
+		if(!isxdigit((int)(start_key[idx])))
 		{
 			strcpy(msg_fld,"START must be hex value");
 			screen_error = 1;
@@ -416,7 +430,7 @@ static void val_index_end_key(void)
 
 	for(idx = 0; idx < keyflen; ++idx)
 	{
-		if(!isxdigit(end_key[idx]))
+		if(!isxdigit((int)(end_key[idx])))
 		{
 			strcpy(msg_fld,"END must be hex value");
 			screen_error = 1;
@@ -537,7 +551,7 @@ static void val_cstring(void)
 	CR_wfld.clen = non_blanklen(cstring);
 	for(idx = 0; idx < CR_wfld.clen; ++idx)
 	{
-		if(!isxdigit(cstring[idx]))
+		if(!isxdigit((int)(cstring[idx])))
 		{
 			strcpy(msg_fld,"CSTRING must be hex.");
 			screen_error = 1;
@@ -604,8 +618,11 @@ static int zero_error(int value, char *str)
 /*
 **	History:
 **	$Log: vscrffld.c,v $
-**	Revision 1.4.2.1  2002/11/12 15:56:41  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.11  2003/02/20 19:29:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.10  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.9  2002/10/24 14:20:31  gsl
 **	Make globals unique

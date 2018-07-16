@@ -28,7 +28,7 @@ CFG=wisptran_test - Win32 Debug
 
 !IF  "$(CFG)" == "wisptran_test - Win32 Release"
 
-# PROP BASE Use_MFC
+# PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
 # PROP BASE Output_Dir "wisptran_test___Win32_Release"
 # PROP BASE Intermediate_Dir "wisptran_test___Win32_Release"
@@ -37,7 +37,7 @@ CFG=wisptran_test - Win32 Debug
 # PROP BASE Target_File "wisptran_test.exe"
 # PROP BASE Bsc_Name "wisptran_test.bsc"
 # PROP BASE Target_Dir ""
-# PROP Use_MFC
+# PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "wisptran_test___Win32_Release"
 # PROP Intermediate_Dir "wisptran_test___Win32_Release"
@@ -49,7 +49,7 @@ CFG=wisptran_test - Win32 Debug
 
 !ELSEIF  "$(CFG)" == "wisptran_test - Win32 Debug"
 
-# PROP BASE Use_MFC
+# PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
 # PROP BASE Output_Dir "wisptran_test___Win32_Debug"
 # PROP BASE Intermediate_Dir "wisptran_test___Win32_Debug"
@@ -58,7 +58,7 @@ CFG=wisptran_test - Win32 Debug
 # PROP BASE Target_File "wisptran_test.exe"
 # PROP BASE Bsc_Name "wisptran_test.bsc"
 # PROP BASE Target_Dir ""
-# PROP Use_MFC
+# PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "wisptran_test___Win32_Debug"
 # PROP Intermediate_Dir "wisptran_test___Win32_Debug"
@@ -84,6 +84,10 @@ CFG=wisptran_test - Win32 Debug
 # Begin Group "Cobol Files"
 
 # PROP Default_Filter "wcb"
+# Begin Source File
+
+SOURCE=.\DOCSRC01.wcb
+# End Source File
 # Begin Source File
 
 SOURCE=.\t_accept.wcb
@@ -198,6 +202,10 @@ SOURCE=.\test0001.wcb
 # PROP Default_Filter "cob"
 # Begin Source File
 
+SOURCE=.\DOCSRC01.cob
+# End Source File
+# Begin Source File
+
 SOURCE=.\t_accept.cob
 # End Source File
 # Begin Source File
@@ -305,6 +313,14 @@ SOURCE=.\test0000.cob
 SOURCE=.\test0001.cob
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\all_options_test.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp.opt
+# End Source File
 # Begin Source File
 
 SOURCE=.\wisptran_test.mak

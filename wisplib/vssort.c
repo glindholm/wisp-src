@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		vssort.c
@@ -11,7 +32,7 @@ static char rcsid[]="$Id:$";
 **	Purpose:	Hold common sort routines.
 **
 **	Routines:	
-**	vssort()	Front-end to os specific sort routines.
+**	WL_vssort()	Front-end to os specific sort routines.
 **
 **
 */
@@ -27,19 +48,17 @@ static char rcsid[]="$Id:$";
 #include "idsistd.h"
 #include "idsisubs.h"
 #include "vssort.h"
-#include "vmssort.h"
 #include "sortseqf.h"
 #include "wfname.h"
 #include "wisplib.h"
 
 /*
-**	Routine:	vssort()
+**	Routine:	WL_vssort()
 **
 **	Function:	Full Wang SORT utility functionality
 **
 **	Description:	This is a front-end to the 
-**				vmssort() routine for VMS.
-**				wangsort() routine for Unix and MS-DOS (It does NOT have full functionality.)
+**				WL_wangsort() routine for Unix and WIN32 (It does NOT have full functionality.)
 **
 **	Arguments:
 **	infiles		List of input FILE names
@@ -97,21 +116,13 @@ static char rcsid[]="$Id:$";
 **	10/10/94	Written by GSL
 **
 */
-void vssort(	char infiles[][9], char inlibs[][9], char invols[][7], char infilenames[][80], 
+void WL_vssort(	char infiles[][9], char inlibs[][9], char invols[][7], char infilenames[][80], 
 		char intypes[], int4 inlens[], int4 incount,
 		char *outfile, char *outlib, char *outvol, char *outfilename, 
 		char outfileorg, int4 outmaxrec, char outrectype, int replace_flag,
 		struct select_criteria selinfo[], int selcnt, struct key_info keyinfo[], int keycnt, int stable_flag, 
 		int4 *retcode, int4 *errcode, char *errmess)
 {
-#ifdef VMS
-	vmssort(infiles, inlibs, invols, infilenames, incount,
-		outfile, outlib, outvol, outfilename, 
-		outfileorg, outmaxrec, outrectype, replace_flag,
-		selinfo, selcnt, keyinfo, keycnt, stable_flag, 
-		retcode, errcode, errmess);
-	return;
-#else
 	struct sortdata_s sortdata;
 	int	i;
 	int4	sortcode;
@@ -138,19 +149,19 @@ void vssort(	char infiles[][9], char inlibs[][9], char invols[][7], char infilen
 	*errcode = 0;
 	*retcode = 0;
 	sortcode = 0;
-	wswap(&inlens[0]);
-	wangsort((char*)&sortdata, &intypes[0], &inlens[0], stable_flag, &sortcode, retcode);
+	WL_wswap(&inlens[0]);
+	WL_wangsort((char*)&sortdata, &intypes[0], &inlens[0], stable_flag, &sortcode, retcode);
 
-	wswap(retcode);
-	wswap(&sortcode);
+	WL_wswap(retcode);
+	WL_wswap(&sortcode);
 
 	if (*retcode <= 20)
 	{
-		sprintf(errmess, "RC=%ld Sortcode=%ld (%s)", (long)*retcode, (long)sortcode, vssort_sortcode(sortcode));
+		sprintf(errmess, "RC=%ld Sortcode=%ld (%s)", (long)*retcode, (long)sortcode, WL_vssort_sortcode(sortcode));
 	}
 	else
 	{
-		sprintf(errmess, "RC=%ld Sortcode=%ld (%s)", (long)*retcode, (long)sortcode, vssort_retcode(*retcode));
+		sprintf(errmess, "RC=%ld Sortcode=%ld (%s)", (long)*retcode, (long)sortcode, WL_vssort_retcode(*retcode));
 	}
 
 	switch(sortcode)
@@ -171,11 +182,10 @@ void vssort(	char infiles[][9], char inlibs[][9], char invols[][7], char infilen
 		break;
 	}
 	return;
-#endif
 }
 
 
-char *vssort_retcode(int4 retcode)
+char *WL_vssort_retcode(int4 retcode)
 {
 	char	*message;
 
@@ -186,9 +196,6 @@ char *vssort_retcode(int4 retcode)
 	case  8:	message = "Insufficient buffer sapce";			break;
 	case 12:	message = "Record size greater then 9999 bytes";	break;  /* Was 2024 on Wang */
 	case 16:	message = "Invalid sort key";				break;
-#ifdef VMS
-	case 20:	message = "Program Check";				break;
-#else
 	case 20:	message = "Sort failed see Sortcode";			break;
 	case 40:	message = "Invalid file type";				break;
 	case 41:	message	= "No INPUT file or access denied";		break;
@@ -198,14 +205,13 @@ char *vssort_retcode(int4 retcode)
 	case 45:	message = "Not a CISAM file";				break;
 	case 46:	message = "Unable to get recsize from CISAM";		break;
 	case 47:	message = "Unable to unload CISAM file";		break;
-#endif
 	default: 	message = "UNKNOWN ERROR";				break;
 	}
 
 	return message;
 }
 
-char *vssort_sortcode(int4 sortcode)
+char *WL_vssort_sortcode(int4 sortcode)
 {
 	char	*message;
 
@@ -242,6 +248,24 @@ char *vssort_sortcode(int4 sortcode)
 /*
 **	History:
 **	$Log: vssort.c,v $
+**	Revision 1.13  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.12  2002/07/18 21:04:29  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.11  2002/07/12 19:10:18  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.10  2002/07/12 17:01:02  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.9  2002/07/09 04:13:56  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.8  2002/06/21 03:10:43  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.7  1998/04/17 18:53:41  gsl
 **	Change max recsize to 9999 from 2024
 **	

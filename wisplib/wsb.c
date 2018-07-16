@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1997 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wsb.c
 **
@@ -10,7 +31,7 @@ static char rcsid[]="$Id:$";
 **	Purpose:	Construct, display, and retrieve screen buffers
 **
 **			These routines provide a common front-end which can
-**			be used with vwang or with nativescreens.
+**			be used with vwang or with wisp_nativescreens.
 **
 */
 
@@ -28,6 +49,7 @@ static char rcsid[]="$Id:$";
 #include "wperson.h"
 #include "wisplib.h"
 #include "vchinese.h"
+#include "link.h"
 
 /*
 **	Structures and Defines
@@ -86,7 +108,6 @@ static wsb_t *wsb[MAX_WSB];		/* Array of screen blocks */
 /*
 **	Static Function Prototypes
 */
-extern void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *link_filespec);
 
 /*
 **	ROUTINE:	wsb_first()
@@ -131,7 +152,8 @@ static int check_hwsb(HWSB hWsb)
 	if (hWsb >= MAX_WSB || !wsb[hWsb])
 	{
 		ASSERT(0);
-		werrlog(104,"%%WSB-E-HWSB Invalid handle to WSB",0,0,0,0,0,0,0);
+		WL_werrlog_error(WERRCODE(104),"WSB", "HWSB", 
+			"Invalid handle to WSB");
 		return 1;
 	}
 
@@ -240,24 +262,25 @@ HWSB wsb_new(void)
 	}
 	if (idx >= MAX_WSB)
 	{
-		werrlog(104,"%%WSB-F-MAX Maximum number of WSB handles exceeded",0,0,0,0,0,0,0);
+		WL_werrlog_error(WERRCODE(104),"WSB", "MAX", 
+			"Maximum number of WSB handles exceeded");
 		wexit(1);
 	}
 
 	/*
 	**	Allocate and initialize the WSB structure
 	*/
-	wsb[idx] = (wsb_t *)wmalloc(sizeof(wsb_t));
+	wsb[idx] = (wsb_t *)wisp_malloc(sizeof(wsb_t));
 	wsb[idx]->vw = (wsbvwang_t *)NULL;
 	wsb[idx]->na = (wsbnative_t *)NULL;
 	wsb[idx]->menumap = NULL;
 	wsb[idx]->sound_alarm = 0;
 	
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		int	i;
 
-		wsb[idx]->na = (wsbnative_t *)wmalloc(sizeof(wsbnative_t));
+		wsb[idx]->na = (wsbnative_t *)wisp_malloc(sizeof(wsbnative_t));
 		memset(wsb[idx]->na, ' ', sizeof(wsbnative_t));
 		wsb[idx]->na->currow = 1;
 		wsb[idx]->na->curcol = 1;
@@ -276,7 +299,7 @@ HWSB wsb_new(void)
 	}
 	else
 	{
-		wsb[idx]->vw = (wsbvwang_t *)wmalloc(sizeof(wsbvwang_t));
+		wsb[idx]->vw = (wsbvwang_t *)wisp_malloc(sizeof(wsbvwang_t));
 		wsb[idx]->vw->oa.row = 1;
 		wsb[idx]->vw->oa.wcc = POSITION_CURSOR|UNLOCK_KEYBOARD; /* 0xA0 = 0x20 + 0x80  */
 		wsb[idx]->vw->oa.curcol = 0;
@@ -312,7 +335,7 @@ void wsb_delete(HWSB hWsb)
 		return;
 	}
 
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		free(wsb[hWsb]->na);
 	}
@@ -373,7 +396,7 @@ void wsb_add_text(HWSB hWsb, int row, int col, const char *text)
 	col--;
 	row--;
 	
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		memcpy(&wsb[hWsb]->na->data[row][col], text, len);
 	}
@@ -384,15 +407,15 @@ void wsb_add_text(HWSB hWsb, int row, int col, const char *text)
 		/*
 		**	If chinese then change '[' and ']' into '(' and )'.
 		*/
-		if (outctx)
+		if (IVS_outctx)
 		{
 			char *ptr;
 			
-			while(ptr = memchr(&wsb[hWsb]->vw->data[row][col], '[', len))
+			while((ptr = memchr(&wsb[hWsb]->vw->data[row][col], '[', len)))
 			{
 				*ptr = '(';
 			}
-			while(ptr = memchr(&wsb[hWsb]->vw->data[row][col], ']', len))
+			while((ptr = memchr(&wsb[hWsb]->vw->data[row][col], ']', len)))
 			{
 				*ptr = ')';
 			}
@@ -453,7 +476,7 @@ void wsb_add_field(HWSB hWsb, int row, int col, fac_t fac, const char *field, in
 	col--;
 	row--;
 	
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		int	idx;
 		
@@ -489,7 +512,8 @@ void wsb_add_field(HWSB hWsb, int row, int col, fac_t fac, const char *field, in
 			
 			if (wsb[hWsb]->na->fields >= MAX_WSB_FIELDS)
 			{
-				werrlog(104,"%%WSB-E-MAXFIELDS Max 40 modifiable fields",0,0,0,0,0,0,0);
+				WL_werrlog_error(WERRCODE(104),"WSB", "MAXFIELDS", 
+					"Max %d modifiable fields", MAX_WSB_FIELDS);
 			}
 			else
 			{
@@ -583,7 +607,7 @@ void wsb_add_menu_item(HWSB hWsb, int row, int col, int pfkey, const char *text)
 	*/
 	if (!wsb[hWsb]->menumap)
 	{
-		wsb[hWsb]->menumap = (int(*)[NUM_PFKEYS])wmalloc(sizeof(*wsb[hWsb]->menumap));
+		wsb[hWsb]->menumap = (int(*)[NUM_PFKEYS])wisp_malloc(sizeof(*wsb[hWsb]->menumap));
 		memset(wsb[hWsb]->menumap, '\0', sizeof(*wsb[hWsb]->menumap));
 	}
 	
@@ -603,7 +627,7 @@ void wsb_add_menu_item(HWSB hWsb, int row, int col, int pfkey, const char *text)
 	col--;
 	row--;
 
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		wsb_add_tabstop(hWsb, row+1, col+1);
 		memcpy(&wsb[hWsb]->na->data[row][col+3], text, len);
@@ -665,7 +689,7 @@ void wsb_add_tabstop(HWSB hWsb, int row, int col)
 	col--;
 	row--;
 
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		memcpy(&wsb[hWsb]->na->data[row][col-1], "[ ]", 3);
 		wsb_add_field(hWsb, row+1, col+1, FAC_MOD_BLANK_LINE, " ", 1);
@@ -720,7 +744,7 @@ void wsb_get_field(HWSB hWsb, int row, int col, char *field, int len)
 	col--;
 	row--;
 	
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		memcpy(field, &wsb[hWsb]->na->data[row][col], len);
 	}
@@ -795,7 +819,7 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 		strcpy(l_keylist,"X");
 	}
 
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		/*
 		**	CALL "WACUWSB" USING
@@ -834,7 +858,7 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 		key_cnt = 0;
 		if (pKeylist)
 		{
-			if (ptr = strchr(l_keylist,'X'))
+			if ((ptr = strchr(l_keylist,'X')))
 			{
 				*ptr = (char)0;
 				key_cnt = strlen(l_keylist) / 2;
@@ -880,13 +904,13 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 		parms[9] = (char*)&timeout_hsecs;
 		lens[9]  = sizeof(timeout_hsecs);
 
-		call_acucobol("WACUWSB", WACUWSB_ARGCNT, parms, lens, &rc);
+		WL_call_acucobol("WACUWSB", WACUWSB_ARGCNT, parms, lens, &rc);
 
 		if (rc)
 		{
 			int4	wrc, wcc;
 			
-			call_acucobol_error(rc, &wrc, &wcc, "WACUWSB");
+			WL_call_acucobol_error(rc, &wrc, &wcc, "WACUWSB");
 
 			*piPfkey = 0;
 			*piCurcol = 1;
@@ -921,7 +945,8 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 	}
 	else
 	{
-		unsigned char	function, lines, term[2], no_mod[2];
+		unsigned char	function, lines, no_mod[2];
+		char term[2];
 
 		no_mod[0] = no_mod[1] = ' ';
 		
@@ -953,7 +978,7 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 		/* 
 		**	Display and read the screen	
 		*/
-		vwang(&function, wsb[hWsb]->vw, &lines, l_keylist, term, no_mod);	
+		vwang(&function, (unsigned char*)(wsb[hWsb]->vw), &lines, l_keylist, term, no_mod);	
 
 
 		/*
@@ -1022,6 +1047,33 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 /*
 **	History:
 **	$Log: wsb.c,v $
+**	Revision 1.17  2003/02/04 17:22:57  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.16  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.15  2002/12/09 19:15:38  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.14  2002/08/01 14:09:09  gsl
+**	type warnings
+**	
+**	Revision 1.13  2002/08/01 02:41:38  gsl
+**	fix type warning
+**	
+**	Revision 1.12  2002/07/15 13:28:59  gsl
+**	IVS_ globals
+**	
+**	Revision 1.11  2002/07/12 20:40:41  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.10  2002/07/10 21:05:36  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.9  2002/07/02 21:15:36  gsl
+**	Rename wstrdup
+**	
 **	Revision 1.8  1998/10/13 18:57:46  gsl
 **	hWsb is unsigned so can't be < 0
 **	
@@ -1029,7 +1081,7 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 **	Initialize the no_mod arg to vwang()
 **
 **	Revision 1.6  1998-03-16 13:22:30-05  gsl
-**	Moved the outctx vchinese logic from wshelp to wsb_add_text()
+**	Moved the IVS_outctx vchinese logic from wshelp to wsb_add_text()
 **
 **	Revision 1.5  1998-03-13 18:01:06-05  gsl
 **	Add wsb_set_alarm()

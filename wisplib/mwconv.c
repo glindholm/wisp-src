@@ -1,13 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #include <string.h>
 
@@ -20,7 +31,7 @@ static char rcsid[]="$Id:$";
 static char *signch;
 static int c_just(char* src, char* idst, char* fdst, int len);
 
-void mwconv(
+void MWCONV(
 	char *src,	/* the source string				*/
 	char *idst,	/* the integer destination string.		*/
 	char *fdst,	/* The fractional destination string.		*/
@@ -33,7 +44,7 @@ void mwconv(
 
 						/*  positve|negative  */ 
 						/*01234567890123456789*/
-	if (aix_cobol || mf_cobol)	signch = "0123456789pqrstuvwxy";
+	if (wisp_mf_cobol())		signch = "0123456789pqrstuvwxy";
 	else				signch = "{ABCDEFGHI}JKLMNOPQR";
 
 	l_len = *len;
@@ -114,7 +125,7 @@ static int c_just(char* src, char* idst, char* fdst, int len)
 			break;
 		}
 
-		if (isdigit(src[i]))							/* If it is a number.			*/
+		if (isdigit((int)src[i]))							/* If it is a number.			*/
 		{
 			temp[tcnt++] = src[i++];					/* copy the integer portion		*/
 		}
@@ -159,7 +170,7 @@ static int c_just(char* src, char* idst, char* fdst, int len)
 				break;
 			}
 
-			if (!isdigit(src[i]))
+			if (!isdigit((int)src[i]))
 			{
 				return(-1);
 			}
@@ -190,6 +201,18 @@ static int c_just(char* src, char* idst, char* fdst, int len)
 /*
 **	History:
 **	$Log: mwconv.c,v $
+**	Revision 1.14  2003/02/04 18:29:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.13  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.12  2002/07/19 22:07:14  gsl
+**	Renaming cobol api routines for global uniqueness
+**	
+**	Revision 1.11  2002/07/02 04:00:38  gsl
+**	change acu_cobol and mf_cobol to wisp_acu_cobol() and wisp_mf_cobol()
+**	
 **	Revision 1.10  1996/08/19 22:32:35  gsl
 **	drcs update
 **	

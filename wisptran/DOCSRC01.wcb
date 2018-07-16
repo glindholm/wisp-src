@@ -1,0 +1,391 @@
+      **   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+      **   $Id:$
+      **
+      **   File:       DOCSRC01.wcb
+      **
+      **   Project:    WISP/DOC
+      **
+      **   Purpose:    WISP Manual Source Examples
+      **
+      **   Example:
+      **
+      *==============================================================
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. DOCSRC01.
+
+      *==============================================================
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+
+      *==============================================================
+      * FIGURATIVE-CONSTANTS
+      *==============================================================
+       FIGURATIVE-CONSTANTS.
+           TAB-STOP     IS "86"
+           BLINK-BIT    IS "10"
+           PROTECT-BIT  IS "04"
+           DIM-BIT      IS "08"
+           NOMODDIM-FAC         IS "88"
+           BLINKING-DISPLAY-FAC IS "94"
+           BRITE-FAC            IS "84"
+           NO-ECHO-FAC          IS "98".
+
+
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS CRT-RELKEY
+               PFKEY           IS CRT-PFKEY
+               CURSOR POSITION IS CRT-CURSOR-POS
+               FILE STATUS     IS CRT-FILE-STATUS.
+
+
+           SELECT SEQ-FILE
+               ASSIGN TO "SEQFIL", "DISK",  NODISPLAY,
+               FILE STATUS     IS SEQ-FILSTAT.
+
+           SELECT ACCTFILE 
+               ASSIGN TO "ACCT0001", "DISK", NODISPLAY
+               ORGANIZATION  IS INDEXED
+               ACCESS        IS DYNAMIC
+               RECORD KEY    IS ACCT-KEY
+               ALTERNATE RECORD 01 IS ACCT-ALT-KEY1 DUPLICATES
+                                02 IS ACCT-ALT-KEY2 DUPLICATES
+               FILE STATUS   IS ACCT-FILSTAT.
+
+           SELECT REPORT-FILE
+               ASSIGN TO "REPORT", "PRINTER",  NODISPLAY.
+
+      *$SORT_FILE
+           SELECT SORT-WORK-FILE
+               ASSIGN TO "SORTWORK", "DISK", NODISPLAY.
+
+           SELECT MY-FILE 
+               ASSIGN TO "MYFILE", "DISK", NODISPLAY
+               ORGANIZATION  IS INDEXED
+               ACCESS        IS DYNAMIC
+               RECORD KEY    IS MY-FILE-KEY.
+
+      *==============================================================
+       DATA DIVISION.
+       FILE SECTION.
+
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRT-RECORD                         PIC X(1924).
+
+
+       FD  SEQ-FILE
+           VALUE OF FILENAME IS SEQ-FILE-NAME
+                    LIBRARY  IS SEQ-LIBRARY
+                    VOLUME   IS SEQ-VOLUME.
+
+       01  SEQ-RECORD   PIC X(20).
+
+       FD  ACCTFILE
+           RECORD CONTAINS 100 COMPRESSED CHARACTERS
+           LABEL RECORDS ARE STANDARD
+           VALUE OF FILENAME IS ACCT-FNAME
+                    LIBRARY  IS ACCT-LIBRARY
+                    SPACE    IS ACCT-SPACE.
+
+       01  ACCT-RECORD.
+           05  ACCT-KEY           PIC X(10).
+           05  ACCT-ALT-KEY1      PIC X(10).
+           05  ACCT-ALT-KEY2      PIC X(10).
+           05  ACCT-DATA          PIC X(70).
+
+       FD  REPORT-FILE
+           VALUE OF FILENAME IS REPORT-FILE-NAME
+                    LIBRARY  IS REPORT-FILE-LIBRARY
+                    VOLUME   IS REPORT-FILE-VOLUME.
+       01  REPORT-RECORD   PIC X(120).
+
+       SD  SORT-WORK-FILE.
+       01  SORT-WORK-REC.
+           05  SORT-WORK-KEY    PIC X(6).
+           05  SORT-WORK-DATA   PIC X(74).
+
+       FD  MY-FILE.
+
+       01  MY-FILE-RECORD.
+           05  MY-FILE-KEY           PIC X(10).
+           05  MY-FILE-DATA          PIC X(70).
+
+
+      *==============================================================
+       WORKING-STORAGE SECTION.
+      *==============================================================
+      *
+      *   CRT FILE VARIABLES
+      *
+       77  CRT-RELKEY  PIC 9(02) VALUE 1.
+       77  CRT-PFKEY   PIC X(02) VALUE ZERO.
+       01  CRT-CURSOR-POS.
+           03  CRT-CURSOR-POS-COL  BINARY.
+           03  CRT-CURSOR-POS-ROW  BINARY.
+       01  CRT-FILE-STATUS.
+           03  CRT-FILE-STATUS-ERR        PIC X(01).
+           03  CRT-FILE-STATUS-AID        PIC X(01).
+
+
+      *==============================================================
+       01  TOTAL-AMOUNT-FIELD  PIC S9(9)V99.
+       01  TEAM-RANGE  PIC -999 OCCURS 4.
+       01  TEAM-FIELD  PIC -999.
+       01  FILLER.
+           05  FILLER OCCURS 3.
+               07  FIRST-ITEM-FIELD PIC 999.99 OCCURS 3.
+               07  SECOND-SOURCE PIC X(10).
+
+      *==============================================================
+       01  ENTRY-SCREEN-X USAGE DISPLAY-WS.
+           05 TOTAL-AMOUNT-ITEM PIC ZZZ,ZZZ,ZZZ.ZZ- 
+              ROW 15 COLUMN 50 SOURCE TOTAL-AMOUNT-FIELD.
+           05 FILLER PIC X(77) ROW 08 COLUMN 2 VALUE
+              "This is a literal that uses 2 lines.
+      -       "here is line 2.".
+           05 TEAM-ITEM-1 PIC -999 ROW 15 COLUMN 34
+              RANGE TEAM-RANGE
+              SOURCE TEAM-FIELD OBJECT TEAM-FIELD.
+           05 FILLER OCCURS 3 TIMES.
+              07  FIRST-ITEM PIC 999.99 OCCURS 3 TIMES 
+                  ROW 20 COLUMN 2
+                  SOURCE FIRST-ITEM-FIELD 
+                  OBJECT FIRST-ITEM-FIELD.
+              07  MY-SECOND-ITEM PIC X(10) ROW 20 COLUMN 50
+                  SOURCE SECOND-SOURCE.
+      *==============================================================
+       01  MY-SCREEN USAGE DISPLAY-WS.
+           05 FILLER PIC X(40) ROW 12 COLUMN 20 VALUE "TEST".
+           05 MY-SCREEN-F1 PIC 999 ROW 15 COLUMN 34
+              SOURCE MY-SCREEN-S1 
+              OBJECT MY-SCREEN-S1.
+
+       01  FLOAT-KEY     PIC 99.
+       01  MY-SCREEN-S1  PIC 999.
+
+      *==============================================================
+       01  MY-SCREEN-2 USAGE DISPLAY-WS.
+           05 ACCT-NAME PIC 999 ROW 15 COLUMN 34
+              SOURCE ACCT-NAME-S1 
+              OBJECT ACCT-NAME-S1.
+
+       01  ACCT-NAME-S1  PIC 999.
+      *==============================================================
+       01  SEQ-FILSTAT  PIC X(2).
+
+       01  SEQ-FILE-NAME                  PIC X(8) VALUE "SEQFILE".
+       01  SEQ-LIBRARY                    PIC X(8) VALUE SPACES.
+       01  SEQ-VOLUME                     PIC X(6) VALUE SPACES.
+      *==============================================================
+
+       01  REPORT-FILE-NAME          PIC X(8) VALUE "##REPT".
+       01  REPORT-FILE-LIBRARY       PIC X(8) VALUE SPACES.
+       01  REPORT-FILE-VOLUME        PIC X(6) VALUE SPACES.
+
+      *==============================================================
+       01  ACCT-FILSTAT  PIC X(2).
+
+       01  ACCT-FNAME                      PIC X(8) VALUE "ACCTFILE".
+       01  ACCT-LIBRARY                    PIC X(8) VALUE SPACES.
+       01  ACCT-VOLUME                     PIC X(6) VALUE SPACES.
+       01  ACCT-SPACE                      PIC 9(6).
+      *==============================================================
+       01  SRC-TXT     PIC X(10).
+       01  DEST-NUM    PIC S9(6)V99.
+      *==============================================================
+       01  COMPANY        PIC X(20).
+       01  YEARCODE       PIC 9999.
+       01  ACCESSCODE     PIC X(5).
+      *==============================================================
+       01  FORMNUM        PIC 9(03) VALUE 2.
+       01  PRINTCLASS     PIC X(01) VALUE "C".
+       01  NUMCOPIES      PIC 9(05) VALUE 3.
+      *==============================================================
+       01  PRINT-RETCODE.
+           05  PRINT-RETCODE-HIGH  BINARY.
+           05  PRINT-RETCODE-BIN   BINARY.
+      *==============================================================
+       01  PROGNAME  PIC X(8).
+       01  LINKTYPE  PIC X VALUE " ".
+       01  COMPCODE.
+           05  COMPCODE-HIGH  BINARY.
+           05  COMPCODE-BIN   BINARY.
+       01  RETCODE.
+           05  RETCODE-HIGH  BINARY.
+           05  RETCODE-BIN   BINARY.
+      *==============================================================
+       PROCEDURE DIVISION.
+       0000-MAIN SECTION.
+
+      *==============================================================
+      * ACCEPT
+      *==============================================================
+       PARA-ACCEPT.
+
+           ACCEPT COMPANY YEARCODE ACCESSCODE.
+
+      *==============================================================
+      * CALL GETPARM
+      *==============================================================
+       PARA-CALL-GETPARM.
+
+      *==============================================================
+      * CALL LINK
+      *==============================================================
+       PARA-CALL-LINK.
+           CALL "LINK" USING PROGNAME LINKTYPE COMPCODE RETCODE.
+
+      *==============================================================
+      * CALL PRINT
+      *==============================================================
+       PARA-CALL-PRINT.
+
+           CALL "PRINT" USING REPORT-FILE-NAME PRINT-RETCODE.
+
+      *==============================================================
+      * CALL SETFILE
+      *==============================================================
+       PARA-CALL-SETFILE.
+
+           CALL "SETFILE" USING REPORT-FILE,
+	                        "FN", FORMNUM,
+				"PC", PRINTCLASS,
+				"NC", NUMCOPIES.
+
+      *==============================================================
+      * DISPLAY AND READ 
+      *==============================================================
+       PARA-DISPLAY-AND-READ.
+
+           DISPLAY AND READ ENTRY-SCREEN-X ON CRT.
+
+      *==============================================================
+      * DISPLAY AND READ CLAUSES
+      *==============================================================
+       PARA-DISPLAY-AND-READ-CLAUSES.
+
+           MOVE 4 TO FLOAT-KEY.
+
+           DISPLAY AND READ ALTERED MY-SCREEN ON CRT
+           ONLY PFKEY 1, 2, 3, FLOAT-KEY
+           ON PFKEY FLOAT-KEY, 3
+              PERFORM ON-PFKEY-PARA
+           NO-MOD 
+              PERFORM NO-MOD-PARA.
+
+       ON-PFKEY-PARA.
+           DISPLAY "ON-PFKEY-PARA".
+
+       NO-MOD-PARA.
+           DISPLAY "NO-MOD-PARA".
+
+      *==============================================================
+      * FREE ALL
+      *==============================================================
+       PARA-FREE-ALL.
+           FREE ALL.
+
+      *==============================================================
+      * FAC OF 
+      *==============================================================
+       PARA-FAC-OF.
+
+           IF FAC OF ACCT-NAME = NOMODDIM-FAC THEN
+               PERFORM ACCT-NAME-NOMOD.
+
+           IF FAC OF ACCT-NAME ALTERED THEN
+               PERFORM ACCT-NAME-ALTERED.
+
+           IF BLINK-BIT IN FAC OF ACCT-NAME IS ON THEN
+               PERFORM ACCT-BLINK.
+
+           IF BLINK-BIT IN FAC OF ACCT-NAME IS OFF THEN
+               PERFORM ACCT-BLINK-OFF.
+
+       ACCT-NAME-NOMOD.
+           DISPLAY "ACCT-NAME-NOMOD".
+
+       ACCT-NAME-ALTERED.
+           DISPLAY "ACCT-NAME-ALTERED".
+
+       ACCT-BLINK.
+           DISPLAY "ACCT-BLINK-ON".
+
+       ACCT-BLINK-OFF.
+           DISPLAY "ACCT-BLINK-OFF".
+
+      *==============================================================
+      * SET FAC OF 
+      *==============================================================
+       PARA-SET-FAC-OF.
+
+	   SET BLINK-BIT IN FAC OF ACCT-NAME OFF.
+
+      *==============================================================
+      * OPEN OUTPUT
+      *==============================================================
+       PARA-OPEN-OUTPUT.
+
+           OPEN OUTPUT SEQ-FILE.
+
+      *==============================================================
+      * READ NEXT WITH HOLD
+      *==============================================================
+       PARA-READ-NEXT-WITH-HOLD.
+
+            READ ACCTFILE NEXT WITH HOLD 
+            AT END
+                PERFORM ACCT-AT-END.
+
+       ACCT-AT-END.
+           DISPLAY "ACCT-AT-END".
+
+      *==============================================================
+      *  MOVE WITH CONVERSION
+      *==============================================================
+       PARA-MOVE-WITH-CONVERSION.
+
+           MOVE WITH CONVERSION SRC-TXT TO DEST-NUM
+                ON ERROR MOVE "ERROR" TO SRC-TXT.
+
+      *==============================================================
+      *  SORT
+      *==============================================================
+       PARA-SORT.
+
+           SORT SORT-WORK-FILE
+                ASCENDING KEY SORT-WORK-KEY OF SORT-WORK-REC
+                WITH DUPLICATES IN ORDER
+                INPUT  PROCEDURE IS P74-SORT-IN-START THRU
+                                    P74-SORT-IN-END
+                OUTPUT PROCEDURE IS P74-SORT-OUT-START THROUGH
+                                    P74-SORT-OUT-END.
+       P74-SORT-IN-START.
+           EXIT .
+       P74-SORT-IN-END. EXIT.
+       P74-SORT-OUT-START. EXIT .
+       P74-SORT-OUT-END.
+           EXIT.
+
+      *==============================================================
+      *  START
+      *==============================================================
+       PARA-START.
+
+           START MY-FILE KEY MY-FILE-KEY IS EQUAL MY-FILE-KEY.
+
+      *==============================================================
+       9999-END SECTION.
+       9999-EXIT.
+           EXIT PROGRAM.
+       9999-STOP.
+           STOP RUN.
+      *==============================================================
+      **
+      **   End of DOCSRC01.wcb
+      **

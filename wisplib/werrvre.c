@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,12 +32,12 @@ static char rcsid[]="$Id:$";
 #include "wexit.h"
 #include "costar.h"
 #include "win32err.h"
-#include "cobrun.h"
 #include "wperson.h"
 #include "wisplib.h"
+#include "link.h"
 
 /*
-**	Routine:	werr_message_box()
+**	Routine:	WL_werr_message_box()
 **
 **	Function:	Display a message in a message box using vwang.
 **
@@ -36,10 +57,10 @@ static char rcsid[]="$Id:$";
 **	Warnings:	None
 **
 */
-void werr_message_box(char *instr)
+void WL_werr_message_box(const char *instr)
 {
 	static	int	entry_flag = 0;
-	char	wsb[WSB_LENGTH], function[1], lines[1];
+	unsigned char	wsb[WSB_LENGTH], function[1], lines[1];
 	int	len, row;
 
 	if (wbackground())
@@ -54,7 +75,7 @@ void werr_message_box(char *instr)
 	*/
 	if (use_w4w() && !use_costar())
 	{
-		if (win32_message_box(instr))
+		if (WL_win32_message_box(instr))
 		{
 			wexit(0);
 		}
@@ -71,8 +92,8 @@ void werr_message_box(char *instr)
 		**	A recursive call to this routine was attempted. 
 		**	Just log the error and return to stop the recursion.
 		*/
-		werr_write("ERROR: Routine werr_message_box() was recursively called.");
-		werr_write(instr);
+		WL_werr_write("ERROR: Routine werr_message_box() was recursively called.");
+		WL_werr_write(instr);
 		return;
 	}
 	entry_flag = 1;
@@ -80,7 +101,7 @@ void werr_message_box(char *instr)
 	/*
 	**	Handle errors with native screens thru cobol.
 	*/
-	if (nativescreens() && acu_cobol)
+	if (wisp_acu_nativescreens())
 	{
 		char	buf[1500];
 		char	buflen9999[5];
@@ -109,12 +130,12 @@ void werr_message_box(char *instr)
 		parms[0] = buf;
 		lens[0] = sizeof(buf);
 
-		sprintf(buflen9999, "%04.4d", len);
+		sprintf(buflen9999, "%04d", len);
 		
 		parms[1] = buflen9999;
 		lens[1] = 4;
 		
-		call_acucobol("WACUERROR", 2, parms, lens, &rc);
+		WL_call_acucobol("WACUERROR", 2, parms, lens, &rc);
 
 		/*
 		**	If there was an error then fall thru to the vwang code.
@@ -152,7 +173,7 @@ void werr_message_box(char *instr)
 	memcpy(&wsb[OA_LENGTH + WSB_COLS * row + 78], " *", 2);
 	row++;
 	memcpy(&wsb[OA_LENGTH + WSB_COLS * row +  0], "\204* ", 3);
-	strcpy(&wsb[OA_LENGTH + WSB_COLS * row + 23],"**** Press (ENTER) to continue ****");
+	strcpy((char*)(&wsb[OA_LENGTH + WSB_COLS * row + 23]),"**** Press (ENTER) to continue ****");
 	memcpy(&wsb[OA_LENGTH + WSB_COLS * row + 78], " *", 2);
 	row++;
 	memcpy(&wsb[OA_LENGTH + WSB_COLS * row +  0], "\204*", 2);
@@ -171,6 +192,30 @@ void werr_message_box(char *instr)
 /*
 **	History:
 **	$Log: werrvre.c,v $
+**	Revision 1.31  2003/02/04 16:30:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.30  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.29  2002/12/06 22:52:24  gsl
+**	WL_werr_message_box(const char*)
+**	
+**	Revision 1.28  2002/10/18 19:14:07  gsl
+**	Cleanup
+**	
+**	Revision 1.27  2002/08/01 15:07:35  gsl
+**	type warnings
+**	
+**	Revision 1.26  2002/08/01 14:09:10  gsl
+**	type warnings
+**	
+**	Revision 1.25  2002/07/10 21:05:30  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.24  2002/07/02 04:00:38  gsl
+**	change acu_cobol and mf_cobol to wisp_acu_cobol() and wisp_mf_cobol()
+**	
 **	Revision 1.23  2001/11/02 14:28:08  gsl
 **	Changed to (ENTER)
 **	

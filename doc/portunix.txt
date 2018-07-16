@@ -1,13 +1,14 @@
-	Copyright (c) 1995-2002 by NeoMedia Technologies Inc. 
+	Copyright (c) 1995-2003 by NeoMedia Technologies Inc. 
 	All Rights Reserved.
 	====================================================================
 	
 	Title:		WISP PORTING INSTRUCTIONS FOR UNIX
 	
+	Id:		$Id:$
 	Document:	portunix.lis
 	Last Updated:	$Date:$
 	Products:	WISP/UNIX, EDE, KCSI
-	Versions:	4.4.00 (AND LATER)
+	Versions:	5.0.00 
 	
 	Summary:	How it port WISP (and others) for unix.
 			Building a shipping kit.
@@ -27,7 +28,7 @@
 
 	The following components are required to port WISP.
 
-	[ ]	WISP source kit  e.g.  wisp4400.src.cpio.Z
+	[ ]	WISP source kit  e.g.  wispXXXX.src.cpio.Z
 
 	[ ] 	Acucobol COBOL compiler
 
@@ -70,9 +71,11 @@
 		directory.
 
 		    $ cd wisp
-		    $ uncompress -c wisp4400.src.tar.Z | tar -xvf -
+                    $ cvs co -d src wisp/src
 		or
-		    $ uncompress -c wisp4400.src.cpio.Z | cpio -icvd
+		    $ uncompress -c wispXXXX.src.tar.Z | tar -xvf -
+		or
+		    $ uncompress -c wispXXXX.src.cpio.Z | cpio -icvd
 
 	[ ]	SET ENVIRONMENT VARIABLES
 
@@ -80,22 +83,22 @@
 		Set COBDIR to the Micro Focus directory
 
 		Change directory to the wisp/src/port and run portenvs.sh
-		to set the WISP and WISPDIR variables.
+		to set the WISPSRC and WISPDIR variables.
 
 			$ cd wisp/src/port
 			$ portenvs.sh
 
-		This will set the variables WISPSRC and WISPDIR
+		This will set the variables WISPSRC and WISPDIR.
 
 				*** IMPORTANT *** 
-		You will need the variable WISP set for the whole porting 
+		You will need the variable WISPSRC set for the whole porting 
 		process.  Alway ensure that it is set correctly.
 
-			$ WISPSRC=/disk1/neomedia/wisp/src
+			$ WISPSRC=/disk1/neomedia/wisp/src 
 			$ WISPDIR=${WISPSRC}
 			$ ACUDIR=/usr/local/acucobol
 			$ COBDIR=/usr/local/mf41
-			$ export WISP WISPDIR ACUDIR COBDIR
+			$ export WISPSRC WISPDIR ACUDIR COBDIR
 
 
 	MODIFIY WISP SYSTEM DEPENDENT FILES
@@ -111,19 +114,9 @@
 	[ ]	${WISPSRC}/acu/acucobol.include
 		- Search for:
 		  "****  CHANGE PLATFORM SETTINGS HERE ****"
+		  ACUOTHER=
+		  SYSCCFLAGS=
 		  "****  CHANGE ACUCOBOL VERSION SETTINGS HERE ****"
-
-	[ ]	${WISPSRC}/acu/wruncbl.umf
-		- Search for:
-		  "**** CHANGE LIBCURSES HERE ****"
-		  "**** CHANGE CC HERE ****"
-		  "**** CHANGE CRID_CFLAGS HERE ****"
-		  CRIDDIR=$(WISPDIR)/CRIDACU.xxxx
-
-	[ ]	${WISPSRC}/mf/wrunmf.umf
-		- Search for:
-		  "**** CHANGE LIBCURSES HERE ****"
-
 
 	The following are only done on a port to a new platform. You
 	will probably need to get everything else working first before
@@ -142,10 +135,6 @@
 	If you are on a system with only an Acucobol runtime and no
 	compiler then:
 
-	[ ]	 Copy Acucobol CRID objects 
-		 CONTROL REPORT INQUIRY DATENTRY 
-		 from ${WISPSRC}/kcsi/crid/ on a system that has them.
-
 	[ ]	 Copy the ${WISPSRC}/testacu Acucobol object files
 		 acuqa.tar.Z from a system that has them.
 
@@ -155,7 +144,7 @@
 
 	[ ]	In the next section run this command instead.
 
-		$ make all_acu >>make.err 2>&1 & # make and log errors
+		$ make -f makewisp.umf all_acu>>make.err 2>&1 & # make and log errors
 		$ tail -f make.err		 # show progress on screen
 
 
@@ -169,7 +158,7 @@
 	[ ]	$ cd ${WISPSRC}/port
 		$ maketail.sh			# make & tail
 		or
-		$ make >>make.err 2>&1 &	# make and log errors
+		$ make -f makewisp.umf>>make.err 2>&1 &	# make and log errors
 		$ tail -f make.err		# show progress on screen
 		
 
@@ -177,19 +166,6 @@
 
 	On any error you will have to fix the problem and re-issue the
 	above command.
-
-
-	BUILD THE WISP SHIP KIT
-	=======================
-
-	Build a temporary ship kit under the "src" directory that will be
-	used for testing WISP and when done will become the real ship kit.
-	The script "bldshipkit.sh" will move all the components from the
-	built source kit into "${WISPSRC}/wispXXXX.ship" and it will build
-	the correct directory structure.
-
-	[ ] 	$ cd ${WISPSRC}/port
-		$ bldshipkit.sh
 
 
 	INSTALL WISP (QA)
@@ -244,20 +220,18 @@
 	MOVE SHIPPING KITS
 	==================
 
-	Move the shipping kits into the shipping area on zigzag.
-	There are 5 ship kits:
+	Move the shipping kits into the shipping area on wakko.
+	There are 3 ship kits:
 
 	[ ]	 ${WISPSRC}/wisp_XXXX.ship
-	[ ]	 ${WISPSRC}/kcsi/create/create_acu_XXXX.ship
-	[ ]	 ${WISPSRC}/kcsi/create/create_mf_XXXX.ship
-	[ ]	 ${WISPSRC}/kcsi/crid/crid_acu_XXXX.ship
-	[ ]	 ${WISPSRC}/kcsi/crid/crid_mf_XXXX.ship
+	[ ]	 ${WISPSRC}/kcsi/kcsi_acu_XXXX.ship
+	[ ]	 ${WISPSRC}/kcsi/kcsi_mf_XXXX.ship
 
 	From a local networked machine:
 
 	$ cd ${WISPSRC}
 	$ cp -r -p *.ship $SHIPPING/os_X.X.X
-	$ cp -r -p kcsi/*/*.ship $SHIPPING/os_X.X.X
+	$ cp -r -p kcsi/*.ship $SHIPPING/os_X.X.X
 
 
 

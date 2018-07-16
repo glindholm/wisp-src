@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 
@@ -65,7 +80,6 @@ static VSESCR_FLDS(ed_cpy_flds) = {
 static int vse_mov_cpy(int type);
 static int vse_ed_mov_range(int type, int4 start_line, int4 end_line, int4 target_line);
 static void copy_block(TEXT **st, TEXT **end, int type);
-static char *mystrdup(char *str);
 static int renumber_range(TEXT *st_txt, TEXT *end_txt);
 static int check_renumber(int4 number, int4 incr, int4 start, int4 end, TEXT **txt_start_p, TEXT **txt_end_p, int4 *count);
 static int vse_xcopy_copy(char *sysname, int4 start_line, int4 end_line, int4 target_line, char *message, int keep_modcode);
@@ -164,7 +178,7 @@ static int vse_mov_cpy(int type)
 
 		if (!rc)
 		{
-			if (rc = validate_linenum(target_field, &target_line))
+			if ((rc = validate_linenum(target_field, &target_line)))
 			{
 				rc = RESP_TARGET;
 			}
@@ -359,8 +373,6 @@ static void copy_block(TEXT **st, TEXT **end, int type)
 {
 	TEXT *p;
 	TEXT *newst, *newp;
-	void *calloc();
-	char *mystrdup();
 	int notdone;
 
 	for (notdone=1, p = *st, newst=newp=NULL; notdone; p=p->next)
@@ -399,14 +411,6 @@ static void copy_block(TEXT **st, TEXT **end, int type)
 	}
 	*st = newst;
 	*end = newp;
-}
-static char *mystrdup(char *str)
-{
-	void *malloc();
-	static char *x;
-	x=(char*)malloc(strlen(str)+1);
-	strcpy(x,str);
-	return x;
 }
 
 static int renumber_range(TEXT *st_txt, TEXT *end_txt)
@@ -499,7 +503,7 @@ int vse_renumberer(int4 number, int4 incr, int4 start, int4 end, int4 *count)
 	TEXT	*txt_start, *txt_end;
 	int	rc;
 
-	if (rc = check_renumber(number,incr,start,end,&txt_start,&txt_end,count))
+	if ((rc = check_renumber(number,incr,start,end,&txt_start,&txt_end,count)))
 	{
 		return rc;
 	}
@@ -817,7 +821,7 @@ int vse_xcopy(void)
 
 		if (!message_code)
 		{
-			if (resp = validate_range(start_field,&start_line,end_field,&end_line))
+			if ((resp = validate_range(start_field,&start_line,end_field,&end_line)))
 			{
 				strcpy(message_field,vse_err(resp));
 				message_code = 1;
@@ -1196,6 +1200,12 @@ static int vse_xcopy_copy(char *sysname, int4 start_line, int4 end_line, int4 ta
 /*
 **	History:
 **	$Log: vsemov.c,v $
+**	Revision 1.11  2003/02/05 21:47:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.10  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
 **	Revision 1.9  1996/09/03 22:24:08  gsl
 **	drcs update
 **	

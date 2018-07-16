@@ -1,0 +1,3 @@
+search=$1
+gawk 'BEGIN { FS = "\n"; RS = ""; IGNORECASE = 1 }
+$0 ~ /'"$search"'/ { print $0 }' /neomedia/WispLicense/wauthorize.log

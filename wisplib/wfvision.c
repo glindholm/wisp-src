@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
 #define _LARGEFILE64_SOURCE
@@ -26,6 +39,9 @@ static char rcsid[]="$Id:$";
 #include <io.h>
 #include <process.h>
 #endif
+#ifdef unix
+#include <unistd.h>
+#endif
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -42,6 +58,7 @@ static char rcsid[]="$Id:$";
 #include "werrlog.h"
 #include "wispcfg.h"
 #include "assert.h"
+#include "vssubs.h"
 
 #ifdef SCO
 /*	XENIX_386  is used by ACUCOBOL for SC0 386 machines */
@@ -106,13 +123,41 @@ struct vision3_struct
 #define VISION_HEADER_SIZE	512
 
 #define V4_REC_COUNT_OFF	52
+#define V4_REC_COUNT_LEN	4
 #define V4_MAX_REC_OFF		116
+#define V4_REC_SIZE_LEN		2
 #define V4_MIN_REC_OFF		118
 #define V4_NUM_KEYS_B		120
 #define V4_COMPRESS_OFF		121
 
+
 /*
-**	ROUTINE:	visioninfo()
+**	Vision 5 - data file
+**
+**	It appears that many of the 2-byte int fields from Vision 4 have been
+**	made into 4-byte int fields.
+**
+**	char	rec_count[4];				62	4	63-66
+**	char	del_rec[4];				66	4	67-70
+**	
+**	char	max_rec[2];				149	4	
+**	char	min_rec[2];				153	4	
+**	char	num_keys[1];				157	1		
+**	char	compress[1];				158	1	
+**	char	encrypt[1];				159	1	
+**	char	max_key[1];				160	1	
+**
+*/
+#define V5_REC_COUNT_OFF	62
+#define V5_REC_COUNT_LEN	4
+#define V5_MAX_REC_OFF		149
+#define V5_REC_SIZE_LEN		4
+#define V5_MIN_REC_OFF		153
+#define V5_NUM_KEYS_B		157
+#define V5_COMPRESS_OFF		158
+
+/*
+**	ROUTINE:	WL_visioninfo()
 **
 **	FUNCTION:	Get info about a vision file.
 **
@@ -140,7 +185,7 @@ struct vision3_struct
 **	WARNINGS:	?
 **
 */
-int visioninfo( const char* path, const char* code, void* raw_field )
+int WL_visioninfo( const char* path, const char* code, void* raw_field )
 {
 	char	header[VISION_HEADER_SIZE];
 	int	header_len;
@@ -163,10 +208,10 @@ int visioninfo( const char* path, const char* code, void* raw_field )
 	close(f);
 	f = -1;
 
-	return visioninfo_header(path, code, raw_field, header, header_len);
+	return WL_visioninfo_header(path, code, raw_field, header, header_len);
 }
 
-int visioninfo_header( const char* path, const char* code, void* raw_field, const char* raw_header, int header_len )
+int WL_visioninfo_header( const char* path, const char* code, void* raw_field, const char* raw_header, int header_len )
 {
 	union
 	{
@@ -177,6 +222,7 @@ int visioninfo_header( const char* path, const char* code, void* raw_field, cons
 		} v2;
 		struct	vision3_struct v3;				/* Vision 3 struct					*/
 		char	v4[VISION_HEADER_SIZE];				/* Vision 4 header					*/
+		char	v5[VISION_HEADER_SIZE];				/* Vision 5 header					*/
 	} header;
 
 	int4	*size;
@@ -199,7 +245,11 @@ int visioninfo_header( const char* path, const char* code, void* raw_field, cons
 
 	memcpy((char*)&header, raw_header, VISION_HEADER_SIZE);
 
-	if (0==memcmp(raw_header, VISION4D_MAGIC, VISION_MAGIC_LEN)) /* We are looking at the data file vs the ".vix" index */
+	if (0==memcmp(raw_header, VISION5D_MAGIC, VISION_MAGIC_LEN)) /* We are looking at the data file vs the ".vix" index */
+	{
+		vision = 5;
+	}
+	else if (0==memcmp(raw_header, VISION4D_MAGIC, VISION_MAGIC_LEN))
 	{
 		vision = 4;
 	}
@@ -232,17 +282,12 @@ int visioninfo_header( const char* path, const char* code, void* raw_field, cons
 		**	V2	Vision 2
 		**	V3	Vision 3
 		**	V4	Vision 4
+		**	V5	Vision 5
 		*/
-		if ( 2 == vision )
+		if ( 5 == vision )
 		{
 			field[0] = 'V';
-			field[1] = '2';
-			return( READFDR_RC_0_SUCCESS );
-		}
-		if ( 3 == vision )
-		{
-			field[0] = 'V';
-			field[1] = '3';
+			field[1] = '5';
 			return( READFDR_RC_0_SUCCESS );
 		}
 		if ( 4 == vision )
@@ -251,18 +296,41 @@ int visioninfo_header( const char* path, const char* code, void* raw_field, cons
 			field[1] = '4';
 			return( READFDR_RC_0_SUCCESS );
 		}
+		if ( 3 == vision )
+		{
+			field[0] = 'V';
+			field[1] = '3';
+			return( READFDR_RC_0_SUCCESS );
+		}
+		if ( 2 == vision )
+		{
+			field[0] = 'V';
+			field[1] = '2';
+			return( READFDR_RC_0_SUCCESS );
+		}
 	}
 	
 	if ( memcmp( code, "RC", 2 ) == 0 )				/* If looking for record count				*/
 	{
-		if ( 4 == vision )
+		if ( 5 == vision )
 		{
-			if ( !bytenormal() ) reversebytes(&header.v4[V4_REC_COUNT_OFF],4);
-			memcpy(size,&header.v4[V4_REC_COUNT_OFF],4);
+			if ( !WL_bytenormal() ) 
+			{
+				WL_reversebytes(&header.v5[V5_REC_COUNT_OFF],V5_REC_COUNT_LEN);
+			}
+			memcpy(size,&header.v5[V5_REC_COUNT_OFF],V5_REC_COUNT_LEN);
+		}
+		else if ( 4 == vision )
+		{
+			if ( !WL_bytenormal() ) 
+			{
+				WL_reversebytes(&header.v4[V4_REC_COUNT_OFF],V4_REC_COUNT_LEN);
+			}
+			memcpy(size,&header.v4[V4_REC_COUNT_OFF],V4_REC_COUNT_LEN);
 		}
 		else if ( 3 == vision )
 		{
-			if ( !bytenormal() ) reversebytes(header.v3.rec_count,4);
+			if ( !WL_bytenormal() ) WL_reversebytes(header.v3.rec_count,4);
 			memcpy(size, header.v3.rec_count, 4);
 		}
 		else if ( 2 == vision )
@@ -281,15 +349,32 @@ int visioninfo_header( const char* path, const char* code, void* raw_field, cons
 	if ( memcmp( code, "RS", 2 ) == 0 ||				/* If looking for record size/lenght			*/
 	     memcmp( code, "RL", 2 ) == 0    )
 	{
-		if ( 4 == vision )
+		if ( 5 == vision )
 		{
-			if ( !bytenormal() ) reversebytes(&header.v4[V4_MAX_REC_OFF],2);
-			memcpy(&tshort,&header.v4[V4_MAX_REC_OFF],2);
+			/*
+			**	4-byte int
+			*/
+			if ( !WL_bytenormal() ) 
+			{
+				WL_reversebytes(&header.v5[V5_MAX_REC_OFF],V5_REC_SIZE_LEN);
+			}
+			memcpy(size,&header.v5[V5_MAX_REC_OFF],V5_REC_SIZE_LEN);
+		}
+		else if ( 4 == vision )
+		{
+			/*
+			**	2-byte int
+			*/
+			if ( !WL_bytenormal() ) 
+			{
+				WL_reversebytes(&header.v4[V4_MAX_REC_OFF],V4_REC_SIZE_LEN);
+			}
+			memcpy(&tshort,&header.v4[V4_MAX_REC_OFF],V4_REC_SIZE_LEN);
 			*size = tshort;
 		}
 		else if ( 3 == vision )
 		{
-			if ( !bytenormal() ) reversebytes(header.v3.max_rec,2);
+			if ( !WL_bytenormal() ) WL_reversebytes(header.v3.max_rec,2);
 			memcpy(&tshort,header.v3.max_rec,2);
 			*size = tshort;
 		}
@@ -310,7 +395,11 @@ int visioninfo_header( const char* path, const char* code, void* raw_field, cons
 	{
 		int num_keys = 1;
 		
-		if ( 4 == vision )
+		if ( 5 == vision )
+		{
+			num_keys = header.v5[V5_NUM_KEYS_B];
+		}
+		else if ( 4 == vision )
 		{
 			num_keys = header.v4[V4_NUM_KEYS_B];
 		}
@@ -343,9 +432,19 @@ int visioninfo_header( const char* path, const char* code, void* raw_field, cons
 
 	if ( memcmp( code, "RT", 2 ) == 0 )				/* If looking for record type				*/
 	{
-		if (4 == vision)
+		if (5 == vision)
 		{
-			if ( memcmp(&header.v4[V4_MAX_REC_OFF],&header.v4[V4_MIN_REC_OFF],2) == 0 ) 
+			if ( memcmp(&header.v5[V5_MAX_REC_OFF],&header.v5[V5_MIN_REC_OFF],V5_REC_SIZE_LEN) == 0 ) 
+				*field = 'F';
+			else
+			    	*field = 'V';
+
+			if ( header.v5[V5_COMPRESS_OFF] ) 
+				*field = 'C';
+		}
+		else if (4 == vision)
+		{
+			if ( memcmp(&header.v4[V4_MAX_REC_OFF],&header.v4[V4_MIN_REC_OFF],V4_REC_SIZE_LEN) == 0 ) 
 				*field = 'F';
 			else
 			    	*field = 'V';
@@ -386,13 +485,13 @@ int visioninfo_header( const char* path, const char* code, void* raw_field, cons
 }
 
 #ifdef unix
-int unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBOL file to a tempfile		*/
+int WL_unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBOL file to a tempfile		*/
 {
 	char	command[256];
 
-	sprintf(command,"%s -unload '%s' '%s' ", acu_vutil_exe(), inname, outname );
+	sprintf(command,"%s -unload '%s' '%s' ", WL_acu_vutil_exe(), inname, outname );
 
-	return 	run_unixcommand_silent(command);
+	return 	WL_run_unixcommand_silent(command);
 }
 #endif /* unix */
 
@@ -400,7 +499,7 @@ int unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBO
 #ifdef WIN32
 #include "win32spn.h"
 
-int unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBOL file to a tempfile		*/
+int WL_unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBOL file to a tempfile		*/
 {
 	char 	cmd[512];
 	int 	rc;
@@ -409,10 +508,10 @@ int unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBO
 	**	Spawn "vutil32.exe -unload <inname> <outname>"
 	*/
 
-	sprintf(cmd, "%s -unload %s %s", acu_vutil_exe(), inname, outname);
+	sprintf(cmd, "%s -unload %s %s", WL_acu_vutil_exe(), inname, outname);
 	ASSERT(strlen(cmd) < sizeof(cmd));
 	
-	rc = win32spawnlp(NULL, cmd, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_NO_INHERIT);
+	rc = WL_win32spawnlp(NULL, cmd, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_NO_INHERIT);
 
 	return( rc );
 }
@@ -421,18 +520,42 @@ int unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBO
 /*
 **	History:
 **	$Log: wfvision.c,v $
-**	Revision 1.21.2.1.2.2  2002/11/19 16:24:03  gsl
+**	Revision 1.32  2003/05/28 19:34:44  gsl
+**	Acucobol 6.0, support
+**	
+**	Revision 1.31  2003/05/28 18:07:14  gsl
+**	Acucobol 6.0, Vision 5 support
+**	
+**	Revision 1.30  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.29  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.28  2003/01/29 21:50:08  gsl
+**	Switch to use vssubs.h
+**	
+**	Revision 1.27  2002/11/19 16:28:42  gsl
 **	Define O_LARGEFILE for ALPHA and SCO
 **	
-**	Revision 1.21.2.1.2.1  2002/10/09 21:03:05  gsl
-**	Huge file support
+**	Revision 1.26  2002/10/08 17:06:02  gsl
+**	Define _LARGEFILE64_SOURCE to define O_LARGEFILE on LINUX
 **	
-**	Revision 1.21.2.1  2002/08/19 15:31:05  gsl
-**	4403a
+**	Revision 1.25  2002/10/07 19:15:21  gsl
+**	Add O_LARGEFILE to open() options
 **	
-**	Revision 1.21  2001-11-12 17:56:17-05  gsl
+**	Revision 1.24  2002/07/22 20:32:34  gsl
+**	Unix commands put filenames in 'quotes' because they can contain $
+**	
+**	Revision 1.23  2002/07/12 19:10:20  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.22  2002/07/10 21:05:32  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.21  2001/11/12 22:56:17  gsl
 **	Open in O_BINARY (WIN32)
-**
+**	
 **	Revision 1.20  2001-11-12 16:49:34-05  gsl
 **	Add trace info
 **

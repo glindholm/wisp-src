@@ -35,8 +35,8 @@ class object {
 //
 //	History:
 //	$Log: object.hpp,v $
-//	Revision 1.5.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.6  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.5  1998/08/31 19:13:58  gsl
 //	drcs update

@@ -1,5 +1,28 @@
-/* Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		pgglobal.h
 **
@@ -57,6 +80,9 @@ EXT int lcnt;
 /*
 **	History:
 **	$Log: pgglobal.h,v $
+**	Revision 1.10  2003/02/04 21:51:16  gsl
+**	fix -Wall warnings
+**	
 **	Revision 1.9  1997/04/21 14:55:44  scass
 **	Corrected copyright.
 **	

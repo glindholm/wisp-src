@@ -1,10 +1,30 @@
-//	Copyright (c) 1996 DevTech Migrations, All rights reserved.
-//	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
 
 #if !defined  DEFINES_H
 #define DEFINES_H
 //	General
-#define AppName		"WISP Translator and Compiler Interface (v1.4)"									//	Name of the application
+#define AppName		"WISP Translator and Compiler Interface (v1.5)"									//	Name of the application
 #ifdef _DEBUG
 #define DEBUG_TAG "(DEBUG)"
 #else
@@ -134,3 +154,12 @@
 #define RK_WBin_WTran_COBOL_MF  "Software\\NeoMedia\\WISP\\WISPBin\\WISPTran\\COBOL\\MFCOBOL"
 
 #endif
+
+/*
+**	History:
+**	$Log: #Defines.h,v $
+**	Revision 1.10  2003/06/18 16:43:06  gsl
+**	Add CVS header and history
+**	
+**
+*/

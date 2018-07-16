@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir ".\Release"
 # PROP Target_Dir "."
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /D "DIRECTVID" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /D "DIRECTVID" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir ".\Debug"
 # PROP Target_Dir "."
 # ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /W3 /GX /Z7 /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /D "DIRECTVID" /YX /FD /c
+# ADD CPP /nologo /MDd /W3 /GX /Z7 /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /D "DIRECTVID" /YX /FD /c
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 BSC32=bscmake.exe
@@ -197,10 +197,6 @@ SOURCE=.\vlist.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vloadch.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\vmacro.c
 # End Source File
 # Begin Source File
@@ -229,10 +225,6 @@ SOURCE=.\vonexit.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vop.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\vopenf.c
 # End Source File
 # Begin Source File
@@ -250,10 +242,6 @@ SOURCE=.\vprint.c
 # Begin Source File
 
 SOURCE=.\vpushscr.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vputc.c
 # End Source File
 # Begin Source File
 
@@ -290,10 +278,6 @@ SOURCE=.\vsection.c
 # Begin Source File
 
 SOURCE=.\vset.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vsize.c
 # End Source File
 # Begin Source File
 
@@ -428,5 +412,9 @@ SOURCE=.\vutil.h
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 # End Group
+# Begin Source File
+
+SOURCE=.\libvideo.umf
+# End Source File
 # End Target
 # End Project

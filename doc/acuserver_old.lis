@@ -1,0 +1,92 @@
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		Notes On Using AcuServer With WISP
+	
+	Document:	ACUSERVER.LIS
+	Last Updated:	5 DEC 95
+	Products:	AcuCOBOL/AcuServer, WISP/UNIX
+	Versions:	3.3x9 of WISP
+			BETA .05 AcuServer
+	
+	Summary:	Notes on AcuSever with WISP
+
+	====================================================================
+
+
+	This document contains notes regarding the use of AcuServer with
+	WISP converted software. 
+
+	NOTE:	WISP does not yet provide support for AcuServer.
+
+
+	NOTES ON USING ACUSERVER WITH WISP CONVERTED SOFTWARE
+	=====================================================
+
+	There are two main issues involved in using AcuServer with WISP
+	converted software.
+
+	1)	AcuServer uses a custom syntax for fully specifing the 
+		location of a file which includes a node/machine name.
+		This syntax is NOT compatable with normal "C" or UNIX
+		file specifications.
+
+		Syntax:		@server-name:path-name
+
+		Example:	@remote:/disk1/myvol/mylib/myfile
+
+	2)	There will not be a physical file that is locally 
+		accessable thru normal "C" or UNIX routines.  There are
+		numerous places in the WISP environment that attempt to
+		access files.  Most importantly these occur in the pre-open
+		logic (wfopen) and in the VSSUBS.
+
+
+	The OPEN logic must be instructed to bypass all it's normal pre-open
+	checking and the VSSUBS that expect a file will not work.
+
+		FIND
+		RENAME
+		SCRATCH
+		READFDR
+		READVTOC
+		SORTCALL/WISPSORT/WSORT
+		WCOPY
+
+	AcuServer can apply to CODE and DATA files.
+
+	Add the AcuServer server-name prefix to the LGMAP for the data 
+	volumes. Keep the code/object/executables on local or NFS volumes.
+
+	Example: $WISPCONFIG/LGMAP
+
+		DATA01 @remote:/disk1/data01
+		DATA02 @remote:/disk2/data02
+		CODE01 /disk1/code01
+		CODE02 /nfs/remote/disk2/code02
+		TEMP   /tmp
+
+	The wfopen() routine has been modified to check if the native file 
+	path has a leading '@' character and if it does the pre-check logic
+	is bypassed.
+
+	Temporary (##) file name generation fails on AcuServer volumes.
+	All temp files must be on local or NFS volumes.
+
+	Automatic file path creation fails.  Normally the file path will
+	be created automatically when the file is created.  Specifically
+	the library portion of the path is normally created on the fly.
+	This does not work on AcuServer files, the file path must already
+	exist or the create (OPEN OUTPUT) fails.
+
+	The Object files must be local (or NFS).  They can't reside
+	on AcuServer volumes if used with LINK, SUBMIT etc.  If the AcuCOBOL
+	object files are used -ONLY- thru COBOL CALL statements then
+	they can be placed on AcuServer volumes.
+
+	Open OUTPUT does not check if the file exists and does not prompt
+	you to confirm deletion of the previous file before continuing.
+
+
+	========================= END OF DOCUMENT ==========================

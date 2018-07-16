@@ -1,3 +1,4 @@
+000100* $Id:$
 
       /*****************************************************************
       *                                                                *
@@ -165,18 +166,29 @@
                FILE STATUS          IS FILE-AV2-STAT.
 
 
+      *	   VISION 4	
+      *$ACU_CODE PROCESS  
+      *    SELECT FILE-AV4
+      *        ASSIGN TO "ALTVARV4",    "DISK",     NODISPLAY,
+      *        ORGANIZATION         IS INDEXED
+      *        ACCESS MODE          IS DYNAMIC
+      *        RECORD KEY           IS AV4-R1-KEY
+      *        ALTERNATE RECORD KEY IS AV4-R1-ALT1
+      *                             IS AV4-R1-ALT2 DUPLICATES
+      *        FILE STATUS          IS FILE-AV4-STAT.
+      *$ACU_END
+           
       *$MF_CODE PROCESS
       $SET IDXFORMAT"4"
+      *    SELECT FILE-AV4
+      *        ASSIGN TO "ALTVAR4",    "DISK",     NODISPLAY,
+      *        ORGANIZATION         IS INDEXED
+      *        ACCESS MODE          IS DYNAMIC
+      *        RECORD KEY           IS AV4-R1-KEY
+      *        ALTERNATE RECORD KEY IS AV4-R1-ALT1
+      *                             IS AV4-R1-ALT2 DUPLICATES
+      *        FILE STATUS          IS FILE-AV4-STAT.
       *$MF_END
-
-           SELECT FILE-AV4
-               ASSIGN TO "ALTVAR4",    "DISK",     NODISPLAY,
-               ORGANIZATION         IS INDEXED
-               ACCESS MODE          IS DYNAMIC
-               RECORD KEY           IS AV4-R1-KEY
-               ALTERNATE RECORD KEY IS AV4-R1-ALT1
-                                    IS AV4-R1-ALT2 DUPLICATES
-               FILE STATUS          IS FILE-AV4-STAT.
 	       
       *$MF_CODE PROCESS
       $SET IDXFORMAT"8"
@@ -489,10 +501,38 @@
 
        01  SCRATCH-TYPE-LIBRARY		   PIC X VALUE "L".
 
-       01  CRT-ROW-NUM			  PIC 99 VALUE 1.
-       01  NEXT-CRT-ROW		          PIC X(80) VALUE SPACES.
 
       ******************************************************************
+       01  PROGRESS-ROW-NUM		  PIC 99 VALUE 1.
+       01  NEXT-PROGRESS-ROW	          PIC X(79) VALUE SPACES.
+
+       01  PROGRESS-TITLE  PIC X(40) VALUE "PROGRESS SCREEN TITLE".
+       01  PROGRESS-FOOTER PIC X(40) VALUE "PROGRESS SCREEN FOOTER".
+       01  PROGRESS-ROWS.
+           05  FILLER OCCURS 20 TIMES.
+	       10  PROGRESS-ROW PIC X(79).
+
+       01  PROGRESS-LOCK-ORDER-AREA.
+           05  PROGRESS-LOCK-OA-ROW     PIC X VALUE HEX-01.
+           05  PROGRESS-LOCK-OA-WCC     PIC X VALUE HEX-20.
+           05  PROGRESS-LOCK-OA-CCOL    PIC X VALUE HEX-01.
+           05  PROGRESS-LOCK-OA-CROW    PIC X VALUE HEX-01.
+
+       01  PROGRESS-UNLOCK-ORDER-AREA.
+           05  PROGRESS-UNLOCK-OA-ROW     PIC X VALUE HEX-01.
+           05  PROGRESS-UNLOCK-OA-WCC     PIC X VALUE HEX-80.
+           05  PROGRESS-UNLOCK-OA-CCOL    PIC X VALUE HEX-01.
+           05  PROGRESS-UNLOCK-OA-CROW    PIC X VALUE HEX-01.
+           
+       01  PROGRESS-SCREEN USAGE IS DISPLAY-WS.
+           05  FILLER PIC X(40)      ROW  1 COLUMN 20
+               SOURCE PROGRESS-TITLE.
+           05  FILLER OCCURS 20 TIMES.
+	       10  FILLER PIC X(79)  ROW  3 COLUMN  2
+	           SOURCE PROGRESS-ROW.
+           05  FILLER PIC X(40)      ROW 24 COLUMN 20
+               SOURCE PROGRESS-FOOTER.
+
       ******************************************************************
 
        01  FILE-SF-STAT                    PIC X(2).
@@ -510,7 +550,6 @@
 
        01  FILE-AV2-STAT                    PIC X(2).
        01  FILE-AV3-STAT                    PIC X(2).
-
        01  FILE-AV4-STAT                    PIC X(2).
        01  FILE-AV8-STAT                    PIC X(2).
        
@@ -537,8 +576,12 @@
 
        01  FIL-FOR-FILE-AV2                PIC X(8) VALUE "ALTVARV2".
        01  FIL-FOR-FILE-AV3                PIC X(8) VALUE "ALTVARV3".
-
-       01  FIL-FOR-FILE-AV4                PIC X(8) VALUE "ALTVAR4".
+      *$ACU_CODE PROCESS
+      *01  FIL-FOR-FILE-AV4                PIC X(8) VALUE "ALTVARV4".
+      *$ACU_END
+      *$MF_CODE PROCESS
+      *01  FIL-FOR-FILE-AV4                PIC X(8) VALUE "ALTVAR4".
+      *$MF_END
        01  FIL-FOR-FILE-AV8                PIC X(8) VALUE "ALTVAR8".
 
        01  FIL-FOR-FILE-HUGE               PIC X(8) VALUE "HUGE".
@@ -928,6 +971,8 @@
        01 PF-KEY-ARG  PIC X(2).
        PROCEDURE DIVISION USING PF-KEY-ARG.
 
+       0000-INIT.
+           OPEN I-O CRT.
 
        FILE-TESTS-2.
 
@@ -1096,7 +1141,7 @@
 
            MOVE "LOG" TO LOG-HEADER.
            MOVE LF TO LOG-NEWLINE.
-           CALL "DATE" USING HL LOG-DATA.
+           CALL "DATE4" USING HL LOG-DATA.
            WRITE LOG-RECORD.
 
            DISPLAY AND READ LOG-SCREEN-2 ON CRT.
@@ -1192,7 +1237,7 @@
 009500                           W002-ID,
                                  W002-USER-ID.
 
-009300      CALL "DATE" USING W005-HL,
+009300      CALL "DATE4" USING W005-HL,
 009400                        W005-DATE-TIME.
 
             MOVE W002-USER-ID TO W-PRINT-USER.
@@ -1232,16 +1277,17 @@
       ******************************************************************
       ******************************************************************
        LOAD-SAMPLE-FILES-SCREEN-START.
-	   PERFORM CLEAR-SCREEN.
-	   MOVE " --- LOADING SAMPLE FILES ---" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
-	   ADD 2 TO CRT-ROW-NUM.
+      *          1234567890123456789012345678901234567890
+	   MOVE "      --- LOADING LIBSAM FILES ---      " 
+	       TO PROGRESS-TITLE.
+	   MOVE "   PLEASE WAIT FOR LOADING TO COMPLETE  " 
+	       TO PROGRESS-FOOTER.
+	   PERFORM INIT-PROGRESS-SCREEN.
 
        LOAD-SAMPLE-FILES-SCREEN-END.
-	   ADD 1 TO CRT-ROW-NUM.
-	   MOVE " Press (ENTER) to continue" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
-	   PERFORM UNLOCK-AND-READ-SCREEN.	   
+	   MOVE "        Press (ENTER) to continue       "
+	       TO PROGRESS-FOOTER.
+	   PERFORM UNLOCK-AND-READ-PROGRESS-SCRN.	   
 
        LOAD-SAMPLE-FILES.
 	   PERFORM LOAD-SAMPLE-FILES-SCREEN-START.
@@ -1270,6 +1316,7 @@
       *$ACU_CODE PROCESS	       
       **   PERFORM LOAD-FILE-AV2.  - Comment out VISION 2 tests
       *    PERFORM LOAD-FILE-AV3.
+      *    PERFORM LOAD-FILE-AV4.
       *$ACU_END
       *$MF_CODE PROCESS	       
       *    PERFORM LOAD-FILE-AV4.
@@ -1324,6 +1371,9 @@
       *
       *    OPEN OUTPUT FILE-AV3.
       *    CLOSE       FILE-AV3.
+      *
+      *    OPEN OUTPUT FILE-AV4.
+      *    CLOSE       FILE-AV4.
       *$ACU_END
       
       *$MF_CODE PROCESS	       
@@ -1348,8 +1398,8 @@
            WRITE SF-R1.
 
 123456 LOAD-FILE-SF.       
-	   MOVE " LOADING SEQFIX" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING SEQFIX" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 	   
       *    Create an empty file
            OPEN OUTPUT FILE-SF.
@@ -1394,9 +1444,9 @@
            CLOSE FILE-SF.
 
 	   STRING " LOADED  SEQFIX   WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       ******************************************************************
       *    SEQVAR (SEQUENTIAL VARYING) FILE-SV
@@ -1443,8 +1493,8 @@
            WRITE SV-R2.
 
 123456 LOAD-FILE-SV.       
-	   MOVE " LOADING SEQVAR" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING SEQVAR" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-SV.
@@ -1494,9 +1544,9 @@
            CLOSE FILE-SV.
 
 	   STRING " LOADED  SEQVAR   WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
 
       ******************************************************************
@@ -1513,8 +1563,8 @@
              DISPLAY "WRITE IDXFIX REC-1 INVALID KEY " IF-WS-KEY.
 
 123456 LOAD-FILE-IF.       
-	   MOVE " LOADING IDXFIX" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING IDXFIX" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-IF.
@@ -1575,9 +1625,9 @@
            CLOSE FILE-IF.
 
 	   STRING " LOADED  IDXFIX   WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       ******************************************************************
       *    IDXFIXC (INDEXED FIXED COMPRESSED) FILE-IFC
@@ -1593,8 +1643,8 @@
              DISPLAY "WRITE IDXFIXC REC-1 INVALID KEY " IFC-WS-KEY.
 
 123456 LOAD-FILE-IFC.       
-	   MOVE " LOADING IDXFIXC" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING IDXFIXC" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-IFC.
@@ -1655,9 +1705,9 @@
            CLOSE FILE-IFC.
 
 	   STRING " LOADED  IDXFIXC  WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       ******************************************************************
       *    IDXVAR (INDEXED VARYING) FILE-IV
@@ -1708,8 +1758,8 @@
              DISPLAY "WRITE IDXVAR REC-2 INVALID KEY " IV-WS-KEY.
 
 123456 LOAD-FILE-IV.       
-	   MOVE " LOADING IDXVAR" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING IDXVAR" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-IV.
@@ -1775,9 +1825,9 @@
            CLOSE FILE-IV.
 
 	   STRING " LOADED  IDXVAR   WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
 
       ******************************************************************
@@ -1795,8 +1845,8 @@
 
 
 123456 LOAD-FILE-RF.       
-	   MOVE " LOADING RELFIX" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING RELFIX" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-RF.
@@ -1857,9 +1907,9 @@
            CLOSE FILE-RF.
 
 	   STRING " LOADED  RELFIX   WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       ******************************************************************
       *    RELVAR (RELATIVE VARYING) FILE-RV
@@ -1885,8 +1935,8 @@
              DISPLAY "WRITE RELVAR REC-2 INVALID KEY " RV-WS-KEY.
 
 123456 LOAD-FILE-RV.       
-	   MOVE " LOADING RELVAR" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING RELVAR" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-RV.
@@ -1952,9 +2002,9 @@
            CLOSE FILE-RV.
 
 	   STRING " LOADED  RELVAR   WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       ******************************************************************
       *    ALTFIX (ALTERNATE INDEXED FIXED) FILE-AF
@@ -1972,8 +2022,8 @@
              DISPLAY "WRITE ALTFIX REC-1 INVALID KEY " AF-WS-KEY.
 
 123456 LOAD-FILE-AF.       
-	   MOVE " LOADING ALTFIX" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING ALTFIX" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-AF.
@@ -2040,9 +2090,9 @@
            CLOSE FILE-AF.
 
 	   STRING " LOADED  ALTFIX   WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       ******************************************************************
       *    ALTVAR (ALTERNATE INDEXED VARYING) FILE-AV
@@ -2072,8 +2122,8 @@
              DISPLAY "WRITE ALTVAR REC-2 INVALID KEY " AV-WS-KEY.
 
 123456 LOAD-FILE-AV.       
-	   MOVE " LOADING ALTVAR" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING ALTVAR" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-AV.
@@ -2145,9 +2195,9 @@
            CLOSE FILE-AV.
 
 	   STRING " LOADED  ALTVAR   WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       ******************************************************************
       * ALTVARV2 (ALTERNATE INDEXED VARYING VISION ) FILE-AV2
@@ -2177,8 +2227,8 @@
              DISPLAY "WRITE ALTVARV2 REC-2 INVALID KEY " AV2-WS-KEY.
 
        LOAD-FILE-AV2.       
-	   MOVE " LOADING ALTVARV2" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING ALTVARV2" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-AV2.
@@ -2250,9 +2300,9 @@
            CLOSE FILE-AV2.
 
 	   STRING " LOADED  ALTVARV2 WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       ******************************************************************
       * ALTVARV3 (ALTERNATE INDEXED VARYING VISION ) FILE-AV3
@@ -2282,8 +2332,8 @@
              DISPLAY "WRITE ALTVARV3 REC-2 INVALID KEY " AV3-WS-KEY.
 
        LOAD-FILE-AV3.       
-	   MOVE " LOADING ALTVARV3" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING ALTVARV3" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-AV3.
@@ -2355,9 +2405,9 @@
            CLOSE FILE-AV3.
 
 	   STRING " LOADED  ALTVARV3 WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       ******************************************************************
       *    ALTVAR4 (ALTERNATE INDEXED VARYING IDX4) FILE-AV4
@@ -2387,8 +2437,9 @@
              DISPLAY "WRITE ALTVAR4 REC-2 INVALID KEY " AV4-WS-KEY.
 
        LOAD-FILE-AV4.       
-	   MOVE " LOADING ALTVAR4" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   STRING " LOADING ", FIL-FOR-FILE-AV4,  
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-AV4.
@@ -2459,10 +2510,11 @@
 
            CLOSE FILE-AV4.
 
-	   STRING " LOADED  ALTVAR4  WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   STRING " LOADED  ", FIL-FOR-FILE-AV4,  
+	       " WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
 
       ******************************************************************
@@ -2493,8 +2545,8 @@
              DISPLAY "WRITE ALTVAR8 REC-2 INVALID KEY " AV8-WS-KEY.
 
 123456 LOAD-FILE-AV8.       
-	   MOVE " LOADING ALTVAR8" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   MOVE " LOADING ALTVAR8" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       *    Create an empty file
            OPEN OUTPUT FILE-AV8.
@@ -2566,9 +2618,9 @@
            CLOSE FILE-AV8.
 
 	   STRING " LOADED  ALTVAR8  WITH ", RECORD-CNT, " RECORDS" 
-	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
       ******************************************************************
 
@@ -2648,42 +2700,38 @@
 
       ******************************************************************
 
-       CLEAR-SCREEN.
+       INIT-PROGRESS-SCREEN.
 
-           MOVE HEX-01 TO CRTREC-OA-1
-           MOVE HEX-20 TO CRTREC-OA-2
-           MOVE HEX-01 TO CRTREC-OA-3
-           MOVE HEX-01 TO CRTREC-OA-4
-	   MOVE SPACES TO CRTREC-MAPPING-AREA.
-	   REWRITE CRTREC.
+	   MOVE PROGRESS-LOCK-ORDER-AREA TO 
+	       ORDER-AREA OF PROGRESS-SCREEN.
+	   MOVE SPACES TO PROGRESS-ROWS.
 
-	   MOVE 1 TO CRT-ROW-NUM.
+           DISPLAY AND READ PROGRESS-SCREEN ON CRT.
 
-       WRITE-NEXT-CRT-ROW.
+	   MOVE 1 TO PROGRESS-ROW-NUM.
+	   MOVE SPACES TO NEXT-PROGRESS-ROW.
 
-           MOVE NEXT-CRT-ROW TO CRTREC-ROW (CRT-ROW-NUM).
+       WRITE-NEXT-PROGRESS-ROW.
 
-           MOVE HEX-01 TO CRTREC-OA-1
-           MOVE HEX-20 TO CRTREC-OA-2
-           MOVE HEX-01 TO CRTREC-OA-3
-           MOVE HEX-01 TO CRTREC-OA-4
-	   REWRITE CRTREC.
+           MOVE NEXT-PROGRESS-ROW TO PROGRESS-ROW (PROGRESS-ROW-NUM).
+	   MOVE PROGRESS-LOCK-ORDER-AREA TO 
+	       ORDER-AREA OF PROGRESS-SCREEN.
+           DISPLAY AND READ PROGRESS-SCREEN ON CRT.
 	   
-	   ADD 1 TO CRT-ROW-NUM.
-	   MOVE SPACES TO NEXT-CRT-ROW.
+	   ADD 1 TO PROGRESS-ROW-NUM.
+	   MOVE SPACES TO NEXT-PROGRESS-ROW.
 
-       UNLOCK-AND-READ-SCREEN.
-           MOVE HEX-01 TO CRTREC-OA-1
-           MOVE HEX-80 TO CRTREC-OA-2
-           MOVE HEX-01 TO CRTREC-OA-3
-           MOVE HEX-01 TO CRTREC-OA-4
-	   REWRITE CRTREC.
-	   READ CRT.
+       UNLOCK-AND-READ-PROGRESS-SCRN.
+
+	   MOVE PROGRESS-UNLOCK-ORDER-AREA TO 
+	       ORDER-AREA OF PROGRESS-SCREEN.
+           DISPLAY AND READ PROGRESS-SCREEN ON CRT.
 
       ******************************************************************
       * ALL DONE.
       ******************************************************************
        EXIT-PROGRAM.
+           CLOSE CRT.
            EXIT PROGRAM.
 
        STOP-RUN.

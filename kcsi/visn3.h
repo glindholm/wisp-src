@@ -1,5 +1,19 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 visn2.h
 Created from notes faxed by Greg Lindholm at IDSI. This is supposed
@@ -85,19 +99,19 @@ typedef struct _i_file{
 extern short f_errno;
 
 
-extern int i_init();
-extern char* i_open();
-extern int i_make();
-extern int i_close();
-extern int i_next();
-extern int i_previous();
-extern int i_read();
-extern int i_start();
-extern int i_write();
-extern int i_rewrite();
-extern int i_delete();
-extern int i_unlock();
-extern int i_info();
+extern int i_init(void);
+extern int i_make(char* name, char* comment, void* p_parms, void* l_parms, void* keys, void* trans);
+extern char* i_open(char* name, int mode, void* l_parms);
+extern int i_close(void* f);
+extern unsigned i_read(void* f, char* record, int keynum);
+extern unsigned i_next(void* f, char* record);
+extern unsigned i_previous(void* f, char* record);
+extern int i_start(void* f, char* record, int keynum, int keysize, int mode);
+extern int i_write(void* f, char* record, unsigned size);
+extern int i_rewrite(void* f, char* record, unsigned size);
+extern int i_delete(void* f, char* record);
+extern int i_unlock(void* f);
+extern int i_info(void* f, int mode, char* result);
 
 #endif /* visn3_H */
 
@@ -105,6 +119,12 @@ extern int i_info();
 /*
 **	History:
 **	$Log: visn3.h,v $
+**	Revision 1.6  2003/06/11 19:22:10  gsl
+**	add 4.0.01 updates to fix signal problem with acu
+**	
+**	Revision 1.5  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
+**	
 **	Revision 1.4  1996/10/02 22:12:15  gsl
 **	define the acucobol i_xxx() funtions
 **	

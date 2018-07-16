@@ -1,4 +1,4 @@
-Copyright (c) 1995-2002 by NeoMedia Technologies Inc. 
+Copyright (c) 1995-2003 by NeoMedia Technologies Inc. 
 All Rights Reserved.
 
 ====================================================================
@@ -8,7 +8,7 @@ Title:          RELEASE NOTES FOR KCSI UTILITIES
 Document:       kcsi_relnotes.lis
 Last Updated:   $Date:$
 Products:       CONTROL, REPORT, INQUIRY, DATENTRY, CREATE
-Versions:       4.0.00
+Versions:       4.1.00
 
 Summary:        Release notes for changes to CONTROL, REPORT,
                 INQUIRY, DATENTRY, CREATE utilities since initial 
@@ -26,8 +26,28 @@ Voice (239) 337-3434
 Fax   (239) 337-1605
 Web   www.neom.com
 Email support@neom.com
-Ftp   ftp://support.neom.com/public/wisp
 
+
+
+CHANGES IN 4.1.00
+=================
+Added support for WISP 5.0.00.
+
+This release required WISP 5.0.00 or later.
+
+Corrected a problem in DATENTY for Acucobol Vision files where
+the last record read was being left LOCKED. When branching out
+to run INQUIRY a RECORD LOCKED error could occur.
+
+The WISP runtime trace facility (WISPDEBUG=FULL) will now also 
+activate the KCSI runtime trace facility (KCSITRACE=1) 
+automatically.
+
+
+CHANGES IN 4.0.01
+=================
+For Acucobol this release corrects a problem that would on occasion 
+cause a "Signal 11" error when exiting one of the utilities.
 
 
 CHANGES IN 4.0.00
@@ -288,6 +308,7 @@ The following table shows the release history.
 
         VERSION          RELEASE DATE
         -------          ------------
+        4.0.01           06/11/2003     Acucobol Patch
         4.0.00           11/12/2002     Combined KCSI
         ------           ----------
         3.0.04           08/14/2002     Relative file patch

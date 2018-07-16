@@ -1,0 +1,573 @@
+000100**   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       WL0034.wcb
+000500**
+000600**   Project:    WISP/TEST - LIBRARY Routines
+000700**
+000800**   Purpose:    Test LINK routine 
+000900**
+001000**   Example:    
+001050**   CALL "LINK" using FILE, TYPE, LIB, VOL, ... CC, RC 
+001100**
+006500**
+001100 Identification Division.
+001200 Program-Id.     WL0034.
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT CRT
+               ASSIGN TO "CRT",  "DISPLAY".
+
+           SELECT BASE-FILE-UFB
+               ASSIGN TO "BASEFILE", "DISK",  NODISPLAY
+               ORGANIZATION    IS INDEXED
+	       RECORD KEY IS BASE-FIL-KEY.
+
+           SELECT SEQ-FILE-UFB
+               ASSIGN TO "SEQFILE", "DISK",  NODISPLAY.
+
+000000*$SEQLINE
+           SELECT WPS-FILE-UFB
+               ASSIGN TO "WPSFILE", "DISK",  NODISPLAY
+               ORGANIZATION    IS SEQUENTIAL.
+
+001300 Data Division.
+       FILE SECTION.
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC.
+           03  CRTREC-OA.
+               05  CRTREC-OA-1             PIC X.
+               05  CRTREC-OA-2             PIC X.
+               05  CRTREC-OA-3             PIC X.
+               05  CRTREC-OA-4             PIC X.
+           03  CRTREC-MAPPING-AREA.
+               05  CRTREC-ROW  OCCURS 24 TIMES.
+                   10 CRTREC-X OCCURS 80 TIMES PIC X.
+
+       FD  BASE-FILE-UFB
+           VALUE OF FILENAME IS BASE-FIL,
+                    LIBRARY  IS BASE-LIB,
+                    VOLUME   IS BASE-VOL.
+
+       01  BASE-FIL-RECORD.
+	   05 BASE-FIL-KEY     PIC X(10).
+	   05 BASE-FIL-DATA    PIC X(70).
+
+       FD  SEQ-FILE-UFB
+           VALUE OF FILENAME IS BASE-FIL,
+                    LIBRARY  IS BASE-LIB,
+                    VOLUME   IS BASE-VOL.
+
+       01  SEQ-FIL-RECORD.
+	   05 SEQ-FIL-DATA    PIC X(80).
+
+       FD  WPS-FILE-UFB
+           VALUE OF FILENAME IS WPS-FIL,
+                    LIBRARY  IS WPS-LIB,
+                    VOLUME   IS WPS-VOL.
+
+       01  WPS-FIL-RECORD.
+	   05 WPS-FIL-DATA    PIC X(79).
+       
+
+
+001400 Working-Storage Section.
+001500
+       01  QASUB	   PIC X(8) VALUE "LINK".
+       01  QAPROG	   PIC X(8) VALUE "WL0034".
+       
+       01  failed-cnt	   pic 99 value 0.
+
+       01  base-fil	   PIC X(8) VALUE "WL0034".
+       01  base-lib	   pic x(8) VALUE "WL0034".
+       01  base-vol	   pic x(6).
+
+       01  WPS-fil	   PIC X(8).
+       01  WPS-lib	   pic x(8).
+       01  WPS-vol	   pic x(6).
+       01  WPS-FILE-EXTENSION PIC X(39) VALUE "wps".
+
+       01  SEQ-FILE-EXTENSION PIC X(39) VALUE "seq".
+
+      *   CALL "LINK" using FILE, TYPE, LIB, VOL, ... CC, RC 
+
+       01  LINK-FILE                  PIC X(8).
+       01  LINK-TYPE                  PIC X.
+       01  LINK-LIB                   PIC X(8).
+       01  LINK-VOL                   PIC X(6).
+
+       01  LINK-CC.
+           05 LINK-CC-HIGH	BINARY.
+	   05 LINK-CC-BIN	BINARY.
+       01  LINK-RC.
+           05 LINK-RC-HIGH	BINARY.
+	   05 LINK-RC-BIN	BINARY.
+       01  LINK-CC-NUM		PIC 9(5).
+       01  LINK-RC-NUM		PIC 9(5).
+
+       01  EXPECTED-CC-NUM	PIC 9(5).
+       01  EXPECTED-RC-NUM	PIC 9(5).
+
+       01  LINK-CANCEL  PIC X.
+       01  LINK-PARMS.
+           05 LINK-PARMS-HIGH	BINARY.
+	   05 LINK-PARMS-BIN	BINARY.
+
+       01  ARGS-ITEMS. 
+	       05  ARG01	PIC 9999.
+	       05  ARG02	PIC 9999.
+	       05  ARG03	PIC 9999.
+	       05  ARG04	PIC 9999.
+	       05  ARG05	PIC 9999.
+	       05  ARG06	PIC 9999.
+	       05  ARG07	PIC 9999.
+	       05  ARG08	PIC 9999.
+	       05  ARG09	PIC 9999.
+	       05  ARG10	PIC 9999.
+	       05  ARG11	PIC 9999.
+	       05  ARG12	PIC 9999.
+	       05  ARG13	PIC 9999.
+	       05  ARG14	PIC 9999.
+	       05  ARG15	PIC 9999.
+	       05  ARG16	PIC 9999.
+	       05  ARG17	PIC 9999.
+	       05  ARG18	PIC 9999.
+	       05  ARG19	PIC 9999.
+	       05  ARG20	PIC 9999.
+	       05  ARG21	PIC 9999.
+	       05  ARG22	PIC 9999.
+	       05  ARG23	PIC 9999.
+	       05  ARG24	PIC 9999.
+	       05  ARG25	PIC 9999.
+	       05  ARG26	PIC 9999.
+	       05  ARG27	PIC 9999.
+	       05  ARG28	PIC 9999.
+	       05  ARG29	PIC 9999.
+	       05  ARG30	PIC 9999.
+	       05  ARG31	PIC 9999.
+	       05  ARG32	PIC 9999.
+       01  ARGS-TABLE REDEFINES ARGS-ITEMS.
+           05  ARGS PIC 9999 OCCURS 32.
+       01  ARGS-IDX PIC 99.
+
+       01  EXPECTED-ARG  PIC 9999.
+
+       01  tst-fil	   PIC X(8).
+       01  tst-lib	   pic x(8).
+       01  tst-vol	   pic x(6).
+
+       01  rc-int4.
+           03 rc-high     BINARY  VALUE 0.
+           03 rc-bin      BINARY  value 0.
+       01  rc-num	   pic 999.
+       
+       01  IL	   PIC X(2) VALUE "IL".
+       01  IV	   PIC X(2) VALUE "IV".
+       01  INLIB   PIC X(8).
+       01  INVOL   PIC X(6).
+       
+       01  TEST-NAME PIC X(8).
+
+       01  READFDR4-MODE.
+	   03 FILLER BINARY VALUE 0.
+	   03 FILLER BINARY VALUE 0.
+
+       01  CD-keyword PIC XX VALUE "CD".
+       01  CREATE-DATE PIC 9(8).
+       01  SCRATCH-L-TYPE PIC X VALUE "L".
+       01  SCRATCH-F-TYPE PIC X VALUE "F".
+
+       01  spaces-fil   pic x(8) values spaces.
+       01  find-start-cnt-int4.
+	   05  find-start-cnt-high binary value 0.
+	   05  find-start-cnt-bin  binary value 0.
+       01  find-cnt-int4.
+	   05  find-cnt-high binary value 0.
+	   05  find-cnt-bin  binary value 0.
+       01  find-receiver   pic x(22).	   
+	   
+  
+001600 Procedure Division.
+       
+      *============================================================	  
+       0000-init.
+	   move 0 to failed-cnt.
+
+	   CALL "EXTRACT" USING
+	       IL, INLIB,
+	       IV, INVOL.
+
+      * Ensure Usage constants are set.	       
+	   if INLIB = " " or INVOL = " " then
+	       DISPLAY "INLIB and INVOL must be set to run test"
+	       go to 9999-exit.
+
+	   MOVE INVOL    TO BASE-VOL.
+
+      * Remove the lib from previous runs.
+	   perform cleanup-files.
+
+      *============================================================	  
+      * CALL "LINK" using FILE, TYPE, LIB, VOL, ... CC, RC 
+      *============================================================	  
+      * TEST: MISSING
+       test001.
+	   MOVE "TEST001" TO TEST-NAME.
+
+	   move "MISSING"	to LINK-FILE.
+
+	   move 8		to EXPECTED-CC-NUM
+	   move 20		to EXPECTED-RC-NUM
+	   
+	   PERFORM CALL-LINK-3ARGS.
+	   PERFORM CHECK-LINK-SUCCESS.
+
+      * TEST: MISSING
+       test002.
+	   MOVE "TEST002" TO TEST-NAME.
+
+	   move "MISSING"	to LINK-FILE.
+	   move "S"		to LINK-TYPE.
+
+	   move 8		to EXPECTED-CC-NUM
+	   move 20		to EXPECTED-RC-NUM
+	   
+	   PERFORM CALL-LINK-4ARGS.
+	   PERFORM CHECK-LINK-SUCCESS.
+
+      * TEST: MISSING
+       test003.
+	   MOVE "TEST003" TO TEST-NAME.
+
+	   move "MISSING"	to LINK-FILE.
+	   move "P"		to LINK-TYPE.
+	   move QAPROG		to LINK-LIB.
+	   move INVOL		to LINK-VOL.
+
+	   move 8		to EXPECTED-CC-NUM
+	   move 20		to EXPECTED-RC-NUM
+	   
+	   PERFORM CALL-LINK-6ARGS.
+	   PERFORM CHECK-LINK-SUCCESS.
+
+	   
+      * TEST: ONPATH
+       test004.
+	   MOVE "TEST004" TO TEST-NAME.
+
+           MOVE "WL0034A"  TO WPS-FIL.
+	   MOVE "ONPATH"   TO WPS-LIB.
+	   MOVE "VOLRUN"   TO WPS-VOL.
+	   PERFORM CREATE-WPS-FILE.
+
+	   move WPS-FIL		to LINK-FILE.
+	   move "S"		to LINK-TYPE.
+
+	   move 0		to EXPECTED-CC-NUM
+	   move 10		to EXPECTED-RC-NUM
+	   
+	   PERFORM CALL-LINK-4ARGS.
+	   PERFORM CHECK-LINK-SUCCESS.
+	   
+      * TEST: TYPE=P
+       test005.
+	   MOVE "TEST005" TO TEST-NAME.
+
+           MOVE TEST-NAME	TO WPS-FIL.
+	   MOVE QAPROG		TO WPS-LIB.
+	   MOVE INVOL		TO WPS-VOL.
+	   PERFORM CREATE-WPS-FILE.
+
+	   move WPS-FIL		to LINK-FILE.
+	   move "P"		to LINK-TYPE.
+	   move WPS-LIB		to LINK-LIB.
+	   move WPS-VOL		to LINK-VOL.
+
+	   move 0		to EXPECTED-CC-NUM
+	   move 10		to EXPECTED-RC-NUM
+	   
+	   PERFORM CALL-LINK-6ARGS.
+	   PERFORM CHECK-LINK-SUCCESS.
+
+      * TEST: NO TYPE (ARGS=3)
+       test006.
+	   MOVE "TEST006" TO TEST-NAME.
+
+	   move "WL0034B"	to LINK-FILE.
+
+	   move 0		to EXPECTED-CC-NUM
+	   move 15		to EXPECTED-RC-NUM
+	   
+	   PERFORM CALL-LINK-3ARGS.
+	   PERFORM CHECK-LINK-SUCCESS.
+
+      * TEST: 32 Args
+       test007.
+	   MOVE "TEST007" TO TEST-NAME.
+
+	   move "WL0034C"	to LINK-FILE.
+	   move SPACES		to LINK-TYPE.
+	   move SPACES		to LINK-LIB.
+	   move SPACES		to LINK-VOL.
+
+	   move 0		to EXPECTED-CC-NUM
+	   move 50		to EXPECTED-RC-NUM
+	   
+
+	   PERFORM VARYING ARGS-IDX FROM 1 BY 1 UNTIL ARGS-IDX = 32
+		MOVE ARGS-IDX TO ARGS (ARGS-IDX)
+	   END-PERFORM.
+	        
+	   MOVE 0  TO LINK-PARMS-HIGH.
+	   MOVE 32 TO LINK-PARMS-BIN.
+
+	   PERFORM CALL-LINK-PRECALL.
+           CALL "LINK" USING	
+		LINK-FILE, LINK-TYPE, 
+		LINK-LIB, LINK-VOL,
+		LINK-PARMS,
+		ARG01, ARG02, ARG03, ARG04, ARG05, 
+		ARG06, ARG07, ARG08, ARG09, ARG10, 
+		ARG11, ARG12, ARG13, ARG14, ARG15, 
+		ARG16, ARG17, ARG18, ARG19, ARG20, 
+		ARG21, ARG22, ARG23, ARG24, ARG25, 
+		ARG26, ARG27, ARG28, ARG29, ARG30, 
+		ARG31, ARG32
+		LINK-CC, LINK-RC.
+	   PERFORM CALL-LINK-POSTCALL.
+
+	   if  (LINK-CC-NUM NOT = EXPECTED-CC-NUM) OR
+	       (LINK-RC-NUM NOT = EXPECTED-RC-NUM) THEN
+	       add 1 to failed-cnt
+	       display QASUB " FAILED ", TEST-NAME, " WRONG CC/RC"
+	   ELSE
+	       PERFORM VARYING ARGS-IDX FROM 1 BY 1 
+		   UNTIL ARGS-IDX = 32
+		   COMPUTE EXPECTED-ARG = ARGS-IDX + 100
+		   IF ARGS (ARGS-IDX) NOT = EXPECTED-ARG THEN
+		       MOVE 32 TO ARGS-IDX
+	               add 1 to failed-cnt
+	               display QASUB " FAILED ", TEST-NAME, 
+		              " UNEXPECTED ARG RETURNED"
+		   END-IF
+	       END-PERFORM
+	   END-IF.
+	   
+
+      * TEST: CANCEL EXIT -> LINK -> LOGOFF
+       test008.
+	   MOVE "TEST008" TO TEST-NAME.
+
+	   move "WL0034D"	to LINK-FILE.
+	   move SPACES		to LINK-TYPE.
+	   move SPACES		to LINK-LIB.
+	   move SPACES		to LINK-VOL.
+	   MOVE "C"		TO LINK-CANCEL.
+
+	   move 16		to EXPECTED-CC-NUM
+	   move 0		to EXPECTED-RC-NUM
+	   
+	   MOVE 0  TO LINK-PARMS-HIGH.
+	   MOVE 0  TO LINK-PARMS-BIN.
+
+	   PERFORM CALL-LINK-PRECALL.
+           CALL "LINK" USING	
+		LINK-FILE, LINK-TYPE, 
+		LINK-LIB, LINK-VOL,
+		LINK-PARMS, LINK-CANCEL
+		LINK-CC, LINK-RC.
+	   PERFORM CALL-LINK-POSTCALL.
+	   PERFORM CHECK-LINK-SUCCESS.
+            
+      *============================================================	  
+       9999-done.
+           IF failed-cnt = 0   THEN
+                DISPLAY QASUB " completion successful."
+           ELSE 
+                DISPLAY QASUB " failed "
+	   END-IF.
+	   
+       9999-exit.
+            EXIT PROGRAM.
+       9999-stop.
+            STOP RUN.
+
+      *============================================================
+
+      *============================================================
+       CLEANUP-FILES.
+	   move QAPROG     TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+
+           MOVE "WL0034A"  TO base-FIL.
+	   MOVE "ONPATH"   TO base-LIB.
+	   MOVE "VOLRUN"   TO base-VOL.
+	   PERFORM SCRATCH-BASE-FILE.
+
+       
+      *============================================================
+       SCRATCH-BASE-FILE.
+	   CALL "SCRATCH" USING 
+	       SCRATCH-F-TYPE, BASE-FIL, BASE-LIB, BASE-VOL, 
+	       RC-int4.
+
+      *============================================================
+       SCRATCH-BASE-LIB.
+	   move spaces	   TO base-fil.
+	   move INVOL	   TO base-vol.
+	   CALL "SCRATCH" USING 
+	       SCRATCH-L-TYPE, BASE-FIL, BASE-LIB, BASE-VOL, 
+	       RC-int4.
+	       
+      *============================================================
+       CHECK-LINK-SUCCESS.
+	   if  (LINK-CC-NUM NOT = EXPECTED-CC-NUM) OR
+	       (LINK-RC-NUM NOT = EXPECTED-RC-NUM) THEN
+	       add 1 to failed-cnt
+	       display QASUB " FAILED ", TEST-NAME, " WRONG CC/RC"
+	   END-IF.
+       
+      *============================================================
+
+      * CALL "LINK" using FILE, TYPE, LIB, VOL, ... CC, RC 
+
+      *============================================================
+       CALL-LINK-PRECALL.
+	   MOVE 0	TO LINK-CC-HIGH.
+	   MOVE 0	TO LINK-CC-BIN.
+	   MOVE 0	TO LINK-RC-HIGH.
+	   MOVE 0	TO LINK-RC-BIN.
+
+       CALL-LINK-POSTCALL.
+	   MOVE LINK-CC-BIN	TO LINK-CC-NUM.
+	   MOVE LINK-RC-BIN	TO LINK-RC-NUM.
+
+       CALL-LINK-3ARGS.
+	   PERFORM CALL-LINK-PRECALL.
+           CALL "LINK" USING LINK-FILE, LINK-CC, LINK-RC.
+	   PERFORM CALL-LINK-POSTCALL.
+
+       CALL-LINK-4ARGS.
+	   PERFORM CALL-LINK-PRECALL.
+           CALL "LINK" USING LINK-FILE, LINK-TYPE, LINK-CC, LINK-RC.
+	   PERFORM CALL-LINK-POSTCALL.
+
+       CALL-LINK-6ARGS.
+	   PERFORM CALL-LINK-PRECALL.
+           CALL "LINK" USING	LINK-FILE, LINK-TYPE, 
+				LINK-LIB, LINK-VOL,
+				LINK-CC, LINK-RC.
+	   PERFORM CALL-LINK-POSTCALL.
+
+      *============================================================
+      *============================================================	  
+       TEST-FILE-EXISTS.
+	   CALL "READFDR4" USING
+	       tst-fil, tst-lib, tst-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 0  then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-EXISTS FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", tst-fil,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+       TEST-FILE-MISSING.
+	   CALL "READFDR4" USING
+	       tst-fil, tst-lib, tst-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 20  AND rc-bin NOT = 16 then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-MISSING FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", tst-fil,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+       TEST-LIB-MISSING.
+	   move spaces to spaces-fil.
+	   move 0 to find-start-cnt-high.
+	   move 1 to find-start-cnt-bin.
+	   move 0 to find-cnt-high.
+	   move 1 to find-cnt-bin.
+	   CALL "FIND" USING
+	       spaces-fil, tst-lib, tst-vol,
+	       find-start-cnt-int4, find-cnt-int4,
+	       find-receiver.
+	   if find-cnt-bin NOT = 0  then
+	       add 1 to failed-cnt
+	       display "TEST-LIB-MISSING FAILED ",
+		   TEST-NAME,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+       TEST-LIB-EXISTS.
+	   move spaces to spaces-fil.
+	   move 0 to find-start-cnt-high.
+	   move 1 to find-start-cnt-bin.
+	   move 0 to find-cnt-high.
+	   move 1 to find-cnt-bin.
+	   CALL "FIND" USING
+	       spaces-fil, tst-lib, tst-vol,
+	       find-start-cnt-int4, find-cnt-int4,
+	       find-receiver.
+	   if find-cnt-bin NOT = 1  then
+	       add 1 to failed-cnt
+	       display "TEST-LIB-EXISTS FAILED ",
+		   TEST-NAME,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+	       
+      *============================================================
+       CREATE-WPS-FILE.
+           CALL "WSETFILEXT" USING WPS-FILE-EXTENSION.
+	   OPEN OUTPUT WPS-FILE-UFB.
+	   MOVE "PROCEDURE " TO WPS-FIL-DATA.
+	   WRITE WPS-FIL-RECORD.
+	   MOVE "RETURN CODE = 10 " TO WPS-FIL-DATA.
+	   WRITE WPS-FIL-RECORD.
+	   CLOSE WPS-FILE-UFB.
+
+	   MOVE WPS-FIL TO TST-FIL.
+	   MOVE WPS-LIB TO TST-LIB.
+	   MOVE WPS-VOL TO TST-VOL.
+	   PERFORM TEST-FILE-EXISTS.
+	       
+      *============================================================
+       CREATE-BASE-FILE.
+      * Create a file to copy.
+	   OPEN OUTPUT BASE-FILE-UFB.
+	   WRITE BASE-FIL-RECORD.
+	   CLOSE BASE-FILE-UFB.
+
+      * Ensure file exists.
+	   move base-fil to tst-fil.
+	   move base-lib to tst-lib.
+	   move base-vol to tst-vol.
+	   perform TEST-FILE-EXISTS.
+	   if rc-bin NOT = 0 THEN GO TO 9999-exit.
+
+	       
+      *============================================================
+       CREATE-SEQ-FILE.
+      * Create a file to copy.
+           CALL "WSETFILEXT" USING SEQ-FILE-EXTENSION.
+	   OPEN OUTPUT SEQ-FILE-UFB.
+	   WRITE SEQ-FIL-RECORD.
+	   CLOSE SEQ-FILE-UFB.
+
+  
+006600**   End of WL0034.wcb 

@@ -99,9 +99,6 @@ int main(int argc, char*argv[])
 /*
 **	History:
 **	$Log: testftok.c,v $
-**	Revision 1.1.2.1  2003/02/07 19:27:57  gsl
-**	sync with $HEAD
-**	
 **	Revision 1.3  2003/02/07 15:08:33  gsl
 **	fix warning
 **	

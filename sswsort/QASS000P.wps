@@ -1,0 +1,102 @@
+* $Id:$
+*-------*---------*---------*---------*---------*---------*---------*--|
+
+*  QA SyncSort version of wsort.
+*
+*  QA MAIN MENU
+
+PROCEDURE QASS000P
+declare &testname as string(8) initial "QASS000P"
+message "RUNNING QA SYNCSORT PROCEDURE MAIN MENU ", &testname
+
+* Setup defaults
+declare &progvol  as string(6) initial "SOURCE"
+declare &runvol   as string(6) initial "SOURCE"
+declare &proglib  as string(8) initial "SSWSORT "
+declare &runlib   as string(8) initial "SSWSORT "
+set progvol=&progvol, proglib=&proglib
+set runvol=&runvol,   runlib=&runlib
+
+declare &pf as integer
+declare &runname as string(8)
+
+start:
+prompt pfkey = &pf
+  center "QA SYNCSORT PROCEDURE MAIN MENU";;;
+  center "(1)  Run QASS001P (SORT 1 INDEXED)                ";
+  center "(2)  Run QASS002P (SORT SELECT 1 INDEXED)         ";
+  center "(3)  Run QASS003P (SORT REFORMAT SELECT 1 INDEXED)";
+  center "(4)  Run QASS004P (SORT REFORMAT SELECT 2 INDEXED)";
+  center "(5)  Run QASS005P (SORT REFORMAT SELECT 2 CONSEC) ";
+  center "(6)  Run QASS006P (MERGE 2 CONSEC)                ";
+  center "(7)  Run QASS007P (MERGE SELECT 2 CONSEC)         ";
+  center "(8)  Run QASS008P (SORT 1 CONSEC, REPLACE=YES)    ";
+  center "(9)  Run QASS009P (SORT 1 INDEXED, ##TEMP)        ";
+  center "(10) Run QASS010P (SORT STABLE, 1 CONSEC)         ";;;
+  center "(16) Exit."
+
+if &pf =  1 then goto run01
+if &pf =  2 then goto run02
+if &pf =  3 then goto run03
+if &pf =  4 then goto run04
+if &pf =  5 then goto run05
+if &pf =  6 then goto run06
+if &pf =  7 then goto run07
+if &pf =  8 then goto run08
+if &pf =  9 then goto run09
+if &pf = 10 then goto run10
+if &pf = 16 then return
+
+goto start
+
+run01:
+assign &runname = "QASS001P"
+goto runandreport
+
+run02:
+assign &runname = "QASS002P"
+goto runandreport
+
+run03:
+assign &runname = "QASS003P"
+goto runandreport
+
+run04:
+assign &runname = "QASS004P"
+goto runandreport
+
+run05:
+assign &runname = "QASS005P"
+goto runandreport
+
+run06:
+assign &runname = "QASS006P"
+goto runandreport
+
+run07:
+assign &runname = "QASS007P"
+goto runandreport
+
+run08:
+assign &runname = "QASS008P"
+goto runandreport
+
+run09:
+assign &runname = "QASS009P"
+goto runandreport
+
+run10:
+assign &runname = "QASS010P"
+goto runandreport
+
+runandreport:
+message "RUNNING QA SYNCSORT PROCEDURE ", &runname
+rc: run &runname in &runlib on &runvol
+prompt 	center &runname, " completed with RC = ", rc;;;
+       	center "Press (ENTER) to continue";;
+goto start
+
+
+
+return
+*-------*---------*---------*---------*---------*---------*---------*--|

@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*****************************************************************************
                  C. I. S.   P R O G R A M   M O D U L E
           (c)Copyright 1991 Corporate Information Systems, Inc.
@@ -376,9 +399,9 @@ void find_linenum( TEXT *txt )
 	start_state = 0;
 
 	/* This is the driver loop for "machine" */
-	for ( i = 0; txt->text[i]; i++ )
+	for ( i = 0; txt->text[(int)i]; i++ )
 	{
-		state = machine[state][txt->text[i]];
+		state = machine[(int)state][(int)txt->text[(int)i]];
 		switch ( state )
 		{
 			case	0:
@@ -399,7 +422,7 @@ void find_linenum( TEXT *txt )
 			case	7:
 			case   32:	start_pos = i;
 			case    8:
-			case   33:	line_number = (line_number * 10) + (txt->text[i] - ZERO);
+			case   33:	line_number = (line_number * 10) + (txt->text[(int)i] - ZERO);
 					  	break;
 
 			case   34:
@@ -898,6 +921,12 @@ void free_linenum(void)
 /*
 **	History:
 **	$Log: vsebasic.c,v $
+**	Revision 1.9  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.8  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
 **	Revision 1.7  1996/09/03 22:23:59  gsl
 **	drcs update
 **	

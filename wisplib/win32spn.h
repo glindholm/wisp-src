@@ -1,7 +1,28 @@
-/* 
-	Copyright (c) 1996 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 
 /*
 **	File:		win32spn.h
@@ -35,15 +56,31 @@
 /*
 **	Function Prototypes
 */
-int win32spawnvp(char *sh_parm[], int Mode);
-int win32spawnlp(const char *cmd, const char *args, int Mode);
-void win32SetNewEnv(char *envstr);
+int  WL_win32spawnvp(const char *sh_parm[], int Mode);
+int  WL_win32spawnlp(const char *cmd, const char *args, int Mode);
+void WL_win32SetNewEnv(char *envstr);
 
 #endif /* WIN32SPN_H */
 
 /*
 **	History:
 **	$Log: win32spn.h,v $
+**	Revision 1.8  2003/01/31 19:18:00  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.7  2002/12/04 20:52:16  gsl
+**	Add to OPTIONS file
+**	WPROC
+**	WPROCDEBUG
+**	ACPCONFIG
+**	ACPMAP
+**	WISP_SCRATCH_MODE/WISPSCRATCHMODE
+**	WISP_DISPLAY_8BIT/DISPLAY8BIT/WISPDISPLAY8BIT
+**	WISPSYSADMIN
+**	
+**	Revision 1.6  2002/07/10 21:05:34  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.5  1998/05/05 21:36:22  gsl
 **	Add HIDDEN_CMD mode flag
 **	

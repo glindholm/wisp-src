@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 	ring:	An multi-use data structure that implements 
 			a Linked-List
@@ -107,7 +128,7 @@ typedef struct ring_struct ring_struct;
 
 static list_struct *pointpos(list_struct* list_head,int position);
 static int real_get(ring_struct* ring_ptr, int position, char* element, list_struct** list_rtn_ptr);
-static unload_element(char* element, list_struct* list_ptr, int size);
+static void unload_element(char* element, list_struct* list_ptr, int size);
 static int free_element(ring_struct* ring_ptr, list_struct* list_ptr);
 static int validatepos(int cnt, int position);
 static int quitpath(int cnt, int position);
@@ -155,7 +176,7 @@ int ring_open(
 	ring_ptr->head.next	= &ring_ptr->head;
 	ring_ptr->head.prev	= &ring_ptr->head;
 
-	if ( rc = new_block( ring_ptr, alloc1 ) )
+	if ( (rc = new_block( ring_ptr, alloc1 )) )
 	{
 		free(ring_ptr);
 		return(rc);
@@ -175,13 +196,13 @@ int ring_close(ring_struct* ring_ptr)
 	list_struct *curr_block, *next_block;
 	int	rc;
 
-	if ( rc = check_id(ring_ptr) ) return(rc);
+	if ( (rc = check_id(ring_ptr)) ) return(rc);
 
 	curr_block = ring_ptr->blocklist;
 	
 	while(curr_block)
 	{
-		if (rc = list_corrupt(curr_block)) return(rc);
+		if ((rc = list_corrupt(curr_block))) return(rc);
 		next_block = curr_block->next;
 		free((char *)curr_block);
 		curr_block = next_block;
@@ -209,7 +230,7 @@ int ring_add(ring_struct *ring_ptr, int position,void *element)
 	int	realpos;
 	list_struct *list_ptr;
 
-	if ( rc = check_id(ring_ptr) ) return(rc);
+	if ( (rc = check_id(ring_ptr)) ) return(rc);
 
 	if ( ring_ptr->sorted )
 	{
@@ -222,7 +243,7 @@ int ring_add(ring_struct *ring_ptr, int position,void *element)
 
 		if ( position != 0 && position != -1 )				/* 0 && -1 are always valid for add		*/
 		{
-			if ( rc = validatepos(ring_ptr->ecnt, position) ) return(rc);
+			if ( (rc = validatepos(ring_ptr->ecnt, position)) ) return(rc);
 		}
 	}
 
@@ -234,11 +255,11 @@ int ring_add(ring_struct *ring_ptr, int position,void *element)
 	{
 		if ( !ring_ptr->freelist )
 		{
-			if ( rc = new_block( ring_ptr, ring_ptr->alloc2 ) ) return(rc);
+			if ( (rc = new_block( ring_ptr, ring_ptr->alloc2 )) ) return(rc);
 		}
 
 		list_ptr = ring_ptr->freelist;					/* Get an element off the freelist		*/
-		if ( rc = list_corrupt(list_ptr) ) return(rc);
+		if ( (rc = list_corrupt(list_ptr)) ) return(rc);
 
 		ring_ptr->freelist = list_ptr->next;				/* Update freelist pointer.			*/
 
@@ -251,7 +272,7 @@ int ring_add(ring_struct *ring_ptr, int position,void *element)
 		strcpy((char *)(list_ptr+1),element);
 	}
 
-	if ( rc = realadd(&ring_ptr->head,list_ptr,realpos) ) return(rc);
+	if ( (rc = realadd(&ring_ptr->head,list_ptr,realpos)) ) return(rc);
 
 	ring_ptr->ecnt += 1;
 	return(0);
@@ -297,7 +318,7 @@ int ring_replace(ring_struct *ring_ptr, int position, void *element)
 	list_struct *list_ptr, *list_new;
 	int	realpos;
 
-	if ( rc = check_id(ring_ptr) ) return(rc);
+	if ( (rc = check_id(ring_ptr)) ) return(rc);
 
 	if ( ring_ptr->sorted )
 	{
@@ -305,7 +326,7 @@ int ring_replace(ring_struct *ring_ptr, int position, void *element)
 	}
 	else
 	{
-		if ( rc = validatepos(ring_ptr->ecnt, position) ) return(rc);
+		if ( (rc = validatepos(ring_ptr->ecnt, position)) ) return(rc);
 	}
 
 	realpos = quitpath(ring_ptr->ecnt,position);
@@ -346,11 +367,11 @@ int ring_remove(ring_struct *ring_ptr, int position, void *element)
 	int	rc;
 	list_struct *list_ptr;
 
-	if ( rc = check_id(ring_ptr) ) return(rc);
+	if ( (rc = check_id(ring_ptr)) ) return(rc);
 
-	if ( rc = real_get(ring_ptr,position,element,&list_ptr) ) return(rc);
+	if ( (rc = real_get(ring_ptr,position,element,&list_ptr)) ) return(rc);
 
-	if ( rc = free_element(ring_ptr, list_ptr) ) return(rc);
+	if ( (rc = free_element(ring_ptr, list_ptr)) ) return(rc);
 
 	return(0);
 }
@@ -371,9 +392,9 @@ int ring_get(ring_struct *ring_ptr, int position, void *element)
 	int	rc;
 	list_struct *list_ptr;
 
-	if ( rc = check_id(ring_ptr) ) return(rc);
+	if ( (rc = check_id(ring_ptr)) ) return(rc);
 
-	if ( rc = real_get(ring_ptr,position,element,&list_ptr) ) return(rc);
+	if ( (rc = real_get(ring_ptr,position,element,&list_ptr)) ) return(rc);
 	return(0);
 }
 
@@ -388,9 +409,9 @@ int ring_find(ring_struct *ring_ptr, void *match, int *position, void *element)
 	list_struct *list_ptr;
 	int	temppos;
 
-	if ( rc = check_id(ring_ptr) ) return(rc);
+	if ( (rc = check_id(ring_ptr)) ) return(rc);
 
-	if ( rc = findpos(ring_ptr,match,&temppos,&list_ptr) ) return(rc);
+	if ( (rc = findpos(ring_ptr,match,&temppos,&list_ptr)) ) return(rc);
 
 	if (position)
 	{
@@ -409,7 +430,7 @@ int ring_count(ring_struct* ring_ptr, int* count)
 {
 	int	rc;
 
-	if ( rc = check_id(ring_ptr) ) return(rc);
+	if ( (rc = check_id(ring_ptr)) ) return(rc);
 
 	*count = ring_ptr->ecnt;
 	return(0);
@@ -486,7 +507,7 @@ static int real_get(ring_struct* ring_ptr, int position, char* element, list_str
 	list_struct *list_ptr;
 	int	realpos;
 
-	if ( rc = validatepos(ring_ptr->ecnt, position) ) return(rc);
+	if ( (rc = validatepos(ring_ptr->ecnt, position)) ) return(rc);
 
 	realpos = quitpath(ring_ptr->ecnt,position);
 
@@ -503,7 +524,7 @@ static int real_get(ring_struct* ring_ptr, int position, char* element, list_str
 INTERNAL	unload_element:	Copy out the contents of a ring element.
 
 *********************************************************************************************************************************/
-static unload_element(char* element, list_struct* list_ptr, int size)
+static void unload_element(char* element, list_struct* list_ptr, int size)
 {
 	if ( element )								/* If element then copy it out			*/
 	{
@@ -512,7 +533,6 @@ static unload_element(char* element, list_struct* list_ptr, int size)
 		else
 			strcpy(element, (char *)(list_ptr+1));
 	}
-	return 0;
 }
 
 /*********************************************************************************************************************************
@@ -795,6 +815,15 @@ char *ring_error(int rc)
 /*
 **	History:
 **	$Log: ring.c,v $
+**	Revision 1.12  2003/02/04 17:22:57  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.11  2003/02/04 17:05:01  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.10  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
 **	Revision 1.9  1996/07/23 18:17:50  gsl
 **	drcs update
 **	

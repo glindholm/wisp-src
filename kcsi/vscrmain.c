@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 
 /*----
@@ -27,8 +41,6 @@ vscrffld.c	Data entry for defining a field from a file
 vscrbchk.c	Checks after each record processed from the
 		input specifications, whether the block
 		has reached its logical end.
-
-vscrsqz.c	Array squeezing routine.
 
 vscrspky.c	Routine for setting the global split key
 		variable.
@@ -121,7 +133,7 @@ int main(int argc, char **argv)
 	sprintf(the_title,"CREATE %s.%s", create_version(), create_platform());
 	vwang_title(the_title);
 
-	initglbs(applname);
+	WL_initglbs(applname);
 
 	kcsi_create_main();
 
@@ -151,11 +163,14 @@ short *Astdlib_f_errno() /* From ACU 5.2 sub.h */
 /*
 **	History:
 **	$Log: vscrmain.c,v $
-**	Revision 1.12.2.2  2002/11/14 16:02:58  gsl
-**	Replace cr_debug the trace level
+**	Revision 1.23  2003/02/07 15:03:38  gsl
+**	remove empty file
 **	
-**	Revision 1.12.2.1  2002/11/12 15:56:42  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.22  2003/02/04 19:19:08  gsl
+**	fix header
+**	
+**	Revision 1.21  2002/11/14 16:03:29  gsl
+**	Replace cr_debug the trace level
 **	
 **	Revision 1.20  2002/10/18 20:13:04  gsl
 **	Move Acucobol 5.1 f_error support from kv3.c to vscrmain.c

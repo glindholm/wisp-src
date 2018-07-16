@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1997 NeoMedia Technologies, Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 #include "create.h"
@@ -24,11 +38,13 @@ static char rcsid[]="$Id:$";
 #	wisp/src/kcsi/kcsi_acu_install.txt
 #	wisp/src/kcsi/kcsi_mf_install.txt
 #	wisp/src/kcsi/kcsi_packlist.txt
-#	wisp/src/doc/wisp_relnotes.lis
+#	wisp/src/doc/wisp_relnotes.txt
 #	wisp/src/acu/wruncbl.umf
+#	wisp/src/acu/wrun32wisp_kcsi_acu50.mak
+#	wisp/src/acu/wrun32wisp_kcsi_acu51.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 */
-#define KCSI_VERSION	4000
+#define KCSI_VERSION	4100
 
 /*
 **	Static data
@@ -108,8 +124,14 @@ char *create_platform(void)
 /*
 **	History:
 **	$Log: version.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:39  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.12  2003/04/11 18:34:16  gsl
+**	Add support for Acucobol 5.0 and 5.1
+**	
+**	Revision 1.11  2003/03/17 21:39:24  gsl
+**	KCSI Version 4.1.00
+**	
+**	Revision 1.10  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.9  2002/10/22 17:59:02  gsl
 **	Combined KCSI

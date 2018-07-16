@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		wt_debug.c.c
@@ -183,8 +196,7 @@ char *the_line;
 	return 0;
 }
 
-debug4_print_statement(the_statement)
-NODE the_statement;
+int debug4_print_statement(NODE the_statement)
 {
 	static int first = 1;
 	static int debug;
@@ -210,9 +222,7 @@ NODE the_statement;
 	return 0;
 }
 
-debug_print_tree(the_tree,depth)
-NODE	the_tree;
-int	depth;
+int debug_print_tree(NODE the_tree, int depth)
 {
 	if (!the_tree) return 0;
 
@@ -251,6 +261,12 @@ int	depth;
 /*
 **	History:
 **	$Log: wt_debug.c,v $
+**	Revision 1.9  2003/02/04 18:02:20  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.8  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
 **	Revision 1.7  1996/10/09 16:31:19  gsl
 **	Fix warnings
 **	

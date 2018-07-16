@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		filecopy.c
 **
@@ -7,40 +26,28 @@ static char rcsid[]="$Id:$";
 **
 **	RCS:		$Source:$
 **
-**	Purpose:	???
+**	Purpose:	This routine allows the copying of a file to another file
 **
 **	Routines:	
-**	xxx()		???
+**	FILECOPY()	
 */
 
-/* FILECOPY.C ... This routine allows the copying of a file to another file.							*/
 
 /*
 **	Includes
 */
 
 #include <stdio.h>
-#ifdef VMS
-#include <rmsdef.h>
-#include <descrip.h>
-#include <ssdef.h>
-#include <fab.h>
-#include <lnmdef.h>
-#include <climsgdef.h>
-#include "spawn.h"
-#endif
 
 #include <string.h>
-#include <varargs.h>                                                                    /* This routine uses a variable number	*/
+#include <stdarg.h>                                                                    /* This routine uses a variable number	*/
 											/* of arguments.			*/
 #include "idsistd.h"
 #include "fcopy.h"
 #include "wfiles.h"
 #include "wcommon.h"
-#include "movebin.h"
 #include "wperson.h"
 #include "werrlog.h"
-#include "cobrun.h"
 #include "filext.h"
 #include "paths.h"
 #include "wfname.h"
@@ -52,11 +59,13 @@ static char rcsid[]="$Id:$";
 	FILECOPY( infile, inlib, invol, outfile, [outlib, [outvol]], retcode )
 */
 
-void FILECOPY(va_alist)
-va_dcl
+void FILECOPY(const char* arg1_infile,
+	      const char* arg2_inlib,
+	      const char* arg3_invol,
+	      const char* arg4_outfile,
+	      ...)
 {
-#define	ROUTINE		18200
-	va_list the_args;								/* A pointer to traverse the stack.	*/
+	va_list the_args;
 	int arg_count;
 	int4 *return_code;
 	int4 filecopy_status;								/* Status from the lib call.		*/
@@ -71,22 +80,17 @@ va_dcl
 	int nvalid;									/* Not Valid call flag.			*/
 	int has_ext;
 
-#ifdef VMS
-#include "filecopy.d"
-	struct FAB fab1; 								/* Structure point to File ATT Block.	*/
-	int rms_status;
-	char cmd[255];									/* buffer to hold cmd string 		*/
-	uint4 vms_status;
-#endif
-
 	filecopy_status = 0;
 	nvalid = 0;
 
-	va_start(the_args);								/* Set pointer to top of stack.		*/
-	arg_count = va_count(the_args);							/* How many args are there ?		*/
-	if (arg_count < 4 || arg_count > 7)
+	arg_count = WL_va_count();							/* How many args are there ?		*/
+
+	WL_wtrace("FILECOPY","ENTRY","FILECOPY([%8.8s], [%8.8s], [%6.6s], [%8.8s], ...) args=%d",
+		arg1_infile, arg2_inlib, arg3_invol, arg4_outfile, arg_count);
+
+	if (arg_count < 5 || arg_count > 7)
 	{
-		werrlog(ERRORCODE(2),"","","",0,0,0,0,0);				/* Invalid arguments.			*/
+		WL_werrlog(WERRCODE(18202),"","","",0,0,0,0,0);				/* Invalid arguments.			*/
 		return;
 	}
 
@@ -97,30 +101,23 @@ va_dcl
 	strcpy(new_lib, lib);
 	strcpy(new_vol, vol);
 
-	va_start(the_args);								/* Go back to the top of the stack.	*/
 
-	ptr = va_arg(the_args, char*);							/* Get addr. of the file.		*/
-	arg_count--;									/* One less argument.			*/
-	memcpy(file,ptr,8);
+	memcpy(file, arg1_infile, 8);
 	if (0==memcmp(file,"        ",8))
 	{
 		nvalid = 1;								/* Invalid: no file name		*/
 	}
 
-	ptr = va_arg(the_args, char*);							/* Get addr. of the lib.		*/
-	arg_count--;									/* One less argument.			*/
-	memcpy(lib,ptr,8);
+	memcpy(lib, arg2_inlib, 8);
 	if (0==memcmp(lib,"        ",8))						/* If the library is not specified	*/
 	{										/* then use defualt INLIB.		*/
-		get_defs(DEFAULTS_IL,lib);
+		WL_get_defs(DEFAULTS_IL,lib);
 	}
 
-	ptr = va_arg(the_args, char*);	   						/* Get addr. of the vol.		*/
- 	arg_count--;									/* One less argument.			*/
-	memcpy(vol,ptr,6);
+	memcpy(vol,arg3_invol,6);
 	if (0==memcmp(vol,"      ",6))				      			/* If the volume is not specified	*/
 	{										/* then use defualt INVOL.		*/
-		get_defs(DEFAULTS_IV,vol);
+		WL_get_defs(DEFAULTS_IV,vol);
 		if (0==memcmp(vol,"      ",6))						/* Must specify a volume.		*/
 		{
 			nvalid = 1;
@@ -128,33 +125,36 @@ va_dcl
 		}         
 	}
 
-	ptr = va_arg(the_args, char*);							/* Get addr. of the new file name.	*/
-	arg_count--;									/* One less argument.			*/
-	memcpy(new_file,ptr,8);
-	if (0==memcmp(new_file,"        ",8)) memcpy(new_file,file,8);			/* If the new file is not specified.	*/
+	memcpy(new_file, arg4_outfile, 8);
+	if (0==memcmp(new_file,"        ",8)) 						/* If the new file is not specified.	*/
+	{
+		memcpy(new_file,file,8);
+	}
 
-	if (arg_count>1)
+	va_start(the_args, arg4_outfile);						/* Setup varargs */
+
+	if (arg_count>5)
 	{
 		ptr = va_arg(the_args, char*);						/* Get addr. of the new library name.	*/
-		arg_count--;								/* One less arg.			*/
 		memcpy(new_lib,ptr,8);
 	}
 	if (0==memcmp(new_lib,"        ",8)) memcpy(new_lib,lib,8);			/* If the new lib not specified.	*/
 
-	if (arg_count>1)
+	if (arg_count>6)
 	{
 		ptr = va_arg(the_args, char*);						/* Get addr. of the new volume name.	*/
-		arg_count--;								/* One less arg.			*/
 		memcpy(new_vol,ptr,6);
 	}
 	if (0==memcmp(new_vol,"      ",6)) memcpy(new_vol,vol,6);			/* If the new vol not specified.	*/
 
 	return_code = va_arg(the_args, int4*);						/* Get the addr. of the return code.	*/
 
+	va_end(the_args);
+
 	if (nvalid)
 	{
-		if (nvalid == 1) werrlog(ERRORCODE(2),file,lib,vol,0,0,0,0,0);		/* Invalid arguments.			*/
-		else if (nvalid == 2) werrlog(ERRORCODE(4),file,lib,vol,0,0,0,0,0);	/* Not yet supported.			*/
+		if (nvalid == 1) werrlog(WERRCODE(18202),file,lib,vol,0,0,0,0,0);	/* Invalid arguments.			*/
+		else if (nvalid == 2) werrlog(WERRCODE(18204),file,lib,vol,0,0,0,0,0);	/* Not yet supported.			*/
 
 		if (!filecopy_status) filecopy_status = 44;
 		goto filecopy_return;
@@ -165,9 +165,7 @@ va_dcl
 
 	mode = 0;
 
-	/* SAVE_WISPFILEXT;  don't save it -- we will use the ext of old_filename for new_filename */
-
-	name_end = wfname(&mode, vol, lib, file, old_filename);        			/* Construct the native filename.	*/
+	name_end = WL_wfname(&mode, vol, lib, file, old_filename);      		/* Construct the native filename.	*/
 	*name_end = '\0'; 								/* null terminate it			*/
 
 	mode = IS_OUTPUT;
@@ -182,66 +180,10 @@ va_dcl
 		goto filecopy_return;
 	}
 
-	name_end = wfname(&mode, new_vol, new_lib, new_file, new_filename);		/* Construct the new native filename.	*/
+	name_end = WL_wfname(&mode, new_vol, new_lib, new_file, new_filename);		/* Construct the new native filename.	*/
 	*name_end = '\0'; 								/* null terminate it			*/
 
-#ifdef VMS
 
-	filecopy_status = check_existence(old_filename);
-	if (!filecopy_status)
-	{
-		filecopy_status=20;							/* File not found.			*/
-		goto filecopy_return;
-	}
-
-	if (check_existence(new_filename))						/* New file already exists		*/
-	{
-		filecopy_status = 52;
-		goto filecopy_return;
-	}
-
-	o_desc.dsc$w_length = strlen(old_filename);
-	fab1 = cc$rms_fab;								/* Initialize fab to rms file.		*/
-	fab1.fab$l_fna = old_filename;							/* Name of file.			*/
-	fab1.fab$b_fns = strlen(old_filename);						/* Size of file name.			*/
-	fab1.fab$b_shr = FAB$M_NIL;							/* Set file to no share.		*/
-											/* Open file with name from wfanme.	*/
-	rms_status = sys$open(&fab1);
-	if (rms_status == RMS$_ACT || rms_status == RMS$_BUSY) 				/* Is the file in use?			*/
-	{
-		filecopy_status=32;							/* Do not copy the file and return	*/
-		sys$close(&fab1);							/* a status of 32.  Close the file.	*/
-		goto filecopy_return;
-	}
-	sys$close(&fab1);								/* Close the file.			*/
-
-	makepath(new_filename);								/* Ensure directories are created	*/
-	sprintf(cmd,"BACKUP/IGNORE=INTERLOCK %s %s",old_filename,new_filename);
-	filecopy_status = spawn2(SPAWN_CMD_QUIET,cmd,"", &vms_status);
-
-	if (filecopy_status != SS$_NORMAL)						/* IF spawn failed ...			*/
-	{
-		if (filecopy_status == SS$_ACCVIO) filecopy_status = 24;		/* Access violation. No update access.	*/
-		else filecopy_status = 48;						/* An I/O error occured.		*/
-	}
-	else
-	{
-		if (vms_status != SS$_NORMAL && vms_status != 268435457)		/* IF spawned command failed ...	*/
-		{
-			if (vms_status == 279150708)					/* Insufficient privs or file protection*/
-			{								/*  violation.				*/
-				filecopy_status = 24;
-			}
-			else	filecopy_status = 48;
-		}
-		else
-		{
-			filecopy_status = 0;						/* Set to 0 for successful.		*/
-		}
-	}
-#endif
-
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 
 	/*
 	**	Make sure the file extensions are the same.
@@ -249,8 +191,8 @@ va_dcl
 	{
 		char	*ext_old, *ext_new;
 
-		ext_old = osd_ext(old_filename);
-		ext_new = osd_ext(new_filename);
+		ext_old = WL_osd_ext(old_filename);
+		ext_new = WL_osd_ext(new_filename);
 
 		if ( 	(ext_old && ext_new && 0 != strcmp(ext_old,ext_new)) ||
 			(ext_old && !ext_new) ||
@@ -310,15 +252,15 @@ va_dcl
 	strcpy(new_filename_idx, new_filename);
 	if (has_ext)
 	{
-		if (ptr = strrchr(old_filename_idx,'.')) *ptr = '\0';		/* cut off the extension			*/
-		if (ptr = strrchr(new_filename_idx,'.')) *ptr = '\0';
+		if ((ptr = strrchr(old_filename_idx,'.'))) *ptr = '\0';		/* cut off the extension			*/
+		if ((ptr = strrchr(new_filename_idx,'.'))) *ptr = '\0';
 	}
 	strcat(old_filename_idx,".idx");
 	strcat(new_filename_idx,".idx");
 	if (!fexists(old_filename_idx))						/* See if there is a .idx index portion		*/
 	{
-		if (ptr = strrchr(old_filename_idx,'.')) *ptr = '\0';		/* cut off the extension			*/
-		if (ptr = strrchr(new_filename_idx,'.')) *ptr = '\0';
+		if ((ptr = strrchr(old_filename_idx,'.'))) *ptr = '\0';		/* cut off the extension			*/
+		if ((ptr = strrchr(new_filename_idx,'.'))) *ptr = '\0';
 
 		strcat(old_filename_idx,".vix");
 		strcat(new_filename_idx,".vix");
@@ -390,7 +332,7 @@ va_dcl
 			/*
 			**	The idx copy failed, try to undo the data portion copy before returning
 			*/
-			unlink(new_filename);
+			wisp_unlink(new_filename);
 			
 			filecopy_status=24;
 			goto filecopy_return;
@@ -398,25 +340,73 @@ va_dcl
 	}
 	
 
-#endif /* unix || MSDOS || WIN32 */
                                
 filecopy_return:
 
 	wtrace("FILECOPY","RETURN","Return Code = [%d]", filecopy_status);
 	
-	wswap(&filecopy_status);
-	PUTBIN(return_code,&filecopy_status,sizeof(int4));
+	WL_put_swap(return_code, filecopy_status);
 }                                                         
 
 
 /*
 **	History:
 **	$Log: filecopy.c,v $
-**	Revision 1.13.2.2  2002/11/14 21:12:21  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.31  2003/01/31 21:24:13  gsl
+**	fix -Wall warnings
 **	
-**	Revision 1.13.2.1  2002/10/09 21:03:00  gsl
-**	Huge file support
+**	Revision 1.30  2003/01/31 17:23:48  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.29  2003/01/16 19:41:27  gsl
+**	WL_werrlog
+**	
+**	Revision 1.28  2003/01/16 17:27:44  gsl
+**	Switch to stdarg
+**	
+**	Revision 1.27  2002/12/11 17:03:06  gsl
+**	use wisp_unlink()
+**	
+**	Revision 1.26  2002/12/10 20:54:15  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.25  2002/12/09 21:09:27  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.24  2002/10/18 19:14:11  gsl
+**	Cleanup
+**	
+**	Revision 1.23  2002/07/29 15:46:50  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
+**	
+**	Revision 1.22  2002/07/16 16:24:56  gsl
+**	Globals
+**	
+**	Revision 1.21  2002/07/12 19:10:11  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.20  2002/07/12 17:00:55  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.19  2002/07/11 20:29:07  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.18  2002/07/11 14:33:59  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.17  2002/07/10 21:05:16  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.16  2002/06/26 01:41:13  gsl
+**	Change fcopy() to wisp_fcopy()
+**	
+**	Revision 1.15  2002/06/25 17:46:03  gsl
+**	Remove WISPFILEXT as a global, now must go thru set/get routines
+**	
+**	Revision 1.14  2002/06/21 03:10:35  gsl
+**	Remove VMS & MSDOS
 **	
 **	Revision 1.13  1998/05/19 21:57:26  gsl
 **	fix warning on WIN32

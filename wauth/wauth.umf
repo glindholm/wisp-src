@@ -1,0 +1,35 @@
+#
+#	Copyright (c) 2003 Neomedia Technologies, All rights reserved.
+#	$Id:$
+#
+#	File:		wauth.umf
+#
+#
+
+CDEBUG   =
+
+L_WISP  = wisp
+L_VIDEO = video
+
+WC=../wispcommon
+VC=../videolib
+WU=../wisputils
+
+include $(WISPSRC)/port/make.include
+
+CFLAGS  = $(CFLAGS0) -I $(WC) -I $(VC) -I $(WU)
+
+UTILS_LIBS_LINK = $(WISP_LIBS_LINK) $(MATH_LINK) $(CURSES_LINK)
+
+ALL= 	wauthorize
+
+all:	$(ALL)
+
+clean:
+	rm -f $(ALL) *.o core *~ 
+	rm -f wauthorize.tab wauthorize.log
+	rm -rf doc
+
+wauthorize: wauthorize.c $(WU)/prompt.c $(WC)/wlicense.h $(WC)/intdef.h $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wauthorize.c $(WU)/prompt.c $(UTILS_LIBS_LINK)
+

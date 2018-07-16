@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 **	File:		wcopy.c
@@ -27,7 +42,12 @@ static char rcsid[]="$Id:$";
 #include <stdlib.h>
 #include <string.h>
 
-#define EXT_FILEXT
+#ifdef unix
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
+
 #include "filext.h"
 #include "wcommon.h"
 #include "wperson.h"
@@ -38,6 +58,7 @@ static char rcsid[]="$Id:$";
 #include "level.h"
 #include "idsisubs.h"
 #include "vwang.h"
+#include "vssubs.h"
 
 static int vscopy();
 static int get_options();
@@ -56,10 +77,9 @@ static void copy();
 
 static	char 	*COPY_VERSION = "WISP Copy Program - Version 1.01.00";
 static	int4	N[255];
-static	int4 	two=2;
 
-#define GP	gp_args.ptrs[gp_cnt++] = (char *)
-static struct { char *ptrs[160]; } gp_args;
+#define GP	gp_args[gp_cnt++] = (char *)
+static char* gp_args[GETPARM_MAX_ARGS];
 static int gp_cnt;
 
 static char *terminate_text;
@@ -94,7 +114,7 @@ static char terminate_buff[80];
 **	03/01/93	Add support for GETPARM. GSL
 **
 */
-main(argc,argv)
+int main(argc,argv)
 int	argc;
 char	*argv[];
 {
@@ -115,9 +135,9 @@ char	*argv[];
         }
         /*************************************************/
 	vwang_title("WISP COPY");
-	initglbs("WCOPY   ");
+	WL_initglbs("WCOPY   ");
 
-	if (pfkeys12())
+	if (WL_pfkeys12())
 	{
 		terminate_text = "Press (12) to end COPY processing";
 		terminate_key_enabled = PFKEY_12_ENABLED | PFKEY_16_ENABLED;
@@ -135,17 +155,17 @@ char	*argv[];
 
 #ifndef unix
 
-	wexit(vscopy());
+	WL_wexit(vscopy());
 
 #else /* unix */
 	if (argc == 1)
 	{
-		wexit(vscopy());
+		WL_wexit(vscopy());
 	}
 	if (argc != 1 && argc != 6 && argc != 7) badusage();
 
 	strcpy( key, argv[1] );
-	upper_string( key );
+	WL_upper_string( key );
 
 	if ( 0 == strcmp( "LIBRARY", key ) )
 	{
@@ -196,25 +216,38 @@ int	*status;
 {
 	char old_filename[132], new_filename[132];					/* Strings to contain the filenames.	*/
 	char libpath[80];
-	int4 mode, savemode;
+	int4 mode;
 	char *name_end;
 	char cmd[100];									/* buffer to hold cmd string 		*/
 	int found, has_ext;
 
 	*status = 0;
 
-	mode = 0;
-	if ( *type == 'L' ) mode |= IS_LIB;						/* Doing a library copy.		*/
-	savemode = mode;
-
-	name_end = wfname(&mode, oldvol, oldlib, oldfile, old_filename);		/* Construct the old filename.		*/
-	*name_end = '\0';
+	if ( *type == 'L' ) 								/* Doing a library copy.		*/
+	{
+		name_end = WL_wanglib2path(oldvol, oldlib, old_filename);			/* Construct the old filename.		*/
+		*name_end = '\0';
+	}
+	else
+	{
+		mode = 0;
+		name_end = WL_wfname(&mode, oldvol, oldlib, oldfile, old_filename);	/* Construct the old filename.		*/
+		*name_end = '\0';
+	}
 	if ( *(--name_end) == '/' ) *name_end = '\0';					/* separator not needed			*/
 
-	mode = savemode;
 	
-	name_end = wfname(&mode, newvol, newlib, newfile, new_filename);		/* Construct the new filename.		*/
-	*name_end = '\0';
+	if ( *type == 'L' ) 								/* Doing a library copy.		*/
+	{
+		name_end = WL_wanglib2path(newvol, newlib, new_filename);			/* Construct the new filename.		*/
+		*name_end = '\0';
+	}
+	else
+	{
+		mode = 0;
+		name_end = WL_wfname(&mode, newvol, newlib, newfile, new_filename);	/* Construct the new filename.		*/
+		*name_end = '\0';
+	}
 	if ( *(--name_end) == '/' ) *name_end = '\0';					/* separator not needed			*/
 
 	strcpy(libpath,new_filename);
@@ -229,7 +262,7 @@ int	*status;
 
 
 
-	if ( !fexists(libpath) )							/* If new_lib doesn't exist.		*/
+	if ( !WL_fexists(libpath) )							/* If new_lib doesn't exist.		*/
 	{
 		if(mkdir(libpath,0777))							/* Create the new lib.			*/
 		{
@@ -251,9 +284,9 @@ int	*status;
 	found = 0;
 	has_ext = hasext(old_filename);
 
-	if (fexists(old_filename))							/* file does exist in this form	*/
+	if (WL_fexists(old_filename))							/* file does exist in this form	*/
 	{
-		if (fexists(new_filename))						/* New file already exists.		*/
+		if (WL_fexists(new_filename))						/* New file already exists.		*/
 		{
 			*status = 52;
 			return;
@@ -276,10 +309,10 @@ int	*status;
 
 	strcat(old_filename,".idx");							/* else try it with a .idx extension	*/
 	strcat(new_filename,".idx");
-	if (fexists(old_filename))							/* idx found				*/
+	if (WL_fexists(old_filename))							/* idx found				*/
 	{
 
-		if (fexists(new_filename))						/* Does new file already exists?	*/
+		if (WL_fexists(new_filename))						/* Does new file already exists?	*/
 		{
 			*status = 52;
 			return;
@@ -296,9 +329,9 @@ int	*status;
 
 	strcpy(strrchr(old_filename,'.'),".dat");					/* replace the '.idx' with a '.dat'	*/
 	strcpy(strrchr(new_filename,'.'),".dat");
-	if (fexists(old_filename))							/* dat found				*/
+	if (WL_fexists(old_filename))							/* dat found				*/
 	{
-		if (fexists(new_filename))						/* Does new file already exists?	*/
+		if (WL_fexists(new_filename))						/* Does new file already exists?	*/
 		{
 			*status = 52;
 			return;
@@ -364,13 +397,12 @@ static int vscopy()
 	char	*messid;
 	int	pfkey;
 	int4	i;
-	int4	vacnt;
 	int4	retcode;
 
 	for (i=0; i<(sizeof(N)/sizeof(N[0])); ++i) 				/* Initialize a swapped numbers array		*/
 	{
 		N[i]=i; 
-		wswap(&N[i]);
+		WL_wswap(&N[i]);
 	}
 
 	memcpy(copy,"FILE   ",7);
@@ -387,10 +419,9 @@ static int vscopy()
 		{
 			if (copy[0] == 'F')					/* Do a file copy				*/
 			{
-				vacnt = 7;
-				wvaset(&vacnt);
+				WL_set_va_count(7);
 				FILECOPY(ifile,ilib,ivol,ofile,olib,ovol,&retcode);
-				wswap(&retcode);
+				WL_wswap(&retcode);
 				if (retcode == 0)
 				{
 					sprintf(message,"File %8.8s in Library %8.8s on Volume %6.6s was created",ofile,olib,ovol);
@@ -460,7 +491,6 @@ char	*ilib, *ivol, *olib, *ovol;
 	int	remaining;
 	int4	start;
 	int4	count;
-	int4	vacnt;
 	int4	retcode;
 	char	reciever[2200];
 	char	ifile[9], ofile[9];
@@ -479,17 +509,16 @@ char	*ilib, *ivol, *olib, *ovol;
 		if (remaining < 1)
 		{
 			count = RSIZE;
-			wswap(&count);
-			wswap(&start);
-			vacnt = 6;
-			wvaset(&vacnt);
+			WL_wswap(&count);
+			WL_wswap(&start);
+			WL_set_va_count(6);
 			FIND("?       ",ilib,ivol,&start,&count,reciever);
-			wswap(&count);
+			WL_wswap(&count);
 			if (count == 0) break;					/* Nothing found so break out			*/
 
 			remaining = count;					/* How many were returned			*/
 
-			wswap(&start);						/* Setup start for next time			*/
+			WL_wswap(&start);						/* Setup start for next time			*/
 			start += RSIZE;
 
 			fileptr = reciever + 14;				/* Point to the first file in reciever		*/
@@ -503,12 +532,12 @@ char	*ilib, *ivol, *olib, *ovol;
 		memcpy(ofile,ifile,8);
 		remaining -= 1;							/* Using up one of the remaining		*/
 
-		if (wfexists(ifile,ilib,ivol))					/* Check if Input file exists			*/
+		if (WL_wfexists(ifile,ilib,ivol))					/* Check if Input file exists			*/
 		{
 			int	copyit;
 
 			copyit = 0;
-			if (wfexists(ofile,olib,ovol))				/* Check if Output file exists			*/
+			if (WL_wfexists(ofile,olib,ovol))				/* Check if Output file exists			*/
 			{
 				char	option[2];
 
@@ -528,10 +557,9 @@ char	*ilib, *ivol, *olib, *ovol;
 
 			if (copyit)						/* Do the copy					*/
 			{
-				vacnt = 7;
-				wvaset(&vacnt);
+				WL_set_va_count(7);
 				FILECOPY(ifile,ilib,ivol,ofile,olib,ovol,&retcode);
-				wswap(&retcode);
+				WL_wswap(&retcode);
 				if (retcode == 0)
 				{
 					copycnt += 1;				/* Copy succeeded				*/
@@ -588,11 +616,11 @@ char *ifile, *ilib, *ivol, *copy;
 	xf = xl = xv = xc = "K";
 
 	memset(ifile,' ',8);
-	get_defs(DEFAULTS_IL,ilib);
-	get_defs(DEFAULTS_IV,ivol);
+	WL_get_defs(DEFAULTS_IL,ilib);
+	WL_get_defs(DEFAULTS_IV,ivol);
 
 	pfkey_mask = terminate_key_enabled;
-	wswap(&pfkey_mask);
+	WL_wswap(&pfkey_mask);
 	gptype = "I ";
 	message = COPY_VERSION;
 	messid = "0001";
@@ -623,8 +651,7 @@ char *ifile, *ilib, *ivol, *copy;
 		GP "E";
 		GP "P";	GP &pfkey_mask;
 
-		wvaset(&two);
-		GETPARM(&gp_args,&gp_cnt);
+		GETPARM2(gp_args,gp_cnt);
 
 		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
 		    pfkey_recv[0] == terminate_key_pressed) 
@@ -682,54 +709,63 @@ char *ifile, *ilib, *ivol, *copy;
 		**	Check if voloume and library exists
 		*/
 		{
-			int4	vacnt, start, count;
+			int4	start, count;
 			char	recvr[22];
 			char	buff[80];
 
-#if defined(unix) || defined(MSFS)
-			if (0==wlgtrans(ivol,buff))
+			if (0==WL_wlgtrans(ivol,buff))
 			{
 				messid = "0010";
 				message = "VOLUME not found, please respecify";
 				xv = "R";
 				continue;
 			}
-#endif
-			vacnt = 6;
 			start = 1;
-			wswap(&start);
+			WL_wswap(&start);
 			count = 1;
-			wswap(&count);
+			WL_wswap(&count);
 
-			wvaset(&vacnt);
+			WL_set_va_count(6);
 			FIND("        ", ilib, ivol, &start, &count, recvr);
-			wswap(&count);
+			WL_wswap(&count);
 			if (count == 0)
 			{
 				messid = "0011";
-#if defined(unix) || defined(MSFS)
 				message = "LIBRARY not found, please respecify";
 				xl = "R";
-#else
-				message = "LIBRARY or VOLUME not found, please respecify";
-				xl = "R";
-				xv = "R";
-#endif
 				continue;
 			}
 		}
 
 		if (copy[0] == 'L')						/* Library was found				*/
 		{
-			use_last_prb();						/* back fill the getparm			*/
+			/*
+			**	Update the PUTPARM with updated file info.
+			**	The WL_use_last_prb() is an internal "hint" to GETPARM
+			**	to use the last PRB.  This will prevent GETPARM from
+			**	possibly updating the wrong "INPUT" putparm if
+			**	there are multiple.
+			**
+			**	GETPARM does not fully correctly handle link-levels
+			**	and PUTPARM chaining so this scenerio can happen:
+			**	If the original "INPUT" putparm is not labeled then
+			**	it will be deleted once used (instead of just being
+			**	marked as used).  If there is another INPUT putparm
+			**	even at a lower link-level it will be found by the
+			**	RD GETPARM and incorrectly updated.  The call to 
+			**	WL_use_last_prb() tell GETPARM to just update the last
+			**	PUTPARM if it still exists instead of going looking
+			**	for a matching PUTPARM.
+			*/	
+			WL_use_last_prb();					/* back fill the getparm			*/
 			gptype = "RD";
 			done = 1;
 			continue;
 		}
 		
-		if (wfexists(ifile,ilib,ivol)) 					/* File exists so return			*/
+		if (WL_wfexists(ifile,ilib,ivol)) 					/* File exists so return			*/
 		{
-			use_last_prb();						/* back fill the getparm			*/
+			WL_use_last_prb();					/* back fill the getparm			*/
 			gptype = "RD";	
 			done = 1;
 			continue;
@@ -781,18 +817,17 @@ char *ifile, *ilib, *ivol, *copy;
 	char	*message;
 	char	*messid;
 	char	*xf,*xl,*xv;
-	int4	vacnt;
 	int4	retcode;
 	char	buff[80];
 
 	xf = xl = xv = "K";
 
 	memset(ofile,' ',8);
-	get_defs(DEFAULTS_OL,olib);
-	get_defs(DEFAULTS_OV,ovol);
+	WL_get_defs(DEFAULTS_OL,olib);
+	WL_get_defs(DEFAULTS_OV,ovol);
 
 	pfkey_mask = terminate_key_enabled;
-	wswap(&pfkey_mask);
+	WL_wswap(&pfkey_mask);
 	gptype = "I ";
 	message = COPY_VERSION;
 
@@ -840,8 +875,7 @@ char *ifile, *ilib, *ivol, *copy;
 			GP "P";	GP &pfkey_mask;
 		}
 
-		wvaset(&two);
-		GETPARM(&gp_args,&gp_cnt);
+		GETPARM2(gp_args,gp_cnt);
 
 		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
 		    pfkey_recv[0] == terminate_key_pressed) 
@@ -852,7 +886,7 @@ char *ifile, *ilib, *ivol, *copy;
 		gptype = "R ";
 		xf = xl = xv = "K";
 		pfkey_mask = terminate_key_enabled;
-		wswap(&pfkey_mask);
+		WL_wswap(&pfkey_mask);
 
 		leftjust(ovol,6);
 		if (' '==ovol[0])
@@ -884,14 +918,13 @@ char *ifile, *ilib, *ivol, *copy;
 			}
 		}
 
-#if defined(unix) || defined(MSFS)
 		/*
 		**	Check if volume exists
 		*/
 		{
 			char	buff[80];
 
-			if (0==wlgtrans(ovol,buff))
+			if (0==WL_wlgtrans(ovol,buff))
 			{
 				messid = "0010";
 				message = "VOLUME not found, please respecify";
@@ -899,7 +932,6 @@ char *ifile, *ilib, *ivol, *copy;
 				continue;
 			}
 		}
-#endif
 
 		if ( 0==memcmp(ivol,ovol,6) && 0==memcmp(ilib,olib,8) )
 		{
@@ -913,14 +945,13 @@ char *ifile, *ilib, *ivol, *copy;
 
 		if (copy[0] == 'F')
 		{
-			if (wfexists(ofile,olib,ovol))				/* Check if file exists				*/
+			if (WL_wfexists(ofile,olib,ovol))				/* Check if file exists				*/
 			{
 				if (pfkey_recv[0] == PFKEY_3_PRESSED) 		/* If second time thru & PF3 was pressed	*/
 				{
-					vacnt = 5;
-					wvaset(&vacnt);
+					WL_set_va_count(5);
 					SCRATCH("F",ofile,olib,ovol,&retcode);	/* Scratch the target file			*/
-					wswap(&retcode);
+					WL_wswap(&retcode);
 					if (retcode == 0) return 0;		/* Scratch suceeded.				*/
 
 					messid = "F002";			/* Scratch failed				*/
@@ -934,7 +965,7 @@ char *ifile, *ilib, *ivol, *copy;
 				message = "\204File already exists.  Respecify or press (3) to scratch it.";
 				xf = "R";
 				pfkey_mask = PFKEY_3_ENABLED | terminate_key_enabled;
-				wswap(&pfkey_mask);
+				WL_wswap(&pfkey_mask);
 				continue;
 			}
 		}
@@ -978,7 +1009,7 @@ char *messid;
 	char	pfkey_recv[1];
 
 	pfkey_mask = PFKEY_1_ENABLED | terminate_key_enabled;
-	wswap(&pfkey_mask);
+	WL_wswap(&pfkey_mask);
 	gptype = "I ";
 
 	pfkey_recv[0] = '@';
@@ -993,8 +1024,7 @@ char *messid;
 	GP "E";
 	GP "P";	GP &pfkey_mask;
 
-	wvaset(&two);
-	GETPARM(&gp_args,&gp_cnt);
+	GETPARM2(gp_args,gp_cnt);
 
 	if (pfkey_recv[0] == PFKEY_16_PRESSED || 
 	    pfkey_recv[0] == terminate_key_pressed) 
@@ -1041,16 +1071,14 @@ static int get_dummy()
 		GP message; GP &N[strlen(message)];
 	GP "E";
 
-	wvaset(&two);
-	GETPARM(&gp_args,&gp_cnt);
+	GETPARM2(gp_args,gp_cnt);
 
 	gp_cnt = 0;
 	GP "ID"; GP "R"; GP "LOCK    "; GP pfkey_recv; GP "DUM2"; GP "WCOPY "; GP &N[1]; 
 		GP message; GP &N[strlen(message)];
 	GP "E";
 
-	wvaset(&two);
-	GETPARM(&gp_args,&gp_cnt);
+	GETPARM2(gp_args,gp_cnt);
 
 	return 0;
 }
@@ -1098,7 +1126,6 @@ char *option;
 	char	*message;
 	char	*messid;
 	char	*xo, *xn;
-	int4	vacnt;
 	int4	retcode;
 	char	buff[80];
 	char	newname[9];
@@ -1106,7 +1133,7 @@ char *option;
 	xn = xo = "K";
 
 	pfkey_mask = terminate_key_enabled;
-	wswap(&pfkey_mask);
+	WL_wswap(&pfkey_mask);
 	gptype = "I ";
 	message = COPY_VERSION;
 	messid = "0018";
@@ -1153,8 +1180,7 @@ char *option;
 		GP "P";	GP &pfkey_mask;
 
 
-		wvaset(&two);
-		GETPARM(&gp_args,&gp_cnt);
+		GETPARM2(gp_args,gp_cnt);
 
 		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
 		    pfkey_recv[0] == terminate_key_pressed) 
@@ -1165,7 +1191,7 @@ char *option;
 		gptype = "R ";
 		xo = xn = "K";
 		pfkey_mask = terminate_key_enabled;
-		wswap(&pfkey_mask);
+		WL_wswap(&pfkey_mask);
 
 		/*
 		**	Validate the OPTION field
@@ -1188,10 +1214,9 @@ char *option;
 
 		if (option[0] == 'S')						/* Scratch the output file first		*/
 		{
-			vacnt = 5;
-			wvaset(&vacnt);
+			WL_set_va_count(5);
 			SCRATCH("F",ofile,olib,ovol,&retcode);			/* Scratch the target file			*/
-			wswap(&retcode);
+			WL_wswap(&retcode);
 			if (retcode == 0) return 0;				/* Scratch suceeded.				*/
 
 			messid = "F002";					/* Scratch failed				*/
@@ -1210,7 +1235,7 @@ char *option;
 			continue;
 		}
 
-		if (wfexists(newname,olib,ovol))
+		if (WL_wfexists(newname,olib,ovol))
 		{
 			messid = "0022";
 			message = "The new file name specified already exists";
@@ -1220,10 +1245,9 @@ char *option;
 
 		if (option[0] == 'R')
 		{
-			vacnt = 6;
-			wvaset(&vacnt);
-			wrename("F",ofile,olib,ovol,newname,&retcode);
-			wswap(&retcode);
+			WL_set_va_count(6);
+			RENAME("F",ofile,olib,ovol,newname,&retcode);
+			WL_wswap(&retcode);
 			if (retcode == 0) return 0;				/* Rename suceeded.				*/
 
 			messid = "F003";					/* Rename failed				*/
@@ -1283,7 +1307,7 @@ int4 retcode;
 	char	pfkey_recv[1];
 
 	pfkey_mask = terminate_key_enabled;
-	wswap(&pfkey_mask);
+	WL_wswap(&pfkey_mask);
 	gptype = "I ";
 	messid = "F001";
 	sprintf(message,"\204Copy failed with return code = %04d",retcode);
@@ -1316,8 +1340,7 @@ int4 retcode;
 	GP "E";
 	GP "P";	GP &pfkey_mask;
 
-	wvaset(&two);
-	GETPARM(&gp_args,&gp_cnt);
+	GETPARM2(gp_args,gp_cnt);
 
 	if (pfkey_recv[0] == PFKEY_16_PRESSED || 
 	    pfkey_recv[0] == terminate_key_pressed) 
@@ -1331,6 +1354,51 @@ int4 retcode;
 /*
 **	History:
 **	$Log: wcopy.c,v $
+**	Revision 1.33  2003/04/24 13:43:32  gsl
+**	Comments on WL_use_last_prb()
+**	
+**	Revision 1.32  2003/02/20 16:49:23  gsl
+**	use GETPARM2() the 2 arg interface to GETPARM()
+**	
+**	Revision 1.31  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.30  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.29  2003/01/30 21:11:22  gsl
+**	Change RENAME to use stdarg.h
+**	
+**	Revision 1.28  2002/07/25 17:03:42  gsl
+**	MSFS->WIN32
+**	
+**	Revision 1.27  2002/07/23 21:24:54  gsl
+**	wrename -> RENAME
+**	
+**	Revision 1.26  2002/07/12 19:10:22  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.25  2002/07/12 17:17:03  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.24  2002/07/11 14:33:56  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.23  2002/07/10 21:06:30  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.22  2002/07/10 04:27:32  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.21  2002/07/09 04:13:50  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.20  2002/06/28 04:02:57  gsl
+**	Work on native version of wfopen and wfname
+**	
+**	Revision 1.19  2002/06/25 18:18:35  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
 **	Revision 1.18  2000/03/13 19:16:52  gsl
 **	Fix WIN32 warning
 **	

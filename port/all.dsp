@@ -83,7 +83,15 @@ SOURCE=.\make.include
 # End Source File
 # Begin Source File
 
+SOURCE=.\makewisp.umf
+# End Source File
+# Begin Source File
+
 SOURCE=..\doc\portwin32.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\wispship.umf
 # End Source File
 # End Target
 # End Project

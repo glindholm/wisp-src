@@ -1,13 +1,23 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	     Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 /********************************************************************************************************************************
  *	WANG USERSUBS "LOGOFF"													*
@@ -19,58 +29,56 @@ static char rcsid[]="$Id:$";
 
 #include "idsistd.h"
 #include "wexit.h"
+#include "wglobals.h"
+#include "werrlog.h"
+#include "vwang.h"
+#include "wdefines.h"
+#include "wisplib.h"
 
-extern int4 LOGOFFFLAG;
-extern int4 CANEXITFLAG;
-
-
-#ifdef VMS
-#include <descrip.h>
-
-static $DESCRIPTOR(logoff_command,"logoutnow");		/*parameter is descriptor*/
-
-
-void LOGOFF(void)
-{
-	LOGOFFFLAG = 1;									/* We've hit a logoff			*/
-	if ( CANEXITFLAG )
-	{
-		wexit(32L);								/* Don't logoff just terminate		*/
-	}
-
-	lib$do_command(&logoff_command);
-}
-#endif
 
 #ifdef unix
 #include <sys/types.h>
 #include <signal.h>
-#include "idsistd.h"
-#include "wdefines.h"
+#include <unistd.h>
 
 void LOGOFF(void)
 {
 	int 	gpid, kpid, rc;
 	char	*ptr;
 
-	LOGOFFFLAG = 1;								/* We've hit a logoff				*/
-	if ( CANEXITFLAG )							/* Cancel exit was set so don't logoff just	*/
+
+	WL_wtrace("LOGOFF","ENTRY","PID=%d WISPGID=%d GID=%d", 
+		(int)getpid(), WL_wgetpgrp(), (int)getpgrp());
+
+	wisp_set_LOGOFFFLAG(1);							/* We've hit a logoff				*/
+	if ( wisp_get_CANEXITFLAG() )						/* Cancel exit was set so don't logoff just	*/
 	{									/* bubble up to the next link-level.		*/
+		WL_wtrace("LOGOFF","CANCELEXIT","LOGOFF with CANEXITFLAG=%d",wisp_get_CANEXITFLAG());
 		wexit(32);
 	}
 
 	vwang_shut();
 
+	/*
+	**  Ignore hangup signals 
+	**  When the parent process is killed this one may get an SIGHUP
+	*/
+	signal( SIGHUP,  SIG_IGN );
+
 	ptr = getenv(WISP_CANCELEXIT_ENV);
-	if ( ptr && *ptr && 0!=strcmp(ptr,"0"))								/* Cancel exit was set BUT we went thru a script*/
+	if ( ptr && *ptr && 0!=strcmp(ptr,"0"))					/* Cancel exit was set BUT we went thru a script*/
 	{									/* or some other non-kosher route to get here	*/
 										/* and we don't have a contiguous path back up	*/
 										/* to the cancel-exit point. So we are going to	*/
 										/* kill the process immediately below the cancel*/
 										/* exit point and hope we get back correctly.	*/
+
+		WL_wtrace("LOGOFF","CANCELEXIT","LOGOFF with [%s=%s]",WISP_CANCELEXIT_ENV,ptr);
+
 		rc = sscanf(ptr,"%d",&kpid);					/* - Get the pid to kill.			*/
 		if ( rc != 1 )
 		{
+			WL_wtrace("LOGOFF","CANCELEXIT","Mis-formed kill process id");
 			wexit(32);						/* This should not happen -- Just exit		*/
 		}
 
@@ -78,6 +86,8 @@ void LOGOFF(void)
 		{
 			if (kpid != getpid())					/* - If not current process then kill it.	*/
 			{
+				WL_wtrace("LOGOFF","CANCELEXIT","KILL pid=%d signal=%d (SIGKILL)",
+					kpid,(int)SIGKILL);
 				kill((pid_t)kpid,SIGKILL);			/* Kill the process below the cancel-exit point	*/
 			}
 			wexit(32);						/* - This process is probably dead already but	*/
@@ -86,7 +96,8 @@ void LOGOFF(void)
 	}
 
 										/* No cancel-exit so really LOGOFF		*/
-	gpid=wgetpgrp();							/* Get process group id 			*/
+	gpid=WL_wgetpgrp();							/* Get process group id 			*/
+	WL_wtrace("LOGOFF","KILL","GROUP WISPGID=%d signal=%d (SIGKILL)", -gpid, (int)SIGKILL);
 	kill((pid_t)-gpid,SIGKILL);						/* Kill all procs in our group			*/
 
 	/*
@@ -94,6 +105,7 @@ void LOGOFF(void)
 	**	might not work so try again with the *REAL* group id.
 	*/
 	gpid=getpgrp();								/* Get the *REAL* process group id 		*/
+	WL_wtrace("LOGOFF","KILL","GROUP gid=%d signal=%d (SIGKILL)", -gpid, (int)SIGKILL);
 	kill((pid_t)-gpid,SIGKILL);						/* Kill all procs in our group			*/
 
 	wexit(32);
@@ -101,22 +113,14 @@ void LOGOFF(void)
 
 #endif
 
-#ifdef MSDOS
-LOGOFF()
-{
-	/*
-	**	No equivalent to LOGOFF on MSDOS so we just do a full exit.
-	*/
-	wexit(32L);
-}
-#endif /* MSDOS */
 
 #ifdef WIN32
 void LOGOFF(void)
 {
+	WL_wtrace_entry("LOGOFF");
 
-	LOGOFFFLAG = 1;								/* We've hit a logoff				*/
-	if ( CANEXITFLAG )							/* Cancel exit was set so don't logoff just	*/
+	wisp_set_LOGOFFFLAG(1);							/* We've hit a logoff				*/
+	if ( wisp_get_CANEXITFLAG() )						/* Cancel exit was set so don't logoff just	*/
 	{									/* bubble up to the next link-level.		*/
 		wexit(32);
 	}
@@ -130,6 +134,36 @@ void LOGOFF(void)
 /*
 **	History:
 **	$Log: logoff.c,v $
+**	Revision 1.23  2003/07/22 19:02:21  gsl
+**	ignore SIGHUP during a logoff
+**	
+**	Revision 1.22  2003/07/22 18:06:19  gsl
+**	add tracing for UNIX
+**	
+**	Revision 1.21  2003/07/22 17:48:58  gsl
+**	add tracing for UNIX
+**	
+**	Revision 1.20  2003/01/31 21:40:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.19  2003/01/31 17:23:48  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.18  2002/12/10 17:09:18  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.17  2002/12/09 21:09:29  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.16  2002/07/10 21:05:19  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.15  2002/07/01 04:02:39  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.14  2002/06/21 03:10:37  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.13  1996/08/29 02:38:25  gsl
 **	Fix check of CANCEL-EXIT to not count if value is ")'
 **	thats "0".

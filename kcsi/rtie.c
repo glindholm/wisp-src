@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 1.	An unpacking table is built with codes for unpacking
 	the input record(s) into the output record.
@@ -25,7 +39,6 @@ there.
 #include "kcsio.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)rtie.c	1.10 6/8/93";
 
 /*----
 Indexes for the elements.
@@ -740,7 +753,7 @@ static int count_lit_dec(char *str)
 		if(*str == '.')
 			dec = 0;
 		else
-		if((isdigit(*str)) && (dec != -1))
+		if((isdigit((int)*str)) && (dec != -1))
 			++dec;
 		++str;
 		}
@@ -837,8 +850,11 @@ void rpt_tie()
 /*
 **	History:
 **	$Log: rtie.c,v $
-**	Revision 1.4.2.1  2002/11/12 15:56:36  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.10  2003/02/20 19:29:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.9  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.8  2002/10/24 15:48:31  gsl
 **	Make globals unique

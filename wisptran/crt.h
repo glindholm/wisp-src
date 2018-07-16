@@ -1,24 +1,31 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
 */
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+
 
 /*
 **	File:		crt.h
 **
 **	Purpose:	To hold CRT defines
-**
-**
-**	History:
-**	mm/dd/yy	Written by ...
 **
 */
 
@@ -48,6 +55,12 @@ EXT int  crt_record_count INIT_ZERO;
 /*
 **	History:
 **	$Log: crt.h,v $
+**	Revision 1.7  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.6  2003/02/04 17:33:20  gsl
+**	fix copyright header
+**	
 **	Revision 1.5  1996/08/31 01:56:02  gsl
 **	drcs update
 **	

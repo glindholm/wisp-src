@@ -1,12 +1,25 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include <stdio.h>
 
 #include "dtype.h"
 #include "shrthand.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)rcmp.c	1.9 9/6/93";
 
 /*----
 Bug in UNIX memcmp always returns 0 for equality and -1 for
@@ -24,7 +37,7 @@ Shorthand
 #define	OP_ADDRESS	(op->_base + op->_pos)
 
 
-static mc(char* mem1,char* mem2,int len);
+static int mc(char* mem1,char* mem2,int len);
 static int comp_eq(DTYPE *lop,DTYPE *rop);
 static int comp_mem(DTYPE *lop,DTYPE *rop);
 static int comp_lt(DTYPE *lop,DTYPE *rop);
@@ -35,7 +48,6 @@ static void cmbcat(DTYPE *lop,DTYPE *rop);
 static double doubleit(DTYPE *op);
 static void undoubleit(double fl,DTYPE *op);
 
-static int comp_blank(DTYPE *lop);
 
 /*----
 Main for testing comparison logic
@@ -175,6 +187,7 @@ static int comp_mem(DTYPE *lop,DTYPE *rop)
 /*----
 Specialized compares to check for blank, zeroes or space
 ------*/
+#ifdef NOT_USED
 static int comp_blank(DTYPE *lop)
 {
 	if(lop->_type & IS_NUM)
@@ -182,6 +195,7 @@ static int comp_blank(DTYPE *lop)
 	else
 		return(KCSI_comp_space(lop));
 }
+#endif /* NOT_USED */
 
 int KCSI_comp_zero(DTYPE *lop)
 {
@@ -376,7 +390,7 @@ static void undoubleit(double fl,DTYPE *op)
 To handle UNIX memcmp bug. Fancy shmancy to removed
 side effects if char is unsigned.
 ------*/
-static mc(char* mem1,char* mem2,int len)
+static int mc(char* mem1,char* mem2,int len)
 {
 	int ch1, ch2;
 
@@ -396,8 +410,11 @@ static mc(char* mem1,char* mem2,int len)
 /*
 **	History:
 **	$Log: rcmp.c,v $
-**	Revision 1.5.2.1  2002/11/12 15:56:32  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.9  2003/02/20 19:29:55  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.8  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.7  2002/10/24 14:20:35  gsl
 **	Make globals unique

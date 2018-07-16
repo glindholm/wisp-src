@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -20,20 +41,22 @@ static char rcsid[]="$Id:$";
 
 static int vchs_do(int char_set);							/* Actually do the selection.		*/
 
+static unsigned char vchs_default = 'B';						/* Use "A" for U.K. or "B" for U.S./Canada.	*/
 
-int vcharset(int char_set)								/* Switch to requested character set.	*/
+
+int VL_vcharset(int char_set)								/* Switch to requested character set.	*/
 {
 	int ret = OPTIMIZED;
 	enum e_vop vopt = voptlevel();
 	
 
-	if (OFF == vchs_op)
+	if (OFF == VL_vchs_op)
 	{
 		/*
 		**     First time thru - no optimization
 		*/
 		vopt = VOP_OFF;
-		vchs_op = ON;								/* Optimization can now be done		*/
+		VL_vchs_op = ON;								/* Optimization can now be done		*/
 	}
 
 	switch(vopt)
@@ -123,6 +146,18 @@ static int vchs_do(int char_set)							/* Actually do the selection.		*/
 /*
 **	History:
 **	$Log: vcharset.c,v $
+**	Revision 1.14  2003/06/20 15:04:28  gsl
+**	VL_ globals
+**	
+**	Revision 1.13  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.12  2002/07/15 20:16:07  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.11  2002/07/15 17:10:02  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.10  1997/07/08 20:31:11  gsl
 **	added vrawdirectio() logic around the vcontrol()
 **	Reworked so optimization logic makes sense.

@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1996 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 /*
@@ -27,20 +47,19 @@
 /*
 **	Function Prototypes
 */
-void hsleep(long hundredths);
+void WL_hsleep(long hundredths);
 
-char *computername(char *cname);
+char *WL_computername(char *cname);
 #define DEF_COMPUTERNAME "Windows"
 
-int handle_stdout(void);
-int get_registry_value(const char *key, const char *value, int maxsize, char *result);
-int get_remote_registry_value(const char* machine, const char *key, const char *value, int maxsize, char *result);
-char *wgetreg(const char *key, const char *value);
+int WL_handle_stdout(void);
+int WL_get_registry_value(const char *key, const char *value, int maxsize, char *result);
+char *WL_wgetreg(const char *key, const char *value);
 
-int win32_nt(void);
-int win32_95(void);
-int win32_98(void);
-const char* win32_version(void);
+int WL_win32_nt(void);
+int WL_win32_95(void);
+int WL_win32_98(void);
+const char* WL_win32_version(void);
 
 
 #endif /* winnt_H */
@@ -48,6 +67,15 @@ const char* win32_version(void);
 /*
 **	History:
 **	$Log: wispnt.h,v $
+**	Revision 1.13  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.12  2002/07/10 21:06:35  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.11  2002/07/09 04:14:02  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
 **	Revision 1.10  1998/12/04 17:59:14  gsl
 **	Add win32_89() and win32_version()
 **	

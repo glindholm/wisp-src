@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1988-1995 NeoMedia Technologies, Inc., All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 /*
@@ -45,7 +65,6 @@
 #define WISP_FILEPATH_LEN	256		/* Internal file path lengths */
 
 #define 	WISP_ERROR_FILE			"wisperr.log"
-#define 	WISP_MESSAGE_FILE		"wispmsg.dat"
 
 /* Operating System Specific Filename definitions. */
 
@@ -55,8 +74,8 @@
 #define		WISP_BACKGROUND_ENV		"WISPBACKGRD"
 #define		WISP_LINK_ENV			"WISPLINK"
 #define		WISP_CANCELEXIT_ENV		"WISPCANEXIT"
-#define		WISP_PROGVOL_ENV		"_PROGVOL"
-#define		WISP_PROGLIB_ENV		"_PROGLIB"
+#define		WISP_PROGVOL_ENV		"WISPPROGVOL"
+#define		WISP_PROGLIB_ENV		"WISPPROGLIB"
 #define		WISP_LINKLEVEL_ENV		"WISPLINKLEVEL"
 #define		WISP_CPU_ENV			"WISPCPU"
 #define		WISP_NETID_ENV			"WISPNETID"
@@ -94,6 +113,15 @@
 /*
 **	History:
 **	$Log: wdefines.h,v $
+**	Revision 1.23  2003/07/09 20:09:13  gsl
+**	Change internal PROGLIB/PROGVOL vars
+**	
+**	Revision 1.22  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.21  2002/12/11 14:08:45  gsl
+**	Removed wispmsg.dat/txt and makemsg
+**	
 **	Revision 1.20  2001/10/31 20:24:41  gsl
 **	Remove VMS and MSDOS
 **	Remove the WISP_TEMP_PERSON_PREFIX

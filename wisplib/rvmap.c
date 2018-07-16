@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		rvmap.c
 **
@@ -63,7 +84,7 @@ static struct rvmap_struct *rvmap(void);
 
 
 /*
-**	ROUTINE:	remote_volume()
+**	ROUTINE:	WL_remote_volume()
 **
 **	FUNCTION:	Preform Remote Volume Translation
 **
@@ -103,7 +124,7 @@ static struct rvmap_struct *rvmap(void);
 **			and must not overlap.
 **
 */
-int remote_volume(const char *local_path, char *remote_path)
+int WL_remote_volume(const char *local_path, char *remote_path)
 {
 	struct rvmap_struct *rvmap_item;
 
@@ -165,7 +186,6 @@ static struct rvmap_struct *rvmap(void)
 {
 	static int	first = 1;
 	static struct rvmap_struct *rvmap_list = NULL;		/* The Remote Volume map linked list	*/
-	char	err_msg[256];
 	
 	if (first)
 	{
@@ -176,7 +196,7 @@ static struct rvmap_struct *rvmap(void)
 	
 		rvmap_list = NULL;
 
-		build_wisp_config_path("RVMAP", rvmap_path);
+		WL_build_wisp_config_path("RVMAP", rvmap_path);
 		ASSERT(strlen(rvmap_path) < sizeof(rvmap_path));
 	
 		the_file = fopen(rvmap_path,"r");
@@ -196,7 +216,7 @@ static struct rvmap_struct *rvmap(void)
 				if (strlen(inbuf) <= 0) continue;
 				if ('#' == inbuf[0]) continue;
 
-				if (ptr = strchr(inbuf,'\n')) *ptr = (char)0;
+				if ((ptr = strchr(inbuf,'\n'))) *ptr = (char)0;
 				
 				cnt = sscanf(inbuf, "%s %s", local_prefix, remote_prefix);
 			
@@ -205,34 +225,34 @@ static struct rvmap_struct *rvmap(void)
 			
 				if (cnt != 2)
 				{
-					sprintf(err_msg,"%%RVMAP-E-INVALID RVMAP entry invalid line=%d [%s]",linenum,inbuf);
-					werrlog(104,err_msg,0,0,0,0,0,0,0);
+					WL_werrlog_error(WERRCODE(104),"RVMAP", "INVALID", 
+						"RVMAP entry invalid line=%d [%s]",linenum,inbuf);
 					continue;
 				}
 				if (strlen(local_prefix) >= MAX_PREFIX_LEN || strlen(remote_prefix) >= MAX_PREFIX_LEN)
 				{
-					sprintf(err_msg,"%%RVMAP-E-LONG RVMAP prefix too long (MAX=%d) line=%d [%s]",
+					WL_werrlog_error(WERRCODE(104),"RVMAP", "LONG", 
+						"RVMAP prefix too long (MAX=%d) line=%d [%s]",
 						MAX_PREFIX_LEN, linenum,inbuf);
-					werrlog(104,err_msg,0,0,0,0,0,0,0);
 					continue;
 				}
 				if (strlen(local_prefix) < MIN_PREFIX_LEN || strlen(remote_prefix) < MIN_PREFIX_LEN)
 				{
-					sprintf(err_msg,"%%RVMAP-E-SHORT RVMAP prefix too short (MIN=%d) line=%d [%s]",
+					WL_werrlog_error(WERRCODE(104),"RVMAP", "SHORT", 
+						"RVMAP prefix too short (MIN=%d) line=%d [%s]",
 						MIN_PREFIX_LEN,linenum,inbuf);
-					werrlog(104,err_msg,0,0,0,0,0,0,0);
 					continue;
 				}
 			
 				if (!rvmap_list)
 				{
-					rvmap_list = (struct rvmap_struct *)wmalloc(sizeof(struct rvmap_struct));
+					rvmap_list = (struct rvmap_struct *)wisp_malloc(sizeof(struct rvmap_struct));
 					rvmap_end = rvmap_list;
 				}
 				else
 				{
 					ASSERT(rvmap_end);
-					rvmap_end->next = (struct rvmap_struct *)wmalloc(sizeof(struct rvmap_struct));
+					rvmap_end->next = (struct rvmap_struct *)wisp_malloc(sizeof(struct rvmap_struct));
 					rvmap_end = rvmap_end->next;
 				}
 
@@ -256,6 +276,21 @@ static struct rvmap_struct *rvmap(void)
 /*
 **	History:
 **	$Log: rvmap.c,v $
+**	Revision 1.13  2003/02/04 17:05:01  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.12  2003/01/31 18:54:38  gsl
+**	Fix copyright header
+**	
+**	Revision 1.11  2002/12/09 19:15:33  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.10  2002/07/10 21:05:23  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.9  2002/07/02 21:15:28  gsl
+**	Rename wstrdup
+**	
 **	Revision 1.8  1998/05/22 18:49:47  gsl
 **	Change to use wtrace()
 **	

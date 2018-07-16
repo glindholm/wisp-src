@@ -1,7 +1,28 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 
 /*
 **	File:		vwang.h
@@ -84,25 +105,18 @@
 #define SPACE_BAR		0x20							/* Space bar input from keyboard.	*/
 #define DEC_MENU_PICK		0x5F							/* Underscore for menu pick.		*/
 
-#ifdef OLD
-/* this has been replaced with a variable which can be adjusted */
-#define MAX_DISP_RANGE	0xFF								/* All displayable chars < this value.	*/
-#endif
 
 #define EIGHT_BIT_DATA 0xFF
 #define SEVEN_BIT_DATA 0x7F
 
-#ifdef VMS 
-#define CURRENT_MENU_PICK	0xBB							/* Double right arrow.			*/
-#endif
 #ifdef unix
 #define CURRENT_MENU_PICK	0x2A							/* Asterisk.				*/
 #endif
-#if defined(MSDOS) || defined(WIN32)
+#if defined(WIN32)
 #define CURRENT_MENU_PICK	0xAF							/* Double right arrow.			*/
 #endif
 
-#if defined(MSDOS) || defined(WIN32)							/* MS-DOS only - substitution chars:	*/
+#if defined(WIN32)									/* WIN32 only - substitution chars:	*/
 
 #define DEC_GRAPHIC_DIAMOND	0x04							/* Graphic diamond.			*/
 #define DEC_GRAPHIC_BOX		0xB0							/* Graphic box.				*/
@@ -175,34 +189,40 @@
 /*
 **	Function Prototypes
 */
-int vwang();
+int vwang(
+	const	unsigned char function[1],
+		unsigned char *wsb,
+	const	unsigned char lines[1],
+	const		 char *terminate_list,
+			 char term[2],
+		unsigned char no_mod[2]);
 
 char vwang_aid(void);
 char vwang_aid_read_unlocked(void);
 void vwang_timeout(int4 seconds);
-void set_aid(char aid);
-char meta_aid(int metachar);
-int ws_fkey(int metachar_key,int *filling,unsigned char *terminate_list,unsigned char *pfkey,unsigned char *no_mod);
-int ws_mod(int cursor_row, int cursor_col);						/* Determine if char is modifyable.	*/
-int ws_bad_char(void);									/* Process invalid characters.		*/
-int ws_cut(int row, int col);								/* Cut the current field.		*/
-int ws_paste(int row, int col, int vr, int vc, int alt_read, unsigned char *no_mod, int do_pseudo);
-int ws_sof(int cursor_row, int cursor_col);						/* Get start of current field.		*/ 
-int ws_eof(int cursor_row, int cursor_col);						/* Get end of current field.		*/
-void ws_erap(int amount);								/* Erase & protect screen sect. */
-int ws_help(int curset);								/* Simulate Wang help function.		*/
-int wpushscr(void);									/* A function to save the screen addrs	*/
-int wpopscr(void);									/* A function to restore the screen and */
-int ws80(void);										/* Select 80 column screen.		*/
-int ws132(void);									/* Select a 132 column screen.		*/
-char wscharat(int r, int c);								/* Get a character from a row and col.	*/
+void vwang_set_aid(char aid);
+char vwang_meta_aid(int metachar);
+int vwang_ws_fkey(int metachar_key,int *filling,const char *terminate_list,char *pfkey,unsigned char *no_mod);
+int vwang_ws_mod(int cursor_row, int cursor_col);					/* Determine if char is modifyable.	*/
+int vwang_bad_char(void);								/* Process invalid characters.		*/
+int vwang_ws_cut(int row, int col);							/* Cut the current field.		*/
+int vwang_ws_paste(int row, int col, int vr, int vc, int alt_read, unsigned char *no_mod, int do_pseudo);
+int vwang_ws_sof(int cursor_row, int cursor_col);					/* Get start of current field.		*/ 
+int vwang_ws_eof(int cursor_row, int cursor_col);					/* Get end of current field.		*/
+void vwang_ws_erap(int amount);								/* Erase & protect screen sect. */
+int vwang_help(int curset);								/* Simulate Wang help function.		*/
+int vwang_wpushscr(void);								/* A function to save the screen addrs	*/
+int vwang_wpopscr(void);								/* A function to restore the screen and */
+int WS80(void);										/* Select 80 column screen.		*/
+int WS132(void);									/* Select a 132 column screen.		*/
+char vwang_charat(int r, int c);								/* Get a character from a row and col.	*/
 int SETFACS(unsigned char *new_table,unsigned char *toupper_table,unsigned char *numeric_table);
 void SET8BIT(unsigned char *faclist,unsigned char *lowuplist,unsigned char *numlist);
-int valid_char_data(char value);
-fac_t fac(fac_t pseudo_FAC);
-fac_t unfac(fac_t true_FAC);
-fac_t fac_pre_vwang(fac_t pseudo_FAC);
-fac_t unfac_pre_vwang(fac_t true_FAC);
+int vwang_valid_char_data(char value);
+fac_t vwang_fac(fac_t pseudo_FAC);
+fac_t vwang_unfac(fac_t true_FAC);
+fac_t vwang_fac_pre_filter(fac_t pseudo_FAC);
+fac_t vwang_unfac_pre_filter(fac_t true_FAC);
 void vwang_flush(void);
 void vwang_write_bell(void);
 int vwang_set_synch(int synch);
@@ -221,7 +241,7 @@ int vwang_wcurwidth(void);
 void vwang_bell(int cnt);
 int vwang_keypressed(int discard);
 void vwang_init_video(void);
-void vwang_title(const char *the_title);
+const char* vwang_title(const char *the_title);
 void vwang_load_charmap(int force);
 void vwang_ansi2wang(unsigned char *buff, int len);
 void vwang_wang2ansi(unsigned char *buff, int len);
@@ -230,19 +250,100 @@ void vwang_wang2term(unsigned char *buff, int len);
 void vwang_subtable(unsigned char *buff, int len);
 void WANSI2WANG(unsigned char *buff, int2 *len);
 void WWANG2ANSI(unsigned char *buff, int2 *len);
-int terminal_control_char(unsigned char the_char);
+int vwang_terminal_control_char(unsigned char the_char);
 
-int init_screen(void);
+int vwang_init_screen(void);
 
-extern int use_custom_vwang(void);
-extern int custom_vwang(unsigned char *function,unsigned char *wsb,unsigned char *lines,unsigned char *terminate_list,
-	unsigned char *term,unsigned char *no_mod);
+int use_custom_vwang(void);
+int custom_vwang(
+	const	unsigned char function[1],
+		unsigned char *wsb,
+	const	unsigned char lines[1],
+	const		 char *terminate_list,
+			 char term[2],
+		unsigned char no_mod[2]);
+
+
+void WS_REWRITE(
+		unsigned char *wsb, 
+	const	unsigned char lines[1], 
+		unsigned char no_mod[2]);
+
+void WS_READ(
+		unsigned char *wsb,
+	const	unsigned char lines[1],
+			 char term_pfkey[2],
+		unsigned char no_mod[2]);
+
+void WS_READ_ALT(
+		unsigned char *wsb,
+	const	unsigned char lines[1],
+			 char term_pfkey[2],
+		unsigned char no_mod[2]);
+
+void WS_CLOSE();
+
+#define WTITLE_TITLE_LEN 80
+void WTITLE(const char the_title[WTITLE_TITLE_LEN]);
+
+/* Borrowed from Video.h */
+int  VL_vsharedscreen(void);
+
+/*
+**	EDE routines
+*/
+int  EDE_using(void);	/* Is EDE being used */
+int  ws_bar_menu( int curset, int vr, int vc, int ak, int ar, unsigned char* nm, int dp );
+int  nc_pop_menu( int* filling, const char* terminate_list, unsigned char* no_mod, char* pfkey );
+int  gen_ncpfkey( int type, char** wsb, int num_chars, int* st_win, int* end_win);
 
 #endif /* VWANG_H */
 
 /*
 **	History:
 **	$Log: vwang.h,v $
+**	Revision 1.55  2003/06/27 15:54:03  gsl
+**	fix EDE API
+**	
+**	Revision 1.54  2003/05/22 14:08:20  gsl
+**	Add WTITLE_TITLE_LEN
+**	
+**	Revision 1.53  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.52  2003/01/29 20:20:52  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.51  2002/12/13 21:17:30  gsl
+**	vwang_title() fixes
+**	
+**	Revision 1.50  2002/08/01 15:07:37  gsl
+**	type warnings
+**	
+**	Revision 1.49  2002/08/01 14:09:12  gsl
+**	type warnings
+**	
+**	Revision 1.48  2002/08/01 02:42:16  gsl
+**	fix type warning
+**	
+**	Revision 1.47  2002/07/31 21:00:28  gsl
+**	globals
+**	
+**	Revision 1.46  2002/07/18 21:04:23  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.45  2002/07/15 14:07:02  gsl
+**	vwang globals
+**	
+**	Revision 1.44  2002/07/11 20:29:21  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.43  2002/07/09 04:14:03  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.42  2002/06/26 01:42:51  gsl
+**	Remove VMS code
+**	
 **	Revision 1.41  2001/10/15 13:48:40  gsl
 **	Change vwang_set_videocap() to vwang_init_video()
 **	

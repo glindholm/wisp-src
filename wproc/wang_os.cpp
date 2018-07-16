@@ -38,7 +38,7 @@ const int max_keyvalue = 80;
 #define argcount_is(i)  \
    {                    \
    int_32 args = i;     \
-   wvaset(&args);       \
+   WL_set_va_count(args);       \
    }
 
 
@@ -58,7 +58,7 @@ char *wang_os_backref_full(const char *label) {
    int_32 mrecvln_vol  = 6;
    int_32 retcode = 0;
 
-   wswap(&keycnt);
+   WL_wswap(&keycnt);
    
    argcount_is(13);
    PUTPARM("M", putlabel, &keycnt,
@@ -67,7 +67,7 @@ char *wang_os_backref_full(const char *label) {
       "VOLUME  ", mrecv_vol, &mrecvln_vol,
       &retcode);
 
-   wswap(&retcode);
+   WL_wswap(&retcode);
 
    mrecv_file[8] = '\0';
    mrecv_lib[8]  = '\0';
@@ -110,13 +110,13 @@ char *wang_os_backref_partial(const char *label, const char *keyword) {
    char pfkeyrecv[1];
    int_32 retcode = 0;
 
-   wswap(&keycnt);
-   wswap(&mrecvln);
+   WL_wswap(&keycnt);
+   WL_wswap(&mrecvln);
 
    argcount_is(9);
    PUTPARM("M", putlabel, &keycnt, kword, mrecv, &mrecvln, pfkeyrecv, " ", &retcode);
 
-   wswap(&retcode);
+   WL_wswap(&retcode);
    
    mrecv[max_keyvalue] = '\0';
 
@@ -140,12 +140,12 @@ Boolean wang_os_exists(wang_filename a_name) {
    int_32 count       = 0;
    int_32 f_count     = 0;
    argcount_is(7);
-   wswap(&start_count);
-   wswap(&count);
-   wswap(&f_count);
+   WL_wswap(&start_count);
+   WL_wswap(&count);
+   WL_wswap(&f_count);
    FIND(a_name.filename, a_name.libname, a_name.volname, &start_count,
       &count, NULL, &f_count);
-   wswap(&f_count);
+   WL_wswap(&f_count);
    return BOOLEAN(f_count > 0);
 }
 
@@ -153,9 +153,9 @@ Boolean wang_os_exists(wang_filename a_name) {
 void wang_os_extract_int(char *keyword, int_32 &receiver) {
    int_32 temp;
    argcount_is(2);
-   wswap(&temp);
+   WL_wswap(&temp);
    EXTRACT(keyword, (void *) &temp);
-   wswap(&temp);
+   WL_wswap(&temp);
    receiver = temp;
 }
 
@@ -228,17 +228,17 @@ void wang_os_update_fetched_args() {
 
 
 void wang_os_init() {
-   initglbs("WPROC   ");
+   WL_initglbs("WPROC   ");
 }
 
 
 void wang_os_increment_link_level() {
-   newlevel();
+   WL_newlevel();
 }
 
 
 void wang_os_decrement_link_level() {
-   oldlevel();
+   WL_oldlevel();
 }
 
 
@@ -265,7 +265,7 @@ int_32 wang_os_link(
    int_32 userargs_swapped;
    
    userargs_swapped = userargs;
-   wswap(&userargs_swapped);
+   WL_wswap(&userargs_swapped);
 
    trace(general, "WANG_OS_LINK");
    trace_ss(general, "filename      : ", filename);
@@ -273,7 +273,7 @@ int_32 wang_os_link(
    trace_ss(general, "volname       : ", volname);
    trace_si(general, "userargs      : ", userargs);
 
-   findrun(filename, libname, volname, path, linktype);
+   WL_findrun(filename, libname, volname, path, linktype);
 
    for (i = 1; i <= userargs; i ++) {
       trace_ss(general, "arg           : ",  args->value(i));
@@ -324,7 +324,7 @@ int_32 wang_os_link(
          if (the_exp->kind() == expression::integer_kind) {
             integer_value = new int_32;
             *integer_value = the_exp->integer();
-	    wswap(integer_value);
+	    WL_wswap(integer_value);
             ptrarg[offset] = (void *) integer_value;
             lenarg[offset++] = sizeof(int_32);
          }
@@ -339,7 +339,7 @@ int_32 wang_os_link(
          if (args->value_kind(i) == expression::integer_kind) {
             integer_value = new int_32;
             string_to_int_32(args->value(i), *integer_value);
-	    wswap(integer_value);
+	    WL_wswap(integer_value);
             ptrarg[offset] = (void *) integer_value;
             lenarg[offset++] = sizeof(int_32);
          }
@@ -409,8 +409,8 @@ int_32 wang_os_link(
 	ptrarg[39],lenarg[39]
       );
 
-   wswap(&retcode);
-   wswap(&status);
+   WL_wswap(&retcode);
+   WL_wswap(&status);
 
    // The link has completed.  The copies we made of the arguments must now
    // all be deleted; however, before deleting them, see which ones are
@@ -430,7 +430,7 @@ int_32 wang_os_link(
          // Arg is an lvalue--assign copied value if different from original
          if (the_exp->kind() == expression::integer_kind) {
             integer_value = (int_32 *) ptrarg[offset];
-	    wswap(integer_value);
+	    WL_wswap(integer_value);
             if (*integer_value != the_exp->integer())
                parent_machine->assign(new expression(*the_exp), *integer_value);
             delete integer_value;
@@ -478,14 +478,14 @@ int_32 wang_os_print(
    if (fclass[0] == '?')
       wang_os_extract_alpha("PC", fclass);
 
-   wswap(&copies);
-   wswap(&form);
+   WL_wswap(&copies);
+   WL_wswap(&form);
    
    argcount_is(9);
    PRINT(filename, libname, volname, status, disp, &copies, fclass, &form,
       &retcode);
 
-   wswap(&retcode);
+   WL_wswap(&retcode);
    
    return retcode;
 }
@@ -531,9 +531,9 @@ int_32 wang_os_putparm(
 
    assert(keycnt<=triplets);
 
-   wswap(&usagecnt);
+   WL_wswap(&usagecnt);
    int_32 keycnt_swapped = keycnt;
-   wswap(&keycnt_swapped);
+   WL_wswap(&keycnt_swapped);
 
    arg[0] = (void *) is_enter ? (char*)"E" : (char*)"D";
    arg[1] = (void *) &usagecnt;
@@ -564,7 +564,7 @@ int_32 wang_os_putparm(
       
       arg[offset + i++] = (void *) (keyval + (pbr ? 1 : 0));
       trace_ss(general, "Passed keyvalue : ", (char*) (arg[offset + i - 1]));
-      wswap(&keylen[l]);
+      WL_wswap(&keylen[l]);
       arg[offset + i++] = (void *) &keylen[l++];
    }
 
@@ -607,7 +607,7 @@ int_32 wang_os_putparm(
       	arg[240],arg[241],arg[242],arg[243],arg[244],arg[245],arg[246],arg[247],arg[248],arg[249]
       );
 
-   wswap(&retcode);
+   WL_wswap(&retcode);
    
    return retcode;
 }
@@ -624,10 +624,10 @@ int_32 wang_os_rename(
    int_32 retcode = 0;
 
    argcount_is(7);
-   wrename(is_library ? "L" : "G", file, library, volume,
+   RENAME(is_library ? "L" : "G", file, library, volume,
       new_file, new_library, &retcode);
 
-   wswap(&retcode);
+   WL_wswap(&retcode);
    
    return retcode;
 }
@@ -658,7 +658,7 @@ int_32 wang_os_scratch(
    argcount_is(5);
    SCRATCH(is_library ? "L" : "F", file, library, volume, &retcode);
 
-   wswap(&retcode);
+   WL_wswap(&retcode);
    
    return retcode;
 }
@@ -672,7 +672,7 @@ void wang_os_set_alpha(char *keyword, char *value) {
 
 void wang_os_set_int(char *keyword, int_32 value) {
    argcount_is(2);
-   wswap(&value);
+   WL_wswap(&value);
    SET(keyword, (void *) &value);
 }
 
@@ -795,7 +795,7 @@ int_32 wang_os_submit(
 	else if ('P' == *action) limit_flag = "P";
 	else if ('W' == *action) limit_flag = "W";
 
-	wswap(&cpulimit);
+	WL_wswap(&cpulimit);
 
 	if (globals || environment || parameters->count > 0)
 	{
@@ -938,7 +938,7 @@ int_32 wang_os_submit(
 		       &cpulimit, limit_flag, &retcode);
 	}
 
-	wswap(&retcode);
+	WL_wswap(&retcode);
 
 	return retcode;
 }
@@ -951,11 +951,11 @@ char *wang_to_native_file_name(const char *a_name, int &file_kind) {
    char          path[80];
    wang_filename name(a_name);
 
-   if (findrun(name.filename, name.libname, name.volname, path, linktype) == 0) {
-      trace_ss(general, "findrun() path = ", path);
-      trace_sc(general, "findrun() linktype = ", linktype[0]);
-      file_kind = runtype(path);
-      trace_si(general, "runtype() type = ", file_kind);
+   if (WL_findrun(name.filename, name.libname, name.volname, path, linktype) == 0) {
+      trace_ss(general, "WL_findrun() path = ", path);
+      trace_sc(general, "WL_findrun() linktype = ", linktype[0]);
+      file_kind = WL_runtype(path);
+      trace_si(general, "WL_runtype() type = ", file_kind);
       file_kind = (file_kind == RUN_PROC || file_kind == RUN_PROCOBJ) ? 1 : 2;
    }
    else
@@ -982,7 +982,7 @@ void wang_os_access_to_machine(machine *a_machine) {
 
 
 void wang_os_first_procedure_name(char *a_name) {
-   firstproc(a_name);
+   WL_firstproc(a_name);
 }
 
 #endif
@@ -990,11 +990,26 @@ void wang_os_first_procedure_name(char *a_name) {
 /*
 **	History:
 **	$Log: wang_os.cpp,v $
-**	Revision 1.27.2.2  2003/02/11 19:12:59  gsl
+**	Revision 1.34  2003/02/11 19:12:44  gsl
 **	fix duplicate history
 **	
-**	Revision 1.27.2.1  2003/02/11 18:52:00  gsl
-**	Removed unneeded #ifdef code for AIX and DEBUG
+**	Revision 1.33  2003/02/11 19:05:27  gsl
+**	Remove unneeded #ifdef's for DEBUG
+**	
+**	Revision 1.32  2002/07/23 21:24:55  gsl
+**	wrename -> RENAME
+**	
+**	Revision 1.31  2002/07/12 17:17:05  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.30  2002/07/10 21:06:29  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.29  2002/07/10 04:27:39  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.28  2002/07/09 04:14:05  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
 **	
 **	Revision 1.27  2001/08/22 20:42:14  gsl
 **	fix gnu errors
@@ -1053,21 +1068,24 @@ void wang_os_first_procedure_name(char *a_name) {
 **
 */
 
-// Revision 1.11  1995/10/19  10:47:33  gsl
-// In a SUBMIT, if DISP=REQUEUE then don't destroy the generated procedure
-//
-// Revision 1.10  1995/10/18  17:16:05  gsl
-// Extensive mods to the submit logic to add support for GLOBALS=YES
-// and ENVIRONMENT=YES.
-// If these are specified or args are passed with the USING clause
-// then wproc will generate a new temp proc which will setup the
-// globals or environment and then run the program.  This generated
-// proc is then submitted.
-//
-// Revision 1.9  1995/10/16  14:06:55  gsl
-// On a SUBMIT, pass thru the Disposition, Abort_action, and Limit_flag
-// to the VSSUB SUBMIT for handling
-//
+//	----------------------------
+//	revision 1.11
+//	date: 1995-10-19 06:47:33-04;  author: gsl;  state: V3_3_19;  lines: +19 -2
+//	In a SUBMIT, if DISP=REQUEUE then don't destroy the generated procedure
+//	----------------------------
+//	revision 1.10
+//	date: 1995-10-18 13:16:05-04;  author: gsl;  state: Exp;  lines: +237 -69
+//	Extensive mods to the submit logic to add support for GLOBALS=YES
+//	and ENVIRONMENT=YES.
+//	If these are specified or args are passed with the USING clause
+//	then wproc will generate a new temp proc which will setup the
+//	globals or environment and then run the program.  This generated
+//	proc is then submitted.
+//	----------------------------
+//	revision 1.9
+//	date: 1995-10-16 10:06:55-04;  author: gsl;  state: Exp;  lines: +28 -7
+//	On a SUBMIT, pass thru the Disposition, Abort_action, and Limit_flag
+//	to the VSSUB SUBMIT for handling
 //	----------------------------
 //	revision 1.8
 //	date: 1995-07-17 10:02:46-04;  author: gsl;  state: V3_3_18;  lines: +1 -1

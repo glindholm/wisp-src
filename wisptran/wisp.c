@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 2001 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wisp.c
 **
@@ -17,13 +38,18 @@ static char rcsid[]="$Id:$";
 
 
 #include <stdio.h>
+#include <string.h>
+#include <limits.h>
 
-#ifdef _MSC_VER
-#include <time.h>
-#include <process.h>
+#ifdef unix
+#include <sys/times.h>
 #endif
 
-#include <string.h>
+#ifdef WIN32
+#include <time.h>
+#include <process.h>
+#include <direct.h>
+#endif
 
 #define EXT
 #define INIT_COMMON
@@ -58,7 +84,9 @@ static char rcsid[]="$Id:$";
 **	Static data
 */
 
-static struct tbuffer { int cpu; int x,y,z; } time_now;					/* Time reference structure.		*/
+#ifdef unix
+static struct tms time_now;								/* Time reference structure.		*/
+#endif
 static int cpu_time;									/* Initial CPU time.			*/
 static char *sargv[50];									/* Save the argv			*/
 static char *targv[50];									/* argv after response file processing	*/
@@ -80,23 +108,26 @@ static void wisp_exit_code(const char *prefix);
 int main(int argc, char *argv[])
 {
 	initialize1(argc,argv);
-
-	get_cli(targc,targv);								/* parse the CLI switches		*/
-
+	get_cli(targc,targv);
 	initialize2();
 
-	open_io();									/* open the WCB and COB files		*/
+	open_io();								/* open the WCB and COB files		*/
 
-	if (do_xtab)								/* Generate cross reference file.	*/
+	/* Can only load option & key files after open_io */
+	load_option_file();							/* Process the options file.			*/
+	load_key_file();							/* Process the keylist file.			*/
+	validate_options();
+
+	if (opt_xtab)								/* Generate cross reference file.	*/
 	{
 		xtab_file = fopen(xtab_fname,"w");
 	}
 
-	if (copy_only)
+	if (opt_noprocess)
 	{
 		gen_txt_file();
 	}
-	else if (data_conv)
+	else if (opt_data_conv)
 	{
 		gen_data_conv();
 	}
@@ -117,7 +148,7 @@ static void gen_txt_file(void)
 	cnt = 0;
 	while(EOF != (lstat=get_cobol_inline()))
 	{
-		if (ptr = strchr(linein,'\n')) *ptr = (char)0;
+		if ((ptr = strchr(linein,'\n'))) *ptr = (char)0;
 		sprintf(tstr,"%06d",++cnt);
 		if (strlen(linein) >= 6) 
 			memcpy(linein,tstr,6);
@@ -216,12 +247,12 @@ int exit_wisp(int err)									/* exit WISP, clean up 			*/
 
 	if (err == EXIT_FAST) goto exit_fast;
 
-	if (!err && !copy_only && !data_conv) 
+	if (!err && !opt_noprocess && !opt_data_conv) 
 	{
 		gen_endstuff();								/* write all the screen paragraphs	*/
 	}
 
-	if (!err && !copy_only && !data_conv && (prog_cnt || lock_clear_para)) 
+	if (!err && !opt_noprocess && !opt_data_conv && (prog_cnt || lock_clear_para)) 
 	{
 		gen_unlocks();								/* Since there were files, write UNLOCKs*/
 	}
@@ -241,7 +272,7 @@ int exit_wisp(int err)									/* exit WISP, clean up 			*/
 		delete(dtp_fname);							/* And delete it.			*/
 	}
 
-	if ( !err && !copy_only && !data_conv) wisp_exit_para();			/* write WISP-EXIT-PROGRAM.		*/
+	if ( !err && !opt_noprocess && !opt_data_conv) wisp_exit_para();			/* write WISP-EXIT-PROGRAM.		*/
 
 	if ( !err )
 	{
@@ -267,7 +298,7 @@ int exit_wisp(int err)									/* exit WISP, clean up 			*/
 	}
 
 
-	if (!err && do_xref)								/* Generate cross reference file.	*/
+	if (!err && opt_xref)								/* Generate cross reference file.	*/
 	{
 		FILE 	*xref_file;							/* The cross ref file.			*/
 		xref_file = fopen(xref_fname,"w");
@@ -321,13 +352,13 @@ int exit_wisp(int err)									/* exit WISP, clean up 			*/
 		fclose(xref_file);
 	}
 
-#ifdef _MSC_VER
+#ifdef WIN32
 	cpu_time = clock() - cpu_time;							/* Get the number of CPU "ticks".	*/
 	j = cpu_time / CLK_TCK;								/* Convert "ticks" to integer seconds.	*/
 	k = ((( cpu_time * 100 )) / CLK_TCK ) - ( j * 100 );				/* Get remainder 100ths of seconds.	*/
 #else		/* unix  */
 	times(&time_now);								/* Get the current CPU value.		*/
-	cpu_time = time_now.cpu - cpu_time;						/* Save it.				*/
+	cpu_time = time_now.tms_utime - cpu_time;						/* Save it.				*/
 
 	j = cpu_time / 100;								/* Convert to seconds.			*/
 	k = cpu_time - (j * 100);							/* Convert fraction of seconds.		*/
@@ -342,7 +373,7 @@ int exit_wisp(int err)									/* exit WISP, clean up 			*/
 	a = in_line_count() - comment_line_count();
 	write_log(" ",' '," ","Total lines processed         %d.",a);
 
-	if (log_stats && !logging)							/* /LOG switch for stats is on		*/
+	if (opt_log_stats && !opt_logging)							/* /LOG switch for stats is on		*/
 	{										/* and not writing a log file		*/
 		printf("\nEXECUTION STATISTICS, WISP %s\n\n",WISP_VERSION);
 		printf("Elapsed CPU                   %d\056%ds.\n",j,k);		/* Display the time report item.	*/
@@ -374,32 +405,23 @@ static void wisp_exit_code(const char* prefix)
 	int	stoprun;
 
 	tput_blank();
-	tput_scomment			("****** WISP EXIT CODE ******");
+	tput_scomment			("*****************************************************************");
+	tput_scomment			("**** WISP EXIT CODE ");
+	tput_scomment			("*****************************************************************");
 	tput_blank();
 
 	tput_line			("       %sWISP-EXIT-PROGRAM.",prefix);
-	if (!vax_cobol)
-	{
-		tput_line		("           CALL \"setretcode\" USING WISPRETURNCODE.");
-		tput_line		("           IF WISP-APPLICATION-NAME = WISPRUNNAME");
-		tput_line		("               CALL \"WISPEXIT\".");
-	}
+	tput_line			("           CALL \"SETRETCODE\" USING WISP-RETURN-CODE.");
+	tput_line			("           IF WISP-APPLICATION-NAME = WISP-RUN-NAME");
+	tput_line			("               CALL \"WISPEXIT\".");
 	tput_line			("           EXIT PROGRAM.");
 	tput_line			("       %sWISP-STOP-RUN.",prefix);
-	if (!vax_cobol)
-	{
-		tput_line		("           CALL \"setretcode\" USING WISPRETURNCODE.");
-		tput_line		("           CALL \"WISPEXIT\".");
-	}
+	tput_line			("           CALL \"SETRETCODE\" USING WISP-RETURN-CODE.");
+	tput_line			("           CALL \"WISPEXIT\".");
 
 	stoprun = 1;
-	if (vax_cobol && !do_dlink)
-	{
-		stoprun = 0;
-	}
-	if (dmf_cobol) 	stoprun = 0;
-	if (keepstop) 	stoprun = 1;
-	if (changestop) stoprun = 0;
+	if (opt_keep_stop_run) 	stoprun = 1;
+	if (opt_change_stop_run) stoprun = 0;
 
 	if (stoprun)
 	{
@@ -417,12 +439,6 @@ int wisp_exit_para(void)
 {
 	wisp_exit_code("");
 
-	if (linkmain)
-	{
-		tput_line		("       END PROGRAM %s.",prog_id);
-		tput_blank();
-		tput_line		("       END PROGRAM WISPLINK.");
-	}
 	return 0;
 }
 
@@ -451,6 +467,16 @@ static int run_wisp(void)								/* Execute the WISP command again	*/
 	{
 		printf("REASON:\n%s\n",need_to_rerun_reason);
 	}
+
+	if (0 != strcmp(original_cwd, new_cwd))
+	{
+		if (0 != chdir(original_cwd))
+		{
+			printf("%%WISP-F-CHDIR Unable to change to original directory chdir(\"%s\").\n", original_cwd);
+			exit_wisp(EXIT_FAST);
+		}
+	}
+
 	fflush(stdout);
 	fflush(stderr);
 
@@ -465,7 +491,7 @@ static int run_wisp(void)								/* Execute the WISP command again	*/
 #endif
 
 	printf("\n%%WISP-F-NOEXEC Fatal error; EXEC failed.\n");
-	exit(-1);
+	exit(-1); /* rerun failed */
 	return 0;
 }
 
@@ -548,11 +574,11 @@ static int initialize1(int argc, char* argv[])						/* Perform all generic initi
 {
 	int	i;
 
-#ifdef _MSC_VER
+#ifdef WIN32
 	cpu_time = clock();								/* Get the number of CPU "ticks".	*/
 #else		/* unix */
 	times(&time_now);								/* Get the current CPU value.		*/
-	cpu_time = time_now.cpu;							/* Save it.				*/
+	cpu_time = time_now.tms_utime;							/* Save it.				*/
 #endif
 
 	for (i=0; i<argc; i++ ) sargv[i] = argv[i];					/* Save the argv			*/
@@ -571,24 +597,6 @@ static int initialize1(int argc, char* argv[])						/* Perform all generic initi
 
 static int initialize2(void)								/* Perform switch specific initialize	*/
 {
-	if (vax_cobol)
-	{
-		strcpy(bin2_type,"COMP");
-		strcpy(bin4_type,"COMP");
-		strcpy(packdec,"COMP-3");
-		strcpy(hard_lock,"92");
-		strcpy(soft_lock,"90");
-		strcpy(cobol_type,"VAX");
-	}
-	if (lpi_cobol)
-	{
-		strcpy(bin2_type,"COMP");
-		strcpy(bin4_type,"COMP");
-		strcpy(packdec,"COMP-3");
-		strcpy(hard_lock,"99");
-		*soft_lock='\0';
-		strcpy(cobol_type,"LPI");
-	}
 	if (acu_cobol)
 	{
 		strcpy(bin2_type,"COMP-1");
@@ -597,15 +605,6 @@ static int initialize2(void)								/* Perform switch specific initialize	*/
 		strcpy(hard_lock,"99");
 		*soft_lock='\0';
 		strcpy(cobol_type,"ACU");
-	}
-	if (aix_cobol)
-	{
-		strcpy(bin2_type,"COMP-5");
-		strcpy(bin4_type,"COMP");
-		strcpy(packdec,"COMP-3");
-		strcpy(hard_lock,"9D");
-		*soft_lock='\0';
-		strcpy(cobol_type,"AIX");
 	}
 	if (mf_cobol)
 	{
@@ -616,17 +615,8 @@ static int initialize2(void)								/* Perform switch specific initialize	*/
 		*soft_lock='\0';
 		strcpy(cobol_type,"MF ");
 	}
-	if (dmf_cobol)
-	{
-		strcpy(bin2_type,"COMP-5");
-		strcpy(bin4_type,"COMP-5");				/* MF always uses Big-Endian except COMP-5		*/
-		strcpy(packdec,"COMP-3");
-		strcpy(hard_lock,"9D");
-		*soft_lock='\0';
-		strcpy(cobol_type,"DMF");
-	}
 
-	if (do_xref)									/* Init xref structure.			*/
+	if (opt_xref)									/* Init xref structure.			*/
 	{
 		xref_ptr = (struct c_list *)wmalloc(sizeof(c_list));  			/* Get some memory.			*/
 		xref_ptr->call_count = 0;
@@ -679,7 +669,7 @@ static int response_file(int argc, char* argv[])
 		if (argv[i] && argv[i][0] == '@')					/* If a response file then process	*/
 		{
 			FILE	*fh;
-			if (fh = fopen(&argv[i][1],"r"))				/* Open the response file.		*/
+			if ((fh = fopen(&argv[i][1],"r")))				/* Open the response file.		*/
 			{
 				char	buff[256];
 				show_command = 1;
@@ -738,7 +728,7 @@ static int response_file(int argc, char* argv[])
 */
 void xtab_log(const char* fileName, int lineNum, const char* xtype, const char *tabData)
 {
-	if (do_xtab && xtab_file != NULL)
+	if (opt_xtab && xtab_file != NULL)
 	{
 		/* PROGRAM, FILE, LINE, XTYPE, Data... */
 		fprintf(xtab_file, "%s\t%s\t%d\t%s\t%s\n", 
@@ -750,6 +740,46 @@ void xtab_log(const char* fileName, int lineNum, const char* xtype, const char *
 /*
 **	History:
 **	$Log: wisp.c,v $
+**	Revision 1.34  2003/03/11 19:26:46  gsl
+**	Add validate_options() routine which checks for option conficts.
+**	
+**	Revision 1.33  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.32  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.31  2003/02/04 18:02:20  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.30  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.29  2003/02/04 17:27:24  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.28  2002/07/31 20:24:26  gsl
+**	globals
+**	
+**	Revision 1.27  2002/07/30 19:12:39  gsl
+**	SETRETCODE
+**	
+**	Revision 1.26  2002/07/29 21:13:25  gsl
+**	setretcode -> SETRETCODE
+**	
+**	Revision 1.25  2002/07/24 21:41:02  gsl
+**	Change directory to the location of the source file if a path is given.
+**	
+**	Revision 1.24  2002/07/18 21:04:26  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.23  2002/06/20 22:54:35  gsl
+**	remove obsolete code
+**	add opt_native stuff
+**	
+**	Revision 1.22  2002/06/19 22:48:16  gsl
+**	Remove VAX code & cleanup
+**	
 **	Revision 1.21  2001/09/13 14:07:24  gsl
 **	Remove VMS and DEMO ifdefs
 **	Add xtab_log() support
@@ -767,7 +797,6 @@ void xtab_log(const char* fileName, int lineNum, const char* xtype, const char *
 **	Change address
 **
 **	Revision 1.16  1996-12-12 12:56:23-05  gsl
-**	Changed Devtech to NeoMedia
 **
 **	Revision 1.15  1996-10-09 09:30:49-07  gsl
 **	add include wispcfg.h

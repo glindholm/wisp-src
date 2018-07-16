@@ -33,7 +33,7 @@
 #define IDC_CHECK1                      1030
 #define ctl_1                           1030
 #define IDC_CHECK2                      1031
-#define ctl_C                           1031
+#define ctl_FF                          1031
 #define IDC_CHECK3                      1032
 #define ctl_x                           1032
 #define IDC_CHECK4                      1033
@@ -59,7 +59,7 @@
 #define IDC_CHECK14                     1043
 #define ctl__l                          1043
 #define IDC_CHECK15                     1044
-#define ctl_R                           1044
+#define ctl_G4                          1044
 #define IDC_CHECK16                     1045
 #define ctl_e                           1045
 #define IDC_EDIT2                       1046

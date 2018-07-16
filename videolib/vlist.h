@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -14,8 +33,6 @@
 **
 **	Purpose:	List structures header file
 **
-**	History:
-**	mm/dd/yy	Written by ...
 **
 */
 
@@ -75,12 +92,25 @@ struct tmpst	{
 			struct len_text it[4];						/* Temporary holding structure.		*/
 		};
 
-int display_scan();
+int VL_display_scan();
+int VL_vlist();
 
 #endif /* VLIST_H */
 /*
 **	History:
 **	$Log: vlist.h,v $
+**	Revision 1.14  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.13  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.12  2002/07/15 20:56:39  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.11  2002/07/15 20:16:10  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.10  1997/06/24 21:18:18  gsl
 **	remove unneeded ifdefs
 **	

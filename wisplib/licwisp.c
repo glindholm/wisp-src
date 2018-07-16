@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		licwisp.c
@@ -28,7 +47,7 @@ static char rcsid[]="$Id:$";
 
 
 /*
-**	Routine:	product_name()
+**	Routine:	WLIC_product_name()
 **
 **	Function:	Return the product name.
 **
@@ -42,11 +61,8 @@ static char rcsid[]="$Id:$";
 **
 **	Warnings:	None
 **
-**	History:	
-**	09/13/93	Written by GSL
-**
 */
-const char *product_name(void)
+const char *WLIC_product_name(void)
 {
 	static	char	name[] = {"WISP"};
 
@@ -54,7 +70,7 @@ const char *product_name(void)
 }
 
 /*
-**	Routine:	license_filepath()
+**	Routine:	WLIC_license_filepath()
 **
 **	Function:	Return the filepath to the license file.
 **
@@ -62,7 +78,7 @@ const char *product_name(void)
 **			the license filepath.
 **
 **			UNIX (OLD):	/lib/wisp.license
-**			UNIX (NEW):	$WISPCONFIG/{machineid}.wisp.license
+**			UNIX (NEW):	$WISPCONFIG/wisp.license
 **
 **	Arguments:	None
 **
@@ -74,21 +90,15 @@ const char *product_name(void)
 **
 */
 #ifdef unix
-const char *license_filepath(void)
+const char *WLIC_license_filepath(void)
 {
 	static	char*	path = NULL;
 	
 	if (!path)
 	{
 		char	buff[256];
-		char	machineid[MAX_MACHINEID_LENGTH+1];
 
-		if (0 != getmachineid(machineid))
-		{
-			strcpy(machineid,"(UNKNOWN)");
-		}
-
-		sprintf(buff,"%s/wisp.%s.license", wispconfigdir(), machineid);
+		sprintf(buff,"%s/wisp.license", wispconfigdir());
 		path = wisp_strdup(buff);
 	}
 
@@ -96,7 +106,7 @@ const char *license_filepath(void)
 }
 #endif /* unix */
 #ifdef WIN32
-const char *license_filepath(void)
+const char *WLIC_license_filepath(void)
 {
 	static	char*	path = NULL;
 	
@@ -122,7 +132,7 @@ const char *license_filepath(void)
 
 
 /*
-**	Routine:	lic_trantable()
+**	Routine:	WLIC_lic_trantable()
 **
 **	Function:	Return the license encoding translation table.
 **
@@ -139,12 +149,8 @@ const char *license_filepath(void)
 **	Return:		Pointer to license encoding translation table.
 **
 **	Warnings:	None
-**
-**	History:	
-**	09/13/93	Written by GSL
-**
 */
-const char *lic_trantable(void)
+const char *WLIC_lic_trantable(void)
 {
 	static	char	tt_tran[] = {"QAZ9CX1EU2GR3IO4YL5MJN6PH7SFT8VDWKB"};	/* WISP */
 
@@ -152,37 +158,35 @@ const char *lic_trantable(void)
 }
 
 /*
-**	Routine:	authlogfile()
-**
-**	Function:	Return the authorize log filename.
-**
-**	Description:	Returns a pointer to a static data area that contains the file name.
-**
-**	Arguments:	None
-**
-**	Globals:	None
-**
-**	Return:		Pointer to name.
-**
-**	Warnings:	None
-**
-**	History:	
-**	09/13/93	Written by GSL
-**
-*/
-const char *authlogfile(void)
-{
-	static	char	name[] = {"wauthorize.log"};
-
-	return(name);
-}
-
-/*
 **	History:
 **	$Log: licwisp.c,v $
-**	Revision 1.8.2.1  2003/02/14 18:21:43  gsl
+**	Revision 1.17  2003/06/18 13:12:38  gsl
+**	change unix license file to $WISPCONFIG/wisp.license
+**	
+**	Revision 1.16  2003/02/13 20:47:53  gsl
+**	missing include
+**	
+**	Revision 1.15  2003/02/13 20:45:02  gsl
 **	On unix change the license file from /lib/wisp.license to
 **	$WISPCONFIG/wisp.{machineid}.license
+**	
+**	Revision 1.14  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.13  2003/01/08 17:30:44  gsl
+**	Move WLIC_authlogfile to wauthorize.c
+**	
+**	Revision 1.12  2002/07/10 21:05:18  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.11  2002/07/02 21:15:25  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.10  2002/06/25 15:21:53  gsl
+**	Change to use wmalloc()
+**	
+**	Revision 1.9  2002/06/21 03:10:37  gsl
+**	Remove VMS & MSDOS
 **	
 **	Revision 1.8  1997/03/21 15:24:58  gsl
 **	Changed the license_filepath() for WIN32 to point to the share name WISP

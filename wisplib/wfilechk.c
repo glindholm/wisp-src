@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wfilechk.c
 **
@@ -12,7 +33,7 @@ static char rcsid[]="$Id:$";
 **
 **	Routines:	
 **	wfilechk()
-**	wfilechk2()
+**	WFILECHK2()
 */
 
 /*
@@ -31,14 +52,9 @@ static char rcsid[]="$Id:$";
 #include "wisplib.h"
 #include "idsisubs.h"
 #include "wexit.h"
+#include "wfname.h"
+#include "wperson.h"
 
-#define ROUTINE	77000
-
-#ifdef VMS
-#include <descrip.h>
-static char msgtxt[260];
-static $DESCRIPTOR(msgdsc,msgtxt);
-#endif
 
 /*
 **	Structures and Defines
@@ -47,98 +63,146 @@ static $DESCRIPTOR(msgdsc,msgtxt);
 /*
 **	Globals and Externals
 */
+static void wisp_set_last_filecheckstatus(const char status[2]);
+static void wisp_set_last_filecheckstatus_ext(const char *status);
 
+void WL_cobfileop2wispfileop(const char acufileop[COB_FILEOP_SIZE], char wispfileop[2]);
+void WL_wispfileop2cobfileop(const char wispfileop[2], char cobfileop[COB_FILEOP_SIZE]);
 
-extern int werrno;									/* Wisp errno field.			*/
-extern uint4 wextstat1;									/* Global place to put extended status.	*/
-extern uint4 wextstat2;
-extern char wfilestat[2];								/* Global file status			*/
-extern char WISPRUNNAME[8];
-extern int4 LINKCOMPCODE;
-extern int4 LINKRETCODE;
-
-void wfilechk2(char   decl_stat[2], 
-	       char   file_stat[2],
-	       char   x_stat1[10],
-	       char   x_stat2[10],
-	       uint4* sflag,
-	       char   vol[6],
-	       char   lib[8],
-	       char   fil[8],
-	       char   fname[80],
-	       char   f_id[40],
-	       char   appl[8]);
 
 /*
 **	Static data
 */
-static char acufilestat[11] = "0000";
 
 /*
 **	Static Function Prototypes
 */
+static int x_wispfilecheck(
+		const char wispfileop[2],
+		const char *cobfileop,
+	       char   decl_stat[2], 
+	       const char file_stat[2],
+	       const char file_status_extended[COB_EXTENDED_FILE_STATUS_SIZE],
+	       int is_norespecify,
+	       int is_declare,
+	       const char file_vol[6],
+	       const char file_lib[8],
+	       const char file_fil[8],
+	       const char cob_filepath[COB_FILEPATH_LEN],
+	       const char* select_name_str,
+	       const char app_name[8]);
 
-static char *msg_filestat(char* file_stat, char* x_stat);
+
+static const char *msg_filestat(const char* file_stat, const char* x_stat);
 
 
-
-/*
-**	ROUTINE:	wfilechk()
-**
-**	FUNCTION:	A front-end to wfilechk2()
-**
-**	DESCRIPTION:	Convert the older format for the extended file statuses
-**			then call wfilechk2().
-**
-**	ARGUMENTS:	See wfilechk2()
-**
-**	GLOBALS:	See wfilechk2()
-**
-**	RETURN:		See wfilechk2()
-**
-**	WARNINGS:	See wfilechk2()
-**
-*/
-void wfilechk( char   decl_stat[2], 
-	       char   file_stat[2],
-	       char*  x_stat1,
-	       char*  x_stat2,
-	       uint4* sflag,
-	       char   vol[6],
-	       char   lib[8],
-	       char   fil[8],
-	       char   fname[80],
-	       char   f_id[40],
-	       char   appl[8])
-{
-	char	x_stat_x1[10], x_stat_x2[10];
-	
-	memset(x_stat_x1, ' ', sizeof(x_stat_x1));
-	memset(x_stat_x2, ' ', sizeof(x_stat_x2));
-	
-	if (acu_cobol)
-	{
-		memcpy(x_stat_x1, x_stat1, 4);	/* PIC X(4) */
-	}
-	else if (vax_cobol)
-	{
-		memcpy(x_stat_x1, x_stat1, 10); /* PIC S9(9) LEADING SEPARATE */
-		memcpy(x_stat_x2, x_stat2, 10); /* PIC S9(9) LEADING SEPARATE */
-	}
-
-	wfilechk2(decl_stat,file_stat,x_stat_x1,x_stat_x2,sflag,vol,lib,fil,fname,f_id,appl);
-	
-}
 
 /*
-**	ROUTINE:	wfilechk2()
+**	ROUTINE:	WFILECHK3()
 **
 **	FUNCTION:	Check file status codes as part of declaratives handling.
 **
-**	DESCRIPTION:	?
+**	DESCRIPTION:	- OPEN respecify logic
+**			- READ with HOLD retry
+**			- Error reporting
+**
+**	ARGUMENTS:
+**	file_operation		Alpha(20)	Last file operation (Acucobol sytle op names)	
+**	file_stat		Alpha(2)	The file status code 
+**	file_status_extended	Alpha(10)	The extended file status code(s)
+**	file_attributes		Alpha(10)	The file attributes string (ATTR-xxx)
+**	file_vol		Alpha(6)	The volume name
+**	file_lib		Alpha(8)	The library name
+**	file_fil		Alpha(8)	The file name
+**	cob_filepath		Alpha(80)	The native filepath
+**	select_name		Alpha(40)	The SELECT name
+**	app_name		Alpha(40)	The application name
+**	skip_declaratives	Alpha(1)	Return "Y"/"N" to skip declaratives 
+**	has_declaratives	Alpha(1)	Is there user coded declaratives "Y"/"N"
+**
+**
+*/
+void WFILECHK3(
+	const char file_operation[COB_FILEOP_SIZE],
+	const char file_status[2],
+	const char file_status_extended[COB_EXTENDED_FILE_STATUS_SIZE],
+	char file_attributes[WISP_FILE_ATTR_SIZE],
+	const char file_vol[6],
+	const char file_lib[8],
+	const char file_fil[8],
+	const char cob_filepath[COB_FILEPATH_LEN],
+	const char select_name[COB_SELECT_NAME_SIZE],
+	const char app_name[40],
+	char skip_declaratives[1],
+	const char has_declaratives[1])
+{
+	char l_cobfileop[COB_FILEOP_SIZE+1];
+	char wispfileop[2];
+	char decl_status[2];
+	int4 mode;
+	int err;
+	char select_name_str[COB_SELECT_NAME_SIZE+1];
+
+	WL_cobx2cstr(l_cobfileop, file_operation, COB_FILEOP_SIZE);
+	WL_cobfileop2wispfileop(file_operation, wispfileop);
+	WL_cobx2cstr(select_name_str,select_name,COB_SELECT_NAME_SIZE);
+
+	wtrace("WFILECHK3", "ENTRY", "Op=[%s (%2.2s)] File=[%s] (%8.8s in %8.8s on %6.6s) App=[%8.8s] Status=[%2.2s][%10.10s] Attr=[%10.10s]",
+	       l_cobfileop, wispfileop, select_name_str, file_fil, file_lib, file_vol, app_name, file_status, file_status_extended, file_attributes);
+
+	wisp_fileattr2mode(file_attributes, &mode);
+
+
+	memcpy(decl_status,wispfileop,2);
+
+	err = x_wispfilecheck(
+		wispfileop, 
+		l_cobfileop,
+		decl_status,
+		file_status,
+		file_status_extended,
+		(mode & IS_NORESPECIFY),
+		(mode & IS_DECLARE),
+		file_vol,
+		file_lib,
+		file_fil,
+		cob_filepath,
+		select_name_str,
+		app_name);
+
+	if (err) 
+	{
+		mode = mode | IS_ERROR;	/* Set the error bit for wfopen().	*/
+	}
+
+	wisp_mode2fileattr(mode, file_attributes);
+
+	if (0==memcmp(decl_status,"00",2))
+	{
+		skip_declaratives[0] = 'Y';
+	}
+	else
+	{
+		skip_declaratives[0] = 'N';
+	}
+
+	wtrace("WFILECHK3", "RETURN", "File=[%s] Attr=[%10.10s] SkipDecl=[%c]",
+		select_name_str, file_attributes, skip_declaratives[0]);
+}
+
+
+
+/*
+**	ROUTINE:	WFILECHK2()
+**
+**	FUNCTION:	Check file status codes as part of declaratives handling.
+**
+**	DESCRIPTION:	- OPEN respecify logic
+**			- READ with HOLD retry
+**			- Error reporting
 **
 **	ARGUMENTS:	
-**	decl_stat	Coded I/O operation
+**	decl_stat	Coded I/O operation  (reset to "00" if skipping user declartives)
 **				OP	OPEN
 **				RD	READ
 **				RW	REWRITE
@@ -148,15 +212,15 @@ void wfilechk( char   decl_stat[2],
 **				CL	CLOSE
 **				SO	SORT
 **	file_stat	The file status code 
-**	x_stat1		The extended file status code(s)
+**	file_status_extended		The extended file status code(s)
 **	x_stat2		The extended file status code(s)
-**	sflag		The S-filename status flag
-**	vol		The volume name
-**	lib		The library name
-**	fil		The file name
-**	fname		The native filepath
-**	f_id		The SELECT name
-**	appl		The application name
+**	sflag		The S-filename status flag  (IS_ERROR bit set on open error)
+**	file_vol	The volume name
+**	file_lib	The library name
+**	file_fil	The file name
+**	cob_filepath	The native filepath
+**	select_name	The SELECT name
+**	app_name	The application name
 **
 **	GLOBALS:	?
 **
@@ -165,44 +229,87 @@ void wfilechk( char   decl_stat[2],
 **	WARNINGS:	?
 **
 */
-void wfilechk2(char   decl_stat[2], 
-	       char   file_stat[2],
-	       char   x_stat1[10],
-	       char   x_stat2[10],
-	       uint4* sflag,
-	       char   vol[6],
-	       char   lib[8],
-	       char   fil[8],
-	       char   fname[COB_FILEPATH_LEN],
-	       char   f_id[40],
-	       char   appl[8])
+void WFILECHK2(char   decl_stat[2], 
+	       const char file_stat[2],
+	       const char file_status_extended[COB_EXTENDED_FILE_STATUS_SIZE],
+	       const char x_stat2[COB_EXTENDED_FILE_STATUS_SIZE],
+	       int4* sflag,
+	       const char file_vol[6],
+	       const char file_lib[8],
+	       const char file_fil[8],
+	       const char cob_filepath[COB_FILEPATH_LEN],
+	       const char select_name[COB_SELECT_NAME_SIZE],
+	       const char app_name[8])
 {
-	char tstr1[COB_FILEPATH_LEN + 40];
+	int err;
+	char wispfileop[2];
+	char l_cobfileop[COB_FILEOP_SIZE+1];
+	char file_attributes[WISP_FILE_ATTR_SIZE];
+	char select_name_str[COB_SELECT_NAME_SIZE+1];
+
+	memcpy(wispfileop,decl_stat,2);
+	WL_wispfileop2cobfileop(wispfileop, l_cobfileop);
+	wisp_mode2fileattr(*sflag, file_attributes);
+	WL_cobx2cstr(select_name_str,select_name,COB_SELECT_NAME_SIZE);
+
+	wtrace("WFILECHK2", "ENTRY", "Op=[%s (%2.2s)] File=[%s] (%8.8s in %8.8s on %6.6s) App=[%8.8s] Status=[%2.2s][%10.10s] Attr=[%10.10s]",
+	       l_cobfileop, wispfileop, select_name_str, file_fil, file_lib, file_vol, app_name, file_stat, file_status_extended, file_attributes);
+
+	err = x_wispfilecheck(
+		wispfileop, 
+		l_cobfileop,
+		decl_stat, 
+		file_stat,
+		file_status_extended,
+		(*sflag & IS_NORESPECIFY),
+		(*sflag & IS_DECLARE),
+		file_vol,
+		file_lib,
+		file_fil,
+		cob_filepath,
+		select_name_str,
+		app_name);
+
+	if (err) 
+	{
+		*sflag = *sflag | IS_ERROR;	/* Set the error bit for wfopen().	*/
+	}
+
+}
+
+static int x_wispfilecheck(
+		const char wispfileop[2],
+		const char *cobfileop,
+		char   decl_stat[2], 
+	       const char file_stat[2],
+	       const char file_status_extended[COB_EXTENDED_FILE_STATUS_SIZE],
+	       int is_norespecify,
+	       int is_declare,
+	       const char file_vol[6],
+	       const char file_lib[8],
+	       const char file_fil[8],
+	       const char cob_filepath[COB_FILEPATH_LEN],
+	       const char* select_name_str,
+	       const char app_name[8])
+{
 	short	wang_filestatus, open_error, reportit, force_error;
 	int	temp_errno;
 	char	msg1[80],msg2[80],msg3[80],msg4[80],msg5[80],msg6[80],msg7[80],msg8[80];
-#ifdef VMS
-	unsigned char info[4];
-	uint4 status;
-	int i;
-	short msglen;
-#endif
-	setprogid(appl);								/* Set the PROGID global variable.	*/
+	char	acufilestat[COB_EXTENDED_FILE_STATUS_SIZE+1] = "00";
+
+	WL_setprogid(app_name);								/* Set the PROGID global variable.	*/
 	temp_errno = errno;
 
-	wtrace("WFILECHK2", "ENTRY", "%2.2s %8.8s (%8.8s in %8.8s on %6.6s) in %8.8s Status=%2.2s Xstat=%10.10s",
-	       decl_stat, f_id, fil, lib, vol, appl, file_stat, x_stat1);
+	wisp_set_last_filecheckstatus(file_stat);					/* And store it away for 'C'.		*/
 
-	wfilestat[0] = file_stat[0];							/* And store it away for 'C'.		*/
-	wfilestat[1] = file_stat[1];
-	if ( acu_cobol )
+	if ( wisp_acu_cobol() )
 	{
 		/* Save the acucobol extended filestat as a string */
 		char *ptr;
 		
-		memcpy(acufilestat, x_stat1, 10);
+		memcpy(acufilestat, file_status_extended, COB_EXTENDED_FILE_STATUS_SIZE);
 		acufilestat[10] = '\0';
-		if (ptr = strchr(acufilestat,' '))
+		if ((ptr = strchr(acufilestat,' ')))
 		{
 			*ptr = '\0';
 		}
@@ -212,14 +319,14 @@ void wfilechk2(char   decl_stat[2],
 			strcat(acufilestat,"    ");
 			acufilestat[4] = '\0';
 		}
-		
+		wisp_set_last_filecheckstatus_ext(acufilestat);
 	}
 	wang_filestatus = TRUE;								/* Assume a WANG file status.		*/
 	reportit = TRUE;								/* Always report non-wang errors.	*/
 	force_error = FALSE;								/* Don't force				*/
 
-	if (0==memcmp("OP",decl_stat,2)) open_error = TRUE;				/* This is an OPEN error.		*/
-	else		 		 open_error = FALSE;				/* Not true.				*/
+	if (0==memcmp("OP",wispfileop,2)) open_error = TRUE;				/* This is an OPEN error.		*/
+	else		 		  open_error = FALSE;				/* Not true.				*/
 
 	switch (file_stat[0])
 	{
@@ -295,31 +402,7 @@ void wfilechk2(char   decl_stat[2],
 		}
 		break;
 	case '9':
-		if (vax_cobol)
-		{
-			switch(file_stat[1])
-			{
-			case '1':							/* "91" OPEN File locked		*/
-				wang_filestatus = FALSE;
-				break;
-			case '5':							/* "95" OPEN No space on device.	*/
-			case '4':							/* "94" UNLOCK incompatible open	*/
-			case '8':							/* "98" CLOSE error			*/
-				force_error = TRUE;					/* OPEN cannot recover.			*/
-				wang_filestatus = FALSE;
-				break;
-			case '0':							/* "90" Record locked (Soft)		*/
-			case '3':							/* "93" UNLOCK no record		*/
-			case '2':							/* "92" Record locked (Hard)		*/
-				wang_filestatus = FALSE;
-				reportit = FALSE;					/* Don't report these.			*/
-				break;
-			default:
-				wang_filestatus = FALSE;
-				break;
-			}
-		}
- 		else if (acu_cobol || lpi_cobol)
+ 		if (wisp_acu_cobol())
 		{
 			switch(file_stat[1])
 			{
@@ -350,7 +433,7 @@ void wfilechk2(char   decl_stat[2],
 				break;
 			}
 		}
- 		else if (aix_cobol || mf_cobol)
+ 		else if (wisp_mf_cobol())
 		{
 			switch((unsigned char)file_stat[1])
 			{
@@ -391,45 +474,22 @@ void wfilechk2(char   decl_stat[2],
 	**		SO SORT		??? 
 	*/
 
-	if (file_stat[0] == hardlock[0] &&
-	    file_stat[1] == hardlock[1]   )						/* If a record lock on a ...		*/
+	if (0==memcmp(file_stat, wisp_get_hardlock(), 2))				/* If a record lock on a ...		*/
 	{
-		if (0==memcmp("RD",decl_stat,2))					/* READ					*/
+		if (0==memcmp("RD",wispfileop,2))					/* READ					*/
 		{
 			wang_filestatus = FALSE;					/*	return to COBOL			*/
 			reportit = FALSE;
 		}
-		else if (0==memcmp("RW",decl_stat,2) ||					/* REWRITE				*/
-			 0==memcmp("DE",decl_stat,2)   )				/* DELETE				*/
+		else if (0==memcmp("RW",wispfileop,2) ||				/* REWRITE				*/
+			 0==memcmp("DE",wispfileop,2)   )				/* DELETE				*/
 		{
 			wang_filestatus = FALSE;
 			reportit = TRUE;						/* 	do declaratives			*/
 		}
 	}
 
-#ifdef VMS
-
-	wextstat1 = 0;									/* Get extended file status 1.		*/
-
-	for (i=1; i<10; i++)								/* Copy 9 digits.			*/
-	{
-		wextstat1 = wextstat1 * 10;						/* Shift left.				*/
-		wextstat1 = wextstat1 + (x_stat1[i] - '0');				/* Get next digit.			*/
-	}
-
-	wextstat2 = 0;									/* Get extended file status 2.		*/
-
-	for (i=1; i<10; i++)								/* Copy 9 digits.			*/
-	{
-		wextstat2 = wextstat2 * 10;						/* Shift left.				*/
-		wextstat2 = wextstat2 + (x_stat2[i] - '0');				/* Get next digit.			*/
-	}
-#else
-	wextstat1 = 0;
-	wextstat2 = 0;
-#endif
-
-	if (opt_allstatuskeys)							/* If set then we want to pass all status keys	*/
+	if (OPTION_ALLSTATUSKEYS)						/* If set then we want to pass all status keys	*/
 	{									/* thru to the user define declaratives, so we	*/
 		wang_filestatus = TRUE;						/* always say it is a Wang filestatus code.	*/
 	}
@@ -437,23 +497,25 @@ void wfilechk2(char   decl_stat[2],
 											/* the user, because there is no way the*/
 											/* Wang program could handle this.	*/
 
-	if (  open_error && (*sflag & IS_NORESPECIFY) ) force_error = FALSE;		/* Open, NORESPECIFY == don't error	*/
-	if ( !open_error && reportit && !wang_filestatus ) force_error = TRUE;		/* Non-Open, non-Wang  == do error	*/
-	if ( !open_error && wang_filestatus && !(*sflag & IS_DECLARE)) force_error=TRUE;/* Non-Open, no declaratives == do error*/
+	if (open_error)
+	{
+		if (is_norespecify) force_error = FALSE;	/* Open, NORESPECIFY == don't error	*/
+	}
+	else /* !open_error */
+	{
+		if (wang_filestatus)
+		{
+			if (!is_declare) force_error = TRUE;	/* Non-Open, no declaratives == do error*/
+		}
+		else /* !wang_filestatus */
+		{
+			if (reportit) force_error = TRUE;	/* Non-Open, non-Wang  == do error	*/
+		}
+	}
 
 	if ( force_error ) 
 	{
-		char	verb[10];
-
-		if      (0==memcmp("DE",decl_stat,2))	strcpy(verb,"DELETE");
-		else if (0==memcmp("OP",decl_stat,2))	strcpy(verb,"OPEN");
-		else if (0==memcmp("RD",decl_stat,2))	strcpy(verb,"READ");
-		else if (0==memcmp("RW",decl_stat,2))	strcpy(verb,"REWRITE");
-		else if (0==memcmp("ST",decl_stat,2))	strcpy(verb,"START");
-		else if (0==memcmp("WR",decl_stat,2))	strcpy(verb,"WRITE");
-		else if (0==memcmp("CL",decl_stat,2))	strcpy(verb,"CLOSE");
-		else if (0==memcmp("SO",decl_stat,2))	strcpy(verb,"SORT");
-		else 					strcpy(verb,"");
+		char cob_filepath_str[COB_FILEPATH_LEN + 40];
 
 		msg1[0] = '\0';
 		msg2[0] = '\0';
@@ -465,91 +527,112 @@ void wfilechk2(char   decl_stat[2],
 		msg8[0] = '\0';
 
 
-		cobx2cstr(tstr1,fname,COB_FILEPATH_LEN);
+		WL_cobx2cstr(cob_filepath_str,cob_filepath,COB_FILEPATH_LEN);
 
-		sprintf(msg7,"File [%8.8s] Lib [%8.8s] Vol [%6.6s]",fil,lib,vol);
-		sprintf(msg8,"File [%s]",tstr1);					/* Display native file name in message.	*/
+		sprintf(msg7,"File [%8.8s] Lib [%8.8s] Vol [%6.6s]",file_fil,file_lib,file_vol);
+		sprintf(msg8,"File [%s]",cob_filepath_str);					/* Display native file name in message.	*/
 
-#ifdef VMS
-		if (wextstat1)
-		{
-			sys$getmsg(wextstat1,&msglen,&msgdsc,1,info);			/* Get the system message.		*/
-			msgtxt[msglen] = '\0';
-			strcpy(msg5,msgtxt);
-		}
 
-		if (wextstat2)
-		{
-			sys$getmsg(wextstat2,&msglen,&msgdsc,1,info);			/* Get the system message.		*/
-			msgtxt[msglen] = '\0';
-			strcpy(msg6,msgtxt);
-		}
-#endif
-
-		unloadpad(tstr1,f_id,30);
-
-		sprintf( msg1, "RUN PROGRAM = %8.8s SUB-PROGRAM = %8.8s FILE = %1.25s", WISPRUNNAME, appl,tstr1); 
+		sprintf( msg1, "RUN PROGRAM = %8.8s SUB-PROGRAM = %8.8s FILE = %1.25s", wisp_get_runname(), app_name,select_name_str); 
 		sprintf( msg2, "ERROR DETECTED AND USER ERROR EXIT NOT IN USE");
-		if ( acu_cobol )
+		if ( wisp_acu_cobol() )
 		{
 			sprintf( msg3, "FILE STATUS = %c%c [%s]   (%s)", 
-				file_stat[0], file_stat[1], &acufilestat[2], verb);
+				file_stat[0], file_stat[1], &acufilestat[2], cobfileop);
 			strcpy(  msg4, msg_filestat(file_stat,&acufilestat[2]) );
 		}
-		else if (mf_cobol || aix_cobol)
+		else if (wisp_mf_cobol())
 		{
 			if ('9' != file_stat[0])
-				sprintf( msg3, "FILE STATUS = %c%c   (%s)", file_stat[0], file_stat[1], verb);
+				sprintf( msg3, "FILE STATUS = %c%c   (%s)", file_stat[0], file_stat[1], cobfileop);
 			else
-				sprintf( msg3, "FILE STATUS = %c/RT%03d   (%s)", file_stat[0], (unsigned)file_stat[1], verb);
+				sprintf( msg3, "FILE STATUS = %c/RT%03d   (%s)", file_stat[0], (unsigned)file_stat[1], cobfileop);
 			strcpy(  msg4, msg_filestat(file_stat,"00") );
 		}
 		else
 		{
-			sprintf( msg3, "FILE STATUS = %c%c   (%s)", file_stat[0], file_stat[1], verb);
+			sprintf( msg3, "FILE STATUS = %c%c   (%s)", file_stat[0], file_stat[1], cobfileop);
 			strcpy(  msg4, msg_filestat(file_stat,"00") );
 		}
 
 
-		err_getparm("FILESTAT","0001", "ERROR ",msg1,msg2,msg3,msg4,msg5,msg6,msg7,msg8 );
-		LINKCOMPCODE = 16;
-		setretcode("016");
-		wexit(16L);								/* Blow program away !!			*/
+		WL_err_getparm("FILESTAT","0001", "ERROR ",msg1,msg2,msg3,msg4,msg5,msg6,msg7,msg8 );
+		wisp_set_LINKCOMPCODE(16);
+		SETRETCODE("016");
+		wexit(16L);
 	}
-	else										/* Don't report it 			*/
+
+	/* Don't report error */
+										/* Here we decide if DECLARATIVES should*/
+										/* Be executed.				*/
+	if (open_error)								/* If it's an open error...		*/
 	{
-											/* Here we decide if DECLARATIVES should*/
-											/* Be executed.				*/
-		if (open_error)								/* If it's an open error...		*/
+		if (is_norespecify)						/* And NORESPECIFY, execute DECLARATIVES*/
 		{
-			if (*sflag & IS_NORESPECIFY)					/* And NORESPECIFY, execute DECLARATIVES*/
-			{
-				memcpy(decl_stat,file_stat,2);				/* Signal with file status.		*/
-			}
-			else								/* RESPECIFY is allowed, Don't do decl.	*/
-			{
-				memcpy(decl_stat,"00",2);				/* Clear WISP-DECLARATIVES-STATUS field.*/
-				*sflag = *sflag | IS_ERROR;				/* Set the error bit for wfopen().	*/
-			}
+			memcpy(decl_stat,file_stat,2);				/* Signal with file status.		*/
 		}
-		else if (wang_filestatus)						/* Not an open error.			*/
-		{									/* A valid Wang error.			*/
-			memcpy(decl_stat,file_stat,2);					/* Must have DECLARATIVES so use them.	*/
-		}
-		else									/* It must be a 'safe' non-wang error.	*/
+		else								/* RESPECIFY is allowed, Don't do decl.	*/
 		{
-			memcpy(decl_stat,"00",2);					/* Clear WISP-DECLARATIVES-STATUS field.*/
+			memcpy(decl_stat,"00",2);				/* Clear WISP-DECLARATIVES-STATUS field.*/
+			return 1;
 		}
 	}
+	else if (wang_filestatus)						/* Not an open error.			*/
+	{									/* A valid Wang error.			*/
+		memcpy(decl_stat,file_stat,2);					/* Must have DECLARATIVES so use them.	*/
+	}
+	else									/* It must be a 'safe' non-wang error.	*/
+	{
+		memcpy(decl_stat,"00",2);					/* Clear WISP-DECLARATIVES-STATUS field.*/
+	}
 
-#ifdef VMS
-	if ( file_stat[0] == '9' &&
-	     file_stat[1] == '0'    ) file_stat[0] = '0';				/* Clear soft-lock 90 --> 00		*/
-#endif
-
+	return 0;
 }
 
-static char *msg_filestat(char* file_stat, char* x_stat)
+/*
+**	ROUTINE:	WFILECHK()
+**
+**	FUNCTION:	A front-end to WFILECHK2()
+**
+**	DESCRIPTION:	Convert the older format for the extended file statuses
+**			then call WFILECHK2().
+**
+**	ARGUMENTS:	See WFILECHK2()
+**
+**	GLOBALS:	See WFILECHK2()
+**
+**	RETURN:		See WFILECHK2()
+**
+**	WARNINGS:	See WFILECHK2()
+**
+*/
+void WFILECHK( char   decl_stat[2], 
+	       const char   file_stat[2],
+	       const char*  file_status_extended,
+	       const char*  x_stat2,
+	       int4* sflag,
+	       const char   file_vol[6],
+	       const char   file_lib[8],
+	       const char   file_fil[8],
+	       const char   cob_filepath[COB_FILEPATH_LEN],
+	       const char   select_name[COB_SELECT_NAME_SIZE],
+	       const char   app_name[8])
+{
+	char	x_stat_x1[COB_EXTENDED_FILE_STATUS_SIZE], x_stat_x2[COB_EXTENDED_FILE_STATUS_SIZE];
+	
+	memset(x_stat_x1, ' ', sizeof(x_stat_x1));
+	memset(x_stat_x2, ' ', sizeof(x_stat_x2));
+	
+	if (wisp_acu_cobol())
+	{
+		memcpy(x_stat_x1, file_status_extended, 4);	/* PIC X(4) */
+	}
+
+	WFILECHK2(decl_stat,file_stat,x_stat_x1,x_stat_x2,sflag,file_vol,file_lib,file_fil,cob_filepath,select_name,app_name);
+	
+}
+
+static const char *msg_filestat(const char* file_stat, const char* x_stat)
 {
 	char *ptr;
 
@@ -589,9 +672,9 @@ static char *msg_filestat(char* file_stat, char* x_stat)
 		case '2':	ptr = "Duplicate Key (INVALID KEY)";			break;
 		case '3':	ptr = "Record not found (INVALID KEY)";			break;
 		case '4':
-			if (acu_cobol && 0==memcmp("00",x_stat,2))
+			if (wisp_acu_cobol() && 0==memcmp("00",x_stat,2))
 				ptr = "Disk full (INVALID KEY)";
-			else if (acu_cobol && 0==memcmp("01",x_stat,2))
+			else if (wisp_acu_cobol() && 0==memcmp("01",x_stat,2))
 				ptr = "Relative record number too large (INVALID KEY)";
 			else
 				ptr = "Boundary Violation (INVALID KEY)";
@@ -607,12 +690,10 @@ static char *msg_filestat(char* file_stat, char* x_stat)
 		case '4':	ptr = "WRITE Boundary violation (Disk Full)";		break;
 		case '5':	ptr = "FILE not found";					break;
 		case '7':
-			if (acu_cobol && 0==memcmp("07",x_stat,2))
+			if (wisp_acu_cobol() && 0==memcmp("07",x_stat,2))
 				ptr = "Access denied (OPEN)";
-			else if (acu_cobol && 0==memcmp("09",x_stat,2))
+			else if (wisp_acu_cobol() && 0==memcmp("09",x_stat,2))
 				ptr = "Invalid file type (OPEN)";
-			else if (vax_cobol)
-				ptr = "Inappropriate device type (OPEN)"; 
 			else
 				ptr = "OPEN mode/access not supported";
 			break;
@@ -636,22 +717,7 @@ static char *msg_filestat(char* file_stat, char* x_stat)
 		}
 		break;
 	case '9':
-		if (vax_cobol)
-		{
-			switch(file_stat[1])
-			{
-			case '0':	ptr = "Record locked by another program";	break;
-			case '1':	ptr = "File locked by another program (OPEN)";	break;
-			case '2':	ptr = "Record locked by another program";	break;
-			case '3':	ptr = "No current record (UNLOCK)";		break;
-			case '4':	ptr = "File not open, or incompatible mode"; 	break;
-			case '5':	ptr = "OPEN No space on device";		break;
-			case '7':	ptr = "OPEN File not found";			break;
-			case '8':	ptr = "CLOSE Error";				break;
-			default:	ptr = "UNKNOWN";				break;
-			}
-		}
-		else if (aix_cobol || mf_cobol)
+		if (wisp_mf_cobol())
 		{
 			switch((unsigned char)file_stat[1])
 			{
@@ -662,7 +728,7 @@ static char *msg_filestat(char* file_stat, char* x_stat)
 			default:	ptr = "UNKNOWN";				break;
 			}
 		}
-		else if (acu_cobol)
+		else if (wisp_acu_cobol())
 		{
 			switch(file_stat[1])
 			{
@@ -736,15 +802,161 @@ static char *msg_filestat(char* file_stat, char* x_stat)
 	return(ptr);
 }
 
-void lastacufilestat(char *buff)
+
+static char last_filestatus[23] = "00"; /* Wisp file status of last wfilechk	*/
+static void wisp_set_last_filecheckstatus(const char status[2]) 
 {
-	strcpy(buff, acufilestat);
+	last_filestatus[0] = status[0];
+	last_filestatus[1] = status[1];
+}
+const char *wisp_get_last_filecheckstatus()	{ return last_filestatus; }
+
+static char last_filestatus_extended[11] = "00";
+static void wisp_set_last_filecheckstatus_ext(const char *status)
+{
+	strcpy(last_filestatus_extended, status);
+}
+const char *wisp_get_last_filecheckstatus_ext()	{ return last_filestatus_extended; }
+
+static struct
+{
+	char *cob_fileop;
+	char *wisp_fileop;
+} fileop_table[] = 
+{
+	{"Close",		"CL"},
+	{"Commit",		"CO"},
+	{"Delete",		"DE"},
+	{"DeleteFile",		"DF"},
+	{"Open",		"OP"},
+	{"Read",		"RD"},	/* Generic READ for backwards compatibility */
+	{"ReadLock",		"RD"},
+	{"ReadNextLock",	"RD"},
+	{"ReadNextNoLock",	"RD"},
+	{"ReadNoLock",		"RD"},
+	{"ReadPreviousLock",	"RD"},
+	{"ReadPreviousNoLock",	"RD"},
+	{"Rewrite",		"RW"},
+	{"Rollback",		"RO"},
+	{"Start",		"ST"},
+	{"StartTransaction",	"SX"},
+	{"Unlock",		"UL"},
+	{"UnlockAll",		"UA"},
+	{"Write",		"WR"},
+	{"Sort",		"SO"},  /* Acucobol does not have a code for SORT */
+	{ 0, 0}
+};
+
+void WL_cobfileop2wispfileop(const char cobfileop[COB_FILEOP_SIZE], char wispfileop[2])
+{
+	int i;
+	char l_cobfileop[COB_FILEOP_SIZE+1];
+
+	WL_cobx2cstr(l_cobfileop, cobfileop, COB_FILEOP_SIZE);
+
+	for(i=0; fileop_table[i].cob_fileop != 0; i++)
+	{
+		if (0==strcmp(l_cobfileop, fileop_table[i].cob_fileop ))
+		{
+			memcpy(wispfileop, fileop_table[i].wisp_fileop, 2);
+			return;
+		}
+	}
+	wispfileop[0] = '?';
+	wispfileop[1] = '?';
 }
 
+void WL_wispfileop2cobfileop(const char wispfileop[2], char cobfileop[COB_FILEOP_SIZE])
+{
+	int i;
+
+	for(i=0; fileop_table[i].cob_fileop != 0; i++)
+	{
+		if (0==memcmp(wispfileop, fileop_table[i].wisp_fileop, 2 ))
+		{
+			strcpy(cobfileop, fileop_table[i].cob_fileop);
+			return;
+		}
+	}
+
+	cobfileop[0] = '\0'; /* Unknown - return empty string */
+}
 
 /*
 **	History:
 **	$Log: wfilechk.c,v $
+**	Revision 1.35  2003/07/28 20:54:04  gsl
+**	fix c++ style comments
+**	
+**	Revision 1.34  2003/03/17 17:22:43  gsl
+**	Change to use  WFILECHK3
+**	
+**	Revision 1.33  2003/03/07 20:10:56  gsl
+**	Standardize param names between the multiple entry points.
+**	Fix the displaying of the select_name.
+**	Use defines for all the field sizes passed from cobol
+**	
+**	Revision 1.32  2003/03/07 16:51:50  gsl
+**	Fix problems in translating between wispfileop and cobfileop.
+**	On error getparms display the cobfileop
+**	fix tracing for WFILECHK2
+**	
+**	Revision 1.31  2003/03/06 21:40:55  gsl
+**	CHange WISP_ACU_FILESTATUSCHECK to WISP_FILESTATUSCHECK
+**	Fix trace to show ATTR.
+**	Fix buff overflow in WL_cobfileop2wispfileop()
+**	
+**	Revision 1.30  2003/02/04 17:05:01  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.29  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.28  2002/12/10 20:54:08  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.27  2002/09/30 21:02:01  gsl
+**	update
+**	
+**	Revision 1.26  2002/07/31 21:00:28  gsl
+**	globals
+**	
+**	Revision 1.25  2002/07/30 19:12:40  gsl
+**	SETRETCODE
+**	
+**	Revision 1.24  2002/07/29 21:13:26  gsl
+**	setretcode -> SETRETCODE
+**	
+**	Revision 1.23  2002/07/18 13:19:29  gsl
+**	fix mode unit4 -> int4
+**	
+**	Revision 1.22  2002/07/17 17:50:10  gsl
+**	Fix unsigned char warnings
+**	
+**	Revision 1.21  2002/07/12 20:40:40  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.20  2002/07/12 19:10:19  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.19  2002/07/12 17:01:02  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.18  2002/07/11 20:29:17  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.17  2002/07/10 21:05:31  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.16  2002/07/02 04:07:23  gsl
+**	Add WISP_ACU_FILESTATUSCHECK
+**	
+**	Revision 1.15  2002/07/01 04:02:42  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.14  2002/06/21 03:10:44  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.13  1998/08/03 21:18:28  jlima
 **	Support Logical Volume Translation to long file names containing eventual embedded blanks.
 **	
@@ -752,8 +964,8 @@ void lastacufilestat(char *buff)
 **	removed WISPPROGID
 **
 **	Revision 1.11  1997-04-29 13:42:05-04  gsl
-**	Renamed wfilechk() to wfilechk2() and added support for long file
-**	status codes from acucobol. Wrote wfilechk() as a frontend to wfilechk2()
+**	Renamed wfilechk() to WFILECHK2() and added support for long file
+**	status codes from acucobol. Wrote wfilechk() as a frontend to WFILECHK2()
 **	which changes to use long file status codes.
 **	Documented the routines.
 **

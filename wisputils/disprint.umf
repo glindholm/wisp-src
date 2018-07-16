@@ -1,5 +1,5 @@
 #
-#	Copyright (c) 1998-2002 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1998-2003 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #	disprint.umf
@@ -7,6 +7,11 @@
 #	Usage: make -f disprint.umf {ACU|ACN|MF|MFSE}
 #
 WISPTRAN=wisp
+WISPFLAGS= -u ACU50
+
+ACU_COBOL=ccbl
+ACU_COBFLAGS=-Da4 -Gd -Za -C50 -Z50
+
 
 default:
 	@echo
@@ -27,26 +32,26 @@ default:
 
 ACU \
 acu:	DISPRINT.wcb
-	rm -f DISPRINT.cob DISPRINT
-	$(WISPTRAN) -VACU DISPRINT.wcb
-	ccbl -da4 -o DISPRINT DISPRINT.cob
+	rm -f DISPRINT.cob DISPRINT.acu
+	$(WISPTRAN) -VACU $(WISPFLAGS) DISPRINT.wcb
+	$(ACU_COBOL) $(ACU_COBFLAGS) -o DISPRINT.acu DISPRINT.cob
 
 ACN \
 acn:	DISPRINT.wcb
-	rm -f DISPRINT.cob DISPRINT
-	$(WISPTRAN) -VACN DISPRINT.wcb
-	ccbl -da4 -o DISPRINT DISPRINT.cob
+	rm -f DISPRINT.cob DISPRINT.acu
+	$(WISPTRAN) -VACN $(WISPFLAGS) DISPRINT.wcb
+	$(ACU_COBOL) $(ACU_COBFLAGS) -o DISPRINT.acu DISPRINT.cob
 
 MF \
 mf:	DISPRINT.wcb
 	rm -f DISPRINT.cob DISPRINT.int
-	$(WISPTRAN) -VMF DISPRINT.wcb
+	$(WISPTRAN) -VMF $(WISPFLAGS) DISPRINT.wcb
 	cob -i DISPRINT.cob
 
 MFSE \
 mfse:	DISPRINT.wcb
 	rm -f DISPRINT.cob DISPRINT.int
-	$(WISPTRAN) -VMFSE DISPRINT.wcb
+	$(WISPTRAN) -VMFSE $(WISPFLAGS) DISPRINT.wcb
 	cob -i DISPRINT.cob
 
 DISPRINT.wcb:
@@ -56,5 +61,5 @@ DISPRINT.wcb:
 	@exit 1
 
 clean:
-	rm -rf DISPRINT.cob DISPRINT.int DISPRINT
+	rm -rf DISPRINT.cob DISPRINT.int DISPRINT.acu
 

@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -386,6 +409,9 @@ struct rec_s *find_rec(struct rec_s *top, struct rec_s *curr, long num)
 /*
 **	History:
 **	$Log: mergemod.c,v $
+**	Revision 1.5  2003/02/04 18:50:26  gsl
+**	fix copyright header
+**	
 **	Revision 1.4  1996/07/23 18:12:55  gsl
 **	drcs update
 **	

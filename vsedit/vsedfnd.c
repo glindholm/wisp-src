@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1991-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		vsedfnd.c
 **
@@ -51,7 +74,7 @@ static char rcsid[]="$Id:$";
 */
 
 static char save_oa[4];
-static screen_error;
+static int screen_error;
 
 static int backward;
 
@@ -329,7 +352,7 @@ int vse_ed_change(void)
 
 		if (!screen_error)
 		{
-			if (rc = validate_range(start_field, &g_start_line, end_field, &g_end_line))
+			if ((rc = validate_range(start_field, &g_start_line, end_field, &g_end_line)))
 			{
 				strcpy(emsg_field,vse_err(rc));
 				screen_error = 1;
@@ -404,7 +427,7 @@ static int4 is_line_number(char *str)
 		return(0);
 
 	strcpy(temp,str);
-	upper_string(temp);
+	WL_upper_string(temp);
 	if (0==strcmp(temp,"FIRST"))
 	{
 		return text_first->lineno;
@@ -417,7 +440,7 @@ static int4 is_line_number(char *str)
 	result = 0;
 	while(len--)
 		{
-		if(!isdigit(*str))
+		if(!isdigit((int)*str))
 			return(0);
 		result *= 10;
 		result += ((*str) - '0');
@@ -710,15 +733,15 @@ static void setup_search(char *srch_txt, int exact)
 	p = srch_txt;				/* Point to the search text.		*/
 	while (*p != CHAR_NULL)				/* Now convert to upper case.		*/
 	{
-		if (!isalpha(*p))
+		if (!isalpha((int)*p))
 		{
-			srch_ch_map[*p]=TRUE;
+			srch_ch_map[(int)*p]=TRUE;
 		}
 		else
 		{
 			if (exact)
 			{
-				srch_ch_map[*p]=TRUE;
+				srch_ch_map[(int)*p]=TRUE;
 			}
 			else
 			{
@@ -733,8 +756,8 @@ static void setup_search(char *srch_txt, int exact)
 
 static int search(char *string, char *mask, int spos, int exact)
 {
-	register m_idx, s_idx, cmpval;
-	register int m_len, s_len;
+	int m_idx, s_idx, cmpval;
+	int m_len, s_len;
 	int save;
 
 	m_len = srch_len - 1;
@@ -773,7 +796,7 @@ static int search(char *string, char *mask, int spos, int exact)
 					**	If the cmpval is not 0x20 or the char is not alpha then not a match.
 					*/
 					if (cmpval != 0x20) break;
-					if (!isalpha((unsigned)mask[m_idx])) break;
+					if (!isalpha((unsigned int)mask[m_idx])) break;
 				}
 				--m_idx; --s_idx;
 			}
@@ -1014,7 +1037,7 @@ static int alldigits(char *str, int len)
 {
 	while(len--)
 	{
-		if (!isdigit(*str)) return 0;
+		if (!isdigit((int)*str)) return 0;
 		str++;
 	}
 	return 1;
@@ -1096,6 +1119,18 @@ static int case_exact(void)
 /*
 **	History:
 **	$Log: vsedfnd.c,v $
+**	Revision 1.15  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.14  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.13  2003/02/04 18:29:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.12  2002/07/11 14:34:00  gsl
+**	Fix WL_ unique globals
+**	
 **	Revision 1.11  1996/07/18 20:48:44  gsl
 **	fix for NT
 **	

@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		winnt.c
 **
@@ -10,7 +31,7 @@ static char rcsid[]="$Id:$";
 **	Purpose:	Hold Windows NT only files
 **
 **	Routines:	
-**	hsleep()
+**	WL_hsleep()
 */
 #ifdef WIN32
 
@@ -47,7 +68,7 @@ static char rcsid[]="$Id:$";
 
 
 /*
-**	ROUTINE:	hsleep()
+**	ROUTINE:	WL_hsleep()
 **
 **	FUNCTION:	Sleep for hundreths of seconds
 **
@@ -63,13 +84,13 @@ static char rcsid[]="$Id:$";
 **	WARNINGS:	none
 **
 */
-void hsleep(long hundredths)
+void WL_hsleep(long hundredths)
 {
 	Sleep(hundredths * 10);
 }
 
 /*
-**	ROUTINE:	computername()
+**	ROUTINE:	WL_computername()
 **
 **	FUNCTION:	Return the computer name (from the registry)
 **
@@ -86,7 +107,7 @@ void hsleep(long hundredths)
 **	WARNINGS:	None
 **
 */
-char *computername(char *cname)
+char *WL_computername(char *cname)
 {
 	static char* the_computername = NULL;
 
@@ -120,7 +141,7 @@ char *computername(char *cname)
 }
 
 /*
-**	ROUTINE:	longuid()
+**	ROUTINE:	WL_longuid()
 **
 **	FUNCTION:	Get the current user id (using GetuserName)
 **
@@ -136,7 +157,7 @@ char *computername(char *cname)
 **	WARNINGS:	None
 **
 */
-const char *longuid(void)
+const char *WL_longuid(void)
 {
 	static char *the_userid = NULL;
 
@@ -159,7 +180,7 @@ const char *longuid(void)
 }
 
 /*
-**	ROUTINE:	handle_stdout()
+**	ROUTINE:	WL_handle_stdout()
 **
 **	FUNCTION:	Return the handle for stdout
 **
@@ -174,13 +195,13 @@ const char *longuid(void)
 **	WARNINGS:	none
 **
 */
-int handle_stdout(void)
+int WL_handle_stdout(void)
 {
 	return (int)GetStdHandle(STD_OUTPUT_HANDLE);
 }
 
 /*
-**	ROUTINE:	getuid()
+**	ROUTINE:	WL_getuid()
 **
 **	FUNCTION:	Get the User Id number.
 **
@@ -195,13 +216,13 @@ int handle_stdout(void)
 **	WARNINGS:	none
 **
 */
-int getuid(void)
+int WL_getuid(void)
 {
 	return(1);
 }
 
 /*
-**	ROUTINE:	ttyname()
+**	ROUTINE:	WL_ttyname()
 **
 **	FUNCTION:	Find name of a terminal
 **
@@ -218,13 +239,13 @@ int getuid(void)
 **	WARNINGS:	none
 **
 */
-const char *ttyname(int fd)
+const char *WL_ttyname(int fd)
 {
-	return computername(NULL);
+	return WL_computername(NULL);
 }
 
 /*
-**	ROUTINE:	get_registry_value()
+**	ROUTINE:	WL_get_registry_value()
 **
 **	FUNCTION:	Get a value from the registry
 **
@@ -247,7 +268,7 @@ const char *ttyname(int fd)
 **	WARNINGS:	None
 **
 */
-int get_registry_value(const char *key, const char *value, int maxsize, char *result)
+int WL_get_registry_value(const char *key, const char *value, int maxsize, char *result)
 {
 	LONG lSuccess; 
 	HKEY hKey; 		/* handle to registry key */
@@ -349,11 +370,11 @@ int get_remote_registry_value(const char* machine, const char *key, const char *
 #endif /* NOT_YET */
 
 /*
-**	ROUTINE:	wgetreg()
+**	ROUTINE:	WL_wgetreg()
 **
 **	FUNCTION:	Get a registry value
 **
-**	DESCRIPTION:	Setup a static buff to receive the value then call get_registry_value.
+**	DESCRIPTION:	Setup a static buff to receive the value then call WL_get_registry_value.
 **
 **	ARGUMENTS:	
 **	key		The registry key (in HKEY_LOCAL_MACHINE)
@@ -366,12 +387,12 @@ int get_remote_registry_value(const char* machine, const char *key, const char *
 **	WARNINGS:	Works like getenv(), max size is 512.
 **
 */
-char *wgetreg(const char *key, const char *value)
+char *WL_wgetreg(const char *key, const char *value)
 {
 	static char buff[512];
 	int	rc;
 
-	rc = get_registry_value(key, value, sizeof(buff), buff);
+	rc = WL_get_registry_value(key, value, sizeof(buff), buff);
 	if (0 == rc)
 	{
 		return buff;
@@ -389,7 +410,7 @@ char *wgetreg(const char *key, const char *value)
 }
 
 /*
-**	ROUTINE:	win32_nt()
+**	ROUTINE:	WL_win32_nt()
 **
 **	FUNCTION:	Check if OS is NT
 **
@@ -406,7 +427,7 @@ char *wgetreg(const char *key, const char *value)
 **	WARNINGS:	None
 **
 */
-int win32_nt(void)
+int WL_win32_nt(void)
 {
 	static int rc = -1;
 	
@@ -429,7 +450,7 @@ int win32_nt(void)
 }
 
 /*
-**	ROUTINE:	win32_95()
+**	ROUTINE:	WL_win32_95()
 **
 **	FUNCTION:	Check if OS is Windows 95 (or 98)
 **
@@ -446,7 +467,7 @@ int win32_nt(void)
 **	WARNINGS:	This should be used to test if WIN32 and not NT.
 **
 */
-int win32_95(void)
+int WL_win32_95(void)
 {
 	static int rc = -1;
 	
@@ -469,7 +490,7 @@ int win32_95(void)
 }
 
 /*
-**	ROUTINE:	win32_98()
+**	ROUTINE:	WL_win32_98()
 **
 **	FUNCTION:	Check if OS is Windows 98 (only)
 **
@@ -486,7 +507,7 @@ int win32_95(void)
 **	WARNINGS:	none
 **
 */
-int win32_98(void)
+int WL_win32_98(void)
 {
 	static int rc = -1;
 	
@@ -510,7 +531,7 @@ int win32_98(void)
 }
 
 /*
-**	ROUTINE:	win32_version()
+**	ROUTINE:	WL_win32_version()
 **
 **	FUNCTION:	Get the WIN32 version formatted as a string.
 **
@@ -527,7 +548,7 @@ int win32_98(void)
 **	WARNINGS:	None
 **
 */
-const char* win32_version(void)
+const char* WL_win32_version(void)
 {
 	static char *the_version = NULL;
 	
@@ -565,6 +586,18 @@ const char* win32_version(void)
 /*
 **	History:
 **	$Log: winnt.c,v $
+**	Revision 1.21  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.20  2002/07/10 21:05:34  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.19  2002/07/10 04:27:34  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.18  2002/07/09 04:13:53  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
 **	Revision 1.17  2001/11/27 21:46:07  gsl
 **	Replace cuserid() with longuid()
 **	

@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wsxio.c
 **
@@ -18,6 +39,7 @@ static char rcsid[]="$Id:$";
 */
 
 #include <string.h>
+#include <stdarg.h>
 
 #include "idsistd.h"
 #include "vwang.h"									/* Reference workstation emulation.	*/
@@ -28,9 +50,7 @@ static char rcsid[]="$Id:$";
 **	Structures and Defines
 */
 
-#define		ROUTINE		88000
 /*
-88001	%%WSXIO-I-ENTRY Entry into WSXIO [%c]
 88002	%%WSXIO-E-NOTSUPP Unsupported XIO operation [%d]
 88004	%%WSXIO-E-NOTSUPP Unsupported function [%c]
 88006	%%WSXIO-E-BADLEN Invalid mapping area length [%d]
@@ -50,37 +70,39 @@ static char rcsid[]="$Id:$";
 
 
 /*
-	WSXIO("O", Device, X, Ufb, X)
-	WSXIO("C", Ufb)
-	WSXIO("X", Ufb, Cmd, Oa, [Oalen,] Map, Maplen, Iosw, X, X, X) 
-	WSXIO("T", Ufb, Cmd, Oa, [Oalen,] Map, Maplen, Iosw, Timer)
-	WSXIO("W", Ufb, Htime, Iosw)
-	WSXIO("A", Ufb, Aid)
+	WSXIO(arg1,  arg2,  arg3,  arg4,  arg5,  arg6,  arg7,  arg8,  arg9,  arg10,  arg11)
+	WSXIO("O",   Device,X,     Ufb,   X)
+	WSXIO("C",   Ufb)
+	WSXIO("X",   Ufb,   Cmd,   Oa,   [Oalen,] Map, Maplen, Iosw,  X,     X,      X) 
+	WSXIO("T",   Ufb,   Cmd,   Oa,   [Oalen,] Map, Maplen, Iosw,  Timer)
+	WSXIO("W",   Ufb,   Htime, Iosw)
+	WSXIO("A",   Ufb,   Aid)
 */
-int WSXIO(     arg1,  arg2,  arg3,  arg4,  arg5,  arg6,  arg7,  arg8,  arg9,  arg10,  arg11)
-unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *arg10, *arg11;
+int WSXIO(const char *function, ...)
 {
-	unsigned char *function;
+	va_list the_args;
+	void *next_arg;
+
 	unsigned char *command;
 	unsigned char *order_area;
 	unsigned char *mapping_area;
-	uint4 *ma_length;
+	int4 *ma_length;
 	unsigned char *iosw;
-	unsigned char *timer;
+	int4 *timer;
 
 	unsigned char vw_function[1], *vw_wsb, vw_lines[1];				/* vwang parameters.			*/
 	int4	map_len;
 	uint4 timeout, l;
-	unsigned char dummy[40];							/* Dummy storage.			*/
+	char pfkey_pressed[40];	
 	unsigned char vwang_scr[WSB_LENGTH+20];
-	char vw_no_mod[2];
-	unsigned char	aid_char;
+	unsigned char vw_no_mod[2];
+	unsigned char aid_char;
 	
-	werrlog(ERRORCODE(1),*arg1,0,0,0,0,0,0,0);
+	WL_wtrace("WSXIO","ENTRY","Entry into WSXIO(%c)", *function);
+
+	va_start(the_args, function);
 
 	vw_no_mod[0] = ' ';
-	
-	function   = arg1;
 
 	switch (function[0])								/* Select the workstation function.	*/
 	{
@@ -92,16 +114,17 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 		{
 			vw_function[0] = CLOSE_WORK_STATION;
 			vw_lines[0]  = (unsigned char)0;
-			vwang(vw_function,"\001\000\000\000",vw_lines,"X",NULL,NULL);
+			vwang(vw_function,(unsigned char*)"\001\000\000\000",vw_lines,"X",NULL,NULL);
 			break;								/* And we're all done.			*/
 		}
 		case WAIT:								/* Wait for a character.		*/
 		{
 			int4	sec100, seconds;
 
-			iosw = arg4;
-			memcpy(&sec100,arg3,sizeof(int4));				/* Get timeout period.			*/
-			wswap(&sec100);
+			next_arg = va_arg(the_args, void*);	/* Arg2 - skip */
+			next_arg = va_arg(the_args, void*);	/* Arg3 - Htime */
+
+			sec100 = WL_get_swap((int4*)next_arg);				/* Get timeout period.			*/
 			if ( sec100 < 0 )						/* Less then zero means no timeout	*/
 				seconds = 0;
 			else if ( sec100 == 0 )						/* No Wait -- instant timeout		*/
@@ -110,6 +133,7 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 				seconds = 1;
 			else
 				seconds = (sec100+50) / 100;				/* In seconds, not hundreths.		*/
+			iosw = va_arg(the_args, unsigned char*);/* Arg4 - IOSW */
 
 			if (vwang_aid() != AID_UNLOCKED)
 			{
@@ -126,7 +150,7 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 				**	Input only occurs on a read so an instant timeout would never allow
 				**	input and would likely setup an infinite loop.
 				*/
-				werrlog(ERRORCODE(8),"WAIT without TIMEOUT",0,0,0,0,0,0,0);
+				werrlog(WERRCODE(88008),"WAIT without TIMEOUT",0,0,0,0,0,0,0);
 				return(0);
 			}
 
@@ -141,7 +165,7 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 			vwang_scr[OA_ROW] = (unsigned char)1;
 			vw_lines[0]  = (unsigned char)WSB_ROWS;
 			vwang_timeout(seconds);						/* Set the timer.			*/
-			vwang(vw_function,vwang_scr,vw_lines,"A",dummy,vw_no_mod);	/* Go do the I/O action.		*/
+			vwang(vw_function,vwang_scr,vw_lines,"A",pfkey_pressed,vw_no_mod);	/* Go do the I/O action.		*/
 			vwang_timeout((int4)0);						/* Cancel timer				*/
 
 			aid_char = vwang_aid();						/* Get the current AID char		*/
@@ -159,25 +183,23 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 		case XIO:								/* Perform I/O operations.		*/
 		case TXIO:
 		{
-			command = arg3;
-			order_area = arg4;
+			next_arg = va_arg(the_args, void*);				/* Arg2 - skip */
+			command = va_arg(the_args, unsigned char*);			/* Arg3 - CMD */
+			order_area = va_arg(the_args, unsigned char*);			/* Arg4 - OA */
 
-			memcpy(&l,arg5,sizeof(int4));
-			wswap(&l);
+			next_arg = va_arg(the_args, void*);				/* Arg5 - OALEN - optional */
+			l = WL_get_swap((int4*)next_arg);
 			if ( l == 4 )
 			{
-				mapping_area 	= arg6;
-				ma_length    	= (uint4 *) arg7;
-				iosw         	= arg8;
-				timer		= arg9;
+				mapping_area 	= va_arg(the_args, unsigned char*);	/* Arg6 - mapping area */;
 			}
 			else
 			{
-				mapping_area 	= arg5;
-				ma_length    	= (uint4 *) arg6;
-				iosw         	= arg7;
-				timer		= arg8;
+				mapping_area 	= (unsigned char*)next_arg;		/* Arg6 - mapping area */
 			}
+			ma_length    	= va_arg(the_args, int4*);			/* Arg7 - MAP LEN */
+			iosw         	= va_arg(the_args, unsigned char*);		/* Arg8 - IOSW */
+			timer		= va_arg(the_args, int4*);			/* Arg9 - TIMER */
 
 			switch(command[0])						/* Determine the I/O operation.		*/
 			{
@@ -194,15 +216,14 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 				vw_function[0] = WRITE_SELECTED; 
 				break;
 			default: 
-				werrlog(ERRORCODE(2),(int)(command[0]),0,0,0,0,0,0,0);
+				werrlog(WERRCODE(88002),(int)(command[0]),0,0,0,0,0,0,0);
 				return(0);
 			}
 
-			memcpy(&map_len,ma_length,sizeof(int4));			/* Get the length of the mapping area.	*/
-			wswap(&map_len);
+			map_len = WL_get_swap(ma_length);				/* Get the length of the mapping area.	*/
 			if (map_len > (WSB_LENGTH-OA_LENGTH) || map_len < 0)		/* Validate map length			*/
 			{
-				werrlog(ERRORCODE(6),map_len,0,0,0,0,0,0,0);
+				werrlog(WERRCODE(88006),map_len,0,0,0,0,0,0,0);
 				return(0);
 			}
 			vw_lines[0] = (map_len > 0) ? (map_len / WSB_COLS) : 0;		/* Determine the number of lines.	*/
@@ -212,12 +233,11 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 			
 			if (function[0] == TXIO)					/* If A TIMED READ			*/
 			{
-				memcpy((char *)&timeout,(char *)timer,sizeof(int4));
-				wswap(&timeout);
+				timeout = WL_get_swap(timer);
 				vwang_timeout(timeout);					/* Set the timer.			*/
 			}
 
-			vwang(vw_function,vw_wsb,vw_lines,"A",dummy,vw_no_mod);		/* Go do the I/O action.		*/
+			vwang(vw_function,vw_wsb,vw_lines,"A",pfkey_pressed,vw_no_mod);		/* Go do the I/O action.		*/
 
 			if (command[0] == XIO_WRITE || command[0] == XIO_WRITE_SELECTED)
 			{
@@ -242,23 +262,45 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 			**	To compensate for not modelling a client/server we check to see if
 			**	there are keystrokes waiting to be read and if so we do a 1 second Wait.
 			*/
+			unsigned char* aid;
+			next_arg = va_arg(the_args, void*);	/* Arg2 - skip */
+			aid = va_arg(the_args, unsigned char*);	/* Arg3 - AID */
 
-			*arg3 = vwang_aid_read_unlocked();
+			*aid = vwang_aid_read_unlocked();
 			break;								/* Exit.				*/
 		}
 
 		default:
 		{
-			werrlog(ERRORCODE(4),function[0],0,0,0,0,0,0,0);
+			werrlog(WERRCODE(88004),function[0],0,0,0,0,0,0,0);
 			return(0);
 		}
 	}
+	va_end(the_args);
 	return(0);
 }
 
 /*
 **	History:
 **	$Log: wsxio.c,v $
+**	Revision 1.20  2003/01/31 19:08:36  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.19  2003/01/29 18:59:01  gsl
+**	Change to use stdargs.h
+**	
+**	Revision 1.18  2002/12/10 20:54:05  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.17  2002/12/09 21:09:35  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.16  2002/08/01 14:45:09  gsl
+**	type warnings
+**	
+**	Revision 1.15  2002/07/12 17:01:08  gsl
+**	Make WL_ global unique changes
+**	
 **	Revision 1.14  1998/07/10 15:31:10  gsl
 **	Initialize the no_mod field to vwang()
 **	

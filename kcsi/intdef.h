@@ -1,16 +1,19 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 /*
 **	File:		intdef.h
@@ -58,8 +61,8 @@ typedef  unsigned int      uint4;
 /*
 **	History:
 **	$Log: intdef.h,v $
-**	Revision 1.2.2.1  2002/11/12 15:56:26  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.4  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
 **	
 **	Revision 1.3  2002/07/18 21:04:26  gsl
 **	Remove MSDOS code

@@ -1,13 +1,25 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 /*
 **	File:		input.c
@@ -38,7 +50,7 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 #include <errno.h>
 
-#ifdef _MSC_VER
+#ifdef WIN32
 #include <io.h>
 #endif
 
@@ -112,7 +124,6 @@ int get_cobol_inline(void)
 **	linesize	Max size of line
 **
 **	Globals:
-**	comments	Flag to include comments in output file.
 **
 **	Return:
 **	NORMAL_LINE	Line was not in conditional code, no special processing needed.
@@ -130,35 +141,25 @@ int get_cobol_inline(void)
 int get_cobol_line(char *the_line, int linesize)
 {
 	static int	line_status;
-	int		discard_this_line;
 
-	do
+	if ( get_held_line(the_line) )					/* First check for externally held line		*/
 	{
-		discard_this_line = 0;
-	
-		if ( get_held_line(the_line) )					/* First check for externally held line		*/
-		{
-			tokenize(the_line, line_status);			/* Re-tokenize it, (use last line_status)	*/
-		}
-		else
-		{
-			line_status = get_next_cobol_line(the_line, linesize);	/* Get a new line				*/
+		tokenize(the_line, line_status);			/* Re-tokenize it, (use last line_status)	*/
+	}
+	else
+	{
+		line_status = get_next_cobol_line(the_line, linesize);	/* Get a new line				*/
 
-			debug2_print_line(the_line);
+		debug2_print_line(the_line);
 
-			if (NORMAL_LINE==line_status || PROCESS_LINE==line_status)
+		if (NORMAL_LINE==line_status || PROCESS_LINE==line_status)
+		{
+			if ( iscomment(the_line) )
 			{
-				if ( iscomment(the_line) )
-				{
-					handle_directives(the_line);
-					if (!comments)
-					{
-						discard_this_line = 1;		/* Discard normal comment lines			*/
-					}
-				}
+				handle_directives(the_line);
 			}
 		}
-	} while(discard_this_line);
+	}
 
 	return line_status;
 }
@@ -177,7 +178,7 @@ int get_cobol_line(char *the_line, int linesize)
 **			A line with a COPY statement will be returned as a COMMENT.
 **			The native COPY statement (.wcb) will also be returned as a COMMENT.
 **			(It will be SPECIAL_COMMENT to force it to be included in the .cob file.)
-**			If generating copybooks the native COPY statement (.lib) will
+**			If generating copybooks the native COPY statement will
 **			be returned as a NOPROCESS_LINE.
 **
 **			If a line contains data before the COPY keyword the line will be split
@@ -232,41 +233,45 @@ int get_next_cobol_line(char *the_line, int linesize)
 	int		found_copy;
 	int		cache_index;
 	TOKEN		tmptok;
-	char		*ptr;
 	int		found_period;
 
-	if ( 1==open_the_copybook )
+	if (open_the_copybook)
 	{
-		/*
-		**	Ready to open copybook but first put out the native COPY statement as a comment.
-		*/
-		sprintf(split_saveline, "      *COPY \"%s\".\n", wcb_copybook);
-		split_line_status = SPECIAL_COMMENT;
-		open_the_copybook = 2;
-
-		if (do_xtab)
+		if ( 1==open_the_copybook ) /* step 1 */
 		{
-			xtab_log(context_infile_name(curr_cob_context), 
-				copy_line_num, "COPY", wcb_copybook);
-		}
-	}
-	else if ( 2==open_the_copybook && copylib )
-	{
-		/*
-		**	If generating copybooks then write the native COPY copybook.lib statement.
-		*/
-		sprintf(split_saveline, "       COPY \"%s\".\n", lib_copybook);
-		split_line_status = NOPROCESS_LINE;	
-		open_the_copybook = 3;
-	}
-	else if ( open_the_copybook )
-	{
-		/*
-		**	The last time thru has set everything up for the copybook to be opened.
-		*/
-		open_the_copybook = 0;
 
-		curr_cob_context = open_cob_context(wcb_copybook,libopen_copybook);
+			/*
+			**	Setup split_saveline for processing this time thru
+			*/
+
+			if (!opt_gen_copylib)
+			{
+				/*
+				**	Ready to open copybook but first put out the native COPY statement as a comment.
+				*/
+				sprintf(split_saveline, "      *COPY \"%s\".\n", wcb_copybook);
+				split_line_status = SPECIAL_COMMENT;
+			}
+			else
+			{
+				/*
+				**	If generating copybooks then write the native COPY copybook.lib statement.
+				*/
+				sprintf(split_saveline, "           COPY \"%s\".\n", lib_copybook);
+				split_line_status = NOPROCESS_LINE;	
+			}
+			open_the_copybook = 2;
+
+		}
+		else /* step 2 */
+		{
+			/*
+			**	The last time thru has set everything up for the copybook to be opened.
+			*/
+			open_the_copybook = 0;
+
+			curr_cob_context = open_cob_context(wcb_copybook,libopen_copybook);
+		}
 	}
 
 	is_a_comment = 0;
@@ -535,8 +540,7 @@ int get_next_cobol_line(char *the_line, int linesize)
 			}
 			else if ( LITERAL == tmptok.type )
 			{
-				tmptok.data[0] = ' ';
-				if (ptr = strchr(tmptok.data,'\"')) *ptr = ' ';
+				remove_quotes(tmptok.data);
 				sscanf(tmptok.data,"%s",file_name);
 				parse_step = 3;
 				break;
@@ -608,8 +612,7 @@ int get_next_cobol_line(char *the_line, int linesize)
 		}
 		else if ( (4==parse_step || 6==parse_step) && LITERAL == tmptok.type )
 		{
-			tmptok.data[0] = ' ';
-			if (ptr = strchr(tmptok.data,'\"')) *ptr = ' ';
+			remove_quotes(tmptok.data);
 			if (4==parse_step)
 				sscanf(tmptok.data,"%s",library_name);
 			else
@@ -704,6 +707,12 @@ int get_next_cobol_line(char *the_line, int linesize)
 	parse_step = 1;								/* Reset the parse_step to look for COPY	*/
 	open_the_copybook = 1;							/* Next time we open the copybook		*/
 
+	if (opt_xtab)
+	{
+		xtab_log(context_infile_name(curr_cob_context), 
+			copy_line_num, "COPY", wcb_copybook);
+	}
+
 	tokenize(the_line, line_status);					/* Re-tokenize this COMMENT line.		*/
 	return(line_status);
 
@@ -739,14 +748,8 @@ int get_next_cobol_line(char *the_line, int linesize)
 **			We are processing a COPY stmt that was in conditional code.
 **
 **	Globals:
-**	vax_cobol	VAX cobol flag etc.
-**	lpi_cobol
 **	acu_cobol
-**	aix_cobol
 **	mf_cobol
-**	dmf_cobol
-**	unix_cobol
-**	dos_cobol
 **
 **	Return:
 **	NORMAL_LINE	Line was not in conditional code, no special processing needed.
@@ -876,18 +879,6 @@ int get_conditional_cobol_line(char *the_line, int linesize, A_file *the_file, i
 			write_log("WISP",'I',"COPYCODE","Start code being copied verbatim.");
 			xxx_code = COPY_CODE;
 		}
-		else if (vax_cobol && ((strpos(the_line,"$VAX_CODE") != -1) ||
-		     		       (strpos(the_line,"$VAX-CODE") != -1)    ))
-		{
-			write_log("WISP",'I',"VAXCOPY","Start Copy of VAX code.");
-			xxx_code = VAX_CODE;
-		}
-		else if (lpi_cobol && ( (strpos(the_line,"$LPI_CODE") != -1) ||
-					(strpos(the_line,"$LPI-CODE") != -1)    ))
-		{
-			write_log("WISP",'I',"LPICOPY","Start Copy of LPI code.");
-			xxx_code = LPI_CODE;
-		}
 		else if (acu_cobol && ((strpos(the_line,"$ACU_CODE") != -1) ||
 		     		       (strpos(the_line,"$ACU-CODE") != -1)    ))
 		{
@@ -900,13 +891,7 @@ int get_conditional_cobol_line(char *the_line, int linesize, A_file *the_file, i
 			write_log("WISP",'I',"ACNCOPY","Start Copy of ACN code.");
 			xxx_code = ACN_CODE;
 		}
-		else if (aix_cobol && ((strpos(the_line,"$AIX_CODE") != -1) ||
- 		    		       (strpos(the_line,"$AIX-CODE") != -1)    ))
-		{
-			write_log("WISP",'I',"AIXCOPY","Start Copy of AIX code.");
-			xxx_code = AIX_CODE;
-		}
-		else if ((mf_cobol || dmf_cobol) &&
+		else if (mf_cobol  &&
 					((strpos(the_line,"$MF_CODE") != -1) ||
 		            		 (strpos(the_line,"$MF-CODE") != -1)    ))
 		{
@@ -918,18 +903,6 @@ int get_conditional_cobol_line(char *the_line, int linesize, A_file *the_file, i
 		{
 			write_log("WISP",'I',"UNIXCOPY","Start Copy of UNIX code.");
 			xxx_code = UNIX_CODE;
-		}
-		else if (dos_cobol && ((strpos(the_line,"$DOS_CODE") != -1) ||
-		        	       (strpos(the_line,"$DOS-CODE") != -1)    ))
-		{
-			write_log("WISP",'I',"DOSCOPY","Start Copy of DOS code.");
-			xxx_code = DOS_CODE;
-		}
-		else if (dmf_cobol &&	((strpos(the_line,"$DMF_CODE") != -1) ||
-		            		 (strpos(the_line,"$DMF-CODE") != -1)    ))
-		{
-			write_log("WISP",'I',"DMFCODE","Start Copy of DMF code.");
-			xxx_code = DMF_CODE;
 		}
 
 		if (xxx_code)							/* Start of conditional code was found		*/
@@ -1096,7 +1069,7 @@ extern	char	*sys_errlist[];
 	if (NULL == wfgets(the_line,linesize,the_file->file))			/* Read next line				*/
 	{
 		const char* err_message;
-
+		
 		if (feof(the_file->file))					/* Check for End Of File			*/
 		{
 			return EOF;						/* Return EOF					*/
@@ -1155,9 +1128,8 @@ extern	char	*sys_errlist[];
 **	vol		Wang style volume name  (NOT USED)
 **
 **	Globals:
-**	cli_ildir	/INLIB	-I path
-**	cli_prefixpath		-P prefixpath
-**	trans_lib
+**	opt_cli_ildir	/INLIB	-I path
+**	opt_cli_prefixpath		-P prefixpath
 **	t_desc
 **	r_desc
 **
@@ -1174,7 +1146,7 @@ static void gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char
 {
 	write_log("WISP",'I',"COPYBOOK", "file=%s lib=%s vol=%s",file,lib,vol);
 
-	if (!lib[0] && !cli_ildir[0])
+	if (!lib[0] && !opt_cli_ildir[0])
 	{
 		write_log("WISP",'I',"NOINLIB","No INLIB specified for COPY %s.",file);
 	}
@@ -1185,49 +1157,111 @@ static void gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char
 	return;
 }
 
-static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *file, char *lib, char *vol)
+static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *xfile, char *xlib, char *xvol)
 {
-	char	file_wcb[80], file_lib[80];
+	char	lfile_wcb[80], lfile_lib[80]; /* lowercase */
+	char	ufile_wcb[80], ufile_lib[80]; /* uppercase */
+	char	ufile[80], ulib[80];
+	char	lfile[80], llib[80];
+
 	char	pathprefix[80];
 	char	*pathptr;
+	char	*copybookext = "cob";
+	int	found_copybook = 0;
 
-	if (lib[0])
+	if (opt_copybook_ext_cpy) 
 	{
-		sprintf(file_wcb,"%s%s%s.wcb",lib,DSS_STR,file);
-		sprintf(file_lib,"%s%s%s.lib",lib,DSS_STR,file);
+		copybookext = "cpy";
+	}
+	else if (opt_copybook_ext_lib) 
+	{
+		copybookext = "lib";
+	}
+
+	strcpy(ufile, xfile);
+	strcpy(ulib, xlib);
+	uppercase(ufile);
+	uppercase(ulib);
+
+	strcpy(lfile, xfile);
+	strcpy(llib, xlib);
+	lowercase(lfile);
+	lowercase(llib);
+
+	if (xlib[0])
+	{
+		sprintf(ufile_wcb,"%s%s%s.wcb",ulib,DSS_STR,ufile);
+		sprintf(ufile_lib,"%s%s%s.%s",ulib,DSS_STR,ufile,copybookext);
+
+		sprintf(lfile_wcb,"%s%s%s.wcb",llib,DSS_STR,lfile);
+		sprintf(lfile_lib,"%s%s%s.%s",llib,DSS_STR,lfile,copybookext);
 	}
 	else
 	{
-		sprintf(file_wcb,"%s.wcb",file);
-		sprintf(file_lib,"%s.lib",file);
-	}		
+		sprintf(ufile_wcb,"%s.wcb",ufile);
+		sprintf(ufile_lib,"%s.%s",ufile,copybookext);
 
-	lowercase(file_wcb);
-	lowercase(file_lib);
+		sprintf(lfile_wcb,"%s.wcb",lfile);
+		sprintf(lfile_lib,"%s.%s",lfile,copybookext);
+	}		
 
 	/*
 	**	Generate the WCB copybook name.
 	**
-	**	lib	cli_ildir	cli_prefixpath		wcb			open			copy
+	**	lib	opt_cli_ildir	opt_cli_prefixpath		wcb			open			copy
 	**	N	N		x			file.wcb		file.lib		file.lib
 	**	Y	x		N			../lib/file.wcb		../lib/file.lib		../lib/file.lib
 	**	N	Y		x			Ipath/file.wcb		Ipath/file.lib		Ipath/file.lib
 	**	Y	x		Y			Ppath/lib/file.wcb	Ppath/lib/file.lib	lib/file.lib
 	*/
 
-	if (!lib[0] && !cli_ildir[0])
+	if (!xlib[0] && !opt_cli_ildir[0])
 	{
-		strcpy(wcb,file_wcb);
-		strcpy(open_cob,file_lib);
-		strcpy(copy_cob,file_lib);
+		/* Assume upper */
+		strcpy(wcb,ufile_wcb);
+		strcpy(open_cob,ufile_lib);
+		strcpy(copy_cob,ufile_lib);
+		if (0==access(wcb,0))
+		{
+			return;
+		}
+
+		/* Try lower */
+		strcpy(wcb,lfile_wcb);
+		if (0==access(wcb,0))
+		{
+			strcpy(open_cob,lfile_lib);
+			strcpy(copy_cob,lfile_lib);
+			return;
+		}
+
+		/* Default to upper */
+		strcpy(wcb,ufile_wcb);
 		return;
 	}
 
-	if (lib[0] && !cli_prefixpath[0])
+	if (xlib[0] && !opt_cli_prefixpath[0])
 	{
-		sprintf(wcb,     "..%s%s",DSS_STR,file_wcb);
-		sprintf(open_cob,"..%s%s",DSS_STR,file_lib);
-		sprintf(copy_cob,"..%s%s",DSS_STR,file_lib);
+		/* Assume upper */
+		sprintf(wcb,     "..%s%s",DSS_STR,ufile_wcb);
+		sprintf(open_cob,"..%s%s",DSS_STR,ufile_lib);
+		sprintf(copy_cob,"..%s%s",DSS_STR,ufile_lib);
+		if (0==access(wcb,0))
+		{
+			return;
+		}
+
+		/* Try lower */
+		sprintf(wcb,     "..%s%s",DSS_STR,lfile_wcb);
+		if (0==access(wcb,0))
+		{
+			sprintf(open_cob,"..%s%s",DSS_STR,lfile_lib);
+			sprintf(copy_cob,"..%s%s",DSS_STR,lfile_lib);
+			return;
+		}
+
+		/* Default to upper */
+		sprintf(wcb,     "..%s%s",DSS_STR,ufile_wcb);
 		return;
 	}
 
@@ -1235,16 +1269,15 @@ static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, 
 	**	If no library then search the -I path else search the -P path.
 	*/
 
-	strcpy(wcb,file_wcb);							/* Set default in case of bad path		*/
-	strcpy(pathprefix,".");							/* Set default in case of bad path		*/
+	found_copybook = 0;
 
-	if (!lib[0])
+	if (!xlib[0])
 	{
-		pathptr = cli_ildir;
+		pathptr = opt_cli_ildir;
 	}
 	else
 	{
-		pathptr = cli_prefixpath;
+		pathptr = opt_cli_prefixpath;
 	}
 
 	/*
@@ -1263,25 +1296,65 @@ static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, 
 			pathprefix[i] = *pathptr;
 		}
 		pathprefix[i] = (char)0;
-		pathptr++;							/* Skip over the path seperator char		*/
+		pathptr++;			/* Skip over the path seperator char		*/
 		if (0==i)
 		{
-			strcpy(pathprefix,".");					/* Empty prefix use "."				*/
+			strcpy(pathprefix,".");	/* Empty prefix use "."				*/
 		}
 
-		sprintf(wcb,"%s%s%s",pathprefix,DSS_STR,file_wcb);
+		sprintf(wcb,"%s%s%s",pathprefix,DSS_STR,ufile_wcb);
 
 		/*
 		**	Break if we find a match.
 		*/
-		if (0==access(wcb,0)) break;
+		if (0==access(wcb,0)) 
+		{
+			/* Default is uppercase so just break */
+			found_copybook = 1;
+			break;
+		}
+
+		/* Try lowercase */
+		sprintf(wcb,"%s%s%s",pathprefix,DSS_STR,lfile_wcb);
+		if (0==access(wcb,0)) 
+		{
+			/* Copy lower unto upper so end logic works using the upper fields */
+			strcpy(ufile_lib, lfile_lib);
+			found_copybook = 1;
+			break;
+		}
 	}
 
-	sprintf(open_cob,"%s%s%s",pathprefix,DSS_STR,file_lib);
-
-	if (!lib[0])
+	if (!found_copybook)
 	{
-		sprintf(copy_cob,"%s%s%s",pathprefix,DSS_STR,file_lib);
+		/* Assume upper */
+		strcpy(wcb,ufile_wcb);
+		strcpy(open_cob,ufile_lib);
+		strcpy(copy_cob,ufile_lib);
+		if (0==access(wcb,0))
+		{
+			return;
+		}
+
+		/* Try lower */
+		strcpy(wcb,lfile_wcb);
+		if (0==access(wcb,0))
+		{
+			strcpy(open_cob,lfile_lib);
+			strcpy(copy_cob,lfile_lib);
+			return;
+		}
+
+		/* Default to upper */
+		strcpy(wcb,ufile_wcb);
+		return;
+	}
+
+	sprintf(open_cob,"%s%s%s",pathprefix,DSS_STR,ufile_lib);
+
+	if (!xlib[0])
+	{
+		sprintf(copy_cob,"%s%s%s",pathprefix,DSS_STR,ufile_lib);
 	}
 	else
 	{
@@ -1289,7 +1362,7 @@ static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, 
 		**	When using the prefixpath we don't use the full path in
 		**	the COPY statements only the lib/file.lib part.
 		*/
-		strcpy(copy_cob,file_lib);
+		strcpy(copy_cob, ufile_lib);
 	}
 
 	return;
@@ -1344,8 +1417,8 @@ static int handle_directives(char *the_line)
 
 	if ((i = strpos(the_line,"$WANG_PROC")) != -1)				/* look for the PROC keyword		*/
 	{
-		isaproc = 1;							/* Set the flag.			*/
-		write_log("WISP",'I',"PROCSET","PROC flag set for next OPEN statement");
+		/* isaproc = 1; */
+		write_log("WISP",'W',"$WANG_PROC","$WANG_PROC is an obsolete directive.");
 	}
 
 	if ((i = strpos(the_line,"$AUTOLOCKPRINT")) != -1)			/* On VMS use automatic locking on 	*/
@@ -1383,20 +1456,6 @@ static int handle_directives(char *the_line)
 		multiplelock = 1;
 		write_log("WISP",'I',"MULTIPLELOCK","Add WITH LOCK ON MULTIPLE RECORDS to next file.");
 	}
-
-#ifdef OLD
-This has been disabled because bugs in Micro Focus support of nested programs.  Specifically SEARCH failed and occasionally IF
-also failed because of addressing errors.  Additionally SUN COBOL would not compile nested programs.
-1/31/92 GSL
-	if ((i = strpos(the_line,"$LINKMAIN")) != -1)
-	{
-		if (mf_cobol || aix_cobol)
-		{
-			linkmain = 1;
-			write_log("WISP",'I',"LINKMAIN","Found $LINKMAIN directive");
-		}
-	}
-#endif
 
 	if ((i = strpos(the_line,"$NOOPTIONAL")) != -1)
 	{
@@ -1601,14 +1660,51 @@ int set_end_of_input(void)
 /*
 **	History:
 **	$Log: input.c,v $
-**	Revision 1.11.2.1  2002/09/05 19:22:30  gsl
-**	LINUX
+**	Revision 1.24  2003/03/03 22:08:40  gsl
+**	rework the options and OPTION file handling
 **	
-**	Revision 1.11  2001/10/18 15:11:00  gsl
+**	Revision 1.23  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.22  2003/02/04 17:33:20  gsl
+**	fix copyright header
+**	
+**	Revision 1.21  2002/09/05 14:33:53  gsl
+**	fix const warning
+**	
+**	Revision 1.20  2002/09/04 18:11:46  gsl
+**	LINUX sys_errlist
+**	
+**	Revision 1.19  2002/08/12 20:13:52  gsl
+**	quotes and literals
+**	
+**	Revision 1.18  2002/08/09 20:43:25  gsl
+**	FIx recent bug in open COPY book logic related to not generating the native path comment
+**	
+**	Revision 1.17  2002/07/18 21:04:25  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.16  2002/07/02 04:08:44  gsl
+**	Cleanup cobol types
+**	
+**	Revision 1.15  2002/06/21 20:49:32  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.14  2002/06/21 03:13:18  gsl
+**	Remove VAX
+**	
+**	Revision 1.13  2002/06/20 22:53:35  gsl
+**	remove obsolete code
+**	
+**	Revision 1.12  2002/05/16 21:35:23  gsl
+**	Allow uppercase copybooks
+**	Change copybook ext to .cob
+**	
+**	Revision 1.11  2001-10-18 11:11:00-04  gsl
 **	Changed conditional code uncomment logic so it only modifies regular comment
 **	lines that have a '*' in col 7. If no comment in col 7 then it is passed thru
 **	unchanged.
-**	
+**
 **	Revision 1.10  2001-09-13 10:13:03-04  gsl
 **	Remove VMS ifdefs
 **	Add xtab_log() of COPY statments

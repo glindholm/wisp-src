@@ -118,8 +118,8 @@ WISPTRAN=wisp
 #COBOL=ccbl
 #OBJFILE=$objectdir/$FILENAME
 #TARGET=$OBJFILE
-#COBFLAGS="-Da4 -Di -Lwo \@.lst -o $OBJFILE"
-#DEBUG_COBFLAGS="-Zd -Za -Da4 -Di -Lwo \@.lst -o $OBJFILE"
+#COBFLAGS="-Da4 -Lwo \@.lst -o $OBJFILE"
+#DEBUG_COBFLAGS="-Gd -Za -Da4 -Lwo \@.lst -o $OBJFILE"
 
 ### *** Micro Focus ***
 #WISPTYPE="-VMF"

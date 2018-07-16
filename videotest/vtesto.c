@@ -15,7 +15,7 @@
 
 static int testo1();
 
-testo()
+int testo()
 {
 	testo1();
 	return(SUCCESS);
@@ -23,7 +23,6 @@ testo()
 
 static int testo1()
 {
-	extern char vchr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];
 	register int i;
 
 	vmove(0,0);

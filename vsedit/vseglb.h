@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 #ifndef	_VSEGLB_H
 #define	_VSEGLB_H
 #include "vsegp.h"
@@ -222,7 +241,7 @@ Globals used in getparms
 
 EXTERN_DEF int4 GPINT[255];
 EXTERN_DEF int4 gpcnt;
-EXTERN_DEF GPARG gparg;
+EXTERN_DEF char* gparg[500];
 EXTERN_DEF int4 gppfkeys;
 EXTERN_DEF int4 gppfkey;
 EXTERN_DEF char gppfrcvr[1];
@@ -309,7 +328,7 @@ EXTERN_DEF	char vse_file_message[81];
 
 EXTERN_DEF char vse_stat_message[81] INIT_80_SPACES;
 
-EXTERN_DEF      char vse_tab_setting[81];
+EXTERN_DEF unsigned char vse_tab_setting[81];
 
 EXTERN_DEF int4 vse_save_row INIT_MINUS_ONE;
 EXTERN_DEF int4 vse_save_col INIT_MINUS_ONE;
@@ -324,6 +343,15 @@ EXTERN_DEF int4 vse_file_changed INIT_ZERO;
 /*
 **	History:
 **	$Log: vseglb.h,v $
+**	Revision 1.14  2003/02/19 22:16:13  gsl
+**	Add GETPARM2() the 2 arg interface to GETPARM()
+**	
+**	Revision 1.13  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.12  2002/08/01 15:57:50  gsl
+**	type warnings
+**	
 **	Revision 1.11  1996/09/03 22:24:05  gsl
 **	drcs update
 **	

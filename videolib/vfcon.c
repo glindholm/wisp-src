@@ -9,7 +9,7 @@
 
 #include <ctype.h>										/* Get character type macros.	*/
 #include <stdio.h>										/* Reference standard I/O.	*/
-#include <v/video.h>										/* Reference video definitions.	*/
+#include "video.h"										/* Reference video definitions.	*/
 
 #define DQ '\042'										/* Double quotes.		*/
 #define SQ '\047'										/* Single quote.		*/
@@ -62,6 +62,33 @@ static int rules[4][36] = {
 	 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0,17,18,19,20,21,22,23,24, 0, 0, 0, 0, 0, 0, 0, 0,33,34, 0, 0,
 	 0, 0, 0, 0, 0, 0, 0, 0, 9,10,11,12,13,14,15,16, 0, 0, 0, 0, 0, 0, 0, 0,25,26,27,28,29,30,31,32, 0, 0,35,36};
 
+
+static int StrPos(const char *src, const char *srch)				/* search a string for the occurence of another string	*/
+										/* src is the string to search, srch is the match	*/
+{
+	int i;
+	const char *tsrc,*tsrch;
+
+	i = 0;									/* start position counter			*/
+	do
+	{
+		tsrc = src;							/* copy the pointer				*/
+		tsrch = srch;
+
+		do
+		{
+			if (*tsrch != *tsrc) break;				/* no match					*/
+			tsrch++;
+			tsrc++;
+		} while (*tsrch && *tsrc);					/* till null					*/
+		if (!*tsrch) return(i);						/* a match					*/
+		if (!*tsrc) return(-1);						/* out of space					*/
+		i++;
+	} while (*(++src));							/* till null					*/
+	return(-1);								/* didn't match					*/
+}
+
+
 /*			Entry point.												*/
 
 vfcon(ipf, v0, v1) char *ipf; int v0,v1;
@@ -79,7 +106,7 @@ vfcon(ipf, v0, v1) char *ipf; int v0,v1;
 	strcpy(infile,ipf);
 	strcpy(outfile,ipf);
 
-	if (strpos(infile,".hpf") < 0) strcat(infile,".hpf");
+	if (StrPos(infile,".hpf") < 0) strcat(infile,".hpf");
 
 	if ((in = fopen(infile,"r")) == NULL)
 	{
@@ -87,10 +114,9 @@ vfcon(ipf, v0, v1) char *ipf; int v0,v1;
 		exit();
 	}
 
-	if ((i = strpos(outfile,".hpf")) >= 0) outfile[i] = CHAR_NULL;
+	if ((i = StrPos(outfile,".hpf")) >= 0) outfile[i] = CHAR_NULL;
 	strcat(outfile,".vvf");
 
-#ifndef VMS
 	if ((out = fopen(outfile,"r")) != NULL)
 	{
 		fclose(out);
@@ -103,7 +129,6 @@ vfcon(ipf, v0, v1) char *ipf; int v0,v1;
 			exit();
 		}
 	}
-#endif
 
 	if ((out = fopen("temp.sif","w")) == NULL)
 	{
@@ -187,15 +212,15 @@ static void strip_header(in,out) FILE *in,*out;
 		if (buf1[0] == CHAR_NULL)
 		{
 			if (!gl(in,buf2)) return;
-			if (strpos(buf2,"FORMSPEC  VERSION") >= 0)
+			if (StrPos(buf2,"FORMSPEC  VERSION") >= 0)
 			{
 				gl(in,buf1);
 				gl(in,buf1);
-				if (strpos(buf1,"FORM NAME:") >= 0);
+				if (StrPos(buf1,"FORM NAME:") >= 0);
 				else if (buf1[0] == CHAR_NULL)
 				{
 					gl(in,buf2);
-					if (strpos(buf2,"Formsfile directory continued:") >= 0)
+					if (StrPos(buf2,"Formsfile directory continued:") >= 0)
 					{
 						gl(in,buf1);
 						gl(in,buf1);
@@ -233,7 +258,7 @@ static int gna(in,string) FILE *in; char *string;
 	{
 		if (gl(in,buff))
 		{
-			i = strpos(buff,string);
+			i = StrPos(buff,string);
 			if (i >= 0)
 			{
 				scanning = FALSE;
@@ -263,7 +288,7 @@ static void fapa(in,out,string) FILE *in,*out; char *string;
 	{
 		if (gl(in,buff))
 		{
-			i = strpos(buff,string);
+			i = StrPos(buff,string);
 			if (i >= 0)
 			{
 				put_after(out,buff,string);
@@ -289,7 +314,7 @@ static void glw(in,buff,string) FILE *in; char *buff, *string;
 	{
 		if (gl(in,buff))
 		{
-			i = strpos(buff,string);
+			i = StrPos(buff,string);
 			if (i >= 0) scanning = FALSE;
 		}
 		else
@@ -311,7 +336,7 @@ static void put_after(out,buff,string) FILE *out; char *buff,*string;
 	int i,j;
 	char *ptr;
 
-	i = strpos(buff,string);
+	i = StrPos(buff,string);
 	j = strlen(string);
 	ptr = buff+i+j;
 
@@ -326,7 +351,7 @@ static int decode_after(buff,string) char *buff, *string;
 
 	value = 0;
 	
-	i = strpos(buff,string);
+	i = StrPos(buff,string);
 	j = strlen(string);
 	ptr = buff+i+j;
 
@@ -382,7 +407,7 @@ static int addp(outbuf,inbuf,string) char outbuf[],inbuf[]; char *string;
 	ib = inbuf;
 	tb = temp;
 
-	i = strpos(inbuf,string);
+	i = StrPos(inbuf,string);
 	i = i + strlen(string);
 	ib = ib + i + 1;
 
@@ -429,7 +454,7 @@ static int process_field(in,out,row,col,len,k)	FILE *in,*out;
 	addp(outbuf,inbuf,"FType:");
 
 	gl(in,inbuf2);
-	i = strpos(inbuf2,"Init Value:") + 11;
+	i = StrPos(inbuf2,"Init Value:") + 11;
 	if (strlen(&inbuf2[i])) strcat(outbuf,&inbuf2[i+1]);
 	fprintf(out,"%s\n",outbuf);
 	if (verbosity >= 2) printf("   Field: %s\n",outbuf);
@@ -446,7 +471,7 @@ static int process_field(in,out,row,col,len,k)	FILE *in,*out;
 	if (verbosity >= 2) printf("      DType: %s\n",outbuf);
 
 	gl(in,inbuf);
-	if (strpos(inbuf,"*** PROCESSING SPECIFICATIONS ***") >= 0) process_specs(in,out);
+	if (StrPos(inbuf,"*** PROCESSING SPECIFICATIONS ***") >= 0) process_specs(in,out);
 	else
 	{
 		fprintf(out,"0\n");
@@ -474,7 +499,7 @@ static void process_specs(in,out) FILE *in, *out;
 	{
 		if (!gl(in,inbuf)) active = FALSE;					/* End of file means we are done.	*/
 		if (inbuf[0] == CHAR_NULL) active = FALSE;				/* A blank line means we are done.	*/
-		else if (strpos(inbuf,"Field: ") == 0)					/* The tag "Field:" means we are done.	*/
+		else if (StrPos(inbuf,"Field: ") == 0)					/* The tag "Field:" means we are done.	*/
 		{
 			active = FALSE;
 			pl(inbuf);							/* But put it back to avoid overrun.	*/
@@ -601,13 +626,13 @@ static int pxs(in,ext) FILE *in; char *ext;
 		{
 			while (gl(in,buff) && (buff[0] == 0));
 			if (feof(in)) scanning = FALSE;
-			else if (strpos(buff,"Field: ") == 0) scanning = FALSE;
+			else if (StrPos(buff,"Field: ") == 0) scanning = FALSE;
 		}
 
-		if (strpos(buff,"INIT")   == 0) scanning = FALSE;
-		else if (strpos(buff,"FIELD")  == 0) scanning = FALSE;
-		else if (strpos(buff,"FINISH") == 0) scanning = FALSE;
-		else if (strpos(buff,"LOCALEDITS") == 0) scanning = FALSE;
+		if (StrPos(buff,"INIT")   == 0) scanning = FALSE;
+		else if (StrPos(buff,"FIELD")  == 0) scanning = FALSE;
+		else if (StrPos(buff,"FINISH") == 0) scanning = FALSE;
+		else if (StrPos(buff,"LOCALEDITS") == 0) scanning = FALSE;
 		else if (scanning)
 		{
 recat:			gl(in,buf2);
@@ -828,7 +853,7 @@ static void process_form(in,out,tli) FILE *in,*out; int tli;
 	{
 		if (!gl(in,buff)) scanning = FALSE;
 
-		else if (strpos(buff,"Form: ") >= 0)
+		else if (StrPos(buff,"Form: ") >= 0)
 		{
 			scanning = FALSE;							/* End of field scan.		*/
 			pl(buff);								/* Put the buffer back.		*/
@@ -837,7 +862,7 @@ static void process_form(in,out,tli) FILE *in,*out; int tli;
 		else
 		{
 			fprintf(temp,"%s\n",buff);
-			if (strpos(buff,"Field: ") >= 0) fc++;
+			if (StrPos(buff,"Field: ") >= 0) fc++;
 		}
 	}
 
@@ -1155,11 +1180,7 @@ static int obedient(lt,r,c) int lt,r,c;					/* Does a character obey the rules f
 
 static void remove_file(path) char *path;
 {
-#ifdef VMS
-	while (delete(path) != -1);
-#else
 	unlink(path);
-#endif
 }
 
 crossing_lines(r,c,c0,c1,c2) int r,c; char c0,c1,c2;

@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		costar.c
 **
@@ -165,7 +184,7 @@ int use_costar(void)
 			}
 #endif
 
-			if (ptr = getenv("W4W"))
+			if ((ptr = getenv("W4W")))
 			{
 				switch(*ptr)
 				{
@@ -189,7 +208,7 @@ int use_costar(void)
 				}
 			}
 
-			if (costar_flag && get_wisp_option("COSTARV2"))
+			if (costar_flag && WL_get_wisp_option("COSTARV2"))
 			{
 				attr_mode = ATTR_MODE_V2;
 				costar_flag = 2;
@@ -300,7 +319,7 @@ fac_t costar_fac(fac_t the_fac)
 **	flag		1=enable, 0=disable
 **
 **	GLOBALS:
-**	vkeyvalue(GENERIC_MOUSE)
+**	VL_vkeyvalue(GENERIC_MOUSE)
 **			The mouse prefix to use which is either loaded from vcap file or defaults.
 **
 **	RETURN:		None
@@ -318,7 +337,7 @@ void costar_enable_mouse(int flag)
 		/*
 		**	The first time in we build the control strings
 		*/
-		sprintf(mouse_on,  "%cUWSCRIPT%s,%s%c",  magic_char, COSTAR_MOUSE_SCRIPT, vkeyvalue(GENERIC_MOUSE), magic_char);
+		sprintf(mouse_on,  "%cUWSCRIPT%s,%s%c",  magic_char, COSTAR_MOUSE_SCRIPT, VL_vkeyvalue(GENERIC_MOUSE), magic_char);
 		sprintf(mouse_off, "%cUWSCRIPTSTOP%s%c", magic_char, COSTAR_MOUSE_SCRIPT, magic_char);
 		first = 0;
 	}
@@ -370,7 +389,7 @@ int costar_get_mouse_position(int *m_row, int *m_col)
 
 	for(i=0;i<8;i++)
 	{
-		the_char = vgetc();
+		the_char = VL_vgetc();
 		if (0x0a == the_char || 0x0d == the_char)
 		{
 			break;
@@ -421,7 +440,7 @@ static void costar_raw_api(const char *buff)
 	if (!use_costar()) return;
 
 	vwang_flush();
-	vcontrol((char*)buff);
+	VL_vcontrol((char*)buff);
 }
 
 /*
@@ -522,7 +541,7 @@ void costar_title(const char *title)
 {
 	char buff[256];
 	
-	if ( !wbackground() && !nativescreens())
+	if ( !wbackground() && !wisp_nativescreens())
 	{
 		sprintf(buff,  "%cUWSCRIPT%s,%s%c",  magic_char, COSTAR_TITLE_SCRIPT, title, magic_char);
 		costar_raw_api(buff);
@@ -621,9 +640,9 @@ static char **load_hotspots(void)
 
 		i = 0;
 		
-		build_wisp_config_path("HOTSPOTS",path);
+		WL_build_wisp_config_path("HOTSPOTS",path);
 
-		if (fh = fopen(path,"r"))
+		if ((fh = fopen(path,"r")))
 		{
 			for(;i<MAX_HOTSPOTS;)
 			{
@@ -631,7 +650,7 @@ static char **load_hotspots(void)
 
 				if ( 1 == fscanf(fh,"%s",buff) )
 				{
-					hotspots[i++] = wstrdup(buff);
+					hotspots[i++] = wisp_strdup(buff);
 				}
 				else if (feof(fh))
 				{
@@ -705,8 +724,8 @@ static w4w_pfkey_map_s *load_w4wmap(void)
 		
 		first = 0;
 		
-		build_wisp_config_path("W4WMAP",path);
-		if (fh = fopen(path,"r"))
+		WL_build_wisp_config_path("W4WMAP",path);
+		if ((fh = fopen(path,"r")))
 		{
 			char	buff[256];
 			char	keyword[256];
@@ -728,12 +747,12 @@ static w4w_pfkey_map_s *load_w4wmap(void)
 				if (2 != cnt)
 				{
 					sprintf(errbuff,"%%W4W-W-MAP Invalid entry [%s]\n",buff);
-					werr_write(errbuff);
+					WL_werr_write(errbuff);
 					continue;
 				}
 
 			        pfkey_code = -1;
-				upper_string(keyword);
+				WL_upper_string(keyword);
 				if (0==strcmp("ENTER",keyword))
 				{
 					pfkey_code = 0;
@@ -754,14 +773,14 @@ static w4w_pfkey_map_s *load_w4wmap(void)
 				if (-1 == pfkey_code)
 				{
 					sprintf(errbuff,"%%W4W-W-MAP Invalid keyword [%s]\n",buff);
-					werr_write(errbuff);
+					WL_werr_write(errbuff);
 					continue;
 				}
 
-				pfk = wmalloc(sizeof(w4w_pfkey_map_s));
+				pfk = wisp_malloc(sizeof(w4w_pfkey_map_s));
 				pfk->next = w4w_pfkey_head;
 				pfk->code = pfkey_code;
-				pfk->string = wstrdup(string);
+				pfk->string = wisp_strdup(string);
 
 				w4w_pfkey_head = pfk;
 
@@ -842,7 +861,7 @@ int w4w_mask_row(const char *the_row, char *the_mask)
 			**	For each hotspot search the line
 			*/
 	
-			for(row_ptr = the_row; hot_ptr = strstr(row_ptr,hotspots[hot_idx]); row_ptr = hot_ptr + 1)
+			for(row_ptr = the_row; (hot_ptr = strstr(row_ptr,hotspots[hot_idx])); row_ptr = hot_ptr + 1)
 			{
 				/*
 				**	Find each occurance of the hotspot on the line
@@ -874,7 +893,7 @@ int w4w_mask_row(const char *the_row, char *the_mask)
 			**	For each pfkey string search the line
 			*/
 	
-			for(row_ptr = the_row; hot_ptr = strstr(row_ptr,pfkey_curr->string); row_ptr = hot_ptr + 1)
+			for(row_ptr = the_row; (hot_ptr = strstr(row_ptr,pfkey_curr->string)); row_ptr = hot_ptr + 1)
 			{
 				/*
 				**	Find each occurance of the hotspot on the line
@@ -951,7 +970,7 @@ int w4w_click_row(int click_offset, const char *the_row)
 			**	For each pfkey string search the line
 			*/
 	
-			for(row_ptr = the_row; hot_ptr = strstr(row_ptr,pfkey_curr->string); row_ptr = hot_ptr + 1)
+			for(row_ptr = the_row; (hot_ptr = strstr(row_ptr,pfkey_curr->string)); row_ptr = hot_ptr + 1)
 			{
 				/*
 				**	Find each occurance of the hotspot on the line
@@ -1066,6 +1085,27 @@ int w4w_hotspot_vmode(void)
 /*
 **	History:
 **	$Log: costar.c,v $
+**	Revision 1.38  2003/01/31 21:24:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.37  2003/01/31 17:23:48  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.36  2002/07/15 20:16:00  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.35  2002/07/15 17:52:49  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.34  2002/07/11 14:33:59  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.33  2002/07/10 21:05:15  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.32  2002/07/02 21:15:23  gsl
+**	Rename wstrdup
+**	
 **	Revision 1.31  2001/09/25 15:11:15  gsl
 **	Remove unneeded ifdefs
 **	

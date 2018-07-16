@@ -101,7 +101,7 @@ void testd()
 	vmove(2,29);
 	vprint("NeoMedia Migrations Inc.");
 	vmove(3,29);
-	vprint("2201 Second Street Suite 402");
+	vprint("2201 Second Street, Suite 402");
 	vmove(4,29);
 	vprint("Fort Myers, FL 33901");
 

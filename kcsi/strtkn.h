@@ -1,5 +1,19 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 String token routines use an array of structures of type STR_TKN
 Any such array must be terminated by an entry containing a token
@@ -24,8 +38,8 @@ char *KCSI_lookup_strtkn_str(STRTKN *list, int token);
 /*
 **	History:
 **	$Log: strtkn.h,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:38  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.5  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
 **	
 **	Revision 1.4  2002/10/24 15:48:30  gsl
 **	Make globals unique

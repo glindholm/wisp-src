@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /* direct.c - direct interface between ACUCOBOL and 'C' */
 
 /* The following table can be used to link 'C' external variables with	*/
@@ -79,6 +93,9 @@ struct	DIRECTTABLE LIBDIRECT[] = {
 /*
 **	History:
 **	$Log: direct.c,v $
+**	Revision 1.3  2003/02/04 19:19:09  gsl
+**	fix header
+**	
 **	Revision 1.2  1996/09/17 23:45:34  gsl
 **	drcs update
 **	

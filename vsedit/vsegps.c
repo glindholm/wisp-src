@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*----
 This file contains the various GETPARM screens used by vse.
@@ -107,7 +122,7 @@ int vse_output(char *file, char *library, char *volume, char *sysname, int4 *sta
 	memcpy(start_field,"ALL",3);
 
 	gppfkeys=GP_PF_01|GP_PF_05|GP_PF_03;
-	wswap(&gppfkeys);
+	WL_wswap(&gppfkeys);
 
 	for(;;)
 	{
@@ -186,7 +201,7 @@ int vse_output(char *file, char *library, char *volume, char *sysname, int4 *sta
 			continue;
 		}
 
-		if (rc = validate_range(start_field,start_line,end_field,end_line))
+		if ((rc = validate_range(start_field,start_line,end_field,end_line)))
 		{
 			strcpy(message_field,vse_err(rc));
 			message_code = 2;
@@ -200,7 +215,7 @@ int vse_output(char *file, char *library, char *volume, char *sysname, int4 *sta
 		}
 		else
 		{
-			makepath(sysname);
+			WL_makepath(sysname);
 			return 0;
 		}
 	}
@@ -244,7 +259,7 @@ int vse_renumber_gp(char number_field[7], int4 *number, char incr_field[7], int4
 	for(;;)
 	{
 		gppfkeys=GP_PF_01;
-		wswap(&gppfkeys);
+		WL_wswap(&gppfkeys);
 		GPSETUP();
 		if (resp==0)
 		{
@@ -359,7 +374,7 @@ int vse_badnums_gp(char number_field[7], char incr_field[7], char *err_msg)
 	char	file_info[256];
 
 	gppfkeys=GP_PF_01;
-	wswap(&gppfkeys);
+	WL_wswap(&gppfkeys);
 	GPSETUP();
 	GPRES("BADNUMS ","EDITOR",1);
 	if (strlen(err_msg))
@@ -427,7 +442,7 @@ int vse_longline_gp(char *sysname)
 
 
 	gppfkeys=GP_PF_01;
-	wswap(&gppfkeys);
+	WL_wswap(&gppfkeys);
 	GPSETUP();
 	GPRES("LONGLINE","EDITOR",1);
 	GPMSG(" ");
@@ -484,7 +499,7 @@ int vse_readonly_gp(void)
 
 
 	gppfkeys=GP_PF_01;
-	wswap(&gppfkeys);
+	WL_wswap(&gppfkeys);
 	GPSETUP();
 	GPRES("READONLY","EDITOR",1);
 	GPMSG(" ");
@@ -559,7 +574,7 @@ int vse_defaults_gp(int hidden)
 	{
 		GPSETUP();
 		gppfkeys=GP_PF_01;
-		wswap(&gppfkeys);
+		WL_wswap(&gppfkeys);
 
 		if (0==resp)
 		{
@@ -647,8 +662,8 @@ int vse_defaults_gp(int hidden)
 
 			for (i=0; i<30; i += 3)
 			{
-				if ((' ' != tabs[i] && !isdigit(tabs[i])) ||
-				    (' ' != tabs[i+1] && !isdigit(tabs[i+1])) )
+				if ((' ' != tabs[i] && !isdigit((int)tabs[i])) ||
+				    (' ' != tabs[i+1] && !isdigit((int)tabs[i+1])) )
 				{
 					resp = RESP_TABS;
 					if ( 0==i )
@@ -710,7 +725,7 @@ int vse_defaults_gp(int hidden)
 	tabs[2] = tabs[5] = tabs[8] = tabs[11] = tabs[14] = tabs[17] = tabs[20] = tabs[23] = tabs[26] = ' ';
 	tabs[29] = (char)0;
 	strcpy(vse_gp_defaults_tabs,tabs);
-	strcpy(vse_tab_setting,tabstr);
+	strcpy((char*)vse_tab_setting,tabstr);
 
 	memcpy(vse_gp_defaults_mode,mode,5);
 	vse_gp_defaults_mode[5] = (char)0;
@@ -750,7 +765,7 @@ int vse_options_gp(int hidden)
 	{
 		GPSETUP();
 		gppfkeys=GP_PF_01;
-		wswap(&gppfkeys);
+		WL_wswap(&gppfkeys);
 
 		if (0==resp)
 		{
@@ -886,7 +901,7 @@ int vse_no_file_created(int rest)
 		strcpy(modified,"(The file has been modified.)");
 	}
 
-	sprintf(line_cnt,"%7ld",cnt);
+	sprintf(line_cnt,"%7d",cnt);
 	vsescr_init(ed_scr);
 	if (rest)
 	{
@@ -946,7 +961,7 @@ int vse_xcopy_gp(char *file_field, char *library_field, char *volume_field, char
 	int4	pick;
 
 	gppfkeys=GP_PF_01|GP_PF_05;
-	wswap(&gppfkeys);
+	WL_wswap(&gppfkeys);
 
 	for(;;)
 	{		
@@ -1109,7 +1124,7 @@ int vse_file_changed_gp(char *sysname)
 
 
 	gppfkeys=GP_PF_01;
-	wswap(&gppfkeys);
+	WL_wswap(&gppfkeys);
 	GPSETUP();
 	GPRES("CHANGED ","EDITOR",1);
 	GPMSG(" ");
@@ -1144,6 +1159,24 @@ int vse_file_changed_gp(char *sysname)
 /*
 **	History:
 **	$Log: vsegps.c,v $
+**	Revision 1.14  2003/02/05 21:47:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.13  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.12  2003/02/04 18:29:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.11  2002/08/01 16:00:54  gsl
+**	type warnings
+**	
+**	Revision 1.10  2002/07/12 17:17:07  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.9  2002/07/10 04:27:40  gsl
+**	Rename global routines with WL_ to make unique
+**	
 **	Revision 1.8  1996/09/03 22:24:06  gsl
 **	drcs update
 **	

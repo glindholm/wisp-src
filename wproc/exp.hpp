@@ -189,7 +189,7 @@ class expression_array : public object {
 //
 //	History:
 //	$Log: exp.hpp,v $
-//	Revision 1.6.2.1  2003/02/06 18:11:40  gsl
+//	Revision 1.7  2003/02/06 18:12:01  gsl
 //	Fix qualified name warning on
 //	 expression::validate_integer()
 //	

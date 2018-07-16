@@ -1,3 +1,26 @@
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 #include "#Defines.h"
 #include "#Classes.h"
 #include "#Prototypes.h"
@@ -592,7 +615,7 @@ cApplication::_CmdLine::Build (BOOL Exec, int i_TransComp)
 
 		if (cApp.CmdLine.WOptions->_1 == TRUE) strcat (ch_WCmdLine, " /1");
 		if (cApp.CmdLine.WOptions->_4 == TRUE) strcat (ch_WCmdLine, " /4");
-		if (cApp.CmdLine.WOptions->_C == TRUE) strcat (ch_WCmdLine, " /C");
+		if (cApp.CmdLine.WOptions->_F == TRUE) strcat (ch_WCmdLine, " /F");
 		if (cApp.CmdLine.WOptions->_D == TRUE) strcat (ch_WCmdLine, " /D");
 		if (cApp.CmdLine.WOptions->_e == TRUE) strcat (ch_WCmdLine, " /e");
 		if (cApp.CmdLine.WOptions->_f == TRUE) strcat (ch_WCmdLine, " /f");
@@ -601,7 +624,7 @@ cApplication::_CmdLine::Build (BOOL Exec, int i_TransComp)
 		if (cApp.CmdLine.WOptions->_m == TRUE) strcat (ch_WCmdLine, " /m");
 		if (cApp.CmdLine.WOptions->_M == TRUE) strcat (ch_WCmdLine, " /M");
 		if (cApp.CmdLine.WOptions->_q == TRUE) strcat (ch_WCmdLine, " /q");
-		if (cApp.CmdLine.WOptions->_R == TRUE) strcat (ch_WCmdLine, " /R");
+		if (cApp.CmdLine.WOptions->_G4 == TRUE) strcat (ch_WCmdLine, " /G4");
 		if (cApp.CmdLine.WOptions->_S == TRUE) strcat (ch_WCmdLine, " /S");
 		if (cApp.CmdLine.WOptions->_T == TRUE) strcat (ch_WCmdLine, " /T");
 		if (cApp.CmdLine.WOptions->_w == TRUE) strcat (ch_WCmdLine, " /w");
@@ -1027,15 +1050,15 @@ cApplication::_FSettings::GetMaster ()
 				BM_SETCHECK, BST_UNCHECKED, 0);
 		}
 		//==if an option is set in the file then check the checkbox===
-		if (strstr (ch_MasterOpt, "/C") != NULL) {
-			cApp.CmdLine.WOptions->_C = TRUE;
-			PostMessage (cWnd.OptionWnd.WCtls._C,
+		if (strstr (ch_MasterOpt, "/F") != NULL) {
+			cApp.CmdLine.WOptions->_F = TRUE;
+			PostMessage (cWnd.OptionWnd.WCtls._F,
 				BM_SETCHECK, BST_CHECKED, 0);
 		}
 		//==Otherwise uncheck the checkbox=============================
 		else {
-			cApp.CmdLine.WOptions->_C = FALSE;
-			PostMessage (cWnd.OptionWnd.WCtls._C,
+			cApp.CmdLine.WOptions->_F = FALSE;
+			PostMessage (cWnd.OptionWnd.WCtls._F,
 				BM_SETCHECK, BST_UNCHECKED, 0);
 		}
 		//==if an option is set in the file then check the checkbox===
@@ -1135,15 +1158,15 @@ cApplication::_FSettings::GetMaster ()
 				BM_SETCHECK, BST_UNCHECKED, 0);
 		}
 		//==if an option is set in the file then check the checkbox===
-		if (strstr (ch_MasterOpt, "/R") != NULL) {
-			cApp.CmdLine.WOptions->_R = TRUE;
-			PostMessage (cWnd.OptionWnd.WCtls._R,
+		if (strstr (ch_MasterOpt, "/G4") != NULL) {
+			cApp.CmdLine.WOptions->_G4 = TRUE;
+			PostMessage (cWnd.OptionWnd.WCtls._G4,
 				BM_SETCHECK, BST_CHECKED, 0);
 		}
 		//==Otherwise uncheck the checkbox=============================
 		else {
-			cApp.CmdLine.WOptions->_R = FALSE;
-			PostMessage (cWnd.OptionWnd.WCtls._R,
+			cApp.CmdLine.WOptions->_G4 = FALSE;
+			PostMessage (cWnd.OptionWnd.WCtls._G4,
 				BM_SETCHECK, BST_UNCHECKED, 0);
 		}
 		//==if an option is set in the file then check the checkbox===
@@ -1377,7 +1400,7 @@ cApplication::_FSettings::SetMaster ()
 	//==Go to the end of the file
 	if (cApp.CmdLine.WOptions->_1 == TRUE) strcat (ch_MasterOpt, "/1");
 	if (cApp.CmdLine.WOptions->_4 == TRUE) strcat (ch_MasterOpt, "/4");
-	if (cApp.CmdLine.WOptions->_C == TRUE) strcat (ch_MasterOpt, "/C");
+	if (cApp.CmdLine.WOptions->_F == TRUE) strcat (ch_MasterOpt, "/F");
 	if (cApp.CmdLine.WOptions->_D == TRUE) strcat (ch_MasterOpt, "/D");
 	if (cApp.CmdLine.WOptions->_e == TRUE) strcat (ch_MasterOpt, "/e");
 	if (cApp.CmdLine.WOptions->_f == TRUE) strcat (ch_MasterOpt, "/f");
@@ -1386,7 +1409,7 @@ cApplication::_FSettings::SetMaster ()
 	if (cApp.CmdLine.WOptions->_m == TRUE) strcat (ch_MasterOpt, "/m");
 	if (cApp.CmdLine.WOptions->_M == TRUE) strcat (ch_MasterOpt, "/M");
 	if (cApp.CmdLine.WOptions->_q == TRUE) strcat (ch_MasterOpt, "/q");
-	if (cApp.CmdLine.WOptions->_R == TRUE) strcat (ch_MasterOpt, "/R");
+	if (cApp.CmdLine.WOptions->_G4 == TRUE) strcat (ch_MasterOpt, "/G4");
 	if (cApp.CmdLine.WOptions->_S == TRUE) strcat (ch_MasterOpt, "/S");
 	if (cApp.CmdLine.WOptions->_T == TRUE) strcat (ch_MasterOpt, "/T");
 	if (cApp.CmdLine.WOptions->_w == TRUE) strcat (ch_MasterOpt, "/w");
@@ -1501,15 +1524,15 @@ cApplication::_FSettings::GetSingle (char *ch_FileName)
 				BM_SETCHECK, BST_UNCHECKED, 0);
 		}
 		//==if an option is set in the file then check the checkbox===
-		if (strstr (ch_MasterOpt, "/C") != NULL) {
-			cApp.CmdLine.WOptions->_C = TRUE;
-			SendMessage (cWnd.OptionWnd.WCtls._C,
+		if (strstr (ch_MasterOpt, "/F") != NULL) {
+			cApp.CmdLine.WOptions->_F = TRUE;
+			SendMessage (cWnd.OptionWnd.WCtls._F,
 				BM_SETCHECK, BST_CHECKED, 0);
 		}
 		//==Otherwise uncheck the checkbox=============================
 		else {
-			cApp.CmdLine.WOptions->_C = FALSE;
-			SendMessage (cWnd.OptionWnd.WCtls._C,
+			cApp.CmdLine.WOptions->_F = FALSE;
+			SendMessage (cWnd.OptionWnd.WCtls._F,
 				BM_SETCHECK, BST_UNCHECKED, 0);
 		}
 		//==if an option is set in the file then check the checkbox===
@@ -1609,15 +1632,15 @@ cApplication::_FSettings::GetSingle (char *ch_FileName)
 				BM_SETCHECK, BST_UNCHECKED, 0);
 		}
 		//==if an option is set in the file then check the checkbox===
-		if (strstr (ch_MasterOpt, "/R") != NULL) {
-			cApp.CmdLine.WOptions->_R = TRUE;
-			SendMessage (cWnd.OptionWnd.WCtls._R,
+		if (strstr (ch_MasterOpt, "/G4") != NULL) {
+			cApp.CmdLine.WOptions->_G4 = TRUE;
+			SendMessage (cWnd.OptionWnd.WCtls._G4,
 				BM_SETCHECK, BST_CHECKED, 0);
 		}
 		//==Otherwise uncheck the checkbox=============================
 		else {
-			cApp.CmdLine.WOptions->_R = FALSE;
-			SendMessage (cWnd.OptionWnd.WCtls._R,
+			cApp.CmdLine.WOptions->_G4 = FALSE;
+			SendMessage (cWnd.OptionWnd.WCtls._G4,
 				BM_SETCHECK, BST_UNCHECKED, 0);
 		}
 		//==if an option is set in the file then check the checkbox===
@@ -1854,7 +1877,7 @@ cApplication::_FSettings::SetSingle (char *ch_FileName)
 	//==Go to the end of the file
 	if (cApp.CmdLine.WOptions->_1 == TRUE) strcat (ch_MasterOpt, "/1");
 	if (cApp.CmdLine.WOptions->_4 == TRUE) strcat (ch_MasterOpt, "/4");
-	if (cApp.CmdLine.WOptions->_C == TRUE) strcat (ch_MasterOpt, "/C");
+	if (cApp.CmdLine.WOptions->_F == TRUE) strcat (ch_MasterOpt, "/F");
 	if (cApp.CmdLine.WOptions->_D == TRUE) strcat (ch_MasterOpt, "/D");
 	if (cApp.CmdLine.WOptions->_e == TRUE) strcat (ch_MasterOpt, "/e");
 	if (cApp.CmdLine.WOptions->_f == TRUE) strcat (ch_MasterOpt, "/f");
@@ -1863,7 +1886,7 @@ cApplication::_FSettings::SetSingle (char *ch_FileName)
 	if (cApp.CmdLine.WOptions->_m == TRUE) strcat (ch_MasterOpt, "/m");
 	if (cApp.CmdLine.WOptions->_M == TRUE) strcat (ch_MasterOpt, "/M");
 	if (cApp.CmdLine.WOptions->_q == TRUE) strcat (ch_MasterOpt, "/q");
-	if (cApp.CmdLine.WOptions->_R == TRUE) strcat (ch_MasterOpt, "/R");
+	if (cApp.CmdLine.WOptions->_G4 == TRUE) strcat (ch_MasterOpt, "/G4");
 	if (cApp.CmdLine.WOptions->_S == TRUE) strcat (ch_MasterOpt, "/S");
 	if (cApp.CmdLine.WOptions->_T == TRUE) strcat (ch_MasterOpt, "/T");
 	if (cApp.CmdLine.WOptions->_w == TRUE) strcat (ch_MasterOpt, "/w");
@@ -2203,3 +2226,15 @@ cApplication::GetDrvInfo ( )
 
 	return 0;
 }
+
+/*
+**	History:
+**	$Log: cApplication.cpp,v $
+**	Revision 1.12  2003/06/18 16:55:56  gsl
+**	Add /F remove /C (replace)
+**	
+**	Revision 1.11  2003/06/18 16:43:07  gsl
+**	Add CVS header and history
+**	
+**
+*/

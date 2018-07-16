@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 	wfind	test the FIND usersub
@@ -17,22 +32,26 @@ static char rcsid[]="$Id:$";
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-#define EXT_FILEXT
+#include "wisplib.h"
+#include "vssubs.h"
 #include "filext.h"
 
-main(argc,argv)
+static void badusage();
+
+int main(argc,argv)
 int	argc;
 char	*argv[];
 {
-	int	argcount, retcode;
-	char	type[1], check[1], access[1];
-	char	key[20], file[20], lib[20], vol[20];
+	int	retcode;
+	char	file[20], lib[20], vol[20];
 	int	starter, counter, filecount;
 	char	rtype[1], receiver[2200];
 	char	*ptr;
 
-	initglbs("WFIND   ");
+	WL_initglbs("WFIND   ");
 
 	if (argc != 4) badusage();
 
@@ -47,16 +66,15 @@ char	*argv[];
  
 	retcode = 0;
 
-	argcount = 8;
-	wvaset( &argcount );
+	WL_set_va_count( 8 );
 	starter=1;
-	wswap(&starter);
+	WL_wswap(&starter);
 	counter=100;
-	wswap(&counter);
+	WL_wswap(&counter);
 	rtype[0] = 'A';
 	FIND( file, lib, vol, &starter, &counter, receiver, &filecount, rtype);
-	wswap(&counter);
-	wswap(&filecount);
+	WL_wswap(&counter);
+	WL_wswap(&filecount);
 	printf("\n");
 	printf("FIND file(%s) lib(%s) vol(%s)\n", file, lib, vol);
 	printf("     counter=%d filecount=%d\n\n",counter,filecount);
@@ -67,7 +85,7 @@ char	*argv[];
 	exit(retcode);
 }
 
-badusage()
+static void badusage()
 {
 	printf("\n");
 	printf("Usage: wfind         file library volume\n");
@@ -82,12 +100,27 @@ badusage()
 /*
 **	History:
 **	$Log: wfind.c,v $
-**	Revision 1.7.2.1  2002/08/16 21:50:52  gsl
-**	Alpha Port 4402f
+**	Revision 1.13  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
 **	
-**	Revision 1.7  1996-07-23 14:13:09-04  gsl
+**	Revision 1.12  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.11  2002/07/12 17:17:04  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.10  2002/07/10 21:06:31  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.9  2002/07/09 19:58:15  gsl
+**	Add missing include string.h
+**	
+**	Revision 1.8  2002/06/25 18:18:36  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 1.7  1996/07/23 18:13:09  gsl
 **	drcs update
-**
+**	
 **
 **
 */

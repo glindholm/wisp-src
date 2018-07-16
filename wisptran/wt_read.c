@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wt_read.c
 **
@@ -66,21 +87,24 @@ static NODE parse_read_crt(NODE the_statement, NODE the_sentence);
 **
 **	Translation:
 **
-**     		MOVE "RD" TO WISP-DECLARATIVES-STATUS
+**		MOVE "ReadLock" TO WISP-LASTFILEOP
 **		MOVE "N" TO WISP-TEST-BYTE
-**		COMPUTE WISP-FILE-TIMEOUT = 100 * (timeout-seconds)
+**		COMPUTE WISP-LOCK-TIMEOUT = (timeout-seconds)
 **		MOVE "file" TO WISP-NEW-LOCK-ID
 **		PERFORM WISP-LOCK-START THRU WISP-LOCK-END
 **		PERFORM WITH TEST AFTER
-**                  UNTIL (file-status IS NOT = "99")
-**                  OR (WISP-FILE-TIMEOUT IS < 1)
-**                 READ file [INTO record] [KEY clause]
+**                  UNTIL ({file-status} IS NOT = "{hard-lock}")
+**                  OR (WISP-LOCK-TIMEOUT IS < 1)
+**                 READ file [NEXT|PREVIOUS] [INTO record] [KEY clause]
 **                    INVALID KEY
 **                      MOVE "Y" TO WISP-TEST-BYTE
 **                 END-READ
-**                 CALL "wfwait" USING file-status WISP-FILE-TIMEOUT
+**		   IF {file-status} = "{hard-lock}"
+**		       CALL "SLEEPONE"
+**		       SUBTRACT 1 FROM WISP-LOCK-TIMEOUT
+**		   END-IF
 **		END-PERFORM
-**		IF ( file-status = "99" AND WISP-FILE-TIMEOUT IS < 1)
+**		IF ( {file-status} = "{hard-lock}" AND WISP-LOCK-TIMEOUT IS < 1)
 **		   MOVE SPACES TO WISP-LOCK-ID
 **		   {timeout-statement}
 **		ELSE
@@ -116,6 +140,7 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 	int	timeout_next_sentence = 0;
 	static int timeout_cnt = 0;
 	cob_file *timeout_file_ptr = NULL;
+	int	sequential_access = 0;
 
 	verb_node = first_token_node(the_statement);
 
@@ -156,8 +181,6 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 	if (col < 12) col = 12;
 
 
-	tput_line_at(col, "MOVE \"RD\" TO WISP-DECLARATIVES-STATUS");
-
 
 	/*
 	**	Step through the tokens gathering info and making changes.
@@ -167,6 +190,7 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 	if (eq_token(curr_node->token,KEYWORD,"NEXT") ||
 	    eq_token(curr_node->token,KEYWORD,"PREVIOUS"))
 	{
+		sequential_access = 1;
 		strcpy(next_clause, token_data(curr_node->token));
 		curr_node = curr_node->next;
 	}
@@ -215,6 +239,19 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 		}
 	}
 
+	if (opt_nogetlastfileop)
+	{
+		/* tput_line_at(col, "MOVE \"RD\" TO WISP-DECLARATIVES-STATUS"); */
+		if (with_hold)
+		{
+			tput_line_at(col,"MOVE \"ReadLock\" TO WISP-LASTFILEOP");
+		}
+		else
+		{
+			tput_line_at(col,"MOVE \"ReadNoLock\" TO WISP-LASTFILEOP");
+		}
+	}
+
 	/*
 	**	MODIFIABLE or ALTERED should not be specified, but if they are then ignore them.
 	*/
@@ -234,7 +271,7 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 	{
 		if (with_hold)
 		{
-			if (manual_locking)
+			if (opt_manual_locking)
 			{
 				before_into_lock = "WITH LOCK";
 			}
@@ -264,13 +301,13 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 	}
 
 	/*
-	**	MF & VAX  wants the lock clause after the INTO clause.
+	**	MF wants the lock clause after the INTO clause.
 	*/
 	if (mf_cobol)
 	{
 		if (with_hold)
 		{
-			if (manual_locking)
+			if (opt_manual_locking)
 			{
 				after_into_lock = "WITH KEPT LOCK";
 			}
@@ -285,24 +322,6 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 			{
 				after_into_lock = "NO LOCK";
 			}
-		}
-	}
-
-	if (vax_cobol)
-	{
-		if (prog_ftypes[fnum] & AUTOLOCK)
-		{
-			/* If using automatic record locking	*/
-			/* then don't supply an "ALLOWING" 	*/
-			/* clause. 				*/
-		}
-		else if (with_hold)
-		{
-			after_into_lock = "ALLOWING NO OTHERS";
-		}
-		else
-		{
-			after_into_lock = "REGARDLESS OF LOCK";
 		}
 	}
 
@@ -517,7 +536,12 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 		}
 	}
 	
-	
+
+	if (sequential_access && (invalid_key_found || not_invalid_key_found))
+	{
+		write_tlog(curr_node->token,"WISP",'E',"READINVALIDKEY",
+			"INVALID KEY is not allowed on READ NEXT/PREVIOUS");
+	}
 
 	/*
 	**	Generate results
@@ -531,16 +555,12 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 		tput_line_at(col, "MOVE \"N\" TO WISP-TEST-BYTE\n");
 	}
 
-	if (timeout_node)
+	if (timeout_node) /* HOLD with TIMEOUT */
 	{
 		/* Compute the TIMEOUT value. */
-		tput_line_at(col, "COMPUTE WISP-FILE-TIMEOUT = 100 * (");
+		tput_line_at(col, "COMPUTE WISP-LOCK-TIMEOUT = (");
 		tput_statement (col+4, timeout_node);
 		tput_clause(col+4, ")");
-	}
-	else if (with_hold)
-	{
-		tput_line_at(col,"MOVE 0 TO WISP-FILE-TIMEOUT");
 	}
 
 	if (with_hold)				/* Insert all the special logic to handle WITH HOLD			*/
@@ -556,14 +576,14 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 
 		if (timeout_clause)
 		{
-			tput_line_at(col+8, "OR (WISP-FILE-TIMEOUT IS < 1)");
+			tput_line_at(col+8, "OR (WISP-LOCK-TIMEOUT IS < 1)");
 		}
 
 		col += 4;
 	}
 	else
 	{
-		if (!manual_locking)
+		if (!opt_manual_locking)
 		{
 			/*
 			**	Automatic record locking will clear the lock if this file has it.
@@ -618,9 +638,31 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 			tput_line_at(col, "END-READ");
 		}
 
-		tput_line_at(col, "CALL \"wfwait\" USING");
-		tput_clause(col+4,    "%s", file_status);
-		tput_clause(col+4,    "WISP-FILE-TIMEOUT");
+		/*
+		**	IF {file-status} = "{hard-lock}"
+		**	    CALL "C$SLEEP" USING 1   /   CALL "SLEEPONE"
+		**	    SUBTRACT 1 FROM WISP-LOCK-TIMEOUT
+		**	END-IF
+		*/
+		tput_line_at(col, "IF %s = \"%s\"", file_status, hard_lock);
+		if (!opt_nosleep) 
+		{
+			tput_line_at(col+4,	"CALL \"C$SLEEP\" USING 1");
+
+		}
+		else
+		{
+			tput_line_at(col+4,	"CALL \"SLEEPONE\"");
+		}
+		if (timeout_clause)
+		{
+			tput_line_at(col+4,	"SUBTRACT 1 FROM WISP-LOCK-TIMEOUT");
+		}
+		tput_line_at(col, "END-IF");
+
+		/*	tput_line_at(col, "CALL \"WFWAIT\" USING");	*/
+		/*	tput_clause(col+4,    "%s", file_status);	*/
+		/*	tput_clause(col+4,    "WISP-FILE-TIMEOUT");	*/
 		
 		col -= 4;
 
@@ -629,7 +671,7 @@ NODE parse_read(NODE the_statement, NODE the_sentence)
 		if (timeout_clause)
 		{
 			tput_line_at(col,   "IF ( %s = \"%s\" AND", file_status, hard_lock);
-			tput_clause(col+4,      "WISP-FILE-TIMEOUT IS < 1)");
+			tput_clause(col+4,      "WISP-LOCK-TIMEOUT IS < 1)");
 
 			clear_lock_holder_id(col+4);
 
@@ -964,18 +1006,16 @@ static NODE parse_read_crt(NODE the_statement, NODE the_sentence)
 	**		 {NOT At END     }       
 	**
 	**
-	**	       [CALL "xx2byte" USING crt-rel-key, crt-record]		- if crt has a relative key
+	**	       [CALL "W99TOX" USING crt-rel-key, crt-record]		- if crt has a relative key
 	**		MOVE crt-record TO WISP-CRT-ORDER-AREA
 	**	       [MOVE WISP-SYMB-xx TO VWANG-LINES]			- if lines not equal 24
-	**		CALL "vwang" USING {VWANG-READ-ALL       },
-	**				   {VWANG-READ-MODIFIABLE}
-	**				   {VWANG-READ-ALTERED   }
-	**			WISP-CRT-RECORD, {VWANG-FULL-SCREEN},
-	**					 {VWANG-LINES      }
-	**			WISP-ALL-PF-KEYS, crt-pfkey, crt-status
+	**		CALL "WS_READ"/"WS_READ_ALT" USING 
+	**			WISP-CRT-RECORD, 
+	**			{VWANG-FULL-SCREEN}/{VWANG-LINES      }
+	**			crt-pfkey, crt-status
 	**		MOVE WISP-CRT-RECORD TO crt-record
 	**	       [MOVE crt-record TO into-record]				- if INTO clause
-	**	       [CALL "w2rowcol" USING WISP-CRT-ORDER-AREA-3 crt-cursor]	- if crt has cursor 
+	**	       [CALL "WGETCURPOS" USING WISP-CRT-ORDER-AREA-3 crt-cursor] - if crt has cursor 
 	**
 	**	       [IF crt-status (1:1) = 'N' THEN
 	**			imperative-statement-1]
@@ -997,7 +1037,7 @@ static NODE parse_read_crt(NODE the_statement, NODE the_sentence)
 	/* Load relative key into order-area	*/
 	if (crt_relative[cur_crt][0])
 	{
-		tput_line_at	(col, "CALL \"xx2byte\" USING");
+		tput_line_at	(col, "CALL \"W99TOX\" USING");
 		tput_clause	(col+4, "%s,",crt_relative[cur_crt]);
 		tput_clause  	(col+4, "%s",crt_record[crt_prime_rec[cur_crt]]);
 	}
@@ -1010,11 +1050,14 @@ static NODE parse_read_crt(NODE the_statement, NODE the_sentence)
 	{
 		tput_line_at	(col, "MOVE WISP-SYMB-%d TO VWANG-LINES,\n", vwang_lines);
 	}
-#ifdef OLD
-	tput_line_at		(col, "MOVE SPACES TO %s,\n",crt_status[cur_crt]);	/* Must clear status field	*/
-#endif
-	tput_line_at		(col, "CALL \"vwang\" USING");
-	tput_clause		(col+4, "%s,",crt_type);
+	if (altered_flag)
+	{
+		tput_line_at	(col, "CALL \"WS_READ_ALT\" USING");
+	}
+	else
+	{
+		tput_line_at	(col, "CALL \"WS_READ\" USING");
+	}
 	tput_clause		(col+4, "WISP-CRT-RECORD,");
 	if (24 == vwang_lines)
 	{
@@ -1024,7 +1067,6 @@ static NODE parse_read_crt(NODE the_statement, NODE the_sentence)
 	{
 		tput_clause	(col+4, "VWANG-LINES,");
 	}
-	tput_clause		(col+4, "WISP-ALL-PF-KEYS,");
 	tput_clause		(col+4, "%s,",crt_pfkey[cur_crt]);
 	tput_clause		(col+4, "%s",crt_status[cur_crt]);
 	tput_line_at		(col, "MOVE WISP-CRT-RECORD TO %s",crt_record[crt_prime_rec[cur_crt]]);
@@ -1039,7 +1081,7 @@ static NODE parse_read_crt(NODE the_statement, NODE the_sentence)
 	/* If this file has a CURSOR clause */
 	if (crt_cursor[cur_crt][0])
 	{
-		tput_line_at  	(col, "CALL \"w2rowcol\" USING WISP-CRT-ORDER-AREA-3,");
+		tput_line_at  	(col, "CALL \"WGETCURPOS\" USING WISP-CRT-ORDER-AREA-3,");
 		tput_clause	(col+4, "%s",crt_cursor[cur_crt]);
 		tput_clause     (col, "END-CALL");
 	}
@@ -1219,9 +1261,64 @@ static NODE parse_read_crt(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_read.c,v $
-**	Revision 1.20  1998/08/28 14:56:03  gsl
-**	Add support for READ PREVIOUS
+**	Revision 1.37  2003/03/10 22:42:16  gsl
+**	Add SLEEPONE to sleep one second as a replacement for WFWAIT
 **	
+**	Revision 1.36  2003/03/10 19:38:57  gsl
+**	Fix  C$SLEEP ganularity to 1 second
+**	
+**	Revision 1.35  2003/03/10 18:55:44  gsl
+**	Added nosleep option and for ACU default to using C$SLEEP instead
+**	of WFWAIT on a READ with HOLD
+**	
+**	Revision 1.34  2003/03/07 17:00:07  gsl
+**	For ACU default to using "C$GETLASTFILEOP" to retrieve the last file op.
+**	Add option #NOGETLASTFILEOP to use if not C$GETLASTFILEOP is
+**	not available.
+**	
+**	Revision 1.33  2003/03/06 21:47:10  gsl
+**	Change WISP-DECLARATIVES-STATUS to WISP-LASTFILEOP
+**	
+**	Revision 1.32  2003/02/28 21:49:04  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.31  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.30  2002/12/12 19:57:55  gsl
+**	comments
+**	
+**	Revision 1.29  2002/08/13 18:11:59  gsl
+**	Report Invalid use of INVALID KEY clauses
+**	
+**	Revision 1.28  2002/08/01 18:05:02  gsl
+**	comments
+**	
+**	Revision 1.27  2002/08/01 02:46:27  gsl
+**	Replace vwang calls with WS_CLOSE WS_READ WS_READ_ALT WS_REWRITE
+**	
+**	Revision 1.26  2002/07/30 22:00:48  gsl
+**	globals
+**	
+**	Revision 1.25  2002/07/26 19:20:42  gsl
+**	
+**	Revision 1.24  2002/07/19 22:07:17  gsl
+**	Renaming cobol api routines for global uniqueness
+**	
+**	Revision 1.23  2002/06/20 23:05:01  gsl
+**	remove obsolete code
+**	
+**	Revision 1.22  2002/06/18 23:48:40  gsl
+**	For ACU and NATIVE
+**	READ WITH HOLD
+**	Change "wfwait" to "C$SLEEP"
+**	
+**	Revision 1.21  2002/05/16 21:52:57  gsl
+**	getlastfileop logic
+**	
+**	Revision 1.20  1998-08-28 10:56:03-04  gsl
+**	Add support for READ PREVIOUS
+**
 **	Revision 1.19  1998-06-09 13:09:29-04  gsl
 **	Add support for manual record locking
 **

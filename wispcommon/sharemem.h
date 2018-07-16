@@ -1,16 +1,28 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 /*
 **	File:		sharemem.h
@@ -82,39 +94,45 @@ KEYWSHM
 **	Global sharemem.c routines
 */
 
-extern char 	*get_sh_seg(char *prname, char *label, int size, int *id, int *rsize);
-extern int 	finish_sh_seg(int size);
-extern SHMH 	*get_prb_id(int2 id);
-extern int 	cleanup_shrfil(void);
-extern int 	show_parm_area(void);
-extern int 	ishow_parm_area(void);
-extern int 	dump_parm_area(char *filename);
-extern int 	wax_table_entry(SHMH *parm_area);
-void erase_prb_label_level(char *m_label);
-extern int	erase_prb_level(void);
-extern int	erase_prb(SHMH *prb);
-extern int 	delete_prb(SHMH *prb);
-extern int	use_prb(SHMH *prb);
-extern SHMH 	*get_prb_area(char *m_prname, char *m_label, int used_ok);
-extern SHMH 	*get_prb_prname_level(char *m_prname, int wantlevel);
-extern SHMH 	*get_chained_prb(SHMH *start_prb);
-extern int 	load_keywshm(KEYWSHM *keywshm_ptr, FMTLIST *p);
-extern int 	backwards_reference(SHMH **prb_ptr);
-extern int 	update_prb(SHMH **prb_ptr, FMTLIST *fmtlist);
-extern int 	ppunlink(int level);
+char 	*WL_get_sh_seg(char *prname, char *label, int size, int *id, int *rsize);
+int 	WL_finish_sh_seg(int size);
+SHMH 	*WL_get_prb_id(int2 id);
+int 	WL_cleanup_shrfil(void);
+int 	WL_show_parm_area(void);
+int 	WL_ishow_parm_area(void);
+int 	WL_dump_parm_area(char *filename);
+int 	WL_wax_table_entry(SHMH *parm_area);
+void	WL_erase_prb_label_level(char *m_label);
+int	WL_erase_prb_level(void);
+int	WL_erase_prb(SHMH *prb);
+int 	WL_delete_prb(SHMH *prb);
+int	WL_use_prb(SHMH *prb);
+SHMH 	*WL_get_prb_area(char *m_prname, char *m_label, int used_ok);
+SHMH 	*WL_get_prb_prname_level(char *m_prname, int wantlevel);
+SHMH 	*WL_get_chained_prb(SHMH *start_prb);
+int 	WL_load_keywshm(KEYWSHM *keywshm_ptr, FMTLIST *p);
+int 	WL_backwards_reference(SHMH **prb_ptr);
+int 	WL_update_prb(SHMH **prb_ptr, FMTLIST *fmtlist);
+int 	WL_ppunlink(int level);
 
-extern int2 	a_int2(void *ptr);
-extern int4 	a_int4(void *ptr);
+int2 	WL_a_int2(void *ptr);
+int4 	WL_a_int4(void *ptr);
 
-const char 	*wisp_sm_ctlfile(void);
+const char *WL_sm_ctlfile(void);
 
 
 #endif /* SHAREMEM_H */
 /*
 **	History:
 **	$Log: sharemem.h,v $
+**	Revision 1.10  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.9  2002/07/09 04:14:03  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
 **	Revision 1.8  2001/10/31 20:26:46  gsl
-**	Add wisp_sm_ctlfile()
+**	Add WL_sm_ctlfile()
 **	
 **	Revision 1.7  1996-07-23 14:17:51-04  gsl
 **	drcs update

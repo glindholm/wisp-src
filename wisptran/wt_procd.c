@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		wt_procd.c
@@ -60,7 +81,6 @@ static NODE parse_perform(NODE the_statement, NODE the_sentence);
 static NODE parse_stop(NODE the_statement);
 static NODE parse_exit(NODE the_statement);
 static NODE parse_set(NODE the_statement);
-static NODE parse_else(NODE the_statement);
 static NODE parse_go(NODE the_statement);
 static void exit_copy_mode(NODE the_sentence);
 static NODE parse_evaluate(NODE the_statement, NODE the_sentence);
@@ -97,7 +117,6 @@ void procedure_division(NODE the_statement)
 		write_log("WISP",'I',"PROCDIV","Processing PROCEDURE DIVISION.");
 		division = PROCEDURE_DIVISION;
 
-		if (!comments) tput_blank();
 		tput_statement(12,the_statement);
 		free_statement(the_statement);
 	}
@@ -139,7 +158,7 @@ static void end_of_procedure_division(void)
 	**	Create a comment token with a main context and tput it will
 	**	cause this context switch to occur.
 	*/
-	if (copylib)
+	if (opt_gen_copylib)
 	{
 		NODE the_statement;
 
@@ -181,6 +200,52 @@ NODE is_paragraph(NODE the_sentence)
 	}
 }
 
+/*
+**	Check for END PROGRAM {programid}.
+**
+**	[START] -> [STATEMENT] -> [STATEMENT] -> [END]
+**		   |		  +[START] -> ["."] -> [END]
+**		   +[START] -> ["END"] -> ["PROGRAM"] -> [progid] -> [END]
+*/
+static int is_end_program(NODE the_sentence)
+{
+	NODE the_statement =  NULL;
+	NODE curr_node = NULL;
+
+	if (the_sentence && the_sentence->type == NODE_START &&
+	    the_sentence->next && the_sentence->next->type == NODE_STATEMENT)
+	{
+		the_statement = the_sentence->next->down;
+
+		if (the_statement && the_statement->type == NODE_START)
+		{
+			curr_node = the_statement->next;
+
+			if (curr_node &&
+			    eq_token(curr_node->token, KEYWORD, "END") &&
+			    curr_node->next && 
+			    eq_token(curr_node->next->token, KEYWORD, "PROGRAM"))
+			{
+				if (the_sentence->next->next &&
+				    the_sentence->next->next->type == NODE_STATEMENT)
+				{
+					the_statement = the_sentence->next->next->down;
+					if (the_statement && the_statement->type == NODE_START)
+					{
+						curr_node = the_statement->next;
+						if (curr_node->token && 
+						    PERIOD == curr_node->token->type)
+						{
+							return 1;
+						}
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 static void parse_sentence(NODE the_sentence)
 {
 	NODE	the_statement;
@@ -202,6 +267,14 @@ static void parse_sentence(NODE the_sentence)
 			the_sentence = free_statement(the_sentence);
 		}
 
+		return;
+	}
+
+	if (is_end_program(the_sentence))
+	{
+		first_node = first_non_fluff_node(the_sentence);
+		write_tlog(first_node->token,"WISP",'I',"ENDPROGRAM","END PROGRAM sentence removed.");
+		the_sentence = free_statement(the_sentence);
 		return;
 	}
 
@@ -288,9 +361,9 @@ static NODE parse_declaratives(NODE the_sentence)
 			tput_blank();
 		}
 
-		for (i=0; i<proc_performs_cnt; i++)				/* Delete any procedure division copys	*/
+		for (i=0; i<opt_copy_declarative_para_cnt; i++)			/* Delete any procedure division copys	*/
 		{								/* (from .OPT file)			*/
-			proc_performs[i][0] = '\0';
+			opt_copy_declarative_para[i][0] = '\0';
 		}
 
 		return the_sentence;
@@ -353,21 +426,21 @@ static NODE parse_declaratives(NODE the_sentence)
 	if (decl_stop_exit) d_wisp_exit_para();
 
 	/* Now see if the paragraphs to be	*/
-	for (i=0; i<proc_performs_cnt; i++)				/* copied to the PROCEDURE DIVISION	*/
+	for (i=0; i<opt_copy_declarative_para_cnt; i++)			/* copied to the PROCEDURE DIVISION	*/
 	{								/* really exist (from .OPT file)	*/
 		for (j=0; j<decl_paras_cnt; j++)			/* These are paragraphs which exist in	*/
 		{							/* DECL, but are performed by proc div.	*/
-			if (!strcmp(proc_performs[i],decl_paras[j]))	/* See if they match. if they do, we	*/
+			if (!strcmp(opt_copy_declarative_para[i],decl_paras[j]))	/* See if they match. if they do, we	*/
 			{						/* can skip the loop.		 	*/
 				break;					/* and stop looking for this one.	*/
 			}
 		}
-		if (j == decl_paras_cnt) proc_performs[i][0] = '\0';	/* Wasn't in the list, delete it.	*/
+		if (j == decl_paras_cnt) opt_copy_declarative_para[i][0] = '\0';	/* Wasn't in the list, delete it.	*/
 	}
 
 	if (decl_performs_cnt) check_decl();				/* If there are any unaccounted for	*/
-										/* performs, examine the declaratives	*/
-										/* table.				*/
+									/* performs, examine the declaratives	*/
+									/* table.				*/
 
 	if (prog_cnt - prog_sort)					/* If there were valid files...		*/
 	{
@@ -394,15 +467,15 @@ static NODE add_wisp_main_section(NODE the_sentence)
 		tput_line_at(8, "WISP-MAIN SECTION.");
 	}
 	
-	tput_line_at(8, "WISP-START-PROGRAM.");
+	if (!opt_native) 
+	{
+		tput_line_at(8, "WISP-START-PROGRAM.");
 
-	tput_line_at(12, "CALL \"initwisp2\" USING WISP-TRAN-VERSION,");
-	tput_line_at(12, "                       WISP-LIB-VERSION,");
-	tput_line_at(12, "                       WISP-COBOL-TYPE,");
-	tput_line_at(12, "                       WISP-APPLICATION-NAME,");
-	tput_line_at(12, "                       WISPRUNNAME,");
-	tput_line_at(12, "                       WISP-SWAP-ON,");
-	tput_line_at(12, "                       WISP-ERR-LOGGING.");
+		tput_line_at(12, "CALL \"INITWISP3\" USING WISP-VERSION,");
+		tput_line_at(12, "                       WISP-APPLICATION-NAME,");
+		tput_line_at(12, "                       WISP-RUN-NAME,");
+		tput_line_at(12, "                       WISP-SWAP-ON.");
+	}
 
 	return the_sentence;
 }
@@ -893,7 +966,6 @@ static NODE parse_one_verb(NODE the_statement, NODE the_sentence)
 */
 NODE parse_imperative_statements(NODE the_statement, NODE the_sentence)
 {
-	NODE	period_node = NULL;
 	int	verbs_processed = 0;
 	
 	for(;;)
@@ -1028,7 +1100,7 @@ static NODE parse_stop(NODE the_statement)
 	*/
 	write_log("WISP",'I',"STOPLITRL","Processing STOP literal statement.");
 
-	if (!proc_display)
+	if (opt_nodisplay_processing)
 	{
 		write_log("WISP",'I',"SKIPSTOP","Skipped processing of STOP statement.");
 		tput_statement(12,the_statement);
@@ -1273,7 +1345,7 @@ static NODE parse_move(NODE the_statement, NODE the_sentence)
 		trailing_fluff_node = free_statement(trailing_fluff_node);
 
 	}
-	else if (init_move && 
+	else if (opt_init_move && 
 		 (eq_token(curr_node->token,KEYWORD,"SPACES") || eq_token(curr_node->token,KEYWORD,"SPACE")) )
 	{
 		/*
@@ -1333,21 +1405,21 @@ static NODE parse_set(NODE the_statement)
 		( eq_token(curr_node->token,KEYWORD,"IN") || 
 		  eq_token(curr_node->token,KEYWORD,"OF")    ) )
 	{
-		char	*bit_xxx;
+		int	bit_on_flag = 1;
 		NODE	trailing_fluff_node = NULL;
 
 		/*
 		**	[SET figcon IN FAC OF target {ON|OFF}]
-		**	SET figcon IN      F-target {ON|OFF}
+		**	SET figcon IN  FAC-OF-target {ON|OFF}
 		**	SET figcon OF        target {ON|OFF}
 		**
 		**	MOVE figcon TO WISP-SET-BYTE
-		**	CALL "bit_on" USING WISP-SET-BYTE, target
+		**	CALL "BIT_ON"/"BIT_OFF" USING WISP-SET-BYTE, target
 		**
-		** (ACU)
+		** (cob)
 		**	MOVE figcon TO WISP-SET-BYTE
 		**	MOVE target TO WISP-TEST-BYTE
-		**	CALL "bit_on" USING WISP-SET-BYTE, WISP-TEST-BYTE
+		**	CALL "BIT_ON"/"BIT_OFF" USING WISP-SET-BYTE, WISP-TEST-BYTE
 		**	MOVE WISP-TEST-BYTE TO target
 		*/
 
@@ -1359,7 +1431,7 @@ static NODE parse_set(NODE the_statement)
 		if (eq_token(curr_node->token,KEYWORD,"OF"))
 		{
 			/*
-			**	May need to make target into a FAC (f-target)
+			**	May need to make target into a FAC (FAC-OF-target)
 			*/
 			if (find_item(token_data(target_node->token)))
 			{
@@ -1378,11 +1450,11 @@ static NODE parse_set(NODE the_statement)
 		curr_node = target_node->next;
 		if (eq_token(curr_node->token,KEYWORD,"ON"))
 		{
-			bit_xxx = "bit_on";
+			bit_on_flag = 1;
 		}
 		else if (eq_token(curr_node->token,KEYWORD,"OFF"))
 		{
-			bit_xxx = "bit_off";
+			bit_on_flag = 0;
 		}
 		else
 		{
@@ -1406,7 +1478,14 @@ static NODE parse_set(NODE the_statement)
 		tput_line_at  (col,   "MOVE");
 		tput_statement(col+4,      target_node->down);
 		tput_clause   (col+4,     "TO WISP-TEST-BYTE");
-		tput_line_at  (col,   "CALL \"%s\" USING WISP-SET-BYTE, WISP-TEST-BYTE",bit_xxx);
+		if (bit_on_flag)
+		{
+			tput_line_at  (col,   "CALL \"BIT_ON\" USING WISP-SET-BYTE, WISP-TEST-BYTE");
+		}
+		else
+		{
+			tput_line_at  (col,   "CALL \"BIT_OFF\" USING WISP-SET-BYTE, WISP-TEST-BYTE");
+		}
 		tput_line_at  (col,   "MOVE WISP-TEST-BYTE TO");
 		tput_statement(col+4,      target_node->down);
 
@@ -1511,10 +1590,10 @@ static NODE parse_go(NODE the_statement)
 					add_perf(procedure_name);				/* Add to list			*/
 				}
 			}
-			else if (proc_performs_cnt)						/* Check to see if it is a ref	*/
+			else if (opt_copy_declarative_para_cnt)						/* Check to see if it is a ref	*/
 			{									/* to a paragraph in the DECLAR	*/
 
-				if (paracmp(procedure_name,proc_performs,proc_performs_cnt))
+				if (instrlist(procedure_name,opt_copy_declarative_para,opt_copy_declarative_para_cnt))
 				{								/* now process it.		*/
 					make_fld(buff,procedure_name,"D-");
 					edit_token(curr_node->token,buff);			/* replace it in the line.	*/
@@ -1664,10 +1743,10 @@ static NODE parse_perform(NODE the_statement, NODE the_sentence)
 				add_perf(procedure_name);				/* Add to list			*/
 			}
 		}
-		else if (proc_performs_cnt)						/* Check to see if it is a ref	*/
+		else if (opt_copy_declarative_para_cnt)						/* Check to see if it is a ref	*/
 		{									/* to a paragraph in the DECLAR	*/
 
-			if (paracmp(procedure_name,proc_performs,proc_performs_cnt))
+			if (instrlist(procedure_name,opt_copy_declarative_para,opt_copy_declarative_para_cnt))
 			{								/* now process it.		*/
 				make_fld(buff,procedure_name,"D-");
 				edit_token(curr_node->token,buff);			/* replace it in the line.	*/
@@ -1918,6 +1997,69 @@ NODE parse_hold(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_procd.c,v $
+**	Revision 1.43  2003/03/17 20:33:16  gsl
+**	remove commented old code
+**	
+**	Revision 1.42  2003/03/10 17:37:18  gsl
+**	comments
+**	
+**	Revision 1.41  2003/03/03 22:08:40  gsl
+**	rework the options and OPTION file handling
+**	
+**	Revision 1.40  2003/02/28 21:49:04  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.39  2003/02/04 18:02:20  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.38  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.37  2002/12/12 19:56:58  gsl
+**	INITWISP3
+**	
+**	Revision 1.36  2002/10/14 19:08:03  gsl
+**	Remove the -c options as obsolete since comments are now always
+**	included in the output.
+**	
+**	Revision 1.35  2002/08/13 18:46:57  gsl
+**	Change END PROGRAM to an informational message
+**	
+**	Revision 1.34  2002/08/12 17:56:01  gsl
+**	END PROGRAM
+**	
+**	Revision 1.33  2002/07/31 21:00:26  gsl
+**	globals
+**	
+**	Revision 1.32  2002/07/31 20:24:25  gsl
+**	globals
+**	
+**	Revision 1.31  2002/07/30 22:00:49  gsl
+**	globals
+**	
+**	Revision 1.30  2002/07/30 19:12:38  gsl
+**	SETRETCODE
+**	
+**	Revision 1.29  2002/07/29 21:13:24  gsl
+**	
+**	Revision 1.28  2002/07/26 19:20:42  gsl
+**	bit routine globals (bit_on -> BIT_ON) etc.
+**	
+**	Revision 1.27  2002/07/25 17:53:35  gsl
+**	Fix FAC-OF- prefix
+**	
+**	Revision 1.26  2002/07/20 00:31:19  gsl
+**	remove unused lbit_test
+**	
+**	Revision 1.25  2002/07/17 15:15:41  gsl
+**	MF doesn't like underscores in COBOL names
+**	
+**	Revision 1.24  2002/06/21 20:49:33  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.23  2002/06/19 22:49:22  gsl
+**	 if opt_native changes
+**	
 **	Revision 1.22  1998/06/09 17:11:23  gsl
 **	Move the parse_rewrite() routine to wt_delet.c
 **	

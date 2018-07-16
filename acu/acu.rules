@@ -1,5 +1,5 @@
 #/************************************************************************/
-#	Copyright (c) 1996 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1996-2002 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #/************************************************************************/
 #
@@ -25,7 +25,7 @@
 #			four programs.
 #
 #				include acu.rules
-#				all:	main prog0001 prog0002 prog0003
+#				all:	MAIN.acu PROG001.acu PROG002.acu PROG003.acu
 #
 #			To change the WISP flags or COBOL flags used you
 #			can assign WISPFLAGS or COBFLAGS new values following
@@ -33,14 +33,17 @@
 #
 #				include acu.rules
 #				WISPFLAGS= -I../copy -e
-#				COBFLAGS=-da4 -zd
+#				COBFLAGS=-Da4 -Gd
 #
-#	Warning:	These rules produce lowercase object file names,
-#			that are then linked (ln) to the UPPERCASE filename.
+#	Warning:	These rules produce object file names that are the
+#			same case (upper or lower) as the cobol file names.
+#			If you have lowercase cobol file names then you should
+#			uncomment the $(MAKEUPPER) lines. Then they will be
+#			linked (ln) to the UPPERCASE filename.
 #			You can have them copied (cp) or moved (mv) to
-#			the uppercase names by changing the value of LN.
+#			the uppercase names by changing the value of MAKEUPPER.
 #
-#				LN=cp
+#				MAKEUPPER=cp
 #
 #			This will copy instead of link.
 #
@@ -48,23 +51,35 @@
 WISPTRAN=wisp
 WISPFLAGS=
 COBOL=ccbl
-COBDEBUG=-Zd -Zi -Za
-COBFLAGS=-da4 $(COBDEBUG)
-#LN=ln
-LN=cp
+COBDEBUG=-Gd -Za
+COBFLAGS=-Da4 -Te 800 $(COBDEBUG)
+#MAKEUPPER=cp
+MAKEUPPER=ln
+
+
 LANG=-VACU
 
-.SUFFIXES: .cob .wcb
+.SUFFIXES: .acu .cob .wcb
 
 .wcb.cob:
-	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
+	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $<
+
+.wcb.acu:
+	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $<
+	$(COBOL) $(COBFLAGS) -o $@ $*.cob
+#	$(MAKEUPPER) $@ `echo $* | tr '[a-z]' '[A-Z]'`.acu
 
 .wcb:
-	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
-	$(COBOL) $(COBFLAGS) -o $* $*.cob
-	$(LN) $* `echo $* | tr '[a-z]' '[A-Z]'`
+	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $<
+	$(COBOL) $(COBFLAGS) -o $@ $*.cob
+#	$(MAKEUPPER) $@ `echo $@ | tr '[a-z]' '[A-Z]'`
+
+.cob.acu:
+	$(COBOL) $(COBFLAGS) -o $@ $*.cob
+#	$(MAKEUPPER) $@ `echo $* | tr '[a-z]' '[A-Z]'`.acu
 
 .cob:
-	$(COBOL) $(COBFLAGS) -o $* $*.cob
-	$(LN) $* `echo $* | tr '[a-z]' '[A-Z]'`
+	$(COBOL) $(COBFLAGS) -o $@ $*.cob
+#	$(MAKEUPPER) $@ `echo $* | tr '[a-z]' '[A-Z]'`
+
 

@@ -1,15 +1,27 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 /*
 **	File:		fcopy.h
@@ -34,8 +46,8 @@ int wisp_fcopy(const char* srcfile, const char* dstfile);
 /*
 **	History:
 **	$Log: fcopy.h,v $
-**	Revision 1.5.2.1  2002/10/09 21:03:00  gsl
-**	Huge file support
+**	Revision 1.8  2003/01/31 19:18:00  gsl
+**	Fix copyright header  and -Wall warnings
 **	
 **	Revision 1.7  2002/10/07 20:54:48  gsl
 **	Huge file support

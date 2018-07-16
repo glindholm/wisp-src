@@ -1,0 +1,73 @@
+Copyright (c) 2003 by NeoMedia Technologies Inc. 
+All Rights Reserved.
+
+====================================================================
+
+Title:          Build WISP for Acucobol 6.0 ATM Runtime (WIN32)
+
+Document:       build_wisp_acu60atm_rts.txt
+Last Updated:   $Date:$
+Products:       WISP/WIN32
+Versions:       5.0.00
+
+Summary:        Instructions to build Acucobol 6.0 ATM runtime.
+                This ATM runtime is used with the WISP NT Telnet.
+
+====================================================================
+
+Follow these instructions carefully to build a custom Acucobol ATM
+(Alternate Terminal Manager) runtime that includes the WISP runtime 
+routines.  
+
+In these instructions these macros are used as follows:
+
+${ACUDIR}  - Acucobol-GT 6.0 ATM dir (C:\Acucorp\acucbl600\acugt)
+${WISPDIR} - WISP installation dir   (C:\WISP5000)
+
+Acucobol 6.0 requires that you rebuild the run32.exe file in order 
+to add C routines to the runtime.  This procedure will create a 
+new run32_wisp.exe executable file.
+
+The build is performed in the ${ACUDIR}\lib folder which is 
+normally C:\acucorp\acucbl600\lib.  If you do not want to make 
+changes to this folder then you may take a copy of it and work with 
+the copy.  If you have installed Acucobol in a different location 
+then you may need to adjust these instructions.
+
+1) Copy the following WISP files into the ${ACUDIR}\lib folder.
+
+    ${WISPDIR}\lib\wisp.lib
+    ${WISPDIR}\lib\video.lib
+    ${WISPDIR}\acu\wisp_sub85_inc.c
+    ${WISPDIR}\acu\wispicon.ico
+    ${WISPDIR}\acu\acu60\sub85.c
+    ${WISPDIR}\acu\acu60\run32.rc
+    ${WISPDIR}\acu\acu60\run32_wisp_acu60.mak
+    ${WISPDIR}\acu\acu60\run32_wisp_acu60.dsp
+
+2)  Open the file ${ACUDIR}\lib\run32_wisp_acu60.dsp in
+Microsoft Visual C++ 6.0 Developer Studio.  You should be able to 
+simply double-click on ${ACUDIR}\lib\run32_wisp_acu60.dsp.
+
+3) From the Build menu select "Rebuild All".  
+This will build run32_wisp.exe. It should complete without errors.
+
+4) In order to use the new runtime you will need to copy the new 
+${ACUDIR}\lib\run32_wisp.exe to ${ACUDIR}\bin.
+
+You should notice that the new run32_wisp.exe is larger then the 
+original run32.exe and has the current date.
+
+You will also need to copy and rename the Acucobol license file
+to match the new runtime name. Copy ${ACUDIR}\bin\run32.alc to 
+${ACUDIR}\bin\run32_wisp.alc.
+
+5) Edit ${WISPCONFIG}\wrun.cfg and change the path to the runtime.
+The path of the Acucobol runtime is ${ACUDIR}\bin\run32_wisp.exe.
+
+   RUNCBL=C:\acucorp\acucbl600\acugt\bin\run32_wisp.exe
+   or 
+   RUNCBL=\\SERVER\ACUDIR\bin\run32_wisp.exe
+
+
+========================= END OF DOCUMENT ==========================

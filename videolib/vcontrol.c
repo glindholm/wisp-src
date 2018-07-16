@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -30,9 +51,9 @@ static char rcsid[]="$Id:$";
 /* the flag is used by vrawunix to decide whether or not to attempt translation */
 /* (IVS/Chinese) to output data.  Data coming from this routine should NOT be   */
 /* so translated                                                                */
-int v_control_data=FALSE;
+int VL_v_control_data=FALSE;
 
-int vcontrol(char *string)								/* Output a control string.		*/
+int VL_vcontrol(char *string)								/* Output a control string.		*/
 {											
 	int i;
 
@@ -41,7 +62,7 @@ int vcontrol(char *string)								/* Output a control string.		*/
 		/*
 		**	A NULL means to flush the output
 		*/
-		return vcontrol_flush();
+		return VL_vcontrol_flush();
 	}
 	if (!*string)
 	{
@@ -51,35 +72,35 @@ int vcontrol(char *string)								/* Output a control string.		*/
 		return SUCCESS;
 	}
 
-	v_control_data = TRUE;								/* set the flag                         */
+	VL_v_control_data = TRUE;								/* set the flag                         */
 	if (vdeferred())								/* Should we do any output?		*/
 	{
 		vre("vcontrol()-Output attempted when in deferred state, string = %s",string+1);
-		v_control_data=FALSE;							/* will be output later, so clear for now*/
+		VL_v_control_data=FALSE;							/* will be output later, so clear for now*/
 		return(FAILURE);							/* Return failure.			*/
 	}
 
 	vrawprint(string);								/* Print the data.			*/
-	if (vcap_padding) for(i=0; i<vcap_padding; ++i) vrawputc((char)0);
-	v_control_data = FALSE;								/* clear the control flag               */
+	if (VL_vcap_padding) for(i=0; i<VL_vcap_padding; ++i) vrawputc((char)0);
+	VL_v_control_data = FALSE;								/* clear the control flag               */
 	return(SUCCESS);
 }
 
 /*
 **	Flush the control data out
 */
-int vcontrol_flush(void)
+int VL_vcontrol_flush(void)
 {
 	int ret;
 
-	v_control_data = TRUE;
+	VL_v_control_data = TRUE;
 	ret=vrawflush();
-	v_control_data=FALSE;
+	VL_v_control_data=FALSE;
 	return ret;
 }
 
 
-int vcap_reset_terminal(void)
+int VL_vcap_reset_terminal(void)
 {
 #ifdef	DIRECTVID
 	if (vrawdirectio())
@@ -87,9 +108,9 @@ int vcap_reset_terminal(void)
 		return SUCCESS;
 	}
 #endif
-	return vcontrol(vcapvalue(RESET_TERMINAL));
+	return VL_vcontrol(VL_vcapvalue(RESET_TERMINAL));
 }
-int vcap_init_terminal(void)
+int VL_vcap_init_terminal(void)
 {
 #ifdef	DIRECTVID
 	if (vrawdirectio())
@@ -97,12 +118,30 @@ int vcap_init_terminal(void)
 		return SUCCESS;
 	}
 #endif
-	return vcontrol(vcapvalue(INIT_TERMINAL));
+	return VL_vcontrol(VL_vcapvalue(INIT_TERMINAL));
 }
 
 /*
 **	History:
 **	$Log: vcontrol.c,v $
+**	Revision 1.19  2003/06/20 15:48:03  gsl
+**	VL_ globals
+**	
+**	Revision 1.18  2003/06/20 15:37:44  gsl
+**	VL_ globals
+**	
+**	Revision 1.17  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.16  2002/07/15 20:56:38  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.15  2002/07/15 20:16:07  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.14  2002/07/15 17:52:54  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.13  1997/07/12 21:32:31  gsl
 **	Add missing includes
 **	

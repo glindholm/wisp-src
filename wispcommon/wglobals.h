@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 
@@ -28,6 +48,7 @@
 #include "idsistd.h"
 #include "wfiles.h"
 
+const char *WL_get_wisp_option(const char *keyword);
 
 /*
 **	VMS is completely brain dead when it comes to initialization of extern variables; it reserves space and initializes
@@ -48,46 +69,47 @@
 #define INIT_DEF_NULL
 #endif
 
-EXTERN_DEF int4			LINKPARM 	INIT_DEF_ZERO;				/* Were we started by a LINK		*/
+void wisp_set_LINKPARM(int i);
+int  wisp_get_LINKPARM();
 
-#ifdef VMS
-EXTERN_DEF int4			tabtype 	INIT_DEF_ZERO;
-#endif
+void wisp_set_LINKCOMPCODE(int4 i);
+int4 wisp_get_LINKCOMPCODE();
 
+void wisp_set_LINKRETCODE(int4 i);
+int4 wisp_get_LINKRETCODE();
 
-EXTERN_DEF int4			LINKCOMPCODE 	INIT_DEF_ZERO;
-EXTERN_DEF int4			LINKRETCODE  	INIT_DEF_ZERO;
-EXTERN_DEF int4			LOGOFFFLAG   	INIT_DEF_ZERO;
-EXTERN_DEF int4			CANEXITFLAG  	INIT_DEF_ZERO;
-EXTERN_DEF int  		lnk_depth    	INIT_DEF_ZERO;				/* Call stack depth on VMS		*/
+void wisp_set_LOGOFFFLAG(int4 i);
+int4 wisp_get_LOGOFFFLAG();
 
-EXTERN_DEF time_t		WSTARTTIME	INIT_DEF_ZERO;				/* The start time of the process	*/
-EXTERN_DEF int 			swap_words 	INIT_DEF_ONE;				/* Define the word swap flag.		*/
-EXTERN_DEF int 			noswap_words 	INIT_DEF_ZERO;				/* Opposite of swap_words		*/
-EXTERN_DEF int			werrno 		INIT_DEF_ZERO;				/* Wisp errno				*/
+void wisp_set_CANEXITFLAG(int4 i);
+int4 wisp_get_CANEXITFLAG();
 
-EXTERN_DEF uint4        	wextstat1 	INIT_DEF_ZERO;				/* Wisp extended error number.		*/
-EXTERN_DEF uint4        	wextstat2 	INIT_DEF_ZERO;
-EXTERN_DEF char			wfilestat[2];						/* Wisp file status of last wfilechk	*/
-EXTERN_DEF char			filelock[2];						/* Locked file - file I/O status	*/
-EXTERN_DEF char			hardlock[2];						/* Hard lock on record - file status	*/
-EXTERN_DEF char			softlock[2];						/* Soft lock on record - file status	*/
-EXTERN_DEF char 		WISPRUNNAME[8];						/* Define the Run name field. 		*/
-EXTERN_DEF char			WISPTRANVER[21];					/* The Translator version		*/
-EXTERN_DEF int			create_gbl	INIT_DEF_ZERO;				/* Flag to decide if need to really	*/
-											/* create shared memory file or not.	*/
-EXTERN_DEF char 		wisp_progname[9];					/* Define the program name field.	*/
-EXTERN_DEF char 		wisp_screen[33];					/* Define the screen name field.	*/
+void wisp_set_WSTARTTIME();
+time_t wisp_get_WSTARTTIME();
 
-EXTERN_DEF fstruct 		*g_temp_file_list INIT_DEF_NULL;			/* The list of temp files		*/
-EXTERN_DEF pstruct 		*g_print_file_list INIT_DEF_NULL;			/* The list of print files		*/
+void wisp_set_noswap(int i);
+int  wisp_get_noswap();
 
-EXTERN_DEF int		opt_errflag_found	INIT_DEF_ZERO;				/* Found ERRFLAG in OPTIONS file	*/
-EXTERN_DEF int		opt_errflag		INIT_DEF_ZERO;				/* The value of ERRFLAG from OPTIONS	*/
-EXTERN_DEF int		opt_signalsoff		INIT_DEF_ZERO;				/* Turn signal trapping off		*/
-EXTERN_DEF int		opt_nulldisplay		INIT_DEF_ZERO;				/* Display NULLs as a space.		*/
-EXTERN_DEF int		opt_outputverifyoff	INIT_DEF_ZERO;				/* Suppress PF3 to continue screens	*/
-EXTERN_DEF int		opt_createvolumeon	INIT_DEF_ZERO;				/* Auto create volume if not found	*/
+#define WISP_RUNNAME_SIZE	8
+void wisp_set_runname(const char name[WISP_RUNNAME_SIZE]);
+const char* wisp_get_runname();
+
+const char* wisp_get_filelock();
+const char* wisp_get_hardlock();
+
+#define PROGNAME_SIZE	8
+void wisp_set_progname(const char* progname);
+const char* wisp_get_progname();
+
+#define SCREENNAME_SIZE	32
+void wisp_set_screenname(const char* screenname);
+const char* wisp_get_screenname();
+
+void wisp_set_noprogscrn(int flag);
+int wisp_get_noprogscrn();
+
+EXTERN_DEF wisp_fstruct	*WL_g_temp_file_list INIT_DEF_NULL;			/* The list of temp files		*/
+EXTERN_DEF wisp_pstruct *WL_g_print_file_list INIT_DEF_NULL;			/* The list of print files		*/
 
 enum e_printqueue
 {
@@ -98,18 +120,13 @@ enum e_printqueue
 	PQ_NP,
 	PQ_GENERIC
 };
-EXTERN_DEF enum e_printqueue opt_printqueue;						/* Which Print Queue mechanism?		*/
-EXTERN_DEF char *opt_printqueue_manager;						/* Print Queue Manager command or NULL	*/
+EXTERN_DEF enum e_printqueue WL_opt_printqueue;						/* Which Print Queue mechanism?		*/
+EXTERN_DEF char             *WL_opt_printqueue_manager;					/* Print Queue Manager command or NULL	*/
 
-EXTERN_DEF int		opt_idnumeric		INIT_DEF_ZERO;				/* Return numeric user ID from EXTRACT.	*/
-EXTERN_DEF int		opt_idfive		INIT_DEF_ZERO;				/* Return char 5-7 user ID from EXTRACT.*/
-EXTERN_DEF int		opt_allstatuskeys	INIT_DEF_ZERO;				/* Pass all status keys thru to declr	*/
-EXTERN_DEF int		opt_helpstyle		INIT_DEF_ONE;				/* 1=Wang HELP style 2=non-Wang style	*/
+EXTERN_DEF int		WL_opt_helpstyle	INIT_DEF_ONE;				/* 1=Wang HELP style 2=non-Wang style	*/
 
-EXTERN_DEF int		opt_batchqueue		INIT_DEF_ZERO;				/* Use a batch queue product		*/
-EXTERN_DEF char		*batchqueue_name;
-EXTERN_DEF int		opt_batchman		INIT_DEF_ZERO;				/* Use a batch queue manage product	*/
-EXTERN_DEF char		*batchman_name;
+EXTERN_DEF int		WL_opt_batchman		INIT_DEF_ZERO;				/* Use a batch queue manage product	*/
+EXTERN_DEF char		*WL_batchman_name;
 
 
 EXTERN_DEF int		ede_synch		INIT_DEF_ZERO;				/* Synchronization flag for EDE.	*/
@@ -117,13 +134,43 @@ EXTERN_DEF int		ede_synch		INIT_DEF_ZERO;				/* Synchronization flag for EDE.	*/
 #undef EXTERN_DEF
 #undef INIT_DEF_ZERO
 
-void wglobals();
+void WL_globals();
 
 #endif
 
 /*
 **	History:
 **	$Log: wglobals.h,v $
+**	Revision 1.25  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.24  2002/10/11 20:39:52  gsl
+**	Detect runtime Cobol type without needing INITWISP call.
+**	For ACU set in sub85.c,
+**	For utils set via WRUNCONFIG
+**	Default to MF on UNIX
+**	
+**	Revision 1.23  2002/07/12 20:40:45  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.22  2002/07/12 19:10:25  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.21  2002/07/11 20:29:21  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.20  2002/07/09 04:14:02  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.19  2002/07/01 04:02:45  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.18  2002/06/26 01:42:51  gsl
+**	Remove VMS code
+**	
+**	Revision 1.17  2002/06/21 03:50:25  gsl
+**	Remove softlock
+**	
 **	Revision 1.16  1998/10/22 18:06:30  gsl
 **	Change the flist and plist to g_temp_file_list and g_print_file_list.
 **	

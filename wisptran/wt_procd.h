@@ -1,24 +1,31 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
 */
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+
 
 /*
 **	File:		wt_procd.h
 **
 **	Purpose:	To ...
-**
-**
-**	History:
-**	mm/dd/yy	Written by ...
 **
 */
 
@@ -65,6 +72,12 @@ NODE parse_rewrite_crt(int crt_num, NODE the_statement, NODE the_sentence);
 /*
 **	History:
 **	$Log: wt_procd.h,v $
+**	Revision 1.8  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.7  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
 **	Revision 1.6  1998/03/03 21:20:15  gsl
 **	update
 **	

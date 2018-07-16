@@ -12,7 +12,7 @@
 #include <video.h>
 #include <vmodules.h>
 
-testj()
+int testj()
 {
 	char c,vgetc();
 	int retcount;
@@ -33,7 +33,7 @@ again:	c = vgetc();
 	else retcount = 0;
 
 	uc = (unsigned char)c;
-	if (isprint(c) && isascii(c))
+	if (isprint((int)c) && isascii((int)c))
 	{
 		vprint("Character is \'%c\' = 0x%02x hex, %3u dec, %04o oct\n",c,(int)uc,(int)uc,(int)uc);
 	}

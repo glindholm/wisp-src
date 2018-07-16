@@ -1,5 +1,26 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 struct vol_rec {
 	char header[4];
 	char label[6];
@@ -53,6 +74,9 @@ struct header2 shead2;
 /*
 **	History:
 **	$Log: vsload.h,v $
+**	Revision 1.8  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
+**	
 **	Revision 1.7  1996/07/23 18:13:03  gsl
 **	drcs update
 **	

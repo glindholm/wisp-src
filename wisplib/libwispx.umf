@@ -1,0 +1,1074 @@
+#
+#	Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+#	$Id:$
+#
+#
+#	File:		libwisp.umf
+#
+#	Function:	Generic makefile for the wisp library on all unix platforms.
+#
+#
+
+MAKEFILE = libwisp.umf
+CDEBUG	=
+
+L_WISP	= wisp
+L_VIDEO = video
+THE_LIB	= lib$(L_WISP).a
+LIBVIDEO = $(STDLIB)/lib$(L_VIDEO).a
+
+WC=../wispcommon
+VC=../videolib
+
+TARGET=all
+
+include $(WISPSRC)/port/make.include
+
+CFLAGS  = $(CFLAGS0) -I $(WC) -I$(VC)
+
+.PRECIOUS:	$(THE_LIB) 
+
+all:	$(THE_LIB)
+
+debug:
+	$(MAKE) -f $(MAKEFILE) CDEBUG="-g -DDEBUG" L_WISP=wispd $(TARGET)
+
+clean:
+	rm -f libwisp*.a *.o core *~
+
+install: $(STDLIB)/$(THE_LIB)
+
+$(STDLIB)/$(THE_LIB): $(THE_LIB) $(STDLIB)
+	cp $(THE_LIB) $@
+
+$(STDLIB):
+	mkdir -p $@
+
+
+WISPLIB_OBJS= \
+	$(THE_LIB)(acustubs.o) \
+	$(THE_LIB)(backgrnd.o) \
+	$(THE_LIB)(bell.o) \
+	$(THE_LIB)(bit_x.o) \
+	$(THE_LIB)(bits.o) \
+	$(THE_LIB)(breakacp.o) \
+	$(THE_LIB)(cancel.o) \
+	$(THE_LIB)(cexit.o) \
+	$(THE_LIB)(checkacp.o) \
+	$(THE_LIB)(closeacp.o) \
+	$(THE_LIB)(coblink.o) \
+	$(THE_LIB)(cobpic.o) \
+	$(THE_LIB)(cobscrn.o) \
+	$(THE_LIB)(costar.o) \
+	$(THE_LIB)(customvw.o) \
+	$(THE_LIB)(date.o) \
+	$(THE_LIB)(day.o) \
+	$(THE_LIB)(dbfile.o) \
+	$(THE_LIB)(edestubs.o) \
+	$(THE_LIB)(errgparm.o) \
+	$(THE_LIB)(extract.o) \
+	$(THE_LIB)(fcopy.o) \
+	$(THE_LIB)(fexists.o) \
+	$(THE_LIB)(filecopy.o) \
+	$(THE_LIB)(filesize.o) \
+	$(THE_LIB)(filgparm.o) \
+	$(THE_LIB)(find.o) \
+	$(THE_LIB)(findcase.o) \
+	$(THE_LIB)(findexts.o) \
+	$(THE_LIB)(fxzone.o) \
+	$(THE_LIB)(getparm.o) \
+	$(THE_LIB)(gparmbld.o) \
+	$(THE_LIB)(hexunpk.o) \
+	$(THE_LIB)(idsisubs.o) \
+	$(THE_LIB)(initglbs.o) \
+	$(THE_LIB)(initwisp.o) \
+	$(THE_LIB)(isexec.o) \
+	$(THE_LIB)(level.o) \
+	$(THE_LIB)(licwisp.o) \
+	$(THE_LIB)(link.o) \
+	$(THE_LIB)(linkproc.o) \
+	$(THE_LIB)(linksubs.o) \
+	$(THE_LIB)(linkvect.o) \
+	$(THE_LIB)(logoff.o) \
+	$(THE_LIB)(longarg.o) \
+	$(THE_LIB)(machid.o) \
+	$(THE_LIB)(makepath.o) \
+	$(THE_LIB)(menu_go.o) \
+	$(THE_LIB)(menu_key.o) \
+	$(THE_LIB)(menuread.o) \
+	$(THE_LIB)(menuscan.o) \
+	$(THE_LIB)(message.o) \
+	$(THE_LIB)(mfstubs.o) \
+	$(THE_LIB)(mngfile.o) \
+	$(THE_LIB)(mwconv.o) \
+	$(THE_LIB)(nextfile.o) \
+	$(THE_LIB)(onhelp.o) \
+	$(THE_LIB)(openacp.o) \
+	$(THE_LIB)(operator.o) \
+	$(THE_LIB)(packer.o) \
+	$(THE_LIB)(paths.o) \
+	$(THE_LIB)(platsubs.o) \
+	$(THE_LIB)(print.o) \
+	$(THE_LIB)(putparm.o) \
+	$(THE_LIB)(pwdname.o) \
+	$(THE_LIB)(readacp.o) \
+	$(THE_LIB)(readfdr.o) \
+	$(THE_LIB)(readvtoc.o) \
+	$(THE_LIB)(rename.o) \
+	$(THE_LIB)(retcode.o) \
+	$(THE_LIB)(ring.o) \
+	$(THE_LIB)(runtype.o) \
+	$(THE_LIB)(rvmap.o) \
+	$(THE_LIB)(scratch.o) \
+	$(THE_LIB)(screen.o) \
+	$(THE_LIB)(search.o) \
+	$(THE_LIB)(set.o) \
+	$(THE_LIB)(setenvst.o) \
+	$(THE_LIB)(setfile.o) \
+	$(THE_LIB)(setprgid.o) \
+	$(THE_LIB)(settrigp.o) \
+	$(THE_LIB)(sharemem.o) \
+	$(THE_LIB)(shutexit.o) \
+	$(THE_LIB)(sort.o) \
+	$(THE_LIB)(sortcall.o) \
+	$(THE_LIB)(sortlink.o) \
+	$(THE_LIB)(sortseqf.o) \
+	$(THE_LIB)(string.o) \
+	$(THE_LIB)(submit.o) \
+	$(THE_LIB)(untabify.o) \
+	$(THE_LIB)(updatfdr.o) \
+	$(THE_LIB)(upper.o) \
+	$(THE_LIB)(vdisplay.o) \
+	$(THE_LIB)(vssort.o) \
+	$(THE_LIB)(vwang.o) \
+	$(THE_LIB)(waccept.o) \
+	$(THE_LIB)(wangmenu.o) \
+	$(THE_LIB)(wanguid.o) \
+	$(THE_LIB)(wassert.o) \
+	$(THE_LIB)(wauthsub.o) \
+	$(THE_LIB)(wchain.o) \
+	$(THE_LIB)(wcmatch.o) \
+	$(THE_LIB)(wdisplay.o) \
+	$(THE_LIB)(werrlog.o) \
+	$(THE_LIB)(werrpath.o) \
+	$(THE_LIB)(werrvre.o) \
+	$(THE_LIB)(wexit.o) \
+	$(THE_LIB)(wexith.o) \
+	$(THE_LIB)(wfaccess.o) \
+	$(THE_LIB)(wfcisam.o) \
+	$(THE_LIB)(wfclose.o) \
+	$(THE_LIB)(wfilechk.o) \
+	$(THE_LIB)(wfiledis.o) \
+	$(THE_LIB)(wfileext.o) \
+	$(THE_LIB)(wfname.o) \
+	$(THE_LIB)(wfopen.o) \
+	$(THE_LIB)(wftok.o) \
+	$(THE_LIB)(wfvision.o) \
+	$(THE_LIB)(wfwait.o) \
+	$(THE_LIB)(wgetpgrp.o) \
+	$(THE_LIB)(wglobals.o) \
+	$(THE_LIB)(wisp_pic.o) \
+	$(THE_LIB)(wispcfg.o) \
+	$(THE_LIB)(wispexit.o) \
+	$(THE_LIB)(wispsort.o) \
+	$(THE_LIB)(wispsync.o) \
+	$(THE_LIB)(wispvers.o) \
+	$(THE_LIB)(wlickey.o) \
+	$(THE_LIB)(wmalloc.o) \
+	$(THE_LIB)(wpause.o) \
+	$(THE_LIB)(wperson.o) \
+	$(THE_LIB)(wprint.o) \
+	$(THE_LIB)(writeacp.o) \
+	$(THE_LIB)(wrunconf.o) \
+	$(THE_LIB)(wsb.o) \
+	$(THE_LIB)(wsclose.o) \
+	$(THE_LIB)(wscreen.o) \
+	$(THE_LIB)(wsfnm.o) \
+	$(THE_LIB)(wsfns.o) \
+	$(THE_LIB)(wshelp.o) \
+	$(THE_LIB)(wswap.o) \
+	$(THE_LIB)(wsxio.o) \
+	$(THE_LIB)(wsystem.o) \
+	$(THE_LIB)(wvaset.o) \
+	$(THE_LIB)(wwaitpid.o)
+
+VIDEOLIB_OBJS= \
+	$(THE_LIB)(gcal2.o) \
+	$(THE_LIB)(gcalc.o) \
+	$(THE_LIB)(gcalend.o) \
+	$(THE_LIB)(gclock.o) \
+	$(THE_LIB)(gnotepad.o) \
+	$(THE_LIB)(gpuzzle.o) \
+	$(THE_LIB)(gzones.o) \
+	$(THE_LIB)(valert.o) \
+	$(THE_LIB)(vbell.o) \
+	$(THE_LIB)(vcap.o) \
+	$(THE_LIB)(vcharset.o) \
+	$(THE_LIB)(vchstubs.o) \
+	$(THE_LIB)(vcontrol.o) \
+	$(THE_LIB)(vcut.o) \
+	$(THE_LIB)(vdefer.o) \
+	$(THE_LIB)(vedge.o) \
+	$(THE_LIB)(verase.o) \
+	$(THE_LIB)(vexit.o) \
+	$(THE_LIB)(vfnkey.o) \
+	$(THE_LIB)(vgets0.o) \
+	$(THE_LIB)(vgrid.o) \
+	$(THE_LIB)(vinput.o) \
+	$(THE_LIB)(visdebug.o) \
+	$(THE_LIB)(vkeymap.o) \
+	$(THE_LIB)(vline.o) \
+	$(THE_LIB)(vlist.o) \
+	$(THE_LIB)(vmacro.o) \
+	$(THE_LIB)(vmap.o) \
+	$(THE_LIB)(vmenu.o) \
+	$(THE_LIB)(vmode.o) \
+	$(THE_LIB)(vmove.o) \
+	$(THE_LIB)(vnewline.o) \
+	$(THE_LIB)(vonexit.o) \
+	$(THE_LIB)(vopenf.o) \
+	$(THE_LIB)(vpaste.o) \
+	$(THE_LIB)(vpopscr.o) \
+	$(THE_LIB)(vprint.o) \
+	$(THE_LIB)(vpushscr.o) \
+	$(THE_LIB)(vrawunix.o) \
+	$(THE_LIB)(vrefresh.o) \
+	$(THE_LIB)(vrelease.o) \
+	$(THE_LIB)(vroll.o) \
+	$(THE_LIB)(vscreen.o) \
+	$(THE_LIB)(vsection.o) \
+	$(THE_LIB)(vset.o) \
+	$(THE_LIB)(vslew.o) \
+	$(THE_LIB)(vstate.o) \
+	$(THE_LIB)(vsynch.o) \
+	$(THE_LIB)(vsystem.o) \
+	$(THE_LIB)(vtext.o) \
+	$(THE_LIB)(vtrigger.o) \
+	$(THE_LIB)(vtrim.o) \
+	$(THE_LIB)(vuserex.o) \
+	$(THE_LIB)(vutil.o) \
+	$(THE_LIB)(vwait.o) \
+	$(THE_LIB)(version.o)
+
+$(THE_LIB): $(WISPLIB_OBJS) $(VIDEOLIB_OBJS)
+	$(RANLIB) $(THE_LIB)
+	@echo lib $(THE_LIB) is now up-to-date
+
+
+
+#
+#	WISPLIB Dependancies
+#
+
+$(THE_LIB)(acustubs.o): acustubs.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(backgrnd.o): backgrnd.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wperson.h $(WC)/werrlog.h \
+ $(WC)/wdefines.h
+$(THE_LIB)(bell.o): bell.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/vwang.h \
+ $(WC)/scnfacs.h $(WC)/wperson.h
+$(THE_LIB)(bit_x.o): bit_x.c $(WC)/idsistd.h $(WC)/intdef.h \
+ cobrun.h $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/scnfacs.h
+$(THE_LIB)(bits.o): bits.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/vssubs.h
+$(THE_LIB)(breakacp.o): breakacp.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(cancel.o): cancel.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(cexit.o): cexit.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(checkacp.o): checkacp.c $(WC)/werrlog.h $(WC)/idsistd.h \
+ $(WC)/intdef.h
+$(THE_LIB)(closeacp.o): closeacp.c $(WC)/idsistd.h $(WC)/intdef.h \
+ acp.h $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(coblink.o): coblink.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(cobpic.o): cobpic.c $(WC)/idsistd.h $(WC)/intdef.h \
+ cobpic.h $(WC)/wisp_pic.h
+$(THE_LIB)(cobscrn.o): cobscrn.c cobscrn.h
+$(THE_LIB)(costar.o): costar.c $(WC)/costar.h $(WC)/scnfacs.h \
+ $(WC)/idsistd.h $(WC)/intdef.h $(WC)/vwang.h \
+ $(WC)/wperson.h $(WC)/werrlog.h \
+ $(WC)/idsisubs.h $(WC)/wmalloc.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h $(VC)/video.h \
+ $(VC)/verase.h $(VC)/vmenu.h $(VC)/vintdef.h \
+ $(VC)/vline.h $(VC)/vscreen.h $(VC)/vprint.h \
+ $(VC)/vlocal.h $(VC)/vdata.h $(VC)/vcap.h \
+ $(VC)/vraw.h
+$(THE_LIB)(customvw.o): customvw.c
+$(THE_LIB)(date.o): date.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h day.h
+$(THE_LIB)(day.o): day.c $(WC)/idsistd.h $(WC)/intdef.h day.h \
+ $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(dbfile.o): dbfile.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wcommon.h
+$(THE_LIB)(edestubs.o): edestubs.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h $(WC)/werrlog.h \
+ $(WC)/wexit.h
+$(THE_LIB)(errgparm.o): errgparm.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wangkeys.h $(WC)/wperson.h \
+ $(WC)/werrlog.h $(WC)/wdefines.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h
+$(THE_LIB)(extract.o): extract.c $(WC)/wsysconf.h $(WC)/idsistd.h \
+ $(WC)/intdef.h $(WC)/wdefines.h \
+ $(WC)/wperson.h $(WC)/werrlog.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wanguid.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/idsisubs.h \
+ $(WC)/wrunconf.h $(WC)/wispcfg.h \
+ $(WC)/machid.h setprgid.h
+$(THE_LIB)(fcopy.o): fcopy.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h fcopy.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(fexists.o): fexists.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(filecopy.o): filecopy.c $(WC)/idsistd.h $(WC)/intdef.h \
+ fcopy.h $(WC)/wfiles.h $(WC)/wdefines.h \
+ $(WC)/wcommon.h $(WC)/wperson.h \
+ $(WC)/werrlog.h $(WC)/filext.h $(WC)/paths.h \
+ $(WC)/wfname.h $(WC)/idsisubs.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h
+$(THE_LIB)(filesize.o): filesize.c $(WC)/wisplib.h $(WC)/intdef.h \
+ $(WC)/setenvst.h $(WC)/idsistd.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(filgparm.o): filgparm.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wcommon.h $(WC)/wangkeys.h \
+ $(WC)/wperson.h $(WC)/werrlog.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/idsisubs.h filgparm.h
+$(THE_LIB)(find.o): find.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wfiles.h $(WC)/wdefines.h \
+ $(WC)/werrlog.h $(WC)/wfname.h \
+ $(WC)/idsisubs.h $(WC)/wexit.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/filext.h $(WC)/wperson.h $(WC)/paths.h
+$(THE_LIB)(findcase.o): findcase.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/idsisubs.h
+$(THE_LIB)(findexts.o): findexts.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wdefines.h $(WC)/idsisubs.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/wcommon.h
+$(THE_LIB)(fxzone.o): fxzone.c $(WC)/idsistd.h $(WC)/intdef.h
+$(THE_LIB)(getparm.o): getparm.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wangkeys.h \
+ $(WC)/wcommon.h $(WC)/scnfacs.h \
+ $(WC)/sharemem.h $(WC)/putparm.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wispvers.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/wexit.h $(WC)/idsisubs.h $(WC)/vwang.h \
+ $(WC)/wmalloc.h $(WC)/wperson.h setprgid.h \
+ $(WC)/link.h
+$(THE_LIB)(gparmbld.o): gparmbld.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wdefines.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h
+$(THE_LIB)(hexunpk.o): hexunpk.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/hexunpk.h
+$(THE_LIB)(idsisubs.o): idsisubs.c $(WC)/idsisubs.h \
+ $(WC)/idsistd.h $(WC)/intdef.h $(WC)/paths.h \
+ assert.h
+$(THE_LIB)(initglbs.o): initglbs.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/werrlog.h \
+ $(WC)/filext.h $(WC)/wexit.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wperson.h \
+ $(WC)/level.h $(WC)/vwang.h $(WC)/scnfacs.h \
+ $(WC)/wispvers.h $(WC)/wrunconf.h \
+ $(WC)/platsubs.h
+$(THE_LIB)(initwisp.o): initwisp.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wdefines.h \
+ $(WC)/wcommon.h $(WC)/vwang.h $(WC)/scnfacs.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/filext.h $(WC)/wperson.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/wexit.h $(WC)/level.h $(WC)/machid.h \
+ wsb.h $(WC)/wispvers.h $(WC)/platsubs.h \
+ $(WC)/wlicense.h
+$(THE_LIB)(isexec.o): isexec.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wdefines.h runtype.h
+$(THE_LIB)(level.o): level.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/level.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(licwisp.o): licwisp.c $(WC)/idsisubs.h $(WC)/idsistd.h \
+ $(WC)/intdef.h $(WC)/wlicense.h \
+ $(WC)/wispcfg.h $(WC)/wmalloc.h
+$(THE_LIB)(link.o): link.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/link.h $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wperson.h \
+ $(WC)/wcommon.h cobrun.h runtype.h $(WC)/wrunconf.h \
+ $(WC)/idsisubs.h $(WC)/paths.h $(WC)/wfname.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/wexit.h linkvect.h $(WC)/filext.h \
+ $(WC)/level.h $(WC)/vwang.h $(WC)/scnfacs.h \
+ $(WC)/sharemem.h $(WC)/wmalloc.h \
+ $(WC)/wispcfg.h setprgid.h $(WC)/wfiledis.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(linkproc.o): linkproc.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h \
+ $(WC)/wdefines.h $(WC)/wperson.h \
+ $(WC)/wfiles.h $(WC)/wcommon.h runtype.h \
+ $(WC)/wfname.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/level.h \
+ $(WC)/sharemem.h $(WC)/wexit.h \
+ $(WC)/wispcfg.h $(WC)/link.h $(WC)/werrlog.h
+$(THE_LIB)(linksubs.o): linksubs.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/idsisubs.h $(WC)/link.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h osddefs.h $(WC)/paths.h \
+ $(WC)/wexit.h $(WC)/wperson.h $(WC)/wanguid.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(linkvect.o): linkvect.c $(WC)/idsistd.h $(WC)/intdef.h \
+ linkvect.h $(WC)/link.h $(WC)/wperson.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/vssubs.h
+$(THE_LIB)(logoff.o): logoff.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wexit.h $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/werrlog.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(longarg.o): longarg.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(machid.o): machid.c $(WC)/idsisubs.h $(WC)/idsistd.h \
+ $(WC)/intdef.h $(WC)/wlicense.h \
+ $(WC)/wispnt.h assert.h $(WC)/machid.h \
+ $(WC)/wmalloc.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(makepath.o): makepath.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/paths.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/idsisubs.h \
+ $(WC)/wdefines.h assert.h
+$(THE_LIB)(menu_go.o): menu_go.c $(WC)/idsistd.h $(WC)/intdef.h \
+ menu.h $(WC)/wexit.h $(WC)/vwang.h \
+ $(WC)/scnfacs.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(VC)/video.h $(VC)/verase.h \
+ $(VC)/vmenu.h $(VC)/vintdef.h $(VC)/vline.h \
+ $(VC)/vscreen.h $(VC)/vprint.h $(VC)/vlocal.h
+$(THE_LIB)(menu_key.o): menu_key.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h menu.h $(VC)/video.h \
+ $(VC)/verase.h $(VC)/vmenu.h $(VC)/vintdef.h \
+ $(VC)/vline.h $(VC)/vscreen.h $(VC)/vprint.h
+$(THE_LIB)(menuread.o): menuread.c $(WC)/idsistd.h $(WC)/intdef.h \
+ menu.h $(WC)/paths.h $(WC)/wispcfg.h \
+ $(WC)/wmalloc.h
+$(THE_LIB)(menuscan.o): menuscan.c $(WC)/idsistd.h $(WC)/intdef.h \
+ menu.h $(WC)/wperson.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/vwang.h \
+ $(WC)/scnfacs.h $(WC)/wanguid.h $(VC)/video.h \
+ $(VC)/verase.h $(VC)/vmenu.h $(VC)/vintdef.h \
+ $(VC)/vline.h $(VC)/vscreen.h $(VC)/vprint.h \
+ $(VC)/vlocal.h $(VC)/vdata.h
+$(THE_LIB)(message.o): message.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wdefines.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h $(WC)/wmalloc.h \
+ $(WC)/wperson.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h osddefs.h
+$(THE_LIB)(mfstubs.o): mfstubs.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(mngfile.o): mngfile.c $(WC)/idsistd.h $(WC)/intdef.h \
+ runtype.h $(WC)/wcommon.h $(WC)/vwang.h \
+ $(WC)/scnfacs.h $(WC)/wperson.h \
+ $(WC)/wdefines.h $(WC)/werrlog.h \
+ $(WC)/wfname.h $(WC)/ring.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/idsisubs.h \
+ $(WC)/paths.h $(WC)/wispcfg.h screen.h wsb.h \
+ $(WC)/wfiledis.h wfvision.h wfcisam.h assert.h
+$(THE_LIB)(mwconv.o): mwconv.c $(WC)/idsistd.h $(WC)/intdef.h \
+ cobrun.h
+$(THE_LIB)(nextfile.o): nextfile.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wdefines.h $(WC)/wmalloc.h
+$(THE_LIB)(onhelp.o): onhelp.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wperson.h
+$(THE_LIB)(openacp.o): openacp.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wispcfg.h $(WC)/paths.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h acp.h $(WC)/wmalloc.h
+$(THE_LIB)(operator.o): operator.c
+$(THE_LIB)(packer.o): packer.c $(WC)/idsistd.h $(WC)/intdef.h
+$(THE_LIB)(paths.o): paths.c $(WC)/idsisubs.h $(WC)/idsistd.h \
+ $(WC)/intdef.h $(WC)/paths.h $(WC)/wispcfg.h \
+ $(WC)/wmalloc.h
+$(THE_LIB)(platsubs.o): platsubs.c $(WC)/idsistd.h $(WC)/intdef.h \
+ wplatdef.h $(WC)/platsubs.h
+$(THE_LIB)(print.o): print.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wcommon.h $(WC)/wperson.h \
+ $(WC)/werrlog.h $(WC)/wfname.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/filext.h
+$(THE_LIB)(putparm.o): putparm.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/sharemem.h \
+ $(WC)/putparm.h $(WC)/wdefines.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/idsisubs.h $(WC)/wmalloc.h
+$(THE_LIB)(pwdname.o): pwdname.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/wanguid.h
+$(THE_LIB)(readacp.o): readacp.c $(WC)/idsistd.h $(WC)/intdef.h \
+ acp.h $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(readfdr.o): readfdr.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wcommon.h $(WC)/werrlog.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/wfname.h $(WC)/wdefines.h \
+ $(WC)/idsisubs.h $(WC)/filext.h wfcisam.h wfvision.h \
+ $(WC)/wperson.h $(WC)/vssubs.h
+$(THE_LIB)(readvtoc.o): readvtoc.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wfname.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wmalloc.h
+$(THE_LIB)(rename.o): rename.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wfname.h $(WC)/wdefines.h \
+ $(WC)/wfiles.h $(WC)/wcommon.h \
+ $(WC)/wperson.h $(WC)/werrlog.h \
+ $(WC)/idsisubs.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/filext.h \
+ $(WC)/vssubs.h
+$(THE_LIB)(retcode.o): retcode.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/idsisubs.h $(WC)/werrlog.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wispcfg.h \
+ $(WC)/paths.h $(WC)/filext.h $(WC)/wperson.h \
+ $(WC)/wmalloc.h osddefs.h $(WC)/wglobals.h \
+ $(WC)/wfiles.h
+$(THE_LIB)(runtype.o): runtype.c $(WC)/idsistd.h $(WC)/intdef.h \
+ runtype.h $(WC)/wdefines.h $(WC)/idsisubs.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(rvmap.o): rvmap.c $(WC)/idsistd.h $(WC)/intdef.h \
+ assert.h $(WC)/wmalloc.h rvmap.h $(WC)/wdefines.h \
+ $(WC)/werrlog.h $(WC)/wperson.h
+$(THE_LIB)(scratch.o): scratch.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wcommon.h $(WC)/wdefines.h \
+ $(WC)/idsisubs.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wfname.h \
+ $(WC)/filext.h $(WC)/wispcfg.h \
+ $(WC)/werrlog.h $(WC)/vssubs.h
+$(THE_LIB)(screen.o): screen.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h $(WC)/wcommon.h \
+ $(WC)/werrlog.h $(WC)/wperson.h \
+ $(WC)/wdefines.h $(WC)/wanguid.h \
+ $(WC)/wfname.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wmalloc.h screen.h osddefs.h
+$(THE_LIB)(search.o): search.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wdefines.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h
+$(THE_LIB)(set.o): set.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wperson.h $(WC)/werrlog.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(setenvst.o): setenvst.c $(WC)/setenvst.h \
+ $(WC)/wmalloc.h $(WC)/werrlog.h \
+ $(WC)/idsistd.h $(WC)/intdef.h
+$(THE_LIB)(setfile.o): setfile.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wfiles.h $(WC)/wdefines.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/werrlog.h $(WC)/wfname.h \
+ $(WC)/idsisubs.h $(WC)/wglobals.h \
+ $(WC)/wcommon.h
+$(THE_LIB)(setprgid.o): setprgid.c setprgid.h
+$(THE_LIB)(settrigp.o): settrigp.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wfiles.h $(WC)/wdefines.h \
+ $(WC)/wcommon.h $(WC)/werrlog.h \
+ $(WC)/wfname.h $(WC)/filext.h
+$(THE_LIB)(sharemem.o): sharemem.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/sharemem.h \
+ $(WC)/putparm.h $(WC)/wdefines.h \
+ $(WC)/wanguid.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/idsisubs.h \
+ $(WC)/level.h $(WC)/wexit.h $(WC)/wperson.h \
+ osddefs.h $(WC)/wmalloc.h
+$(THE_LIB)(shutexit.o): shutexit.c $(WC)/idsistd.h $(WC)/intdef.h
+$(THE_LIB)(sort.o): sort.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(sortcall.o): sortcall.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/idsisubs.h $(WC)/wcommon.h \
+ $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(sortlink.o): sortlink.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(sortseqf.o): sortseqf.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/sortseqf.h $(WC)/idsisubs.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/wispcfg.h $(WC)/wperson.h \
+ $(WC)/werrlog.h $(WC)/wdefines.h
+$(THE_LIB)(string.o): string.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wmalloc.h
+$(THE_LIB)(submit.o): submit.c submit.h $(WC)/idsistd.h \
+ $(WC)/intdef.h $(WC)/idsisubs.h \
+ $(WC)/wcommon.h $(WC)/wperson.h \
+ $(WC)/werrlog.h $(WC)/wdefines.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/filext.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wfname.h \
+ $(WC)/wispcfg.h $(WC)/level.h $(WC)/wexit.h \
+ $(WC)/wmalloc.h $(WC)/wanguid.h filgparm.h assert.h \
+ $(WC)/wrunconf.h runtype.h $(WC)/wispnt.h
+$(THE_LIB)(untabify.o): untabify.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wmalloc.h
+$(THE_LIB)(updatfdr.o): updatfdr.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(upper.o): upper.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(vdisplay.o): vdisplay.c $(VC)/video.h $(VC)/verase.h \
+ $(VC)/vmenu.h $(VC)/vintdef.h $(VC)/vline.h \
+ $(VC)/vscreen.h $(VC)/vprint.h $(VC)/vlocal.h \
+ $(VC)/vdata.h $(VC)/vcap.h $(WC)/idsistd.h \
+ $(WC)/intdef.h $(WC)/werrlog.h \
+ $(WC)/wperson.h $(WC)/scnfacs.h \
+ $(WC)/wanguid.h $(WC)/idsisubs.h \
+ $(WC)/costar.h osddefs.h $(WC)/wexit.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/filext.h $(WC)/wispcfg.h $(WC)/vwang.h \
+ wsb.h $(WC)/wmalloc.h screen.h
+$(THE_LIB)(vssort.o): vssort.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/idsisubs.h $(WC)/vssort.h \
+ $(WC)/sortseqf.h $(WC)/wfname.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(vwang.o): vwang.c $(VC)/video.h $(VC)/verase.h \
+ $(VC)/vmenu.h $(VC)/vintdef.h $(VC)/vline.h \
+ $(VC)/vscreen.h $(VC)/vprint.h $(VC)/vlocal.h \
+ $(VC)/vdata.h $(VC)/vcap.h $(VC)/vchinese.h \
+ $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wperson.h $(WC)/vwang.h $(WC)/scnfacs.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wexit.h assert.h wsfns.h \
+ menu.h $(WC)/wmalloc.h $(WC)/costar.h \
+ $(WC)/wispcfg.h $(WC)/werrlog.h
+$(THE_LIB)(waccept.o): waccept.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h
+$(THE_LIB)(wangmenu.o): wangmenu.c $(WC)/idsistd.h $(WC)/intdef.h \
+ menu.h
+$(THE_LIB)(wanguid.o): wanguid.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wdefines.h $(WC)/wanguid.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/idsisubs.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wmalloc.h \
+ $(WC)/wperson.h
+$(THE_LIB)(wassert.o): wassert.c assert.h $(WC)/werrlog.h \
+ $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wexit.h
+$(THE_LIB)(wauthsub.o): wauthsub.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wlicense.h $(WC)/platsubs.h \
+ $(WC)/idsisubs.h $(WC)/machid.h \
+ $(WC)/wispcfg.h
+$(THE_LIB)(wchain.o): wchain.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/werrlog.h $(WC)/wcommon.h \
+ $(WC)/wdefines.h $(WC)/wfname.h \
+ $(WC)/filext.h runtype.h $(WC)/level.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h \
+ $(WC)/wrunconf.h
+$(THE_LIB)(wcmatch.o): wcmatch.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wdefines.h
+$(THE_LIB)(wdisplay.o): wdisplay.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/werrlog.h
+$(THE_LIB)(werrlog.o): werrlog.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wperson.h $(WC)/wdefines.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h osddefs.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/idsisubs.h $(WC)/wispcfg.h \
+ $(WC)/wanguid.h $(WC)/werrlog.h
+$(THE_LIB)(werrpath.o): werrpath.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wdefines.h $(WC)/wglobals.h \
+ $(WC)/wfiles.h $(WC)/idsisubs.h \
+ $(WC)/wperson.h $(WC)/wmalloc.h \
+ $(WC)/wispcfg.h
+$(THE_LIB)(werrvre.o): werrvre.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h $(WC)/werrlog.h \
+ $(WC)/wexit.h $(WC)/costar.h win32err.h \
+ $(WC)/wperson.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/link.h
+$(THE_LIB)(wexit.o): wexit.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wglobals.h \
+ $(WC)/wfiles.h $(WC)/wdefines.h $(WC)/wexit.h \
+ cobrun.h $(WC)/vwang.h $(WC)/scnfacs.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/level.h
+$(THE_LIB)(wexith.o): wexith.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wperson.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wglobals.h \
+ $(WC)/filext.h $(WC)/level.h $(WC)/vwang.h \
+ $(WC)/scnfacs.h $(WC)/sharemem.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/idsisubs.h
+$(THE_LIB)(wfaccess.o): wfaccess.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wdefines.h $(WC)/wcommon.h wfaccess.h cobrun.h \
+ $(WC)/idsisubs.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/werrlog.h
+$(THE_LIB)(wfcisam.o): wfcisam.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h osddefs.h wfvision.h \
+ $(WC)/werrlog.h $(WC)/wmalloc.h $(WC)/paths.h \
+ $(WC)/vssubs.h $(WC)/wperson.h
+$(THE_LIB)(wfclose.o): wfclose.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wperson.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/idsisubs.h \
+ $(WC)/wglobals.h $(WC)/werrlog.h
+$(THE_LIB)(wfilechk.o): wfilechk.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wcommon.h cobrun.h \
+ $(WC)/wdefines.h $(WC)/wglobals.h \
+ $(WC)/wfiles.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/idsisubs.h \
+ $(WC)/wexit.h $(WC)/wfname.h $(WC)/wperson.h
+$(THE_LIB)(wfiledis.o): wfiledis.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wperson.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wcommon.h \
+ $(WC)/wangkeys.h $(WC)/wfname.h $(WC)/level.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/sharemem.h $(WC)/vwang.h \
+ $(WC)/scnfacs.h $(WC)/filext.h \
+ $(WC)/wfiledis.h $(WC)/wmalloc.h \
+ $(WC)/wispcfg.h $(WC)/idsisubs.h filgparm.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(wfileext.o): wfileext.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/filext.h $(WC)/idsisubs.h
+$(THE_LIB)(wfname.o): wfname.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wperson.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wcommon.h \
+ $(WC)/werrlog.h cobrun.h $(WC)/wfname.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/idsisubs.h $(WC)/paths.h $(WC)/filext.h \
+ $(WC)/wispcfg.h
+$(THE_LIB)(wfopen.o): wfopen.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wperson.h $(WC)/wangkeys.h \
+ $(WC)/wcommon.h wfaccess.h cobrun.h $(WC)/wglobals.h \
+ $(WC)/wfiles.h $(WC)/wdefines.h \
+ $(WC)/filext.h $(WC)/wmalloc.h assert.h rvmap.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/wexit.h $(WC)/idsisubs.h $(WC)/wfname.h \
+ filgparm.h $(WC)/werrlog.h
+$(THE_LIB)(wftok.o): wftok.c $(WC)/idsistd.h $(WC)/intdef.h
+$(THE_LIB)(wfvision.o): wfvision.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h wfvision.h \
+ $(WC)/werrlog.h $(WC)/wispcfg.h assert.h \
+ $(WC)/vssubs.h visint.h visn2.h
+$(THE_LIB)(wfwait.o): wfwait.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(wgetpgrp.o): wgetpgrp.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wdefines.h $(WC)/werrlog.h \
+ $(WC)/wexit.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(wglobals.o): wglobals.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h cobrun.h
+$(THE_LIB)(win32err.o): win32err.c
+$(THE_LIB)(win32msg.o): win32msg.c
+$(THE_LIB)(win32prt.o): win32prt.c
+$(THE_LIB)(win32spn.o): win32spn.c
+$(THE_LIB)(winnt.o): winnt.c
+$(THE_LIB)(wispcfg.o): wispcfg.c $(WC)/wispcfg.h $(WC)/wmalloc.h \
+ $(WC)/idsisubs.h $(WC)/idsistd.h \
+ $(WC)/intdef.h $(WC)/setenvst.h assert.h \
+ $(WC)/wispnt.h $(WC)/wisplib.h \
+ $(WC)/wperson.h $(WC)/werrlog.h \
+ $(WC)/wanguid.h
+$(THE_LIB)(wispexit.o): wispexit.c $(WC)/wisplib.h $(WC)/intdef.h \
+ $(WC)/setenvst.h $(WC)/werrlog.h \
+ $(WC)/idsistd.h
+$(THE_LIB)(wispsort.o): wispsort.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wcommon.h $(WC)/sortseqf.h \
+ $(WC)/wfname.h $(WC)/wdefines.h osddefs.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/wmalloc.h $(WC)/vwang.h $(WC)/scnfacs.h \
+ $(WC)/wispcfg.h wfcisam.h wfvision.h assert.h fcopy.h \
+ $(WC)/werrlog.h
+$(THE_LIB)(wispsync.o): wispsync.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h
+$(THE_LIB)(wispvers.o): wispvers.c $(WC)/wcommon.h \
+ $(WC)/wispvers.h
+$(THE_LIB)(wlickey.o): wlickey.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wlicense.h
+$(THE_LIB)(wmalloc.o): wmalloc.c $(WC)/werrlog.h $(WC)/idsistd.h \
+ $(WC)/intdef.h $(WC)/wexit.h $(WC)/wmalloc.h
+$(THE_LIB)(wpause.o): wpause.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wispnt.h
+$(THE_LIB)(wperson.o): wperson.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wperson.h $(WC)/werrlog.h \
+ $(WC)/wdefines.h $(WC)/wglobals.h \
+ $(WC)/wfiles.h $(WC)/wanguid.h $(WC)/vwang.h \
+ $(WC)/scnfacs.h osddefs.h $(WC)/wexit.h \
+ $(WC)/idsisubs.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wrunconf.h \
+ $(WC)/wmalloc.h $(WC)/paths.h $(WC)/wispnt.h \
+ $(WC)/link.h $(WC)/wispcfg.h submit.h cobrun.h \
+ assert.h
+$(THE_LIB)(wprint.o): wprint.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/idsisubs.h $(WC)/wperson.h \
+ $(WC)/werrlog.h $(WC)/wglobals.h \
+ $(WC)/wfiles.h $(WC)/wdefines.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/wmalloc.h
+$(THE_LIB)(writeacp.o): writeacp.c $(WC)/idsistd.h $(WC)/intdef.h \
+ acp.h $(WC)/werrlog.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h
+$(THE_LIB)(wrunconf.o): wrunconf.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wrunconf.h $(WC)/wdefines.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/idsisubs.h $(WC)/wmalloc.h \
+ $(WC)/wispcfg.h $(WC)/werrlog.h
+$(THE_LIB)(wsb.o): wsb.c wsb.h $(WC)/vwang.h $(WC)/idsistd.h \
+ $(WC)/intdef.h $(WC)/scnfacs.h \
+ $(WC)/wmalloc.h assert.h $(WC)/werrlog.h \
+ $(WC)/wexit.h $(WC)/wperson.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(VC)/vchinese.h $(WC)/link.h
+$(THE_LIB)(wsclose.o): wsclose.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h
+$(THE_LIB)(wscreen.o): wscreen.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/wcommon.h cobrun.h $(WC)/werrlog.h \
+ $(WC)/wexit.h $(WC)/vwang.h $(WC)/scnfacs.h \
+ cobpic.h $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/wperson.h $(WC)/costar.h \
+ $(WC)/wmalloc.h $(WC)/wglobals.h \
+ $(WC)/wfiles.h $(WC)/wdefines.h
+$(THE_LIB)(wsfnm.o): wsfnm.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h $(WC)/werrlog.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h wsfns.h
+$(THE_LIB)(wsfns.o): wsfns.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h $(WC)/werrlog.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h wsfns.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wexit.h $(WC)/level.h \
+ $(WC)/wmalloc.h $(WC)/vssubs.h
+$(THE_LIB)(wshelp.o): wshelp.c osddefs.h $(VC)/video.h $(VC)/verase.h \
+ $(VC)/vmenu.h $(VC)/vintdef.h $(VC)/vline.h \
+ $(VC)/vscreen.h $(VC)/vprint.h $(VC)/vlocal.h \
+ $(VC)/vdata.h $(VC)/vcap.h $(WC)/idsistd.h \
+ $(WC)/intdef.h $(WC)/wcommon.h \
+ $(WC)/wperson.h $(WC)/vwang.h $(WC)/scnfacs.h \
+ $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/werrlog.h cobrun.h \
+ $(WC)/wanguid.h $(WC)/wispvers.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h \
+ $(WC)/level.h $(WC)/idsisubs.h $(WC)/wexit.h \
+ $(WC)/sharemem.h $(WC)/wispnt.h \
+ $(WC)/platsubs.h $(WC)/wispcfg.h \
+ $(WC)/wlicense.h $(WC)/machid.h \
+ $(WC)/wrunconf.h submit.h wsb.h screen.h cobscrn.h \
+ $(WC)/wfiledis.h $(WC)/wmalloc.h
+$(THE_LIB)(wswap.o): wswap.c $(WC)/idsistd.h $(WC)/intdef.h \
+ cobrun.h $(WC)/wglobals.h $(WC)/wfiles.h \
+ $(WC)/wdefines.h $(WC)/wisplib.h \
+ $(WC)/setenvst.h $(WC)/wexit.h
+$(THE_LIB)(wsxio.o): wsxio.c $(WC)/idsistd.h $(WC)/intdef.h \
+ $(WC)/vwang.h $(WC)/scnfacs.h $(WC)/werrlog.h \
+ $(WC)/wisplib.h $(WC)/setenvst.h
+$(THE_LIB)(wsystem.o): wsystem.c $(WC)/wisplib.h $(WC)/intdef.h \
+ $(WC)/setenvst.h $(WC)/werrlog.h \
+ $(WC)/idsistd.h
+$(THE_LIB)(wvaset.o): wvaset.c $(WC)/idsistd.h $(WC)/intdef.h
+$(THE_LIB)(wwaitpid.o): wwaitpid.c $(WC)/idsistd.h $(WC)/intdef.h
+
+
+#
+#	WISPCOMMON
+#
+
+$(THE_LIB)(ring.o): $(WC)/ring.c $(WC)/ring.h
+	$(CC) -c $(CFLAGS) $(WC)/$(%:.o=.c)
+	ar rv $@ $%
+	rm -f $%
+
+$(THE_LIB)(wisp_pic.o): $(WC)/wisp_pic.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wisp_pic.h
+	$(CC) -c $(CFLAGS) $(WC)/$(%:.o=.c)
+	ar rv $@ $%
+	rm -f $%
+
+#
+#	VIDEOLIB
+#	- Combine all the video library object file into the wisp library (eliminate video library)
+#
+$(VIDEOLIB_OBJS): $(LIBVIDEO)
+	ar x $(LIBVIDEO) $%
+	ar rv $@ $%
+	rm -f $%
+
+
+selftest: validation
+
+VALLIST= wispcfg machid
+
+validation:	$(VALLIST)
+	@echo
+	@echo Running validation routines
+	@for i in $(VALLIST) ; \
+	do \
+		(./$$i || exit 0); \
+	done
+	@echo
+	@echo Validation completed
+	@echo
+
+$(VALLIST): $(THE_LIB)
+	$(CC) $(CFLAGS) -g -DDEBUG -DMAIN -o $@ $@.c $(THE_LIB) $(VIDEO_LIB_PATH) $(CURSES_LINK)
+
+#	History:
+#	$Log: libwispx.umf,v $
+#	Revision 1.4  2003/06/27 15:54:18  gsl
+#	fix
+#	
+#	Revision 1.3  2003/06/23 14:59:22  gsl
+#	remove wdinit and wdfinish
+#	
+#	Revision 1.2  2003/06/23 14:29:35  gsl
+#	remove regexpr.[ch]
+#	
+#	Revision 1.1  2003/06/20 20:43:07  gsl
+#	Combine wisp and video libs togetther into libwisp.a then don't
+#	need libvideo.a anymore.
+#	
+#	Revision 1.59  2003/03/20 15:01:05  gsl
+#	Fix -Wall warnings
+#	
+#	Revision 1.58  2003/02/24 21:58:03  gsl
+#	Remove support for screen versions 20 and 21 (unix only) and juster
+#	
+#	Revision 1.57  2003/02/10 21:58:23  gsl
+#	update dependencies
+#	
+#	Revision 1.56  2003/02/07 14:31:19  gsl
+#	remove empty source files
+#	
+#	Revision 1.55  2003/02/05 15:40:13  gsl
+#	Fix copyright headers
+#	
+#	Revision 1.54  2003/01/31 21:20:54  gsl
+#	remove initscrn.c obsolete
+#	
+#	Revision 1.53  2002/11/07 16:44:08  gsl
+#	Change to use variable $(WISPSRC)
+#	
+#	Revision 1.52  2002/10/18 19:14:10  gsl
+#	Cleanup
+#	
+#	Revision 1.51  2002/07/15 14:35:40  gsl
+#	remove obsolete wdellock
+#	
+#	Revision 1.50  2002/07/15 14:33:29  gsl
+#	remove obsolete wdelfile
+#	
+#	Revision 1.49  2002/07/15 14:29:49  gsl
+#	remove obsolete shellvar
+#	
+#	Revision 1.48  2002/07/15 14:09:03  gsl
+#	remove dummy "protect"
+#	
+#	Revision 1.47  2002/07/12 19:10:12  gsl
+#	Global unique WL_ changes
+#	
+#	Revision 1.46  2002/07/12 17:02:56  gsl
+#	update
+#	
+#	Revision 1.45  2002/07/11 14:44:02  gsl
+#	remove obsolete files
+#	
+#	Revision 1.44  2002/06/26 13:38:33  gsl
+#	remove obsolete files
+#	
+#	Revision 1.43  2002/06/25 15:43:27  gsl
+#	Removed many obsolete routines
+#	
+#	Revision 1.42  2002/06/03 19:51:16  gsl
+#	Create wisp/src/lib
+#	
+#	Revision 1.41  2001/11/27 20:49:49  gsl
+#	Remove VMS que stuff
+#	
+#	Revision 1.40  2001-11-27 10:12:53-05  gsl
+#	Update dependancies
+#
+#	Revision 1.39  2001-10-22 11:11:37-04  gsl
+#	Add wfcisam.h
+#
+#	Revision 1.38  2001-09-27 10:58:20-04  gsl
+#	remove msdosfns ans sleepdos
+#
+#	Revision 1.37  2001-09-27 10:53:52-04  gsl
+#	remove dosprint
+#
+#	Revision 1.36  1998-12-14 11:32:52-05  gsl
+#	add mfstubs
+#
+#	Revision 1.35  1998-10-02 15:23:24-04  gsl
+#	Moved costar.h to wispcommon
+#
+#	Revision 1.34  1998-03-13 16:43:53-05  gsl
+#	Add cobscrn.c
+#
+#	Revision 1.33  1997-12-04 18:09:12-05  gsl
+#	Rename winnt.h to wispnt.h
+#
+#	Revision 1.32  1997-12-04 13:58:13-05  gsl
+#	move winnt.h to wispcommon
+#
+#	Revision 1.31  1997-10-29 11:58:23-05  gsl
+#	Add wsb.c
+#
+#	Revision 1.30  1997-03-25 13:43:53-05  gsl
+#	Update to use wispcommon
+#
+#	Revision 1.29  1997-03-06 17:02:17-05  gsl
+#	don't install by default
+#	specify the makefile name
+#
+#	Revision 1.28  1997-03-06 14:56:16-05  gsl
+#	Add machid to validation list
+#
+#	Revision 1.27  1996-10-14 14:27:33-04  gsl
+#	Add validation and selftest
+#
+#	Revision 1.26  1996-10-09 14:50:47-07  gsl
+#	Add wispcfg.o
+#
+#	Revision 1.25  1996-07-17 15:44:17-07  gsl
+#	Updated dependencies
+#
+#	Revision 1.24  1996-07-15 09:08:19-07  gsl
+#	Add the video include directory to the cflags
+#
+#	Revision 1.23  1996-07-10 17:28:32-07  gsl
+#	Change wassert.h to assert.h
+#
+#	Revision 1.22  1996-04-10 05:41:04-07  gsl
+#	Add target "install"
+#
+# Revision 1.21  1996/01/04  11:41:09  gsl
+# update
+#
+# Revision 1.20  1996/01/03  11:41:56  gsl
+# add rvmap.[ch] wassert.[ch] wmalloc.[ch]
+#
+#
+# 			03/18/90	Written by GSL
+#			04/14/92	Moved system specific variables to $(PORT)/include.cfl, devo
+#			06/04/92	Changed to use make.include GSL
+#			01/26/93	Added level.c. GSL
+#			04/21/93	Added isdebug.c  GSL
+#			04/27/93	Added wftok.c GSL
+#			07/20/93	Changed $(LIB) to $(THE_LIB) for MSDOS compatiblity. GSL
+#			07/05/95	Added customvw.c  SMC
+

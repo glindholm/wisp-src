@@ -1,3 +1,4 @@
+      * $Id:$
       /*****************************************************************
       *                                                                *
       *                       IDENTIFICATION DIVISION                  *
@@ -7,10 +8,6 @@
        IDENTIFICATION DIVISION.
        PROGRAM-ID.
            QASCRN2.
-       AUTHOR.
-           Greg Lindholm.
-       DATE-WRITTEN.
-           12/07/89.
       /*****************************************************************
       *                                                                *
       *                         ENVIRONMENT DIVISION                   *
@@ -217,12 +214,6 @@
                    15  PROJECT-FIELD       PIC X(10).
                    15  PROJ-DESC-FIELD     PIC X(30).
 
-       01  REWRITE-TEST.
-           03  FILLER               PIC X(746) VALUE SPACES.
-           03  FILLER               PIC X      VALUE BRITE.
-           03  FILLER               PIC X(30)  VALUE
-           "THIS IS A TEST OF REWRITE".
-
        01  CRTREC2.
            05  CRTREC2-FULL         PIC X(1924) VALUE SPACES.
            05  FILLER REDEFINES CRTREC2-FULL.
@@ -250,61 +241,6 @@
       *                                                                *
       ******************************************************************
       *
-       01  SCREEN-TOTAL USAGE IS DISPLAY-WS.
-           03  FILLER PIC X(30) ROW 1 COL 25
-               VALUE "DISPLAY & READ TOTAL TEST".
-           03  FILLER PIC X(10) ROW 3 COL 5 VALUE "FLOAT KEY".
-           03  FILLER PIC 99 ROW 3 COL 17 SOURCE FLOAT-KEY.
-           03  FILLER PIC X(18) ROW 5 COL 5 VALUE "RANGE (YES ,NO)".
-           03  FILLER PIC X(3)  ROW 5 COL 25 
-               SOURCE IS YES-NO OBJECT IS YES-NO
-      *$RANGE_COUNT 2
-               RANGE IS YN-TABLE.
-           03  FILLER PIC X(50) ROW 22 COL 25 
-               VALUE "ONLY PFKEY (1), (2), (3), FLOAT-KEY, (16)".
-           03  FILLER PIC X(50) ROW 23 COL 25 
-               VALUE "ON   PFKEY       (3), FLOAT-KEY".
-	   03  FILLER PIC X(50) ROW 24 COL 25
-	       VALUE "Press (16) to exit loop".
-
-       01  FLOAT-KEY PIC 99 VALUE 4.
-       01  YES-NO    PIC XXX VALUE "YES".
-
-       01  T1.
-           03  ENTRIES.
-               05  FILLER PIC XXX VALUE "YES".
-               05  FILLER PIC XXX VALUE "NO ".
-           03  FILLER REDEFINES ENTRIES.
-               05  YN-TABLE OCCURS 2 TIMES PIC XXX.
-
-
-
-       01  MISC-SCREEN-2 USAGE IS DISPLAY-WS.
-
-           03  FILLER PIC X(25)     ROW 1 COL 28  VALUE
-               "* * * MISC-SCREEN-2 * * *".
-
-           03  FILLER PIC X(60) ROW 4 COL 10 VALUE
-               "This test does 2 DISPLAY AND READs of a 9 element".
-           03  FILLER PIC X(60) ROW 5 COL 10 VALUE
-               "vertical matrix with a PIC Z(7).ZZ- and a RANGE of".
-           03  FILLER PIC X(60) ROW 6 COL 10 VALUE
-               "-99 to 999.".
-
-
-           03  SC1-MATRIX-DAT OCCURS 9 TIMES ROW 12.
-               05  SC1-COL-QTY-FAC PIC Z(7).ZZ- ROW 12 COL 25
-                   RANGE -99 TO 999
-                   SOURCE SC1-COL-QTY
-                   OBJECT SC1-COL-QTY.
-
-           03  FILLER PIC X(40)
-                      ROW 24 COL 27
-                      VALUE "PRESS (ENTER) TO CONTINUE.".
-
-       01 SC1-DATA-ITEM.
-           03  SC1-COL-QTY PIC S9(7)V99 OCCURS 9 TIMES.
-
 
        01  SCREEN-SUBT USAGE IS DISPLAY-WS.
            03  FILLER PIC X(23) 
@@ -812,39 +748,103 @@
 
 
 
-123456*    This is a screen from RHS that wasn't working
 
-000001 01  MESSAGE-SUMMARY USAGE DISPLAY-WS.
-           05  SUMMARY-LINE-1 COLUMN 20 PIC X(50)
-               SOURCE MESSAGE-SUMMARY-TOPLINE.
-           05  FILLER ROW 2 OCCURS 23.
-            10 FILLER ROW 2 COLUMN 02 PIC X(19) SOURCE SUMMARY-COLUMN-1.
-            10 FILLER ROW 2 COLUMN 22 PIC X(19) SOURCE SUMMARY-COLUMN-2.
-            10 FILLER ROW 2 COLUMN 42 PIC X(19) SOURCE SUMMARY-COLUMN-3.
-            10 FILLER ROW 2 COLUMN 62 PIC X(19) SOURCE SUMMARY-COLUMN-4.
+      ******************************************************************
+063600 01  EMBED-SCREEN USAGE IS DISPLAY-WS.
+063700     03  EMBEDDED-ITEM PIC X(60) ROW 12 COL 10
+063800           SOURCE EMBED-STRUCT OBJECT EMBED-STRUCT.
+063900
+064000 01  EMBED-STRUCT.
+064100     03  FILLER PIC X VALUE HEX-8C.
+064200     03  FILLER PIC X(17) VALUE "Embedded FAC test".
+064300     03  FILLER PIC X VALUE HEX-80.
+064400     03  EMBED-VALUE PIC X(5) VALUE "+++++".
+064500     03  FILLER PIC X VALUE HEX-8C.
+064600     03  FILLER PIC X(35) VALUE "<<< 80 Brite-Mod-ALL".
 
-000001 01  MESSAGE-SUMMARY-TOPLINE.
-           05  FILLER PIC X(50) VALUE 
-               "MULTIPLE COLUMNS 4 x 23 = 92 ELEMENTS".
+      ******************************************************************
+022700
+022800 01  REWRITE-TEST.
+022900     03  FILLER               PIC X(740) VALUE SPACES.
+023000     03  FILLER               PIC X      VALUE BRITE.
+023100     03  FILLER               PIC X(50)  VALUE
+023200     "THIS IS A TEST OF REWRITE (PAUSE 3 SECONDS)".
+023300
+023400 01  PAUSE-TIME.
+023500     03  PAUSE-TIME-1  BINARY.
+023600     03  PAUSE-TIME-2  BINARY.
+      ******************************************************************
 
-000001 77  TOTAL-MESSAGE-COUNT PIC 9(5) COMP.
-       01  SUMMARY-COLUMNS.
-           05  SUMMARY-ELEMENT OCCURS 92.
-            10 SUMMARY-ELEMENT-ID      PIC XXX.
-            10 SUMMARY-ELEMENT-GRP REDEFINES SUMMARY-ELEMENT-ID PIC XX.
-            10 SUMMARY-ELEMENT-TO      PIC ZZZ9.
-            10 SUMMARY-ELEMENTTO       PIC XXXX.    %   VALUE " TO;".
-            10 SUMMARY-ELEMENT-BY      PIC ZZZ9.
-            10 SUMMARY-ELEMENTBY       PIC XXXX.    %   VALUE " BY".
-            10 J1                      PIC 9999 COMP.
-            10 J2                      PIC 9999 COMP.
-       01  FILLER REDEFINES SUMMARY-COLUMNS.
-           05  SUMMARY-COLUMN-1 PIC X(25) OCCURS 23.
-           05  SUMMARY-COLUMN-2 PIC X(25) OCCURS 23.
-           05  SUMMARY-COLUMN-3 PIC X(25) OCCURS 23.
-           05  SUMMARY-COLUMN-4 PIC X(25) OCCURS 23.
-
-
+069200 01  QASCRN2-MENU USAGE IS DISPLAY-WS.
+069300     03  FILLER  PIC X(20) ROW 1 COL 20 VALUE
+069400         "DIRECT IO TESTS".
+069500     03  FILLER  PIC X(20) ROW 1 COL 60 VALUE
+069600         "QASCRN2-MENU".
+069700     03  FILLER  PIC X(35) ROW  3 COL 02 VALUE
+069800         " (1) ROW REWRITE & READ".
+069900     03  FILLER  PIC X(35) ROW  4 COL 02 VALUE
+070000         " (2) REWRITE & READ CRT (ALL FAC)".
+070100     03  FILLER  PIC X(35) ROW  5 COL 02 VALUE
+070200         " (3) ".
+070300     03  FILLER  PIC X(35) ROW  6 COL 02 VALUE
+070400         " (4) ".
+070500     03  FILLER  PIC X(35) ROW  7 COL 02 VALUE
+070600         " (5) ".
+070700     03  FILLER  PIC X(35) ROW  8 COL 02 VALUE
+070800         " (6) REWRITE CRT with PAUSE".
+070900     03  FILLER  PIC X(35) ROW  9 COL 02 VALUE
+071000         " (7) ".
+071100     03  FILLER  PIC X(37) ROW 10 COL 02 VALUE
+071200         " (8) EMBEDDED FAC TEST".
+071300     03  FILLER  PIC X(35) ROW 11 COL 02 VALUE
+071400         " (9) ".
+071500     03  FILLER  PIC X(35) ROW 12 COL 02 VALUE
+071600         "(10) ".
+071700     03  FILLER  PIC X(35) ROW 13 COL 02 VALUE
+071800         "(11) TEST MONKEY BAR MENU.".
+071900     03  FILLER  PIC X(35) ROW 14 COL 02 VALUE
+072000         "(12) ".
+072100     03  FILLER  PIC X(35) ROW 15 COL 02 VALUE
+072200         "(13) ".
+072300     03  FILLER  PIC X(35) ROW 16 COL 02 VALUE
+072400         "(14) ".
+072500     03  FILLER  PIC X(35) ROW 17 COL 02 VALUE
+072600         "(15) ".
+072700     03  FILLER  PIC X(35) ROW 19 COL 02 VALUE
+072800         "(16) EXIT".
+072900     03  FILLER  PIC X(35) ROW  3 COL 40 VALUE
+073000         "(17) ".
+073100     03  FILLER  PIC X(35) ROW  4 COL 40 VALUE
+073200         "(18) ".
+073300     03  FILLER  PIC X(35) ROW  5 COL 40 VALUE
+073400         "(19) ".
+073500     03  FILLER  PIC X(35) ROW  6 COL 40 VALUE
+073600         "(20) ".
+073700     03  FILLER  PIC X(35) ROW  7 COL 40 VALUE
+073800         "(21) ".
+073900     03  FILLER  PIC X(35) ROW  8 COL 40 VALUE
+074000         "(22) ".
+074100     03  FILLER  PIC X(35) ROW  9 COL 40 VALUE
+074200         "(23) ".
+074300     03  FILLER  PIC X(35) ROW 10 COL 40 VALUE
+074400         "(24) ".
+074500     03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
+074600         "(25) ".
+074700     03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
+074800         "(26) ".
+074900     03  FILLER  PIC X(35) ROW 13 COL 40 VALUE
+075000         "(27) ".
+075100     03  FILLER  PIC X(35) ROW 14 COL 40 VALUE
+075200         "(28) ".
+075300     03  FILLER  PIC X(35) ROW 15 COL 40 VALUE
+075400         "(29) ".
+075500     03  FILLER  PIC X(35) ROW 16 COL 40 VALUE
+075600         "(30) ".
+075700     03  FILLER  PIC X(35) ROW 17 COL 40 VALUE
+075800         "(31) ".
+075900     03  FILLER  PIC X(23) ROW 24 COL 20 VALUE
+076000         "PRESS (16) TO EXIT".
+076100
 
       /*****************************************************************
       *                                                                *
@@ -852,58 +852,54 @@
       *                                                                *
       ******************************************************************
       *
-       LINKAGE SECTION.
-       01  PF-KEY-ARG  PIC X(2).
 
-       PROCEDURE DIVISION USING PF-KEY-ARG.
+       PROCEDURE DIVISION.
 
-       SCREEN-TESTS.
+       QASCRN2-MENU-LOOP.
       
-           MOVE PF-KEY-ARG TO PF-KEY.
+
+095500     DISPLAY AND READ QASCRN2-MENU ON CRT
+095600     ONLY PFKEYS 1, 2, 6, 8, 11, 16.
 
 
-           IF PF-KEY = "11" THEN
+           IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM
+097800        
+097900     ELSE IF PF-KEY = "06" THEN
+098000        PERFORM DO-REWRITE
+098400        
+098500     ELSE IF PF-KEY = "08" THEN
+098600        PERFORM EMBEDDED-FAC-TEST
+
+           ELSE IF PF-KEY = "11" THEN
               PERFORM DO-MONKEYBAR-SCREEN
       *       PERFORM DO-MONKEYBAR-OPT-SCREEN
 
-           ELSE IF PF-KEY = "12" THEN
-              PERFORM DISPLAY-MISC-2
-
-           ELSE IF PF-KEY = "13" THEN
-              PERFORM DISPLAY-TOTAL
-
-           ELSE IF PF-KEY = "14" THEN
-              PERFORM VWANG-TEST-132-80
-
-           ELSE IF PF-KEY = "15" THEN
+           ELSE IF PF-KEY = "02" THEN
               PERFORM REWRITE-READ-CRT
 
-           ELSE IF PF-KEY = "17" THEN
-              PERFORM ROW-REWRITE-READ
-
-           ELSE IF PF-KEY = "18" THEN
-              PERFORM RHS-TEST.
+           ELSE IF PF-KEY = "01" THEN
+              PERFORM ROW-REWRITE-READ.
 
 
-           GO TO EXIT-PROGRAM.
+           GO TO QASCRN2-MENU-LOOP.
 
+119500******************************************************************
+119600 DO-REWRITE.
+119700
+119800     MOVE REWRITE-TEST TO CRTREC-MAPPING-AREA.
+119900     REWRITE CRTREC SETTING CURSOR COLUMN 01 ROW 01.
+120000     MOVE 0   TO PAUSE-TIME-1.
+120100     MOVE 300 TO PAUSE-TIME-2.
+120200     CALL "PAUSE" USING PAUSE-TIME.
+
+136600******************************************************************
+136700 EMBEDDED-FAC-TEST.
+136800     DISPLAY AND READ EMBED-SCREEN ON CRT.
+136900     DISPLAY AND READ EMBED-SCREEN ON CRT.
 
       ******************************************************************
 
-       DISPLAY-MISC-2.
-           MOVE 0 TO SC1-COL-QTY(1).
-           MOVE 0 TO SC1-COL-QTY(2).
-           MOVE 0 TO SC1-COL-QTY(3).
-           MOVE 0 TO SC1-COL-QTY(4).
-           MOVE 0 TO SC1-COL-QTY(5).
-           MOVE 0 TO SC1-COL-QTY(6).
-           MOVE 0 TO SC1-COL-QTY(7).
-           MOVE 0 TO SC1-COL-QTY(8).
-           MOVE 0 TO SC1-COL-QTY(9).
-
-           DISPLAY AND READ MISC-SCREEN-2 ON CRT.
-
-           DISPLAY AND READ MISC-SCREEN-2 ON CRT.
 
        INITIALIZE-SCREEN-OCC-1.
 
@@ -968,44 +964,7 @@
        DO-MB-MENU4.
            DISPLAY AND READ SCREEN-MB-4 ON CRT.
 
-      ******************************************************************
 
-       DISPLAY-TOTAL.
-
-       	   DISPLAY "DISPLAY AND READ TOTAL TEST LOOP".
-		   
-           MOVE 4 TO FLOAT-KEY.
-
-           DISPLAY AND READ ALTERED SCREEN-TOTAL ON CRT
-           ONLY PFKEY 1, 2, 3, FLOAT-KEY, 16
-           ON PFKEY FLOAT-KEY, 3
-                PERFORM ON-PFKEY-PARA
-           NO-MOD 
-                PERFORM NO-MOD-PARA.
-
-       	   IF PF-KEY NOT = 16 THEN
-	       GO DISPLAY-TOTAL.
-		
-       ON-PFKEY-PARA.
-           DISPLAY "ON-PFKEY: PFKEY " PF-KEY " WAS PRESSED".
-       NO-MOD-PARA.
-           DISPLAY "NO MODS WERE MADE ON THIS SCREEN".
-
-      ******************************************************************
-
-       VWANG-TEST-132-80.
-
-           MOVE "THE SCREEN SHOULD BE IN 80 COLUMN MODE"
-             TO VW-SCN-STATUS.
-           DISPLAY AND READ VWANG-SCREEN80 ON CRT.
-           CALL "ws132".
-           MOVE "THE SCREEN SHOULD BE IN 132 COLUMN MODE"
-             TO VW-SCN-STATUS.
-           DISPLAY AND READ VWANG-SCREEN132 ON CRT.
-           CALL "ws80".
-           MOVE "THE SCREEN SHOULD NOW BE BACK IN 80 COLUMN MODE"
-             TO VW-SCN-STATUS.
-           DISPLAY AND READ VWANG-SCREEN80 ON CRT.
 
       ******************************************************************
        REWRITE-READ-CRT.
@@ -1201,24 +1160,6 @@
            REWRITE CRT-OA-REC.
 
            READ CRT-ROW.
-
-       RHS-TEST.
-           PERFORM RHS-SETUP VARYING TOTAL-MESSAGE-COUNT FROM 1 BY 1
-                             UNTIL TOTAL-MESSAGE-COUNT > 92.
-           PERFORM RHS-DR.
-
-       RHS-DR.
-           DISPLAY AND READ MESSAGE-SUMMARY ON CRT.
-
-       RHS-SETUP.
-           MOVE "(( " TO SUMMARY-ELEMENT-ID ( TOTAL-MESSAGE-COUNT ).
-           MOVE " ) (" TO SUMMARY-ELEMENTTO ( TOTAL-MESSAGE-COUNT ).
-           MOVE " )) " TO SUMMARY-ELEMENTBY ( TOTAL-MESSAGE-COUNT ).
-           MOVE TOTAL-MESSAGE-COUNT TO
-                SUMMARY-ELEMENT-TO ( TOTAL-MESSAGE-COUNT )
-                SUMMARY-ELEMENT-BY ( TOTAL-MESSAGE-COUNT )
-                J1 ( TOTAL-MESSAGE-COUNT )
-                J2 ( TOTAL-MESSAGE-COUNT ).
 
 
       ******************************************************************

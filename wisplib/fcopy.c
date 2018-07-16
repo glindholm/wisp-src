@@ -1,13 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		fcopy.c
@@ -33,6 +44,10 @@ static char rcsid[]="$Id:$";
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+
+#ifdef unix
+#include <unistd.h>
+#endif
 
 #if defined(WIN32)
 #include <io.h>
@@ -171,11 +186,14 @@ char *argv[];
 /*
 **	History:
 **	$Log: fcopy.c,v $
-**	Revision 1.8.2.2  2002/11/19 16:24:07  gsl
-**	Define O_LARGEFILE for ALPHA and SCO
+**	Revision 1.19  2003/01/31 17:23:48  gsl
+**	Fix  copyright header
 **	
-**	Revision 1.8.2.1  2002/10/09 21:03:00  gsl
-**	Huge file support
+**	Revision 1.18  2003/01/29 19:42:50  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.17  2002/11/19 16:28:45  gsl
+**	Define O_LARGEFILE for ALPHA and SCO
 **	
 **	Revision 1.16  2002/10/07 21:08:00  gsl
 **	Huge file support

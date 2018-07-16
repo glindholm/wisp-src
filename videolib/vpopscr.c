@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -21,14 +42,14 @@ static char rcsid[]="$Id:$";
 #include "vmodules.h"
 #include "vdata.h"
 
-vpopscr()										/* A function to restore the screen and	*/
+int VL_vpopscr()										/* A function to restore the screen and	*/
 											/* associated variables.		*/
 {
-	extern struct save_screen *vscrn_stack;						/* Reference to external variable.	*/
+	extern struct save_screen *VL_vscrn_stack;						/* Reference to external variable.	*/
 	struct save_screen *ss_ptr;							/* Local pointer to the save area.	*/
 	int x;										/* A working variable.			*/
                                                                                                                                   
-	ss_ptr = vscrn_stack;								/* Point to the most recently saved 	*/
+	ss_ptr = VL_vscrn_stack;								/* Point to the most recently saved 	*/
 											/* structure of pointers and variables.	*/
 
 	if (!ss_ptr)									/* Are we pointing to never never land?	*/
@@ -56,15 +77,27 @@ vpopscr()										/* A function to restore the screen and	*/
 	vrol_bot = ss_ptr->xrol_bot;
 	vmap_top = ss_ptr->xmap_top;
 
-	vscrn_stack = ss_ptr->prev_ptr;							/* Get address of the new top screen.	*/
+	VL_vscrn_stack = ss_ptr->prev_ptr;							/* Get address of the new top screen.	*/
 	free(ss_ptr);									/* Free up the allocated area.		*/
 
-	vrefresh(HARD_REFRESH);								/* Refresh the screen.			*/
+	VL_vrefresh(HARD_REFRESH);								/* Refresh the screen.			*/
 	return(0);
 }
 /*
 **	History:
 **	$Log: vpopscr.c,v $
+**	Revision 1.14  2003/06/20 15:48:03  gsl
+**	VL_ globals
+**	
+**	Revision 1.13  2003/01/31 20:58:40  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.12  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.11  2002/07/15 20:16:12  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.10  1997/07/09 15:49:25  gsl
 **	remove extern references.
 **	remove the line attribute stuff as not used

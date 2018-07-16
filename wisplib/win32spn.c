@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1996-1998 NeoMedia Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		win32spn.c
 **
@@ -15,8 +36,8 @@ static char rcsid[]="$Id:$";
 **			Standalone	- parent continues, child runs in separate window
 **
 **	Routines:	
-**	win32spawnvp()
-**	win32spawnlp()
+**	WL_win32spawnvp()
+**	WL_win32spawnlp()
 **
 **	TEST CASES:	This is a very difficult routine to test because of the large number
 **			of combinations of cases.
@@ -116,9 +137,9 @@ struct newenvstr
 */
 extern HWND vraw_get_console_hWnd(void);
 extern WORD vrawgetattribute(int attr);
-extern int wbackground(void);
+extern int WL_wbackground(void);
 extern int use_costar(void);
-extern long WL_filesize(const char* path);
+extern long WL_filesize(const char* name);
 HANDLE opentempfile(char *path);
 
 
@@ -136,16 +157,16 @@ static char *win32BuildNewEnv(void);
 static void win32DeleteEnv(void);
 
 /*
-**	ROUTINE:	win32spawnvp()
+**	ROUTINE:	WL_win32spawnvp()
 **
 **	FUNCTION:	spawn a program
 **
-**	DESCRIPTION:	convert char*[] to char[], and call win32spawnlp to
+**	DESCRIPTION:	convert char*[] to char[], and call WL_win32spawnlp to
 **                      do the rest
 **
 **	ARGUMENTS:	sh_parm       char* array of points to program plus args
 **
-**                      Mode          see win32spawnlp()
+**                      Mode          see WL_win32spawnlp()
 **
 **	GLOBALS:	
 **
@@ -154,8 +175,7 @@ static void win32DeleteEnv(void);
 **	WARNINGS:	?
 **
 */
-#define ROUTINE 28000
-int win32spawnvp(char *sh_parm[], int Mode)
+int WL_win32spawnvp(const char *sh_parm[], int Mode)
 {
 	char *cmdline;
 	int cmd_len;
@@ -184,12 +204,12 @@ int win32spawnvp(char *sh_parm[], int Mode)
 		dqw_strcat(cmdline, sh_parm[idx]);					/* Double Quote wrap if embedded spaces	*/
 	}
 
-	rc =  win32spawnlp(NULL, cmdline, Mode);
+	rc =  WL_win32spawnlp(NULL, cmdline, Mode);
 	free(cmdline);
 	return rc;
 }
 /*
-**	ROUTINE:	win32spawnlp()
+**	ROUTINE:	WL_win32spawnlp()
 **
 **	FUNCTION:	spawn a program
 **
@@ -218,7 +238,7 @@ int win32spawnvp(char *sh_parm[], int Mode)
 **	WARNINGS:	?
 **
 */
-int win32spawnlp(const char *cmd, const char *args, int Mode)
+int WL_win32spawnlp(const char *cmd, const char *args, int Mode)
 {
 	PROCESS_INFORMATION pinfo;
 	STARTUPINFO sinfo;
@@ -232,7 +252,6 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 	SECURITY_ATTRIBUTES processAttributes, threadAttributes;
 	SECURITY_DESCRIPTOR  sd;
 	HANDLE hStdin, hStdout, hDupStdin, hDupStdout;
-	char err1[1024];
 	BOOL bDebugNoHide = FALSE;
 
 	wtrace("WIN32SPAWNLP","ENTRY","Cmd=[%s] Args=[%s] Mode=[%d]", cmd ? cmd:"(nil)", args ? args:"(nil)",Mode);
@@ -245,14 +264,14 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 	       ((Mode & SPN_CAPTURE_OUTPUT)   ? "CAPTURE_OUTPUT "   : ""),
 	       ((Mode & SPN_STANDALONE_CHILD) ? "STANDALONE_CHILD " : ""),
 	       ((Mode & SPN_HIDDEN_CMD)       ? "HIDDEN_CMD "       : ""));
-	wtrace_timestamp("WIN32SPAWNLP");
+	WL_wtrace_timestamp("WIN32SPAWNLP");
 
 	hStdin = INVALID_HANDLE_VALUE;
 	hStdout = INVALID_HANDLE_VALUE;
 	hDupStdin = INVALID_HANDLE_VALUE;
 	hDupStdout = INVALID_HANDLE_VALUE;
 
-	if (get_wisp_option("DEBUGNOHIDE"))
+	if (WL_get_wisp_option("DEBUGNOHIDE"))
 	{
 		bDebugNoHide = TRUE;
 	}
@@ -284,7 +303,7 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 	**
 	**	NOTE: Do not call vraw_get_console_hWnd() when in background as it displays a console.
 	*/
-	if (wbackground())
+	if (WL_wbackground())
 	{
 		/*
 		**	If not console handle them assume COSTAR and hide the child window.
@@ -348,8 +367,8 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 		/*
 		**	Un-do the console position env var so earlier settings will not be acted on.
 		*/
-		win32SetNewEnv("CONWINPOS=");
-		win32SetNewEnv("WISPHCONSOLE=");
+		WL_win32SetNewEnv("CONWINPOS=");
+		WL_win32SetNewEnv("WISPHCONSOLE=");
 
 	}
 	else if (Mode & SPN_HIDDEN_CMD)
@@ -403,9 +422,9 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 						   DUPLICATE_SAME_ACCESS);
 			if (!bSuccess)
 			{
-				sprintf(err1,"%%WIN32SPAWN-E-DUPHANDLE %s hStdout=%ld",
-					GetWin32Error("DuplicateHandle(hStdout) failed"), (long)hStdout);
-				werrlog(104,err1,0,0,0,0,0,0,0);
+				WL_werrlog_error(WERRCODE(104),"WIN32SPAWN", "DUPHANDLE", 
+					"%s hStdout=%ld",
+					WL_GetWin32Error("DuplicateHandle(hStdout) failed"), (long)hStdout);
 			}
 		}
 		
@@ -420,9 +439,9 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 						   DUPLICATE_SAME_ACCESS);
 			if (!bSuccess)
 			{
-				sprintf(err1,"%%WIN32SPAWN-E-DUPHANDLE %s hStdin=%ld",
-					GetWin32Error("DuplicateHandle(hStdin) failed"), (long)hStdin);
-				werrlog(104,err1,0,0,0,0,0,0,0);
+				WL_werrlog_error(WERRCODE(104),"WIN32SPAWN", "DUPHANDLE", 
+					"%s hStdin=%ld",
+					WL_GetWin32Error("DuplicateHandle(hStdin) failed"), (long)hStdin);
 			}
 		}
 		
@@ -464,7 +483,7 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 			 **	so the new process get position its window correctly.
 			 */
 			sprintf(envstring,"CONWINPOS=%d:%d", sinfo.dwX, sinfo.dwY);
-			win32SetNewEnv(envstring);
+			WL_win32SetNewEnv(envstring);
 		}
 
 		/*
@@ -472,7 +491,7 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 		**	move the window if needed. 
 		*/
 		sprintf(envstring,"WISPHCONSOLE=%d",(int)hConsole);
-		win32SetNewEnv(envstring);
+		WL_win32SetNewEnv(envstring);
 	}
 
 	if ((Mode & SPN_HIDDEN_CMD) && (Mode & SPN_WAIT_FOR_CHILD))
@@ -520,7 +539,7 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 		**	Give the new process invalid handles to use.
 		**	The bInheritHandles=FALSE seems to work on NT but not on 95.
 		*/
-		if (use_costar() && !win32_nt())
+		if (use_costar() && !WL_win32_nt())
 		{
 			sinfo.dwFlags |= STARTF_USESTDHANDLES;
 			sinfo.hStdInput  = INVALID_HANDLE_VALUE;
@@ -540,7 +559,7 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 	processAttributes.lpSecurityDescriptor = NULL;
 	processAttributes.bInheritHandle = TRUE;
 
-	if (win32_nt())
+	if (WL_win32_nt())
 	{
 		InitializeSecurityDescriptor( &sd, SECURITY_DESCRIPTOR_REVISION );
 		SetSecurityDescriptorDacl( &sd, TRUE, NULL, FALSE );
@@ -603,9 +622,9 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 	*/
 	if (!bSuccess)
 	{
-		sprintf(err1,"%%WIN32SPAWN-E-CREATEP %s Cmd=[%s] Args=[%s]",
-			GetWin32Error("CreateProcess() failed"), cmd ? cmd:"(nil)", args ? args:"(nil)");
-		werrlog(104,err1,0,0,0,0,0,0,0);
+		WL_werrlog_error(WERRCODE(104),"WIN32SPAWN", "CREATEP", 
+			"%s Cmd=[%s] Args=[%s]",
+			WL_GetWin32Error("CreateProcess() failed"), cmd ? cmd:"(nil)", args ? args:"(nil)");
 
 		if ( sinfo.dwFlags & STARTF_USESTDHANDLES )
 		{
@@ -669,14 +688,14 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 
 				sprintf(the_line,"%s: Spawned process finished with exit code [%d]\n", 
 					"%WIN32SPAWNLP-T-FINISHED",dwRetcode);
-				werr_write(the_line);
+				WL_werr_write(the_line);
 
 				if (fh = fopen(tempout,"r"))
 				{
 					while(fgets(the_line,sizeof(the_line)-1,fh))
 					{
-						werr_write("STDOUT:");
-						werr_write(the_line);
+						WL_werr_write("STDOUT:");
+						WL_werr_write(the_line);
 					}
 					
 					fclose(fh);
@@ -686,8 +705,8 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 				{
 					while(fgets(the_line,sizeof(the_line)-1,fh))
 					{
-						werr_write("STDERR:");
-						werr_write(the_line);
+						WL_werr_write("STDERR:");
+						WL_werr_write(the_line);
 					}
 					
 					fclose(fh);
@@ -717,7 +736,7 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 	return dwRetcode;
 }
 /*
-**	ROUTINE:	win32SetNewEnv()
+**	ROUTINE:	WL_win32SetNewEnv()
 **
 **	FUNCTION:	add an environment var for the process about to be created
 **
@@ -737,7 +756,7 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 **	WARNINGS:	?
 **
 */
-void win32SetNewEnv(char *envstr)
+void WL_win32SetNewEnv(char *envstr)
 {
 	char *lpEnvCopy;
 	struct newenvstr *strptr;
@@ -745,11 +764,11 @@ void win32SetNewEnv(char *envstr)
 
 	nCurSize = strlen(envstr);
 	nNewEnvSize += nCurSize + 1;
-	lpEnvCopy = wstrdup(envstr);
+	lpEnvCopy = wisp_strdup(envstr);
 
 	if (lpNewEnv == NULL)
 	{
-		strptr = lpNewEnv = wmalloc(sizeof(struct newenvstr));
+		strptr = lpNewEnv = wisp_malloc(sizeof(struct newenvstr));
 	}
 	else
 	{
@@ -758,7 +777,7 @@ void win32SetNewEnv(char *envstr)
 		{
 			strptr = strptr->next;
 		}
-		strptr->next = wmalloc(sizeof(struct newenvstr));
+		strptr->next = wisp_malloc(sizeof(struct newenvstr));
 		strptr = strptr->next;
 	}
 	
@@ -804,7 +823,7 @@ static char *win32BuildNewEnv(void)
 	/*
 	** extra byte for trailing null
 	*/
-	lpNewBlock = wcalloc(nOldSize + nNewEnvSize + 1, 1);
+	lpNewBlock = wisp_calloc(nOldSize + nNewEnvSize + 1, 1);
 	
 	lpNewPtr = lpNewBlock;
 
@@ -860,7 +879,7 @@ static char *win32BuildNewEnv(void)
 			memcpy(lpNewPtr,*ep,len);
 			lpNewPtr += len + 1;
 
-			wtrace("WIN32BUILDNEWENV","OLD","%s",*ep);
+			/* wtrace("WIN32BUILDNEWENV","OLD","%s",*ep); */
 		}
 		
 	}
@@ -977,8 +996,42 @@ HANDLE opentempfile(char *path)
 /*
 **	History:
 **	$Log: win32spn.c,v $
-**	Revision 1.29.2.1  2002/10/09 21:17:34  gsl
-**	Huge file support
+**	Revision 1.39  2003/03/17 20:29:19  gsl
+**	Remove overly large and non-useful traces
+**	
+**	Revision 1.38  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.37  2002/12/10 20:54:07  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.36  2002/12/09 19:15:37  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.35  2002/12/04 20:52:16  gsl
+**	Add to OPTIONS file
+**	WPROC
+**	WPROCDEBUG
+**	ACPCONFIG
+**	ACPMAP
+**	WISP_SCRATCH_MODE/WISPSCRATCHMODE
+**	WISP_DISPLAY_8BIT/DISPLAY8BIT/WISPDISPLAY8BIT
+**	WISPSYSADMIN
+**	
+**	Revision 1.34  2002/10/04 20:55:59  gsl
+**	Change WL_filesize() to return a long
+**	
+**	Revision 1.33  2002/07/10 21:05:33  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.32  2002/07/10 04:27:34  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.31  2002/07/02 21:15:33  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.30  2002/06/26 01:42:47  gsl
+**	Remove VMS code
 **	
 **	Revision 1.29  1998/12/09 20:03:58  gsl
 **	Fix for WIN98 to force window to foreground on return.
@@ -1074,8 +1127,8 @@ HANDLE opentempfile(char *path)
 **	Also added wtrace()
 **
 **	Revision 1.6  1997-02-24 21:52:35-05  gsl
-**	Change win32spawnvp() to assemble a complete command line and
-**	pass it to win32spawnlp() instead of splitting the program and the args
+**	Change WL_win32spawnvp() to assemble a complete command line and
+**	pass it to WL_win32spawnlp() instead of splitting the program and the args
 **	into two variables
 **
 **	Revision 1.5  1997-01-22 14:27:37-08  gsl
@@ -1089,8 +1142,8 @@ HANDLE opentempfile(char *path)
 **	Change the SW_RESTORE into a SW_SHOW because we're hiding not minimizing.
 **
 **	Revision 1.3  1996-12-06 15:38:08-08  jockc
-**	win32spawn broken up into win32spawnvp and
-**	win32spawnlp  (like execvp and execlp).. code added to pass
+**	win32spawn broken up into WL_win32spawnvp and
+**	WL_win32spawnlp  (like execvp and execlp).. code added to pass
 **	environment to child process (for WBCKGRD flag)
 **
 **	Revision 1.2  1996-10-09 14:52:51-07  gsl

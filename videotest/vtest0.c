@@ -38,7 +38,7 @@ extern void testy();
 extern void testz();
 extern void line();
 
-main()
+int main()
 {
 	extern char vgetc();
 	char t;
@@ -47,7 +47,7 @@ main()
 	vstate(0);
 	vscreen(NARROW|DARK);
 
-start:	vbuffering_start();
+start:	VL_vbuffering_start();
 	vmode(0);
 	vmove(0,0);
 	vline(FAT_HORIZONTAL,78);
@@ -78,7 +78,7 @@ start:	vbuffering_start();
 	vtext(0,i++,6,"0 - EXIT (zero)");
 	vtext(BOLD,21,20,"Please select? ");
 	vmode(0);
-	vbuffering_end();
+	VL_vbuffering_end();
 inp:	t = vgetc();
 	if ((t >= 'a') && (t <= 'z')) t = t - 'a' + 'A';
 
@@ -106,7 +106,7 @@ inp:	t = vgetc();
 	vrelease();
 	switch(t)
 	{
-		case '0': {vrelease(); verase(FULL_SCREEN); vmove(0,0); vexit(); return(0); break;}
+		case '0': {vrelease(); verase(FULL_SCREEN); vmove(0,0); VL_vexit(); return(0); break;}
 		case 'A': {testa(); break;}
 		case 'B': {testb(); break;}
 		case 'C': {testc(); break;}

@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 This is set up as a temporary solution .
 RPTPLN was a cobol program called from C. this worked under LPI
@@ -27,7 +41,6 @@ KK = Close and keep
 First letter makes io unique
 ------*/
 
-static char sccsid[]="@(#)rpln.c	1.5 4/10/93";
 
 static char tpname[100];
 static FILE *tpf;
@@ -42,7 +55,7 @@ static void open_printer_file(char *p_file,char *p_lib,char *p_vol)
 	memset(p_vol,' ',6);
 	mode = IS_OUTPUT + IS_PRINTFILE;
 	strcpy(p_file,"##REPO  ");
-	wfopen2(&mode,p_vol,p_lib,p_file,tpname,"REPORT  ","PRINT   ");
+	WFOPEN2(&mode,p_vol,p_lib,p_file,tpname,"REPORT  ","PRINT   ");
 	KCSI_strunc(tpname);
 	tpf = fopen(tpname,"w");
 	printer_file_is_open = 1;
@@ -115,8 +128,8 @@ void KCSI_rptpln(char *p_io,char *p_record,char *p_file,char *p_lib,char *p_vol)
 /*
 **	History:
 **	$Log: rpln.c,v $
-**	Revision 1.5.2.1  2002/11/12 15:56:35  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.16  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.15  2002/10/24 14:20:34  gsl
 **	Make globals unique

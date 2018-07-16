@@ -1,15 +1,33 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -22,12 +40,15 @@ struct termio old,new;
 struct termios old,new;
 #endif
 
-main()
+static char *makeprintable(unsigned char value);
+static char *oct(unsigned char value);
+static void rawmode();
+static void cleanexit(int sig);
+
+
+int main()
 {
 	unsigned char ch;
-	void cleanexit();
-	char *makeprintable();
-	char *oct();
 	int	exit_flag;
 
 #ifdef TESTING	
@@ -57,9 +78,9 @@ sleep(3);
 		}
 	}
 	cleanexit(0);
+	return 0;
 }
-char *makeprintable(value)
-unsigned char value;
+static char *makeprintable(unsigned char value)
 {
 	static char buf[4];
 	
@@ -69,8 +90,7 @@ unsigned char value;
 	else sprintf(buf,"'%c'",value);
 	return buf;
 }
-char *oct(value)
-unsigned char value;
+static char *oct(unsigned char value)
 {
 	static char buf[4];
 	
@@ -81,7 +101,7 @@ unsigned char value;
 	buf[2]= ((unsigned char)(value & 07)       ) + 0x30;
 	return buf;
 }
-rawmode()
+static void rawmode()
 {
 #ifdef USEIOCTL
 	ioctl(0,TCGETA,&old);
@@ -103,8 +123,7 @@ rawmode()
 #endif
 	
 }
-void cleanexit(sig)
-int sig;
+static void cleanexit(int sig)
 {
 #ifdef USEIOCTL
 	ioctl(0,TCSETAW,&old);
@@ -120,6 +139,18 @@ int sig;
 /*
 **	History:
 **	$Log: viewkey.c,v $
+**	Revision 1.13  2003/03/12 18:18:11  gsl
+**	FIx -Wall warnings
+**	
+**	Revision 1.12  2003/02/04 21:05:36  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.11  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.10  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
 **	Revision 1.9  1996/07/26 22:14:16  gsl
 **	Fix includes for termio.h and termios.h
 **	

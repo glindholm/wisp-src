@@ -1,4 +1,4 @@
-000100**   Copyright (c) 1996-97 NeoMedia Technologies, Inc., All rights reserved.
+000100**   Copyright (c) 1996-2003 NeoMedia Technologies, Inc., All rights reserved.
 000200**   $Id:$
 000300**
 000400**   File:       wl0016.wcb
@@ -11,10 +11,29 @@
 001000**   Example:
 001100**
 006500**
+      ******************************************************************
 001100 Identification Division.
 001200 Program-Id.     wl0016.
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               PFKEY           IS PF-KEY.
+      ******************************************************************
 001300 Data Division.
+       FILE SECTION.
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC                         PIC X(1924).
+
 001400 Working-Storage Section.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
 001500 01  FUNCTION-TYPE              PIC X(02).
        01  FORMATTED-DATE-STRING      PIC X(45).
        01  STARTING-GREGORIAN-DATE    PIC X(06).
@@ -35,7 +54,7 @@
        01  T-RETURN-CODE.
            03 FILLER                  BINARY   VALUE 0.
            03 RETURN-CODE-BIN         BINARY. 
-       01  COMPLETION-STATUS          PIC 9(02) VALUE 0.
+
 
        01  STARTING-GREGORIAN-EXT     PIC X(08).
        01  ENDING-GREGORIAN-EXT       PIC X(08).
@@ -55,633 +74,1282 @@
        01  LAST-TIME		      PIC 9(08).
        01  END-TIME		      PIC 9(08).
        01  LOOP-CNT		      PIC 9(08).
-	   
+
+000000*================================================================
+       01  DATE-HD	PIC X(45).
+       01  DATE-HL	PIC X(45).
+       01  DATE2-HD	PIC X(45).
+       01  DATE2-HL	PIC X(45).
+       01  DATE2-HG	PIC X(8).
+       01  DATE2-HJ	PIC X(7).
+       01  DATE4-HD	PIC X(45).
+       01  DATE4-HL	PIC X(45).
+       01  DATE4-HG	PIC X(8).
+       01  DATE4-HJ	PIC X(7).
+       01  DATE6-HD	PIC X(45).
+       01  DATE6-HL	PIC X(45).
+       01  DATE6-HG	PIC X(6).
+       01  DATE6-HJ	PIC X(5).
+
+       01  DATE2-GG	PIC X(8).
+       01  DATE2-GGT	PIC X(8).
+       01  DATE4-GG	PIC X(8).
+       01  DATE4-GGT	PIC X(8).
+       01  DATE6-GG	PIC X(6).
+       01  DATE6-GGT	PIC X(8).
+
+       01  DATE2-AG	PIC X(8).
+       01  DATE2-AGT	PIC X(8).
+       01  DATE4-AG	PIC X(8).
+       01  DATE4-AGT	PIC X(8).
+       01  DATE6-AG	PIC X(6).
+       01  DATE6-AGT	PIC X(8).
+
+       01  DATE2-EG	PIC X(8).
+       01  DATE2-EGT	PIC X(8).
+       01  DATE4-EG	PIC X(8).
+       01  DATE4-EGT	PIC X(8).
+       01  DATE6-EG	PIC X(6).
+       01  DATE6-EGT	PIC X(8).
+
+       01  NOW-SCREEN USAGE IS DISPLAY-WS.
+           05 ROW 1 COLUMN 20 PIC X(40)
+              VALUE "*** CURRENT DATE VALUES ***".
+           05 ROW  3 COLUMN  2 PIC X(8)  VALUE "DATE".
+           05 ROW  3 COLUMN 12 PIC X(45) VALUE
+	      "AAAAAAAAA...BBBBBBBBBBBBBBBBBBB......CCCCCCCC".
+           05 ROW  4 COLUMN  2 PIC X(8)  VALUE "DATE-HD".
+           05 ROW  4 COLUMN 12 PIC X(45) SOURCE DATE-HD.
+           05 ROW  5 COLUMN  2 PIC X(8)  VALUE "DATE-HL".
+           05 ROW  5 COLUMN 12 PIC X(45) SOURCE DATE-HL.
+
+           05 ROW  7 COLUMN  2 PIC X(8)  VALUE "DATE2".
+           05 ROW  7 COLUMN 12 PIC X(45) VALUE
+	      "AAAAAAAAAAA.BBBBBBBBBBBBBBBBBBBBB....CCCCCCCC".
+           05 ROW  8 COLUMN  2 PIC X(8)  VALUE "DATE2-HD".
+           05 ROW  8 COLUMN 12 PIC X(45) SOURCE DATE2-HD.
+           05 ROW  9 COLUMN  2 PIC X(8)  VALUE "DATE2-HL".
+           05 ROW  9 COLUMN 12 PIC X(45) SOURCE DATE2-HL.
+
+           05 ROW 10 COLUMN  2 PIC X(8)  VALUE "DATE4-HD".
+           05 ROW 10 COLUMN 12 PIC X(45) SOURCE DATE4-HD.
+           05 ROW 11 COLUMN  2 PIC X(8)  VALUE "DATE4-HL".
+           05 ROW 11 COLUMN 12 PIC X(45) SOURCE DATE4-HL.
+
+           05 ROW 12 COLUMN  2 PIC X(8)  VALUE "DATE6-HD".
+           05 ROW 12 COLUMN 12 PIC X(45) SOURCE DATE6-HD.
+           05 ROW 13 COLUMN  2 PIC X(8)  VALUE "DATE6-HL".
+           05 ROW 13 COLUMN 12 PIC X(45) SOURCE DATE6-HL.
+
+           05 ROW 15 COLUMN  2 PIC X(8)  VALUE "HG - HJ".
+           05 ROW 15 COLUMN 12 PIC X(8)  VALUE "YYYYMMDD".
+           05 ROW 15 COLUMN 32 PIC X(8)  VALUE "YYYYDDD".
+
+           05 ROW 16 COLUMN  2 PIC X(8)  VALUE "DATE2".
+           05 ROW 16 COLUMN 12 PIC X(8)  SOURCE DATE2-HG.
+           05 ROW 16 COLUMN 32 PIC X(7)  SOURCE DATE2-HJ.
+
+           05 ROW 17 COLUMN  2 PIC X(8)  VALUE "DATE4".
+           05 ROW 17 COLUMN 12 PIC X(8)  SOURCE DATE4-HG.
+           05 ROW 17 COLUMN 32 PIC X(7)  SOURCE DATE4-HJ.
+
+           05 ROW 18 COLUMN  2 PIC X(8)  VALUE "DATE6".
+           05 ROW 18 COLUMN 14 PIC X(6)  SOURCE DATE6-HG.
+           05 ROW 18 COLUMN 34 PIC X(5)  SOURCE DATE6-HJ.
+
+           05 ROW 20 COLUMN  2 PIC X(8)  VALUE "DATE2-GG".
+           05 ROW 20 COLUMN 12 PIC X(8)  SOURCE DATE2-GG.
+           05 ROW 20 COLUMN 22 PIC X(8)  SOURCE DATE2-GGT.
+           05 ROW 20 COLUMN 32 PIC X(8)  SOURCE DATE2-AG.
+           05 ROW 20 COLUMN 42 PIC X(8)  SOURCE DATE2-AGT.
+           05 ROW 20 COLUMN 52 PIC X(8)  SOURCE DATE2-EG.
+           05 ROW 20 COLUMN 62 PIC X(8)  SOURCE DATE2-EGT.
+
+           05 ROW 21 COLUMN  2 PIC X(8)  VALUE "DATE4-GG".
+           05 ROW 21 COLUMN 12 PIC X(8)  SOURCE DATE4-GG.
+           05 ROW 21 COLUMN 22 PIC X(8)  SOURCE DATE4-GGT.
+           05 ROW 21 COLUMN 32 PIC X(8)  SOURCE DATE4-AG.
+           05 ROW 21 COLUMN 42 PIC X(8)  SOURCE DATE4-AGT.
+           05 ROW 21 COLUMN 52 PIC X(8)  SOURCE DATE4-EG.
+           05 ROW 21 COLUMN 62 PIC X(8)  SOURCE DATE4-EGT.
+
+           05 ROW 22 COLUMN  2 PIC X(8)  VALUE "DATE6-GG".
+           05 ROW 22 COLUMN 14 PIC X(6)  SOURCE DATE6-GG.
+           05 ROW 22 COLUMN 22 PIC X(8)  SOURCE DATE6-GGT.
+           05 ROW 22 COLUMN 32 PIC X(6)  SOURCE DATE6-AG.
+           05 ROW 22 COLUMN 42 PIC X(8)  SOURCE DATE6-AGT.
+           05 ROW 22 COLUMN 52 PIC X(6)  SOURCE DATE6-EG.
+           05 ROW 22 COLUMN 62 PIC X(8)  SOURCE DATE6-EGT.
+ 
+           05 ROW 24 COLUMN 23 PIC X(34) VALUE 
+              "*** PRESS (ENTER) TO CONTINUE ***".
+
+000000*================================================================
+       01  TEST-NAME		PIC X(15).
+       01  TEST-CNT		PIC 9(4) VALUE 0.
+       01  TEST-ERROR-CNT       PIC 9(4) VALUE 0.
+
+       01  RC.
+               10 rc-high	BINARY.
+               10 rc-bin	BINARY.
+
+       01  D6-CNT.
+	       10 D6-CNT-B1        BINARY.
+	       10 D6-CNT-BIN       BINARY.
+
+       01  D6.	
+           05  G1		PIC X(6).
+	   05  G1-END		PIC X.
+           05  G2		PIC X(6).
+	   05  G2-END		PIC X.
+           05  J1		PIC X(5).
+	   05  J1-END		PIC X.
+           05  J2		PIC X(5).
+	   05  J2-END		PIC X.
+           05  CNT-NUM		PIC S99999.
+	   05  CNT-END		PIC X.
+	   05  DOW              PIC X(11).
+	   05  DOW-END          PIC X.
+           05  RC-NUM		PIC S999.
+	   05  RC-END		PIC X.
+       01  D6-X.	
+           05  G1		PIC X(6).
+	   05  G1-END		PIC X.
+           05  G2		PIC X(6).
+	   05  G2-END		PIC X.
+           05  J1		PIC X(5).
+	   05  J1-END		PIC X.
+           05  J2		PIC X(5).
+	   05  J2-END		PIC X.
+           05  CNT-NUM		PIC S99999.
+	   05  CNT-END		PIC X.
+	   05  DOW              PIC X(11).
+	   05  DOW-END          PIC X.
+           05  RC-NUM		PIC S999.
+	   05  RC-END		PIC X.
+
+000000*================================================================
 001600 Procedure Division.  
 
-      *"HL" - function
-           MOVE  "HL" TO FUNCTION-TYPE.
-           MOVE  SPACES TO FORMATTED-DATE-STRING. 
-           CALL  "DATE" USING FUNCTION-TYPE,
-                              FORMATTED-DATE-STRING.
-           DISPLAY "  Format          AAAAAAAAA   BBBBBBBBBBBBBBBBBBB     
-      -      "   CCCCCCCC                  (DATE) TODAY IS:",
-             FORMATTED-DATE-STRING.
+       MAIN-START SECTION.
+           PERFORM NOW-TESTS.
+	   PERFORM DATE6-TESTS.
+           PERFORM DATE-TESTS.
 
-           MOVE  "HL" TO FUNCTION-TYPE.
-           MOVE  SPACES TO FORMATTED-DATE-STRING. 
-           CALL  "DATE2" USING FUNCTION-TYPE,
-                              FORMATTED-DATE-STRING.  
-           DISPLAY "  Format         AAAAAAAAAAA BBBBBBBBBBBBBBBBBBBBB     
-      -      "  CCCCCCCC                 (DATE2) TODAY IS:",
-             FORMATTED-DATE-STRING.
-      *END "HL"
+           IF  TEST-ERROR-CNT = 0 THEN
+                DISPLAY "Successfully completed  " TEST-CNT 
+			"  DATE TESTS"
+           ELSE 
+                DISPLAY "DATE failed  " TEST-ERROR-CNT "  TESTS".
 
-      *"HD" - function
+	   PERFORM 9999-DONE.
+
+000000*================================================================
+       NOW-TESTS SECTION.
            MOVE  "HD" TO FUNCTION-TYPE.
-           MOVE  SPACES TO FORMATTED-DATE-STRING. 
-           CALL  "DATE" USING FUNCTION-TYPE,
-                              FORMATTED-DATE-STRING.  
-           DISPLAY "  Format          AAAAAAAAA   BBBBBBBBBBBBBBBBBBB     
-      -      "   CCCCCCCC                  (DATE) TODAY IS:",
-             FORMATTED-DATE-STRING.
+           CALL  "DATE"  USING FUNCTION-TYPE, DATE-HD.
+           CALL  "DATE2" USING FUNCTION-TYPE, DATE2-HD.
+           CALL  "DATE4" USING FUNCTION-TYPE, DATE4-HD.
+           CALL  "DATE6" USING FUNCTION-TYPE, DATE6-HD.
 
-           MOVE  "HD" TO FUNCTION-TYPE.
-           MOVE  SPACES TO FORMATTED-DATE-STRING. 
-           CALL  "DATE2" USING FUNCTION-TYPE,
-                              FORMATTED-DATE-STRING.  
-           DISPLAY "  Format         AAAAAAAAAAA BBBBBBBBBBBBBBBBBBBBB     
-      -      "  CCCCCCCC                 (DATE2) TODAY IS:",
-             FORMATTED-DATE-STRING.
-      *END "HD"
-      
-      *"HG" - function
+           MOVE  "HL" TO FUNCTION-TYPE.
+           CALL  "DATE"  USING FUNCTION-TYPE, DATE-HL.
+           CALL  "DATE2" USING FUNCTION-TYPE, DATE2-HL.
+           CALL  "DATE4" USING FUNCTION-TYPE, DATE4-HL.
+           CALL  "DATE6" USING FUNCTION-TYPE, DATE6-HL.
+
            MOVE  "HG" TO FUNCTION-TYPE.
-           CALL  "DATE2" USING FUNCTION-TYPE,
-       	       OUTPUT-GREGORIAN-EXT.
-       	   DISPLAY "DATE2(HG) YYYYMMDD IS: " 
-       	       OUTPUT-GREGORIAN-EXT.
+           CALL  "DATE2" USING FUNCTION-TYPE, DATE2-HG.
+           CALL  "DATE4" USING FUNCTION-TYPE, DATE4-HG.
+           CALL  "DATE6" USING FUNCTION-TYPE, DATE6-HG.
 
-      *"HJ" - function
            MOVE  "HJ" TO FUNCTION-TYPE.
-           CALL  "DATE2" USING FUNCTION-TYPE,
-               OUTPUT-JULIAN-EXT.
-       	   DISPLAY "DATE2(HJ) YYYYDDD IS: " 
-       	       OUTPUT-JULIAN-EXT.
-      
-      *"GG" - function
+           CALL  "DATE2" USING FUNCTION-TYPE, DATE2-HJ.
+           CALL  "DATE4" USING FUNCTION-TYPE, DATE4-HJ.
+           CALL  "DATE6" USING FUNCTION-TYPE, DATE6-HJ.
+
            MOVE  "GG" TO FUNCTION-TYPE.
-           CALL  "DATE4" USING FUNCTION-TYPE,
-       	       OUTPUT-GREGORIAN-EXT, HHMMSSHH.
-       	   DISPLAY "DATE4(GG) YYYYMMDD IS: " 
-       	       OUTPUT-GREGORIAN-EXT
-	       " HHMMSSHH=" HHMMSSHH.
-      
-      *"AG" - function
+           CALL  "DATE2" USING FUNCTION-TYPE, DATE2-GG, DATE2-GGT.
+           CALL  "DATE4" USING FUNCTION-TYPE, DATE4-GG, DATE4-GGT.
+           CALL  "DATE6" USING FUNCTION-TYPE, DATE6-GG, DATE6-GGT.
+
            MOVE  "AG" TO FUNCTION-TYPE.
-           CALL  "DATE4" USING FUNCTION-TYPE,
-       	       OUTPUT-GREGORIAN-EXT, HHMMSSHH.
-       	   DISPLAY "DATE4(AG) MMDDYYYY IS: " 
-       	       OUTPUT-GREGORIAN-EXT
-	       " HHMMSSHH=" HHMMSSHH.
+           CALL  "DATE2" USING FUNCTION-TYPE, DATE2-AG, DATE2-AGT.
+           CALL  "DATE4" USING FUNCTION-TYPE, DATE4-AG, DATE4-AGT.
+           CALL  "DATE6" USING FUNCTION-TYPE, DATE6-AG, DATE6-AGT.
+
+           MOVE  "EG" TO FUNCTION-TYPE.
+           CALL  "DATE2" USING FUNCTION-TYPE, DATE2-EG, DATE2-EGT.
+           CALL  "DATE4" USING FUNCTION-TYPE, DATE4-EG, DATE4-EGT.
+           CALL  "DATE6" USING FUNCTION-TYPE, DATE6-EG, DATE6-EGT.
+
+           DISPLAY AND READ NOW-SCREEN ON CRT.
+
+000000*================================================================
+       DATE6-TESTS SECTION.
+
+      * "GJ" - function
+       DATE6-TEST001.
+	   MOVE "DATE6-TEST001" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "GJ" TO FUNCTION-TYPE.
+	   MOVE "031231"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "03365"    TO J1 OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-J1-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+       DATE6-TEST002.
+	   MOVE "DATE6-TEST002" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "GJ" TO FUNCTION-TYPE.
+	   MOVE "040229"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "04060"    TO J1 OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-J1-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+       DATE6-TEST003.
+	   MOVE "DATE6-TEST003" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "GJ" TO FUNCTION-TYPE.
+	   MOVE "030229"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE 8          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-J1-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "AJ" - function
+       DATE6-TEST004.
+	   MOVE "DATE6-TEST004" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "AJ" TO FUNCTION-TYPE.
+	   MOVE "123103"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "03365"    TO J1 OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-J1-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "EJ" - function
+       DATE6-TEST005.
+	   MOVE "DATE6-TEST005" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "EJ" TO FUNCTION-TYPE.
+	   MOVE "311203"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "03365"    TO J1 OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-J1-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "JG" - function
+       DATE6-TEST006.
+	   MOVE "DATE6-TEST006" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "JG" TO FUNCTION-TYPE.
+	   MOVE "03365"    TO J1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "031231"   TO G1 OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-J1-G1-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "JA" - function
+       DATE6-TEST007.
+	   MOVE "DATE6-TEST007" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "JA" TO FUNCTION-TYPE.
+	   MOVE "03365"    TO J1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "123103"   TO G1 OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-J1-G1-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "JE" - function
+       DATE6-TEST008.
+	   MOVE "DATE6-TEST008" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "JE" TO FUNCTION-TYPE.
+	   MOVE "03365"    TO J1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "311203"   TO G1 OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-J1-G1-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "G-" - function
+       DATE6-TEST009.
+	   MOVE "DATE6-TEST009" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "G-" TO FUNCTION-TYPE.
+	   MOVE "031230"   TO G1 OF D6.
+	   MOVE "031231"   TO G2 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE 1          TO CNT-NUM OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-G2-CNT-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+       DATE6-TEST010.
+	   MOVE "DATE6-TEST010" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "G-" TO FUNCTION-TYPE.
+	   MOVE "031231"   TO G1 OF D6.
+	   MOVE "031230"   TO G2 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE -1         TO CNT-NUM OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-G2-CNT-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "A-" - function
+       DATE6-TEST011.
+	   MOVE "DATE6-TEST011" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "A-" TO FUNCTION-TYPE.
+	   MOVE "032603"   TO G1 OF D6.
+	   MOVE "032503"   TO G2 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE -1         TO CNT-NUM OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-G2-CNT-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "E-" - function
+       DATE6-TEST012.
+	   MOVE "DATE6-TEST012" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "E-" TO FUNCTION-TYPE.
+	   MOVE "260303"   TO G1 OF D6.
+	   MOVE "250303"   TO G2 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE -1         TO CNT-NUM OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-G2-CNT-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "J-" - function
+       DATE6-TEST013.
+	   MOVE "DATE6-TEST013" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "J-" TO FUNCTION-TYPE.
+	   MOVE "03100"   TO J1 OF D6.
+	   MOVE "03110"   TO J2 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE 10         TO CNT-NUM OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-J1-J2-CNT-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+       DATE6-TEST014.
+	   MOVE "DATE6-TEST014" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "J-" TO FUNCTION-TYPE.
+	   MOVE "03100"   TO J1 OF D6.
+	   MOVE "03000"   TO J2 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE 0          TO CNT-NUM OF D6-X.
+	   MOVE 8          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-J1-J2-CNT-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "G+" - function
+       DATE6-TEST015.
+	   MOVE "DATE6-TEST015" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "G+" TO FUNCTION-TYPE.
+	   MOVE "030325"   TO G1 OF D6.
+	   MOVE 1          TO CNT-NUM OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "030326"   TO G2 OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-CNT-G2-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "A+" - function
+       DATE6-TEST016.
+	   MOVE "DATE6-TEST016" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "A+" TO FUNCTION-TYPE.
+	   MOVE "032503"   TO G1 OF D6.
+	   MOVE -1         TO CNT-NUM OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "032403"   TO G2 OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-CNT-G2-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "E+" - function
+       DATE6-TEST017.
+	   MOVE "DATE6-TEST017" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "E+" TO FUNCTION-TYPE.
+	   MOVE "260303"   TO G1 OF D6.
+	   MOVE 6         TO CNT-NUM OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "010403"   TO G2 OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-CNT-G2-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "J+" - function
+       DATE6-TEST018.
+	   MOVE "DATE6-TEST018" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "J+" TO FUNCTION-TYPE.
+	   MOVE "03100"    TO J1 OF D6.
+	   MOVE -10        TO CNT-NUM OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "03090"    TO J2 OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-J1-CNT-J2-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "GD" - function
+       DATE6-TEST019.
+	   MOVE "DATE6-TEST019" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "GD" TO FUNCTION-TYPE.
+	   MOVE "030327"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "THURSDAY" TO DOW OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-DOW-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "AD" - function
+       DATE6-TEST020.
+	   MOVE "DATE6-TEST020" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "AD" TO FUNCTION-TYPE.
+	   MOVE "032803"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "FRIDAY" TO DOW OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-DOW-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "ED" - function
+       DATE6-TEST021.
+	   MOVE "DATE6-TEST021" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "ED" TO FUNCTION-TYPE.
+	   MOVE "290303"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "SATURDAY" TO DOW OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-DOW-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "JD" - function
+       DATE6-TEST022.
+	   MOVE "DATE6-TEST022" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "JD" TO FUNCTION-TYPE.
+	   MOVE "03365"    TO J1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "WEDNESDAY" TO DOW OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-J1-DOW-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "G#" - function
+       DATE6-TEST023.
+	   MOVE "DATE6-TEST023" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "G#"       TO FUNCTION-TYPE.
+	   MOVE "030327"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE 5          TO CNT-NUM OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-CNT-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "A#" - function
+       DATE6-TEST024.
+	   MOVE "DATE6-TEST024" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "A#"       TO FUNCTION-TYPE.
+	   MOVE "032903"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE 7          TO CNT-NUM OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-CNT-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "E#" - function
+       DATE6-TEST025.
+	   MOVE "DATE6-TEST025" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "E#"       TO FUNCTION-TYPE.
+	   MOVE "300303"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE 1          TO CNT-NUM OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-CNT-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "J#" - function
+       DATE6-TEST026.
+	   MOVE "DATE6-TEST026" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "J#"       TO FUNCTION-TYPE.
+	   MOVE "03365"    TO J1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE 4          TO CNT-NUM OF D6-X.
+	   MOVE 0          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-J1-CNT-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "AS" - function
+       DATE6-TEST027.
+	   MOVE "DATE6-TEST027" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "AS"       TO FUNCTION-TYPE.
+	   MOVE "123103"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "031231"   TO G2 OF D6-X.
+	   PERFORM DATE6-CALL-G1-G2.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "AE" - function
+       DATE6-TEST028.
+	   MOVE "DATE6-TEST028" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "AE"       TO FUNCTION-TYPE.
+	   MOVE "123103"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "311203"   TO G2 OF D6-X.
+	   PERFORM DATE6-CALL-G1-G2.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "EA" - function
+       DATE6-TEST029.
+	   MOVE "DATE6-TEST029" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "EA"       TO FUNCTION-TYPE.
+	   MOVE "311203"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "123103"   TO G2 OF D6-X.
+	   PERFORM DATE6-CALL-G1-G2.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "ES" - function
+       DATE6-TEST030.
+	   MOVE "DATE6-TEST030" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "ES"       TO FUNCTION-TYPE.
+	   MOVE "311203"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "031231"   TO G2 OF D6-X.
+	   PERFORM DATE6-CALL-G1-G2.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "SA" - function
+       DATE6-TEST031.
+	   MOVE "DATE6-TEST031" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "SA"       TO FUNCTION-TYPE.
+	   MOVE "031231"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "123103"   TO G2 OF D6-X.
+	   PERFORM DATE6-CALL-G1-G2.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      * "SE" - function
+       DATE6-TEST032.
+	   MOVE "DATE6-TEST032" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "SE"       TO FUNCTION-TYPE.
+	   MOVE "031231"   TO G1 OF D6.
+	   MOVE D6         TO D6-X.
+	   MOVE "311203"   TO G2 OF D6-X.
+	   PERFORM DATE6-CALL-G1-G2.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+      *
+      *    DATE6 Range errors
+      *
+
+       DATE6-TEST033.
+	   MOVE "DATE6-TEST033" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "G+" TO FUNCTION-TYPE.
+           MOVE DATE6-GG   TO G1 OF D6
+      *    Add 75 years to the current date
+	   COMPUTE CNT-NUM OF D6 = 75 * 366.
+	   MOVE D6         TO D6-X.
+	   MOVE 4          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-CNT-G2-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+       DATE6-TEST034.
+	   MOVE "DATE6-TEST034" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "A+" TO FUNCTION-TYPE.
+           MOVE DATE6-AG   TO G1 OF D6
+      *    Add 75 years to the current date
+	   COMPUTE CNT-NUM OF D6 = 75 * 366.
+	   MOVE D6         TO D6-X.
+	   MOVE 4          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-CNT-G2-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+       DATE6-TEST035.
+	   MOVE "DATE6-TEST035" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "G+" TO FUNCTION-TYPE.
+           MOVE DATE6-EG   TO G1 OF D6
+      *    Add 75 years to the current date
+	   COMPUTE CNT-NUM OF D6 = 75 * 366.
+	   MOVE D6         TO D6-X.
+	   MOVE 4          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-G1-CNT-G2-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+       DATE6-TEST036.
+	   MOVE "DATE6-TEST036" TO TEST-NAME.
+           PERFORM DATE6-INIT-FIELDS.
+	   MOVE "J+" TO FUNCTION-TYPE.
+           MOVE DATE6-HJ   TO J1 OF D6
+      *    Add 75 years to the current date
+	   COMPUTE CNT-NUM OF D6 = 75 * 366.
+	   MOVE D6         TO D6-X.
+	   MOVE 4          TO RC-NUM OF D6-X.
+	   PERFORM DATE6-CALL-J1-CNT-J2-RC.
+	   PERFORM DATE6-CHECK-RESULTS.
+
+000000*================================================================
+       DATE6-HELPER SECTION.
+
+       DATE6-INIT-FIELDS.
+           MOVE QUOTE TO D6.
+           MOVE D6 TO D6-X.
+           MOVE LOW-VALUES TO RC.
+           MOVE LOW-VALUES TO D6-CNT.
+
+       DATE6-CALL-G1-J1-RC.
+           CALL "DATE6" USING 
+		FUNCTION-TYPE
+		G1 OF D6,
+		J1 OF D6,
+		RC.
+	   MOVE RC-BIN TO RC-NUM OF D6.
+
+       DATE6-CALL-J1-G1-RC.
+           CALL "DATE6" USING 
+		FUNCTION-TYPE
+		J1 OF D6,
+		G1 OF D6,
+		RC.
+	   MOVE RC-BIN TO RC-NUM OF D6.
+
+       DATE6-CALL-G1-G2-CNT-RC.
+           CALL "DATE6" USING 
+		FUNCTION-TYPE
+		G1 OF D6,
+		G2 OF D6,
+		D6-CNT,
+		RC.
+	   MOVE RC-BIN TO RC-NUM OF D6.
+	   MOVE D6-CNT-BIN TO CNT-NUM OF D6.
+
+       DATE6-CALL-G1-G2.
+           CALL "DATE6" USING 
+		FUNCTION-TYPE
+		G1 OF D6,
+		G2 OF D6.
+
+       DATE6-CALL-G1-CNT-RC.
+           CALL "DATE6" USING 
+		FUNCTION-TYPE
+		G1 OF D6,
+		D6-CNT,
+		RC.
+	   MOVE RC-BIN TO RC-NUM OF D6.
+	   MOVE D6-CNT-BIN TO CNT-NUM OF D6.
+
+       DATE6-CALL-J1-J2-CNT-RC.
+           CALL "DATE6" USING 
+		FUNCTION-TYPE
+		J1 OF D6,
+		J2 OF D6,
+		D6-CNT,
+		RC.
+	   MOVE RC-BIN TO RC-NUM OF D6.
+	   MOVE D6-CNT-BIN TO CNT-NUM OF D6.
+
+       DATE6-CALL-J1-CNT-RC.
+           CALL "DATE6" USING 
+		FUNCTION-TYPE
+		J1 OF D6,
+		D6-CNT,
+		RC.
+	   MOVE RC-BIN TO RC-NUM OF D6.
+	   MOVE D6-CNT-BIN TO CNT-NUM OF D6.
+
+       DATE6-CALL-G1-CNT-G2-RC.
+           IF CNT-NUM OF D6 < 0 THEN
+              MOVE -1 TO D6-CNT-B1
+           END-IF.
+	   MOVE CNT-NUM OF D6 TO D6-CNT-BIN
+           CALL "DATE6" USING 
+		FUNCTION-TYPE
+		G1 OF D6,
+		D6-CNT,
+		G2 OF D6,
+		RC.
+	   MOVE RC-BIN TO RC-NUM OF D6.
+	   MOVE D6-CNT-BIN TO CNT-NUM OF D6.
+
+       DATE6-CALL-J1-CNT-J2-RC.
+           IF CNT-NUM OF D6 < 0 THEN
+              MOVE -1 TO D6-CNT-B1
+           END-IF.
+	   MOVE CNT-NUM OF D6 TO D6-CNT-BIN
+           CALL "DATE6" USING 
+		FUNCTION-TYPE
+		J1 OF D6,
+		D6-CNT,
+		J2 OF D6,
+		RC.
+	   MOVE RC-BIN TO RC-NUM OF D6.
+	   MOVE D6-CNT-BIN TO CNT-NUM OF D6.
+
+       DATE6-CALL-G1-DOW-RC.
+           CALL "DATE6" USING 
+		FUNCTION-TYPE
+		G1 OF D6,
+		DOW OF D6,
+		RC.
+	   MOVE RC-BIN TO RC-NUM OF D6.
+
+       DATE6-CALL-J1-DOW-RC.
+           CALL "DATE6" USING 
+		FUNCTION-TYPE
+		J1 OF D6,
+		DOW OF D6,
+		RC.
+	   MOVE RC-BIN TO RC-NUM OF D6.
+
+
+       DATE6-CHECK-RESULTS.
+           ADD 1 TO TEST-CNT.
+           IF D6 NOT = D6-X THEN
+	       ADD 1 TO TEST-ERROR-CNT
+	       DISPLAY "DATE6 FAILED ",
+		   " TEST=[", TEST-NAME, "] ",
+		   " FUNC=[", FUNCTION-TYPE, "] ",
+		   " D6=[", D6, "] ",
+		   " D6-X=[", D6-X, "] "
+	   END-IF.
+
+
+
+
+000000*================================================================
+       DATE-TESTS SECTION.
 
       * Test Hundreds of seconds in "GG"
+	   MOVE "DATE4-TEST001" TO TEST-NAME.
 	   DISPLAY "TESTING Hundredths-of-seconds using DATE4(GG)".
            MOVE  "GG" TO FUNCTION-TYPE.
            CALL  "DATE4" USING FUNCTION-TYPE,
        	       OUTPUT-GREGORIAN-EXT, START-TIME.
 	   MOVE START-TIME TO LAST-TIME.
-	   PERFORM 100 TIMES
+	   PERFORM 20 TIMES
 	       CALL  "DATE4" USING FUNCTION-TYPE,
 		   OUTPUT-GREGORIAN-EXT, END-TIME
 	       IF END-TIME < LAST-TIME THEN
 	           DISPLAY "TIME: " END-TIME
 		           " IS LESS THEN LAST-TIME: "
 			   LAST-TIME
-                   ADD 1 TO COMPLETION-STATUS
+                   PERFORM DATE-REPORT-ERROR
 	       END-IF
 	       MOVE END-TIME TO LAST-TIME
 	   END-PERFORM.
-       	   DISPLAY "DATE4(GG) 100 CALLS START TIME: " 
+       	   DISPLAY "DATE4(GG) 20 CALLS START TIME: " 
 	       START-TIME " END TIME: " END-TIME.
-
-      * Speed test
-           CALL  "DATE4" USING FUNCTION-TYPE,
-       	       OUTPUT-GREGORIAN-EXT, START-TIME.
-	   ADD 100 TO START-TIME GIVING END-TIME.
-	   MOVE START-TIME TO LAST-TIME.
-	   MOVE 0 TO LOOP-CNT.
-	   PERFORM UNTIL LAST-TIME >= END-TIME
-	       CALL  "DATE4" USING FUNCTION-TYPE,
-		   OUTPUT-GREGORIAN-EXT, LAST-TIME
-	       ADD 1 TO LOOP-CNT
-	   END-PERFORM.
-	   DISPLAY "DATE4(GG) WAS CALLED " LOOP-CNT
-	       " TIMES IN ONE SECOND.".
-      
-      *"EG" - function
-           MOVE  "EG" TO FUNCTION-TYPE.
-           CALL  "DATE4" USING FUNCTION-TYPE,
-       	       OUTPUT-GREGORIAN-EXT, HHMMSSHH.
-       	   DISPLAY "DATE4(EG) DDMMYYYY IS: " 
-       	       OUTPUT-GREGORIAN-EXT
-	       " HHMMSSHH=" HHMMSSHH.
 
       *"GJ" - function.
            MOVE  "GJ" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST002" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "900115"      TO INPUT-GREGORIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-DATE,
                               OUTPUT-JULIAN-DATE,
                               T-RETURN-CODE.  
            IF  OUTPUT-JULIAN-DATE NOT = "90015" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST003" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "900000"      TO INPUT-GREGORIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-DATE,
                               OUTPUT-JULIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
           
+	   MOVE "DATE2-TEST004" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "20010704"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-JULIAN-EXT,
                                T-RETURN-CODE.  
            IF  OUTPUT-JULIAN-EXT NOT = "2001185" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST005" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "20000000"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-JULIAN-EXT,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "GJ"
 
       *"GX" - function.
            MOVE  "GX" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST006" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "900101"      TO INPUT-GREGORIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-DATE,
                               OUTPUT-GREGORIAN-EXT,
                               T-RETURN-CODE.  
            IF  OUTPUT-GREGORIAN-EXT NOT = "19900101" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST007" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "900000"      TO INPUT-GREGORIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-DATE,
                               OUTPUT-GREGORIAN-EXT,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "GX"
 
       *"GR" - function.
            MOVE  "GR" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST008" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "900101"      TO INPUT-GREGORIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-DATE,
                               OUTPUT-JULIAN-EXT,
                               T-RETURN-CODE.  
            IF  OUTPUT-JULIAN-EXT NOT = "1990001" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST009" TO TEST-NAME.
            MOVE  "900000"      TO INPUT-GREGORIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-DATE,
                               OUTPUT-JULIAN-EXT,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.    
+               PERFORM DATE-REPORT-ERROR.    
       *END "GR"
 
       *"XG" - function.
+	   MOVE "DATE-TEST010" TO TEST-NAME.
            MOVE  "XG" TO FUNCTION-TYPE.
-           MOVE  "19000101"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+           MOVE  "19990101"    TO INPUT-GREGORIAN-EXT. 
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-EXT,
                               OUTPUT-GREGORIAN-DATE,
                               T-RETURN-CODE.  
-           IF  OUTPUT-GREGORIAN-DATE NOT = "000101" OR
+           IF  OUTPUT-GREGORIAN-DATE NOT = "990101" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
-           MOVE  "20000101"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   MOVE "DATE-TEST011" TO TEST-NAME.
+           MOVE  "18000101"    TO INPUT-GREGORIAN-EXT. 
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-EXT,
                               OUTPUT-GREGORIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 4     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE-TEST012" TO TEST-NAME.
            MOVE  "19900000"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-EXT,
                               OUTPUT-GREGORIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "XG"
 
       *"RG" - function.
+	   MOVE "DATE-TEST013" TO TEST-NAME.
            MOVE  "RG" TO FUNCTION-TYPE.
-           MOVE  "1900001"    TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+           MOVE  "1999001"    TO INPUT-JULIAN-EXT. 
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-EXT,
                               OUTPUT-GREGORIAN-DATE,
                               T-RETURN-CODE.  
-           IF  OUTPUT-GREGORIAN-DATE NOT = "000101" OR
+           IF  OUTPUT-GREGORIAN-DATE NOT = "990101" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
-           MOVE  "2000001"    TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   MOVE "DATE-TEST014" TO TEST-NAME.
+           MOVE  "1800001"    TO INPUT-JULIAN-EXT. 
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-EXT,
                               OUTPUT-GREGORIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 4     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE-TEST015" TO TEST-NAME.
            MOVE  "19900000"    TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-EXT,
                               OUTPUT-GREGORIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "RG"
 
       *"XJ" - function.
+	   MOVE "DATE-TEST016" TO TEST-NAME.
            MOVE  "XJ" TO FUNCTION-TYPE.
-           MOVE  "19000126"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+           MOVE  "19990126"    TO INPUT-GREGORIAN-EXT. 
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-EXT,
                               OUTPUT-JULIAN-DATE,
                               T-RETURN-CODE.  
-           IF  OUTPUT-JULIAN-DATE NOT = "00026" OR
+           IF  OUTPUT-JULIAN-DATE NOT = "99026" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
-           MOVE  "20000101"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   MOVE "DATE-TEST017" TO TEST-NAME.
+           MOVE  "18000101"    TO INPUT-GREGORIAN-EXT. 
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-EXT,
                               OUTPUT-JULIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 4     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE-TEST018" TO TEST-NAME.
            MOVE  "19900000"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-EXT,
                               OUTPUT-JULIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "XJ"
 
       *"RJ" - function.
+	   MOVE "DATE-TEST019" TO TEST-NAME.
            MOVE  "RJ" TO FUNCTION-TYPE.
-           MOVE  "1900026"    TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+           MOVE  "1999026"    TO INPUT-JULIAN-EXT. 
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-EXT,
                               OUTPUT-JULIAN-DATE,
                               T-RETURN-CODE.  
-           IF  OUTPUT-JULIAN-DATE NOT = "00026" OR
+           IF  OUTPUT-JULIAN-DATE NOT = "99026" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
-           MOVE  "2000001"    TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   MOVE "DATE-TEST020" TO TEST-NAME.
+           MOVE  "1800001"    TO INPUT-JULIAN-EXT. 
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-EXT,
                               OUTPUT-JULIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 4     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE-TEST021" TO TEST-NAME.
            MOVE  "1990000"    TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-EXT,
                               OUTPUT-JULIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "RJ"
 
       *"XR" - function.
            MOVE  "XR" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST022" TO TEST-NAME.
            MOVE  "19900101"      TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-EXT,
                               OUTPUT-JULIAN-EXT,
                               T-RETURN-CODE.  
            IF  OUTPUT-JULIAN-EXT NOT = "1990001" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST023" TO TEST-NAME.
            MOVE  "19900000"      TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-GREGORIAN-EXT,
                               OUTPUT-JULIAN-EXT,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.          
+               PERFORM DATE-REPORT-ERROR.          
       *END "XR"
 
       *"AJ" = function
            MOVE  "AJ" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST024" TO TEST-NAME.
            MOVE  "01152000"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-JULIAN-EXT,
                                T-RETURN-CODE.  
            IF  OUTPUT-JULIAN-EXT NOT = "2000015" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST025" TO TEST-NAME.
            MOVE  "00002001"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-JULIAN-EXT,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "AJ"
 
       *"EJ" = function
            MOVE  "EJ" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST026" TO TEST-NAME.
            MOVE  "20012001"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-JULIAN-EXT,
                                T-RETURN-CODE.  
            IF  OUTPUT-JULIAN-EXT NOT = "2001020" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST027" TO TEST-NAME.
            MOVE  "00002000"    TO INPUT-GREGORIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-JULIAN-EXT,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "EJ"
 
       *"JG" - function
            MOVE  "JG" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST028" TO TEST-NAME.
            MOVE  "90001"       TO INPUT-JULIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-DATE,
                               OUTPUT-GREGORIAN-DATE,
                               T-RETURN-CODE.  
            IF  OUTPUT-GREGORIAN-DATE NOT = "900101" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST029" TO TEST-NAME.
            MOVE  "90368"      TO INPUT-JULIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-DATE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-DATE,
                               OUTPUT-GREGORIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST030" TO TEST-NAME.
            MOVE  "2000186"     TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-JULIAN-EXT,
                                OUTPUT-GREGORIAN-EXT,
                                T-RETURN-CODE.  
            IF  OUTPUT-GREGORIAN-EXT NOT = "20000704" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST031" TO TEST-NAME.
            MOVE  "2001368"     TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                               INPUT-JULIAN-EXT,
                               OUTPUT-GREGORIAN-EXT,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "JG"       
 
       *"JX" - function
            MOVE  "JX" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST032" TO TEST-NAME.
            MOVE  "90001"      TO INPUT-JULIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-DATE,
                               OUTPUT-GREGORIAN-EXT,
                               T-RETURN-CODE.  
            IF  OUTPUT-GREGORIAN-EXT NOT = "19900101" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST033" TO TEST-NAME.
            MOVE  "90368"      TO INPUT-JULIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-DATE,
                               OUTPUT-GREGORIAN-EXT,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
       *END "JX"       
 
       *"JR" - function
            MOVE  "JR" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST034" TO TEST-NAME.
            MOVE  "90001"      TO INPUT-JULIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-DATE,
                               OUTPUT-JULIAN-EXT,
                               T-RETURN-CODE.  
            IF  OUTPUT-JULIAN-EXT NOT = "1990001" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST035" TO TEST-NAME.
            MOVE  "90368"      TO INPUT-JULIAN-DATE. 
-           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-DATE,
                               OUTPUT-JULIAN-EXT,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
       *END "JR"       
 
       *"RX" - function
            MOVE  "RX" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST036" TO TEST-NAME.
            MOVE  "1990001"      TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-EXT,
                               OUTPUT-GREGORIAN-EXT,
                               T-RETURN-CODE.  
            IF  OUTPUT-GREGORIAN-EXT NOT = "19900101" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST037" TO TEST-NAME.
            MOVE  "1990368"      TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               INPUT-JULIAN-EXT,
                               OUTPUT-GREGORIAN-EXT,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
       *END "RX"       
 
       *"JA" - function
            MOVE  "JA" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST038" TO TEST-NAME.
            MOVE  "2001186"     TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-JULIAN-EXT,
                                OUTPUT-GREGORIAN-EXT,
                                T-RETURN-CODE.  
            IF  OUTPUT-GREGORIAN-EXT NOT = "07052001" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST039" TO TEST-NAME.
            MOVE  "2000368"     TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-JULIAN-EXT,
                                OUTPUT-GREGORIAN-EXT,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "JA"
 
       *"JE" - function
            MOVE  "JE" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST040" TO TEST-NAME.
            MOVE  "2000186"     TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-JULIAN-EXT,
                                OUTPUT-GREGORIAN-EXT,
                                T-RETURN-CODE.  
            IF  OUTPUT-GREGORIAN-EXT NOT = "04072000" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST041" TO TEST-NAME.
            MOVE  "2001368"     TO INPUT-JULIAN-EXT. 
-           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-JULIAN-EXT,
                                OUTPUT-GREGORIAN-EXT,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "JE"
 
       *"G-" - function
            MOVE  "G-" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST042" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "900101"      TO STARTING-GREGORIAN-DATE. 
            MOVE  "891231"      TO ENDING-GREGORIAN-DATE. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
                               ENDING-GREGORIAN-DATE,
@@ -689,13 +1357,12 @@
                               T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = -1 OR 
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST043" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "900101"      TO STARTING-GREGORIAN-DATE. 
            MOVE  "900102"      TO ENDING-GREGORIAN-DATE. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
                               ENDING-GREGORIAN-DATE,
@@ -703,39 +1370,36 @@
                               T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = 1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST044" TO TEST-NAME.
            MOVE  "900000"      TO STARTING-GREGORIAN-DATE. 
            MOVE  "900102"      TO ENDING-GREGORIAN-DATE. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
                               ENDING-GREGORIAN-DATE,
                               DAY-DIFFERENCE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE-TEST045" TO TEST-NAME.
            MOVE  "900101"      TO STARTING-GREGORIAN-DATE. 
            MOVE  "900000"      TO ENDING-GREGORIAN-DATE. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
                               ENDING-GREGORIAN-DATE,
                               DAY-DIFFERENCE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST046" TO TEST-NAME.
            MOVE  "20000101"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "19991231"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
@@ -743,13 +1407,12 @@
                                T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = -1 OR 
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST047" TO TEST-NAME.
            MOVE  "20000101"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "20000102"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
@@ -757,42 +1420,39 @@
                                T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = 1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST048" TO TEST-NAME.
            MOVE  "20010000"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "20010102"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
                                DAY-DIFFERENCE,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST048" TO TEST-NAME.
            MOVE  "20010101"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "20010000"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
                                DAY-DIFFERENCE,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "G-"
 
       *"X-" - function
            MOVE  "X-" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST049" TO TEST-NAME.
            MOVE  "19900101"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "19891231"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-EXT,
                               ENDING-GREGORIAN-EXT,
@@ -800,13 +1460,12 @@
                               T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = -1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST050" TO TEST-NAME.
            MOVE  "19900101"     TO STARTING-GREGORIAN-EXT. 
            MOVE  "19900102"     TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-EXT,
                               ENDING-GREGORIAN-EXT,
@@ -814,42 +1473,39 @@
                               T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = 1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST051" TO TEST-NAME.
            MOVE  "19900000"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "19900102"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-EXT,
                               ENDING-GREGORIAN-EXT,
                               DAY-DIFFERENCE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE-TEST052" TO TEST-NAME.
            MOVE  "19900101"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "19900000"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-EXT,
                               ENDING-GREGORIAN-EXT,
                               DAY-DIFFERENCE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "X-"
 
       *"A-" - function
            MOVE  "A-" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST053" TO TEST-NAME.
            MOVE  "01012000"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "12311999"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
@@ -857,13 +1513,12 @@
                                T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = -1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST054" TO TEST-NAME.
            MOVE  "01012000"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "01022000"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
@@ -871,42 +1526,39 @@
                                T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = 1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST055" TO TEST-NAME.
            MOVE  "00002001"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "01022001"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
                                DAY-DIFFERENCE,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST056" TO TEST-NAME.
            MOVE  "01012001"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "00002001"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
+	   PERFORM DATE-INIT-TEST.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
                                DAY-DIFFERENCE,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "A-"
 
       *"E-" - function
            MOVE  "E-" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST057" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "01012000"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "31121999"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
@@ -914,13 +1566,12 @@
                                T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = -1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST058" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "01012000"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "02012000"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
@@ -928,42 +1579,39 @@
                                T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = 1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST059" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "00002001"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "02012001"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
                                DAY-DIFFERENCE,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST060" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "01011990"    TO STARTING-GREGORIAN-EXT. 
            MOVE  "00001990"    TO ENDING-GREGORIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                ENDING-GREGORIAN-EXT,
                                DAY-DIFFERENCE,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "E-"
 
       *"J-" - function
            MOVE  "J-" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST061" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "90302"      TO STARTING-JULIAN-DATE. 
            MOVE  "90301"      TO ENDING-JULIAN-DATE. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
                               ENDING-JULIAN-DATE,
@@ -971,13 +1619,12 @@
                               T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = -1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST062" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "89365"      TO STARTING-JULIAN-DATE. 
            MOVE  "90001"      TO ENDING-JULIAN-DATE. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
                               ENDING-JULIAN-DATE,
@@ -985,39 +1632,36 @@
                               T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = 1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST063" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "90368"      TO STARTING-JULIAN-DATE. 
            MOVE  "90002"      TO ENDING-JULIAN-DATE. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
                               ENDING-JULIAN-DATE,
                               DAY-DIFFERENCE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE-TEST064" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "90001"      TO STARTING-JULIAN-DATE. 
            MOVE  "90000"      TO ENDING-JULIAN-DATE. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
                               ENDING-JULIAN-DATE,
                               DAY-DIFFERENCE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST065" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "2001302"     TO STARTING-JULIAN-EXT. 
            MOVE  "2001301"     TO ENDING-JULIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
                                ENDING-JULIAN-EXT,
@@ -1025,13 +1669,12 @@
                                T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = -1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST066" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "1999365"     TO STARTING-JULIAN-EXT. 
            MOVE  "2000001"     TO ENDING-JULIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
                                ENDING-JULIAN-EXT,
@@ -1039,43 +1682,40 @@
                                T-RETURN-CODE.  
            IF  DAY-DIFFERENCE-BIN NOT = 1 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST067" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "2000368"     TO STARTING-JULIAN-EXT. 
            MOVE  "2000002"     TO ENDING-JULIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
                                ENDING-JULIAN-EXT,
                                DAY-DIFFERENCE,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST068" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "2001001"     TO STARTING-JULIAN-EXT. 
            MOVE  "2001000"     TO ENDING-JULIAN-EXT. 
-           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
                                ENDING-JULIAN-EXT,
                                DAY-DIFFERENCE,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "J-"
 
       *"J+" - function
            MOVE  "J+" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST069" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "90302"      TO STARTING-JULIAN-DATE. 
-           MOVE  SPACES       TO ENDING-JULIAN-DATE. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  10            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
                               DAYS-TO-ADD,
@@ -1083,15 +1723,14 @@
                               T-RETURN-CODE.  
            IF  ENDING-JULIAN-DATE NOT = "90312" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST070" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "99365"      TO STARTING-JULIAN-DATE. 
-           MOVE  SPACES       TO ENDING-JULIAN-DATE. 
            MOVE  LOW-VALUES   TO DAYS-TO-ADD.
            MOVE  -1           TO FIRST-BIN.
            MOVE  -20            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
                               DAYS-TO-ADD,
@@ -1099,42 +1738,40 @@
                               T-RETURN-CODE.  
            IF  ENDING-JULIAN-DATE NOT = "99345" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST071" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "99365"      TO STARTING-JULIAN-DATE. 
-           MOVE  SPACES       TO ENDING-JULIAN-DATE. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  1            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
                               DAYS-TO-ADD,
                               ENDING-JULIAN-DATE,
                               T-RETURN-CODE.  
-           IF  RETURN-CODE-BIN NOT = 4     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+           IF  ENDING-JULIAN-DATE NOT = "00001" OR
+               RETURN-CODE-BIN NOT = 0     THEN
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST072" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "00000"      TO STARTING-JULIAN-DATE. 
-           MOVE  SPACES       TO ENDING-JULIAN-DATE. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  1            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
                               DAYS-TO-ADD,
                               ENDING-JULIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST073" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "2000302"     TO STARTING-JULIAN-EXT. 
-           MOVE  SPACES        TO ENDING-JULIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  10            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
                                DAYS-TO-ADD,
@@ -1142,15 +1779,14 @@
                                T-RETURN-CODE.  
            IF  ENDING-JULIAN-EXT NOT = "2000312" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST074" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "1999365"     TO STARTING-JULIAN-EXT. 
-           MOVE  SPACES        TO ENDING-JULIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  -1            TO FIRST-BIN.
            MOVE  -20           TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
                                DAYS-TO-ADD,
@@ -1158,45 +1794,42 @@
                                T-RETURN-CODE.  
            IF  ENDING-JULIAN-EXT NOT = "1999345" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST075" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "1999365"     TO STARTING-JULIAN-EXT. 
-           MOVE  SPACES        TO ENDING-JULIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  1             TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
                                DAYS-TO-ADD,
                                ENDING-JULIAN-EXT,
                                T-RETURN-CODE.
            IF ENDING-JULIAN-EXT NOT = "2000001"  THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST076" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "2000000"     TO STARTING-JULIAN-EXT. 
-           MOVE  SPACES        TO ENDING-JULIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  1             TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
                                DAYS-TO-ADD,
                                ENDING-JULIAN-EXT,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "J+"
 
       *"G+" - function
            MOVE  "G+" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST077" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "900302"      TO STARTING-GREGORIAN-DATE. 
-           MOVE  SPACES       TO ENDING-GREGORIAN-DATE. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  10            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
                               DAYS-TO-ADD,
@@ -1204,15 +1837,14 @@
                               T-RETURN-CODE.  
            IF  ENDING-GREGORIAN-DATE NOT = "900312" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST078" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "900325"      TO STARTING-GREGORIAN-DATE. 
-           MOVE  SPACES       TO ENDING-GREGORIAN-DATE. 
            MOVE  LOW-VALUES   TO DAYS-TO-ADD.
            MOVE  -1           TO FIRST-BIN.
            MOVE  -20            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
                               DAYS-TO-ADD,
@@ -1220,42 +1852,40 @@
                               T-RETURN-CODE.  
            IF  ENDING-GREGORIAN-DATE NOT = "900305" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST079" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "991231"      TO STARTING-GREGORIAN-DATE. 
-           MOVE  SPACES       TO ENDING-GREGORIAN-DATE. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  1            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
                               DAYS-TO-ADD,
                               ENDING-GREGORIAN-DATE,
                               T-RETURN-CODE.  
-           IF  RETURN-CODE-BIN NOT = 4     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+           IF  ENDING-GREGORIAN-DATE NOT = "000101" OR
+               RETURN-CODE-BIN NOT = 0     THEN
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST080" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "000000"      TO STARTING-GREGORIAN-DATE. 
-           MOVE  SPACES       TO ENDING-GREGORIAN-DATE. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  1            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
                               DAYS-TO-ADD,
                               ENDING-GREGORIAN-DATE,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST081" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "20000302"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  10            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DAYS-TO-ADD,
@@ -1263,15 +1893,14 @@
                                T-RETURN-CODE.  
            IF  ENDING-GREGORIAN-EXT NOT = "20000312" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST082" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "20010325"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  -1            TO FIRST-BIN.
            MOVE  -20           TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DAYS-TO-ADD,
@@ -1279,45 +1908,42 @@
                                T-RETURN-CODE.  
            IF  ENDING-GREGORIAN-EXT NOT = "20010305" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST083" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "19991231"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  1             TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DAYS-TO-ADD,
                                ENDING-GREGORIAN-EXT,
                                T-RETURN-CODE.  
            IF ENDING-GREGORIAN-EXT NOT = "20000101" THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST084" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "20010000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  1             TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DAYS-TO-ADD,
                                ENDING-GREGORIAN-EXT,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "G+"
 
       *"X+" - function
            MOVE  "X+" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST085" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "19900302"      TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES       TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  10            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-EXT,
                               DAYS-TO-ADD,
@@ -1325,15 +1951,14 @@
                               T-RETURN-CODE.  
            IF  ENDING-GREGORIAN-EXT NOT = "19900312" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST086" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "19900325"      TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES       TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES   TO DAYS-TO-ADD.
            MOVE  -1           TO FIRST-BIN.
            MOVE  -20            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-EXT,
                               DAYS-TO-ADD,
@@ -1341,31 +1966,29 @@
                               T-RETURN-CODE.  
            IF  ENDING-GREGORIAN-EXT NOT = "19900305" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST087" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "19000000"      TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES       TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  1            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-EXT,
                               DAYS-TO-ADD,
                               ENDING-GREGORIAN-EXT,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "X+"
 
       *"A+" - function
            MOVE  "A+" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST088" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "03022000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  10            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DAYS-TO-ADD,
@@ -1373,15 +1996,14 @@
                                T-RETURN-CODE.  
            IF  ENDING-GREGORIAN-EXT NOT = "03122000" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST089" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "03252001"   TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES       TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES   TO DAYS-TO-ADD.
            MOVE  -1           TO FIRST-BIN.
            MOVE  -20          TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES   TO T-RETURN-CODE.
-           MOVE  0            TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DAYS-TO-ADD,
@@ -1389,31 +2011,29 @@
                                T-RETURN-CODE.  
            IF  ENDING-GREGORIAN-EXT NOT = "03052001" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST090" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "00002000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  1             TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DAYS-TO-ADD,
                                ENDING-GREGORIAN-EXT,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "A+"
 
       *"E+" - function
            MOVE  "E+" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST091" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "02032001"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  10            TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DAYS-TO-ADD,
@@ -1421,15 +2041,14 @@
                                T-RETURN-CODE.  
            IF  ENDING-GREGORIAN-EXT NOT = "12032001" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST092" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "25032000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  -1            TO FIRST-BIN.
            MOVE  -20           TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DAYS-TO-ADD,
@@ -1437,417 +2056,389 @@
                                T-RETURN-CODE.  
            IF  ENDING-GREGORIAN-EXT NOT = "05032000" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST093" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "00002000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO ENDING-GREGORIAN-EXT. 
            MOVE  LOW-VALUES    TO DAYS-TO-ADD.
            MOVE  1             TO DAYS-TO-ADD-BIN.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DAYS-TO-ADD,
                                ENDING-GREGORIAN-EXT,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "E+"
 
       *"GD" - function
            MOVE  "GD" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST094" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "961113"      TO STARTING-GREGORIAN-DATE. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
                               DEY-OF-WEEK,
                               T-RETURN-CODE.  
            IF  DEY-OF-WEEK NOT = "WEDNESDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST095" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "000000"      TO STARTING-GREGORIAN-DATE. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
                               DEY-OF-WEEK,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST096" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "19961113"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK,
                                T-RETURN-CODE.  
            IF  DEY-OF-WEEK NOT = "WEDNESDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST097" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "20000000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "GD"
 
       *"XD" - function
            MOVE  "XD" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST098" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "19961113"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-EXT,
                               DEY-OF-WEEK,
                               T-RETURN-CODE.  
            IF  DEY-OF-WEEK NOT = "WEDNESDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST099" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "19000000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-EXT,
                               DEY-OF-WEEK,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "XD"
 
       *"AD" - function
            MOVE  "AD" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST100" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "11131996"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK,
                                T-RETURN-CODE.  
            IF  DEY-OF-WEEK NOT = "WEDNESDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST101" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "00002000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DEY-OF-WEEK.
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "AD"
 
       *"ED" - function
            MOVE  "ED" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST102" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "13111996"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK,
                                T-RETURN-CODE.  
            IF  DEY-OF-WEEK NOT = "WEDNESDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST103" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "00002000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "ED"
 
       *"JD" - function
            MOVE  "JD" TO FUNCTION-TYPE.
+	   MOVE "DATE-TEST104" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "96026"      TO STARTING-JULIAN-DATE. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
                               DEY-OF-WEEK,
                               T-RETURN-CODE.  
            IF  DEY-OF-WEEK NOT = "FRIDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE-TEST105" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "90000"      TO STARTING-JULIAN-DATE. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
                               DEY-OF-WEEK,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
 
+	   MOVE "DATE2-TEST106" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "1996026"     TO STARTING-JULIAN-EXT. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                               STARTING-JULIAN-EXT,
                               DEY-OF-WEEK,
                               T-RETURN-CODE.  
            IF  DEY-OF-WEEK NOT = "FRIDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST107" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "2000000"     TO STARTING-JULIAN-EXT. 
-           MOVE  SPACES        TO DEY-OF-WEEK. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
                                DEY-OF-WEEK,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "JD"
 
       *"G#" - function
            MOVE  "G#" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST108" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "19961113"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  0             TO DOW-BIN. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  DOW-BIN NOT = 4 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST109" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "20000000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  0             TO DOW-BIN. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "G#"
 
       *"A#" - function
            MOVE  "A#" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST110" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "11131996"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  0             TO DOW-BIN. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  DOW-BIN NOT = 4 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST111" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "20000000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  0             TO DOW-BIN. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "A#"
 
       *"E#" - function
            MOVE  "E#" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST112" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "13111996"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  0             TO DOW-BIN. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  DOW-BIN NOT = 4 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST113" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "20000000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  0             TO DOW-BIN. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
                                DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "E#"
 
       *"J#" - function
            MOVE  "J#" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST114" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "1996026"     TO STARTING-JULIAN-EXT. 
-           MOVE  0             TO DOW-BIN. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                               STARTING-JULIAN-EXT,
                               DEY-OF-WEEK-NUM,
                               T-RETURN-CODE.  
            IF  DOW-BIN NOT = 6 OR
                RETURN-CODE-BIN NOT = 0     THEN
-               ADD 1           TO COMPLETION-STATUS.           
+               PERFORM DATE-REPORT-ERROR.           
 
+	   MOVE "DATE2-TEST115" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "2000000"     TO STARTING-JULIAN-EXT. 
-           MOVE  0             TO DOW-BIN. 
-           MOVE  LOW-VALUES    TO T-RETURN-CODE.
-           MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
                                DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
-               ADD 1          TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "J#"
 
       *"AE" - function
            MOVE  "AE" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST116" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "02262001"    TO INPUT-GREGORIAN-EXT. 
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-GREGORIAN-EXT.
 
            IF OUTPUT-GREGORIAN-EXT NOT = "26022001" THEN
-               ADD 1           TO COMPLETION-STATUS.
-
-           CALL  "DATE2" USING FUNCTION-TYPE,
-                               INPUT-GREGORIAN-EXT,
-                               INPUT-GREGORIAN-EXT.
-
-           IF INPUT-GREGORIAN-EXT NOT = "26022001" THEN
-               ADD 1           TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "AE"
 
       *"AS" - function
            MOVE  "AS" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST118" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "02262001"    TO INPUT-GREGORIAN-EXT. 
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-GREGORIAN-EXT.
 
            IF OUTPUT-GREGORIAN-EXT NOT = "20010226" THEN
-               ADD 1           TO COMPLETION-STATUS.
-
-           CALL  "DATE2" USING FUNCTION-TYPE,
-                               INPUT-GREGORIAN-EXT,
-                               INPUT-GREGORIAN-EXT.
-
-           IF INPUT-GREGORIAN-EXT NOT = "20010226" THEN
-               ADD 1           TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "AS"
 
       *"EA" - function
            MOVE  "EA" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST120" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "26022001"    TO INPUT-GREGORIAN-EXT. 
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-GREGORIAN-EXT.
 
            IF OUTPUT-GREGORIAN-EXT NOT = "02262001" THEN
-               ADD 1           TO COMPLETION-STATUS.
-
-           CALL  "DATE2" USING FUNCTION-TYPE,
-                               INPUT-GREGORIAN-EXT,
-                               INPUT-GREGORIAN-EXT.
-
-           IF INPUT-GREGORIAN-EXT NOT = "02262001" THEN
-               ADD 1           TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "EA"
 
       *"ES" - function
            MOVE  "ES" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST122" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "26022001"    TO INPUT-GREGORIAN-EXT. 
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-GREGORIAN-EXT.
 
            IF OUTPUT-GREGORIAN-EXT NOT = "20010226" THEN
-               ADD 1           TO COMPLETION-STATUS.
-
-           CALL  "DATE2" USING FUNCTION-TYPE,
-                               INPUT-GREGORIAN-EXT,
-                               INPUT-GREGORIAN-EXT.
-
-           IF INPUT-GREGORIAN-EXT NOT = "20010226" THEN
-               ADD 1           TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "ES"
 
       *"SA" - function
            MOVE  "SA" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST124" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "20010226"    TO INPUT-GREGORIAN-EXT. 
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-GREGORIAN-EXT.
 
            IF OUTPUT-GREGORIAN-EXT NOT = "02262001" THEN
-               ADD 1           TO COMPLETION-STATUS.
-
-           CALL  "DATE2" USING FUNCTION-TYPE,
-                               INPUT-GREGORIAN-EXT,
-                               INPUT-GREGORIAN-EXT.
-
-           IF INPUT-GREGORIAN-EXT NOT = "02262001" THEN
-               ADD 1           TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "SA"
 
       *"SE" - function
            MOVE  "SE" TO FUNCTION-TYPE.
+	   MOVE "DATE2-TEST126" TO TEST-NAME.
+	   PERFORM DATE-INIT-TEST.
            MOVE  "20010226"    TO INPUT-GREGORIAN-EXT. 
            CALL  "DATE2" USING FUNCTION-TYPE,
                                INPUT-GREGORIAN-EXT,
                                OUTPUT-GREGORIAN-EXT.
 
            IF OUTPUT-GREGORIAN-EXT NOT = "26022001" THEN
-               ADD 1           TO COMPLETION-STATUS.
-
-           CALL  "DATE2" USING FUNCTION-TYPE,
-                               INPUT-GREGORIAN-EXT,
-                               INPUT-GREGORIAN-EXT.
-
-           IF INPUT-GREGORIAN-EXT NOT = "26022001" THEN
-               ADD 1           TO COMPLETION-STATUS.
+               PERFORM DATE-REPORT-ERROR.
       *END "SE"
 
-           IF  COMPLETION-STATUS = 0 THEN
-                DISPLAY "DATE completion successful."
-           ELSE 
-                DISPLAY "DATE failed.".
+000000*================================================================
+       DATE-HELPER SECTION.
 
+       DATE-INIT-TEST.
+	   ADD 1 TO TEST-CNT.
+
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+
+           MOVE  SPACES        TO OUTPUT-JULIAN-DATE.
+           MOVE  SPACES        TO OUTPUT-GREGORIAN-DATE.
+           MOVE  SPACES        TO OUTPUT-JULIAN-EXT.
+           MOVE  SPACES        TO OUTPUT-GREGORIAN-EXT.
+
+           MOVE  LOW-VALUES    TO DAY-DIFFERENCE.
+           MOVE  SPACES        TO ENDING-JULIAN-DATE. 
+           MOVE  SPACES        TO ENDING-GREGORIAN-DATE. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
+           MOVE  0             TO DOW-BIN. 
+
+       DATE-REPORT-ERROR.
+	   ADD 1 TO TEST-ERROR-CNT.
+	   DISPLAY "DATEx FAILED ",
+		   " TEST=[", TEST-NAME, "] ",
+		   " FUNC=[", FUNCTION-TYPE, "] ".
+
+000000*================================================================
+       9999-DONE SECTION.
+       9999-exit.
             EXIT PROGRAM.
+       9999-stop.
             STOP RUN.
   
 006600**   End of wl0016.wcb 

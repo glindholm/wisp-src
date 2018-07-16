@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*---
 rlaio.c
 
@@ -39,7 +53,6 @@ deleted records will be nulled out.
 #define O_BINARY 0
 #endif
 
-static char sccsid[]="@(#)rlaio.c	1.5 3/19/94";
 
 #define	RECORD_LEN	(kfb->_record_len)
 #define	ACTUAL_LEN	(RECORD_LEN + 1)
@@ -685,8 +698,8 @@ static void rel_commit(int fh)
 /*
 **	History:
 **	$Log: rlaio.c,v $
-**	Revision 1.9.2.2.2.1  2002/11/12 15:56:34  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.15  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.14  2002/10/24 14:20:35  gsl
 **	Make globals unique

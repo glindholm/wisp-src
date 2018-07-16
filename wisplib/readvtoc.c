@@ -1,126 +1,46 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
-
-#include "idsistd.h"
-#include "werrlog.h"
-#include "movebin.h"
-#include "wfname.h"
-#include "wisplib.h"
-
-#define		ROUTINE		52000
-
-#ifdef VMS
-#include <descrip.h>
-#include <rmsdef.h>
-#include "wfiles.h"
-#include "wcommon.h"
-
-
-void READVTOC(char *option, char *lib, char *vol, int4 *start, int4 *count, char *rcvr, int4 *rtrn_code, int4 *total)
-{											
- 	char *l_rcvr, *ptr;                                        
-	int4 l_start, l_count, find_status, l_rtrn_code;
-	int  i, j, k, c;
-	char *context;
-	int4 mode;
-	char template[COB_FILEPATH_LEN], result[256];
-#include "readvtoc.d"
-
-	werrlog(ERRORCODE(1),*option,lib,vol,0,0,0,0,0);				/* Say we are here.			*/
-
-	i = 0;
-	j = 0;
-                      
-	l_start = *start;								/* Get local copies.			*/
-	l_count = *count;
-	l_rcvr  = rcvr;
-
-	wswap(&l_start);								/* Swap the word order.			*/
-	wswap(&l_count);
-
-	mode = 0;
-	mode |= IS_LIB;
-	
-	ptr = wfname( &mode, vol, lib, "        ", template );				/* Let wfname make a name for itself.	*/
-
-	*ptr++ = '*';									/* Add on wild cards.			*/
-	*ptr++ = '.';
-	*ptr++ = '*';
-	*ptr++ = ';';
-	*ptr++ = '*';
-
-	i = 0;
-	c = 0;                                                         
-	context = 0;
-                                                     
-	do
-	{             
-		find_status = LIB$FIND_FILE(&t_desc, &r_desc, &context, 0, 0, 0, 0);	/* Is there anybody out there.		*/
-
-		if (find_status == RMS$_NORMAL)						/* Success ?				*/
-		{
- 			c++;								/* Bump up the count.			*/
-	      		memset(l_rcvr, ' ', 8);						/* Clear out 8 characters.		*/
-			j = strpos(result, "]");					/* Find this character.			*/
-			j++;								/* Bump up to the next character.	*/
-			if (j != -1)							/* Is there a filename ?		*/
-			{
-				k = 0;							/* Initial character count.		*/
-				do
-				{
-					*l_rcvr++ = result[j++];			/* Move a character.			*/
-					k++;						/* And up the count.			*/
-				} while ((k < 8) && (result[j] != '.'));		/* Until the '.' or 8 characters.	*/
-			}
-			k = 8 - k;							/* We may not have moved 8 characters.	*/
-			l_rcvr += k;							/* Maybe we gotta update the pointer.	*/
-		}                                                                                                                 
-
-		i++;									/* Up the iteration count.		*/ 
-	} while ((find_status == RMS$_NORMAL) && (i < l_count));			/* While there's more files and they	*/
-											/* Want more files.			*/
-
-	if ((find_status == RMS$_NORMAL) || (find_status == RMS$_NMF))			/* Did we complete normally ?		*/
-	{
-		l_rtrn_code = (c > 0) ? 0 : 24;						/* Yup.  Set the return code.		*/
-	}
-	else
-	{
-		l_rtrn_code = 24;							/* Nope.  Set the return code.		*/
-	}
-
-	wswap(&c); 									/* Swap the word order.			*/
- 	*total = c;									/* Set the arg.				*/
-
-	wswap(&l_rtrn_code);								/* Swap the word order.			*/
-	*rtrn_code = l_rtrn_code;							/* And set the argument.		*/
-
-	find_status = LIB$FIND_FILE_END(&context);					/* And free the context area.		*/
-
-}
-#endif	/* VMS */
-
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+#include "idsistd.h"
+#include "werrlog.h"
+#include "wfname.h"
+#include "wisplib.h"
+#include "vssubs.h"
+#include "wmalloc.h"
+
+
 
 static int4 do_vtoc_find( char *lib, char *vol, int4 *start, int4 *count, char *rcvr, int4 *total);
 
 void READVTOC(char *option, char *lib, char *vol, int4 *start, int4 *count, char *rcvr, int4 *rtrn_code, int4 *total)
 {
 
-	werrlog(ERRORCODE(1),*option,lib,vol,0,0,0,0,0);				/* Say we are here.			*/
+	WL_wtrace("READVTOC","ENTRY","Entry into READVTOC(%c, %8.8s, %6.6s, ...)",
+		*option,lib,vol);
 
 	switch( toupper(*option) )
 	{
@@ -130,14 +50,11 @@ void READVTOC(char *option, char *lib, char *vol, int4 *start, int4 *count, char
 
 			do_vtoc_find( lib, vol, start, count, rcvr, total );
 
-			GETBIN(&x_count, count, 4);
-			GETBIN(&x_total, total, 4);
-			wswap(&x_count);
-			wswap(&x_total);
+			x_count = WL_get_swap(count);
+			x_total = WL_get_swap(total);
 
 			x_rc =  (x_count > 0) ? 0 : 24;
-			PUTBIN(rtrn_code, &x_rc, 4);
-			wswap( rtrn_code );
+			WL_put_swap(rtrn_code, x_rc);
 
 			wtrace("READVTOC","RETURN","Count=%ld Total=%ld RC=%ld.",
 						(long)x_count, (long)x_total, (long)x_rc);
@@ -145,16 +62,16 @@ void READVTOC(char *option, char *lib, char *vol, int4 *start, int4 *count, char
 		}
 		case 'L':
 		case 'V':
-			werrlog(ERRORCODE(2),*option,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(52002),*option,0,0,0,0,0,0,0);
 			break;
 		case 'G':
 		case 'X':
 		case '#':
 		case 'D':
-			werrlog(ERRORCODE(4),*option,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(52004),*option,0,0,0,0,0,0,0);
 			break;
 		default:
-			werrlog(ERRORCODE(4),*option,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(52004),*option,0,0,0,0,0,0,0);
 			break;
 	}
 }											
@@ -165,18 +82,14 @@ static int4 do_vtoc_find( char *lib, char *vol, int4 *start, int4 *count, char *
 	char *br, *dr;								/* Pointers to big_rcvr and destination rcvr.	*/
 	int	i;
 	int4	l_count;							/* Local copy of "count" variable.		*/
-	int4	argcnt;
 
-	GETBIN(&l_count, count, 4);						/* Get maximum number of file names to recieve.	*/
-	wswap( &l_count );							/* Swap bytes so l_count is correct for C.	*/
-	big_rcvr = malloc( (int)(22 * l_count) );				/* Allocate memory for FIND() results.		*/
+	l_count = WL_get_swap(count);
+	big_rcvr = wisp_malloc( (int)(22 * l_count) );				/* Allocate memory for FIND() results.		*/
 
-	argcnt = 8;
-	wvaset(&argcnt);
+	WL_set_va_count(8);
 	FIND( "?       ", lib, vol, start, count, big_rcvr, total, "A" );	/* Get "count" number of file names from FIND().*/
 
-	GETBIN(&l_count, count, 4);						/* Get actual number of file names returned.	*/
-	wswap( &l_count );							/* Swap bytes so l_count is correct for C.	*/
+	l_count = WL_get_swap(count);						/* Get actual number of file names returned.	*/
 	br = big_rcvr + 14;							/* File name begins at character position 14.	*/
 	dr = rcvr;								/* Set destination reciever to first position.	*/
 	for( i = 0 ; i < l_count ; ++i )					/* For each file name returned from FIND().	*/
@@ -191,11 +104,34 @@ static int4 do_vtoc_find( char *lib, char *vol, int4 *start, int4 *count, char *
 	return l_count;
 }
 
-#endif	/* unix || MSDOS || WIN32 */
 
 /*
 **	History:
 **	$Log: readvtoc.c,v $
+**	Revision 1.22  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.21  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.20  2002/12/10 20:54:12  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.19  2002/12/09 21:09:30  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.18  2002/07/12 17:00:59  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.17  2002/07/02 21:15:28  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.16  2002/06/25 15:21:53  gsl
+**	Change to use wmalloc()
+**	
+**	Revision 1.15  2002/06/21 03:10:39  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.14  1998/07/31 19:43:37  gsl
 **	Changed NAME_LENGTH to COB_FILEPATH_LEN
 **	

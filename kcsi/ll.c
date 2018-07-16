@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 Standard Linked list functions.
 An LL struct should be declared as the first element
@@ -9,7 +23,6 @@ to these functions.
 #include <stdio.h>
 #include "ll.h"
 
-static char sccs_id[]="@(#)ll.c	1.5 1/13/93";
 
 /*----
 Atomic functions for moving backward and forward thru a linked list.
@@ -55,7 +68,7 @@ void *ll_add_next(LL *base, LL *l_new)
 		{
 		return((void*) l_new);
 		}
-	if(below = NEXT(base))
+	if((below = NEXT(base)) != NULL)
 	    PREV(below) = l_new;
 	NEXT(l_new) = NEXT(base);
 	NEXT(base) = l_new;
@@ -75,7 +88,7 @@ void *ll_add_prev(LL *base, LL *l_new)
 		{
 		return((void*) l_new);
 		}
-	if(above = PREV(base))
+	if((above = PREV(base)) != NULL)
 	    NEXT(above) = l_new;
 	PREV(l_new) = PREV(base);
 	PREV(base) = l_new;
@@ -89,7 +102,7 @@ Find the last entry in the list or NULL if none
 void *ll_last(LL *base)
 {
     LLTYPE *newbase;
-    while(newbase = (LLTYPE*) ll_next(base))
+    while((newbase = (LLTYPE*) ll_next(base)) != NULL)
 	base = newbase;
     return((void*)base);
 }
@@ -101,7 +114,7 @@ Returns the first entry in the list or NULL if none
 void *ll_first(LL *base)
 {
     LLTYPE *newbase;
-    while(newbase = (LLTYPE*) ll_prev(base))
+    while((newbase = (LLTYPE*) ll_prev(base)) != NULL)
 	base = newbase;
     return((void*)base);
 }
@@ -205,7 +218,7 @@ void *ll_bubble_sort(LL *base, int (*compare) (/* ??? */))
 	{
 	changing = 0;
 	f1 = base;
-	while( f2 = (LLTYPE*) ll_next(f1))
+	while( (f2 = (LLTYPE*) ll_next(f1)) != NULL )
 	    {
 	    if( (*compare)(f1,f2) != 0)
 		{
@@ -340,8 +353,11 @@ void *ll_unlink(LL *base)
 /*
 **	History:
 **	$Log: ll.c,v $
-**	Revision 1.5.2.1  2002/11/12 15:56:30  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.8  2003/02/20 19:29:55  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.7  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.6  2002/10/17 17:56:18  gsl
 **	Rename variables new to l_new

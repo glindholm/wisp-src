@@ -14,13 +14,19 @@
 #ifndef MEMCHECK__HPP
 #define MEMCHECK__HPP
 
+// Classes
+// (none)
+
+// Definitions and subprograms
+// (none)
+
 #endif
 
 //
 //	History:
 //	$Log: memcheck.hpp,v $
-//	Revision 1.8.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.9  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.8  1998/08/31 19:13:55  gsl
 //	drcs update

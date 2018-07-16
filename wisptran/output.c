@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		output.c
@@ -62,7 +75,6 @@ struct tput_context_struct
 	char		out_line[SIZEOF_OUT_LINE];			/* Output line buffer				*/
 	int		out_column;					/* Column of last written char in out_line	*/
 	int		lint;						/* Does line contain only lint ?		*/
-	int		write_comments;					/* Do we write out comments and lint		*/
 };
 typedef struct tput_context_struct tput_context;
 
@@ -206,7 +218,7 @@ int tput_block ( char *the_block )
 
 	for(;;)
 	{
-		if (ptr = strchr(line,'\n'))
+		if ((ptr = strchr(line,'\n')))
 		{
 			size = ptr-line;
 			memcpy(a_line,line,size);
@@ -375,7 +387,7 @@ int tput_line_at ( int col, char *line, char *p0, char *p1, char *p2, char *p3, 
 		offset_statement(col-12,the_statement,1);
 	}
 
-	if (the_node = first_node_with_token(the_statement))
+	if ((the_node = first_node_with_token(the_statement)))
 	{
 		/*
 		**	Mark the first token with a fixed column
@@ -383,7 +395,7 @@ int tput_line_at ( int col, char *line, char *p0, char *p1, char *p2, char *p3, 
 		the_node->token->column_fixed = 1;
 		tput_statement(col+4, the_statement);
 	}
-	else if (comments)
+	else 
 	{
 		/*
 		**	Blank line
@@ -430,12 +442,12 @@ int tput_line ( char *line, char *p0, char *p1, char *p2, char *p3, char *p4, ch
 
 	the_statement = make_statement(the_line, tput_use_context());
 
-	if (the_node = first_node_with_token(the_statement))
+	if ((the_node = first_node_with_token(the_statement)))
 	{
 		the_node->token->column_fixed = 1;
 		tput_statement(12, the_statement);
 	}
-	else if (comments)
+	else 
 	{
 		/*
 		**	Blank line
@@ -733,8 +745,7 @@ static cob_file *override_cobfile (void)
 **	tokptr		Point to the token to write out.
 **
 **	Globals:
-**	comments	Flag if comments are to be written out.
-**	copylib		Flag if copylibs are being generated.
+**	opt_gen_copylib		Flag if copylibs are being generated.
 **
 **	Return:		None
 **
@@ -777,7 +788,6 @@ int tput_token ( int mincol, TOKEN *tokptr )
 		main_ctx.last_line = 0;
 		main_ctx.the_cobfile = main_cob_context->outfile;
 		main_ctx.lint = 1;
-		main_ctx.write_comments = comments;
 	}
 
 	if (!tokptr)
@@ -798,7 +808,6 @@ int tput_token ( int mincol, TOKEN *tokptr )
 			override_ctx.last_line = 0;
 			override_ctx.the_cobfile = override_cobfile();
 			override_ctx.lint = 1;
-			override_ctx.write_comments = comments;
 			use_main = 0;
 
 			return(0);
@@ -824,7 +833,7 @@ int tput_token ( int mincol, TOKEN *tokptr )
 
 		context = (cob_file_context *)tokptr->context;			/* Token doesn't known struct of context	*/
 
-		if (copylib && context && context->outfile && context->outfile != main_ctx.the_cobfile)
+		if (opt_gen_copylib && context && context->outfile && context->outfile != main_ctx.the_cobfile)
 		{
 			/*
 			**	If copybooks are being generated and the output file changes then flush 
@@ -926,8 +935,6 @@ static int x_tput_token ( tput_context *ctx, int mincol, TOKEN *tokptr )
 	}
 
 	if (!tokptr || !tokptr->data) return(0);				/* Empty token.					*/
-
-	if (!ctx->write_comments && COMMENT==tokptr->type) return(0);		/* If not writting comments return.		*/
 
 	if (tokptr->line && tokptr->line != ctx->last_line)			/* Changed lines, write out buffer		*/
 	{
@@ -1060,7 +1067,7 @@ static int x_tput_token ( tput_context *ctx, int mincol, TOKEN *tokptr )
 		{
 			/* Don't add a space */
 		}
-		else if ( ('"'==last_char) || (')'==last_char) || ('"'==next_char) )
+		else if ( (DOUBLE_QUOTE==last_char) || (')'==last_char) || (DOUBLE_QUOTE==next_char) )
 		{
 			ctx->out_column++;
 		}
@@ -1082,11 +1089,11 @@ static int x_tput_token ( tput_context *ctx, int mincol, TOKEN *tokptr )
 			/* Always add a space after an operator */
 			ctx->out_column++;
 		}
-		else if (isalnum(last_char))					/* If last char was alphanumeric		*/
+		else if (isalnum((int)last_char))				/* If last char was alphanumeric		*/
 		{
 			ctx->out_column++;					/* Add a space					*/
 		}
-		else if (NUMBER==tokptr->type || isalnum(next_char))		/* If this char is alphanumeric			*/
+		else if (NUMBER==tokptr->type || isalnum((int)next_char))	/* If this char is alphanumeric			*/
 		{
 			ctx->out_column++;
 		}
@@ -1187,11 +1194,10 @@ static int x_tput_token ( tput_context *ctx, int mincol, TOKEN *tokptr )
 */
 static int x_tput_flush_ctx ( tput_context *ctx )
 {
-	if (ctx->out_column && (!ctx->lint || ctx->write_comments))
+	if (ctx->out_column)
 	{
 		/*
-		**	If something to write out and it is not lint or lint (write_comments) are allowed
-		**	then write it out. 
+		**	If something to write out then write it out. 
 		**
 		**	NOTE:	Actual COMMENT tokens were filtered out earlier, this will filter out
 		**		blank lines or lines that contain only LINECODE, MODCODE etc.
@@ -1308,7 +1314,6 @@ void split_token_to_dcl_file ( int mincol, TOKEN *tokptr )
 		split_ctx.last_line = 0;
 		split_ctx.the_cobfile = dcl_file_ptr;
 		split_ctx.lint = 1;
-		split_ctx.write_comments = comments;
 	}
 
 	if (!tokptr || mincol < 0) 
@@ -1500,7 +1505,6 @@ void split_token_to_dtp_file ( int mincol, TOKEN *tokptr )
 		split_ctx.last_line = 0;
 		split_ctx.the_cobfile = dtp_file_ptr;
 		split_ctx.lint = 1;
-		split_ctx.write_comments = comments;
 	}
 
 	if (!tokptr || mincol < 0) 
@@ -1617,6 +1621,25 @@ write_the_token:
 /*
 **	History:
 **	$Log: output.c,v $
+**	Revision 1.19  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.18  2003/02/04 18:43:32  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.17  2003/02/04 18:02:20  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.16  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.15  2002/10/14 19:08:01  gsl
+**	Remove the -c options as obsolete since comments are now always
+**	included in the output.
+**	
+**	Revision 1.14  2002/08/12 20:13:52  gsl
+**	quotes and literals
+**	
 **	Revision 1.13  2001/10/18 15:13:52  gsl
 **	Change to treat a COMMENT token of zero lenght as a blank line
 **	

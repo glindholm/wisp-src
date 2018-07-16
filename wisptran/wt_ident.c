@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995-2001 Neomedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #define EXT extern
 #include "wisp.h"
@@ -11,7 +32,6 @@ static char rcsid[]="$Id:$";
 #include "statment.h"
 #include "ring.h"
 
-extern int 	symbzero;
 extern char	decimal_is;
 
 char	*figcon1_ring = 0;
@@ -21,7 +41,13 @@ struct	figcon1_struct
 	char	name[40];
 } figcon1_item;
 
+
+static int have_finished_figcons = 0; 
+
 static int figcon1_compare(struct figcon1_struct *p1, struct figcon1_struct *p2);
+static void init_figcons(void);
+static void finish_figcons(NODE hold_special);
+
 
 
 /*
@@ -89,7 +115,7 @@ NODE identification_division(NODE the_statement)
 			curr_node = the_statement->next;
 			strcpy(prog_id,token_data(curr_node->token));
 			write_tlog(curr_node->token, "WISP",'I',"PROGRAMID", "Found PROGRAM-ID %s.",prog_id);
-			if (do_xtab)
+			if (opt_xtab)
 			{
 				xtab_log(context_infile_name(curr_node->token->context), 
 					 curr_node->token->line, "PROGRAM-ID", prog_id);
@@ -100,7 +126,7 @@ NODE identification_division(NODE the_statement)
 					   "Ensure PROGRAM-ID %s is unique in first 8 characters.",prog_id);
 			}
 			
-			if (init_data)
+			if (opt_init_data)
 			{
 				tie_down(curr_node,make_clause(12, "IS INITIAL PROGRAM", NULL));
 			}
@@ -208,7 +234,6 @@ NODE environment_division(NODE the_statement)
 		write_log("WISP",'I',"ENVIRONDIV","Processing ENVIRONMENT DIVISION.");
 		division = ENVIRONMENT_DIVISION;
 
-		if (!comments) tput_blank();
 		tput_statement(12,the_statement);
 		free_statement(the_statement);
 
@@ -280,7 +305,7 @@ NODE configuration_section(NODE the_statement)
 	NODE	curr_node, temp_node;
 	NODE	next_statement;
 	NODE	special_statement, figcon_statement;
-	NODE	hold_special;
+	NODE	hold_special;	/* This is a pointer into special_statement */
 	int	rc;
 
 	if (eq_token(the_statement->next->token,KEYWORD,"CONFIGURATION"))
@@ -316,10 +341,20 @@ NODE configuration_section(NODE the_statement)
 			the_statement = get_statement();
 		}
 
+		/*
+		**	SOURCE-COMPUTER. [WANG-VS [with DEBUGGING MODE].]
+		**	OBJECT-COMPUTER. [WANG-VS [MEMORY size {int} {WORDS|CHARACTERS|MODULES}]
+		**				  [program collating SEQUENCE is {alphabet-name}].]
+		**
+		**	Note: MEMORY and SEQUENCE clauses are treated as a comments by the compiler.
+		*/
 		if (eq_token(the_statement->next->token,KEYWORD,"SOURCE-COMPUTER") ||
 		    eq_token(the_statement->next->token,KEYWORD,"OBJECT-COMPUTER")    )
 		{
-			tput_statement(12,the_statement);
+			if (opt_keep_config_computer)
+			{
+				tput_statement(12,the_statement);
+			}
 			free_statement(the_statement);
 
 			the_statement = get_statement();
@@ -330,25 +365,26 @@ NODE configuration_section(NODE the_statement)
 				continue;
 			}
 
-			if (vax_cobol)
-				edit_token(curr_node->token,"VAX");
-			else if (dos_cobol)
-				edit_token(curr_node->token,"MSDOS");
-			else if (nt_cobol)
-				edit_token(curr_node->token,"WINNT");
-			else
-				edit_token(curr_node->token,"UNIX");
-
-			curr_node = curr_node->next;
-			if (IDENTIFIER == curr_node->token->type)
+			if (opt_translate_config_computer)
 			{
-				/*
-				**	This is to handle 2 part names like "WANG VS-1000".
-				*/
-				cleartoknode(curr_node);
+#ifdef WIN32
+				edit_token(curr_node->token,"WINNT");
+#else
+				edit_token(curr_node->token,"UNIX");
+#endif
+				curr_node = curr_node->next;
+				if (IDENTIFIER == curr_node->token->type)
+				{
+					/*
+					**	This is to handle 2 part names like "WANG VS-1000".
+					*/
+					cleartoknode(curr_node);
+				}
 			}
-
-			tput_statement(12,the_statement);
+			if (opt_keep_config_computer)
+			{
+				tput_statement(12,the_statement);
+			}
 			free_statement(the_statement);
 		}
 		else if (eq_token(the_statement->next->token,KEYWORD,"SPECIAL-NAMES"))
@@ -445,6 +481,7 @@ NODE configuration_section(NODE the_statement)
 			}
 
 			tput_leading_fluff(the_statement);
+			depunct_statement(the_statement);
 
 			while (PERIOD != curr_node->token->type)
 			{
@@ -518,8 +555,8 @@ NODE configuration_section(NODE the_statement)
 				{
 					if (!figcon1_ring)
 					{
-						if( rc = ring_open(&figcon1_ring,sizeof(struct figcon1_struct),25,25,
-									figcon1_compare,1) )
+						if( (rc = ring_open(&figcon1_ring,sizeof(struct figcon1_struct),25,25,
+									figcon1_compare,1)) )
 						{
 							write_log("WISP",'F',"RINGOPEN",
 								"Unable to open ring [figcon1_ring] rc=%d [%s]",rc,ring_error(rc));
@@ -528,19 +565,20 @@ NODE configuration_section(NODE the_statement)
 					}
 					strcpy(figcon1_item.name,token_data(temp_node->token));
 					figcon1_item.value = figvalue;
-					if (rc = ring_add(figcon1_ring,0,&figcon1_item)) /* Store the figcon into the ring	*/
+					if ((rc = ring_add(figcon1_ring,0,&figcon1_item))) /* Store the figcon into the ring	*/
 					{
 						write_log("WISP",'F',"RINGADD",
 							"Unable to add to ring [figcon1_ring] rc=%d [%s]",rc,ring_error(rc));
 						exit_with_err();
 					}
 				
-					if (!symbzero) figvalue++;		/* Add 1 to correct collating sequence	*/
-					tput_line_at(12, "SYMBOLIC %s IS %d",token_data(temp_node->token),figvalue);
+					if (!opt_symbzero) figvalue++;		/* Add 1 to correct collating sequence	*/
+					tput_line_at(12, "SYMBOLIC %s IS %d,",token_data(temp_node->token),figvalue);
 				}
 				tput_statement(8,curr_node->down);
 				curr_node = curr_node->next;
 			}
+			finish_figcons(hold_special);
 
 			free_statement(the_statement);
 		}
@@ -552,20 +590,10 @@ NODE configuration_section(NODE the_statement)
 			**	Found end of CONFIGURATION SECTION.
 			*/
 
-			init_figcons();						/* Write canned figcons, it not already done	*/
-			finish_figcons();
-
-			if (hold_special)					/* Write trailing SPECIAL-NAMES statement	*/
+			if (!have_finished_figcons)
 			{
-				if (PERIOD != hold_special->token->type)
-				{
-					tput_flush();
-				}
-				tput_statement(12,hold_special);
-			}
-			else
-			{
-				tput_clause(12, ".");
+				init_figcons();					/* Write canned figcons, it not already done	*/
+				finish_figcons(hold_special);
 			}
 
 			if (special_statement)
@@ -617,7 +645,7 @@ int isafigcon1(const char* item)
 	return(!rc);
 }
 
-void init_figcons(void)
+static void init_figcons(void)
 {
 	static int first = 1;
 
@@ -632,7 +660,7 @@ void init_figcons(void)
 	use_copy = 0;									/* Use a "COPY" statement		*/
 	output_copy = 0;								/* Write the copy code.			*/
 
-	if (symbzero) 	strcpy(COPY_SYMBOLICS,"wc001x05.cpy");
+	if (opt_symbzero) 	strcpy(COPY_SYMBOLICS,"wc001x05.cpy");
 	else    	strcpy(COPY_SYMBOLICS,"wc001005.cpy");
 
 	write_log("WISP",'I',"INITFIGCON","Creating default FIGURATIVE-CONSTANTS.");
@@ -640,6 +668,11 @@ void init_figcons(void)
 	if (!wrote_special_names)
 	{
 		tput_line_at(8, "SPECIAL-NAMES.");					/* Output special names section		*/
+	}
+
+	if (mf_cobol && opt_sign_trailing_separate)
+	{
+		tput_line_at(12, "NUMERIC SIGN IS TRAILING SEPARATE");
 	}
 
 	if ( acn_cobol)
@@ -652,11 +685,11 @@ void init_figcons(void)
 		tput_line_at(12, "SCREEN CONTROL IS WISP-SCREEN-CONTROL");
 	}
 	
-	if ( writing_cob_main() || !copylib )						/* If not writing to a copybook file	*/
+	if ( writing_cob_main() || !opt_gen_copylib )					/* If not writing to a copybook file	*/
 	{
 		tput_line_at(12,"COPY \"%s\".",COPY_SYMBOLICS);				/* Write the copy statement		*/
 		use_copy = 1;
-		if ( access(COPY_SYMBOLICS,0) != 0 )					/* If copybook doesn't exist ...	*/
+		if ( opt_forcegenwispcpy || access(COPY_SYMBOLICS,0) != 0 )					/* If copybook doesn't exist ...	*/
 		{
 			output_copy = 1;
 			cob_file_ptr = open_cob_file(COPY_SYMBOLICS,FOR_OUTPUT,1);	/* open it and start writing.		*/
@@ -675,7 +708,7 @@ void init_figcons(void)
 		tput_scomment("*******          WISP SYMBOLICS         *******");
 		tput_scomment("***********************************************");
 
-		if (symbzero)	offset=0;
+		if (opt_symbzero)	offset=0;
 		else		offset=1;
 
 		tput_line_at(12, "SYMBOLIC WISP-SCWCC    IS %d",(160+offset));
@@ -698,27 +731,77 @@ void init_figcons(void)
 
 }
 
-void finish_figcons(void)
+static void finish_figcons(NODE hold_special)
 {
-	static	int	first = 1;
 	int	offset;
 
-	if (!first) return;
-	first = 0;
+	if (have_finished_figcons) return;
 
-	if (symbzero)	offset=0;
+	if (opt_symbzero)	offset=0;
 	else		offset=1;
 
 	tput_line(	 "           SYMBOLIC EFFAC IS %d",(140+offset));
+
+	if (hold_special)	/* Write trailing SPECIAL-NAMES statement */
+	{
+		if (PERIOD != hold_special->token->type)
+		{
+			tput_flush();
+		}
+		tput_statement(12,hold_special);
+	}
+	else
+	{
+		tput_clause(12, ".");
+	}
+
 	write_log("WISP",'I',"FINFIGCON","Finish FIGURATIVE-CONSTANTS Analysis.");
+
+	have_finished_figcons = 1;
 }
 
 /*
 **	History:
 **	$Log: wt_ident.c,v $
-**	Revision 1.18  2001/09/13 18:12:23  gsl
-**	2001
+**	Revision 1.29  2003/03/03 22:08:40  gsl
+**	rework the options and OPTION file handling
 **	
+**	Revision 1.28  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.27  2003/02/04 18:02:20  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.26  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.25  2003/01/15 20:13:12  gsl
+**	fix #SIGN_TRILING_SEPARATE
+**	
+**	Revision 1.24  2003/01/15 18:23:33  gsl
+**	add #SIGN_TRAILING_SEPARATE support for MF
+**	
+**	Revision 1.23  2002/10/14 19:08:02  gsl
+**	Remove the -c options as obsolete since comments are now always
+**	included in the output.
+**	
+**	Revision 1.22  2002/06/21 20:49:33  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.21  2002/06/20 22:56:44  gsl
+**	remove obsolete code
+**	
+**	Revision 1.20  2002/05/22 20:25:59  gsl
+**	#KEEP_CONFIG_COMPUTER and #TRANSLATE_CONFIG_COMPUTER options
+**	
+**	Revision 1.19  2002/05/16 21:50:13  gsl
+**	Optional OBJECT-COMPUTER SOURCE-COMPUTER logic
+**	Rework end-of-figcons logic
+**	depunct_statement() to remove commas from figcons
+**	
+**	Revision 1.18  2001-09-13 14:12:23-04  gsl
+**	2001
+**
 **	Revision 1.17  2001-09-13 10:37:52-04  gsl
 **	Add xtab_log of the PROGRAMID
 **

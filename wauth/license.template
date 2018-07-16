@@ -31,6 +31,10 @@
 
                   License Type  <LICENSETYPE>
 
+                Version Number  <VERSION>
+
+              Application Code  <APPCODE>
+
                   License Date  <LICENSEDATE>
 
                Expiration Date  <EXPIRATION>
@@ -46,8 +50,6 @@
 
         To license a machine for the WISP runtime run the program "wlicense"
         and enter the LICENSE KEY as written above.
-
-
 
 
         If you have any questions, please contact NeoMedia technical

@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 
@@ -40,7 +55,6 @@ static int vse_ins_save_col;
 
 static char number_field[7], incr_field[7], start_field[17], end_field[17];
 
-static char max_start_field[7], min_start_field[7];
 static char renum_first_line[80];
 
 static VSESCR_FLDS(ask_renum_flds) = {
@@ -60,6 +74,9 @@ static VSESCR_FLDS(ask_renum_flds) = {
 
 {LASTITEM}
 };
+
+#ifdef NOT_USED
+static char max_start_field[7], min_start_field[7];
 static VSESCR_FLDS(ask_renum_startl_flds) = {
 {LEN(0) ROW(1)  COL(2) BRIGHT("Note")},
 {LEN(0) ROW(1)  COL(7) VALUE("-  The starting line must be between ")},
@@ -102,7 +119,7 @@ static VSESCR_FLDS(ask_renum_incre_flds) = {
 
 {LASTITEM}
 };
-
+#endif /* NOT_USED */
 
 void vse_ed_ins(void)
 {
@@ -144,8 +161,6 @@ void vse_ed_ins(void)
 
 static void vse_ed_ins_dispatch(void)
 {
-	extern char ed_oa[];
-	
 	switch(vse_edit_pick)
 	{
 	      case 1:
@@ -371,6 +386,18 @@ static void vse_ed_ins_col(void)
 /*
 **	History:
 **	$Log: vsedins.c,v $
+**	Revision 1.15  2003/02/20 19:29:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.14  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.13  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.12  2002/08/01 15:57:51  gsl
+**	type warnings
+**	
 **	Revision 1.11  1996/09/03 22:24:01  gsl
 **	drcs update
 **	

@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /** 
  ** program: wdelwrk
@@ -19,62 +34,72 @@ static char rcsid[]="$Id:$";
  ** Copyright 1990  International Digital Scientific, Inc.
  **
  **/
-static char *idsi_copyright = "(c)1993 International Digital Scientific, Inc.";
+#ifdef unix
 
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-#define EXT_FILEXT
 #include "filext.h"
 #include "wcommon.h"
 #include "wperson.h"
 #include "intdef.h"
+#include "wfname.h"
+#include "wisplib.h"
 
-#ifdef VMS
-#include <descrip.h>
-#endif
-
-char *wfname();
-
-main()
+int main()
 {
-	char fullpath[100],tempfile[8],cmd[100];					/* work buffers */
+	char	fullpath[100],cmd[100];							/* work buffers */
 	char	def_workvol[6], def_worklib[8];
-	char *end_ptr;
-	int4 mode;
-#ifdef VMS
-	char command[200];
-$DESCRIPTOR(icom,command);								/* For DCL commands.			*/
-#endif
+	char	*end_ptr;
 	
-	initglbs("WDELWRK ");
+	WL_initglbs("WDELWRK ");
 
-	get_defs(DEFAULTS_WV,def_workvol);
-	get_defs(DEFAULTS_WL,def_worklib);
+	WL_get_defs(DEFAULTS_WV,def_workvol);
+	WL_get_defs(DEFAULTS_WL,def_worklib);
 
-	mode = IS_LIB;									/* Generate LIB name */
-	end_ptr = wfname(&mode,def_workvol,def_worklib,tempfile, fullpath);
+	end_ptr = WL_wanglib2path(def_workvol, def_worklib, fullpath);
 	*end_ptr = '\0';
 	end_ptr--;
 	if ( *end_ptr == '/' ) *end_ptr = '\0';
 
-#ifdef unix
 	sprintf(cmd,"rm -fr %s",fullpath);						/* build a command line */
 	system(cmd);									/* do it  */
-#endif
 
-#ifdef VMS
-	sprintf(command,"del %s*.*;*",fullpath);					/* Build a command line.		*/
-	lib$do_command(&icom);
-#endif
+	return 0;
 }	
 
-#ifdef unix
 #include "wutils.h"
-#endif
+#endif /* unix */
 
 /*
 **	History:
 **	$Log: wdelwrk.c,v $
+**	Revision 1.17  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.16  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.15  2002/07/12 19:10:23  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.14  2002/07/11 16:04:52  gsl
+**	Fix warnings
+**	
+**	Revision 1.13  2002/07/10 21:06:30  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.12  2002/06/28 04:02:57  gsl
+**	Work on native version of wfopen and wfname
+**	
+**	Revision 1.11  2002/06/26 01:42:47  gsl
+**	Remove VMS code
+**	
+**	Revision 1.10  2002/06/25 18:18:35  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
 **	Revision 1.9  1997/06/10 19:52:29  scass
 **	Changed long to int4 for portability.
 **	

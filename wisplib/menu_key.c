@@ -1,11 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990			*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #include <stdio.h>
 #include "idsistd.h"
@@ -13,11 +26,11 @@ static char rcsid[]="$Id:$";
 #include "menu.h"
 #include "video.h"
 
-int menu_exit_key = 0;									/* Global var. Key 0 -  Exit key value. */
+static int menu_exit_key = 0;									/* Global var. Key 0 -  Exit key value. */
 
 /* MENU_GET_KEY.C ... This routine accepts one parameters: 1 - Which global pfkey/action variable value to get; 		*/
 
-int menu_get_key(int key_num) 							/* Passed interger value.		*/
+int WL_menu_get_key(int key_num) 							/* Passed interger value.		*/
 {
 	if (!menu_exit_key) menu_exit_key = fn16_key;					/* Default to PF16.			*/
 	switch (key_num)
@@ -26,8 +39,8 @@ int menu_get_key(int key_num) 							/* Passed interger value.		*/
 		default:
 		{
 			char	buff[80];
-			sprintf(buff,"menu_get_key() - Unsupported menu key number: %d", key_num);
-			werr_message_box(buff);
+			sprintf(buff,"WL_menu_get_key() - Unsupported menu key number: %d", key_num);
+			WL_werr_message_box(buff);
  			break;
 		}
 	}
@@ -37,7 +50,7 @@ int menu_get_key(int key_num) 							/* Passed interger value.		*/
 /* MENU_SET_KEY.C ... This routine accepts two parameters: 1 - Which global pfkey/action variable to set; 2 - The value to be	*/
 /* 		      recognized for the specified pfkey/action.								*/
 
-int menu_set_key(int key_num, int value)					/* Passed interger values.		*/
+int WL_menu_set_key(int key_num, int value)					/* Passed interger values.		*/
 {
 	switch (key_num)
 	{
@@ -49,8 +62,8 @@ int menu_set_key(int key_num, int value)					/* Passed interger values.		*/
 		default:
 		{
 			char	buff[80];
-			sprintf(buff,"menu_set_key() - Unsupported menu key number: %d", key_num);
-			werr_message_box(buff);
+			sprintf(buff,"WL_menu_set_key() - Unsupported menu key number: %d", key_num);
+			WL_werr_message_box(buff);
  			break;
 		}
 	}
@@ -59,6 +72,12 @@ int menu_set_key(int key_num, int value)					/* Passed interger values.		*/
 /*
 **	History:
 **	$Log: menu_key.c,v $
+**	Revision 1.14  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.13  2002/07/10 21:05:20  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.12  1997/05/21 15:43:43  gsl
 **	Replace extern with include video.h
 **	

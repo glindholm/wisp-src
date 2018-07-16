@@ -1,15 +1,26 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
 */
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+
 
 /*
 **	File:		statment.h
@@ -32,6 +43,7 @@ extern NODE first_non_fluff_node(NODE the_tree);
 extern NODE first_node_with_token(NODE the_tree);
 extern NODE free_statement(NODE start);
 extern NODE delint_statement(NODE start);
+extern NODE depunct_statement(NODE start);
 extern NODE strip_statement(NODE start);
 extern NODE decontext_statement(NODE start);
 extern NODE get_sentence_tree(void);
@@ -47,9 +59,15 @@ extern NODE unhook_trailing_fluff(NODE the_tree);
 /*
 **	History:
 **	$Log: statment.h,v $
-**	Revision 1.7  1998/03/03 21:08:18  gsl
-**	updated
+**	Revision 1.9  2003/02/04 17:33:19  gsl
+**	fix copyright header
 **	
+**	Revision 1.8  2002/05/16 21:37:18  gsl
+**	add depunct_statement()
+**	
+**	Revision 1.7  1998-03-03 16:08:18-05  gsl
+**	updated
+**
 **	Revision 1.6  1998-02-10 15:08:54-05  gsl
 **	update with new routines
 **

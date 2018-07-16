@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		linkproc.c
 **
@@ -7,7 +26,7 @@ static char rcsid[]="$Id:$";
 **
 **	RCS:		$Source:$
 **
-**	Purpose:	???
+**	Purpose:	To run a shell script and pass parameters
 **
 **	Routines:	
 **	LINKPROC()
@@ -55,29 +74,20 @@ static char rcsid[]="$Id:$";
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <varargs.h>									/* Function uses variable params.	*/
+#include <stdarg.h>									/* Function uses variable params.	*/
 #include <errno.h>
+#include <string.h>
 
 #ifdef unix
 #include <ctype.h>
 #include <signal.h>
+#include <unistd.h>
 #endif
 
-#ifdef VMS
-#include <ssdef.h>
-#include <rmsdef.h>
-#include <climsgdef.h>
-#endif
-
-#ifdef MSDOS
-#include <process.h>
-#endif
 
 #include "idsistd.h"
 #include "vwang.h"
 #include "wdefines.h"
-#include "movebin.h"
-#include "werrlog.h"
 #include "wperson.h"
 #include "wfiles.h"
 #include "wcommon.h"
@@ -88,6 +98,13 @@ static char rcsid[]="$Id:$";
 #include "sharemem.h"
 #include "wexit.h"
 #include "wispcfg.h"
+#include "link.h"
+
+#include "werrlog.h"
+/*
+28502	%%LINKPROC-F-PARMCNT Invalid parmcnt %d
+28504	%%LINKPROC-F-EXEC Exec failed to %.60s [errno=%d]
+*/
 
 /*
 **	Structures and Defines
@@ -104,7 +121,6 @@ static char rcsid[]="$Id:$";
 #define WNOMEM 		60
 
 #define		MAX_LINKPROC_PARMS	8
-#define		ROUTINE		28500
 
 /*
 **	Globals and Externals
@@ -119,16 +135,14 @@ static char rcsid[]="$Id:$";
 */
 
 #ifdef unix
-static int fixerr();
+static int fixerr(int code);
 #endif
 
 
 
-void LINKPROC(va_alist)									/* There are a variable number of args.	*/
-va_dcl
+void LINKPROC(char* progname, char* libname, char* volname, short* parmcnt_ptr, ...)
 {
 	va_list		the_args;
-	char 		*progname,*libname,*volname;
 	short		parmcnt;
 	short		parmlen[MAX_LINKPROC_PARMS];
 	char		parmtext[MAX_LINKPROC_PARMS][256];
@@ -137,33 +151,27 @@ va_dcl
 	int4 		mode;
 	int 		i;
 	char 		*p;
-	int  		cpos;
 	int 		ftyp;
 	int		arg_count;
 	int4		l_retcode, l_compcode;
 	char		l_lib[9], l_vol[7];
+#ifdef WIN32
 	char		command[516];
+	int  		cpos;
+#endif
 #ifdef unix
 	int		pid;
-#endif
-#ifdef VMS
-	uint4		status;
-	uint4		vms_status;
-	int		savelevel;
 #endif
 
 	l_retcode = 0;
 	l_compcode = 0;
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
+	va_start(the_args, parmcnt_ptr);
+	arg_count = WL_va_count();
 
-	va_start(the_args);
-	arg_count = va_count(the_args);
-	va_start(the_args);
+	WL_wtrace("LINKPROC","ENTRY", "Proc=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] Count=[%d] args=%d",
+		progname, libname, volname, (int) *parmcnt_ptr,  arg_count);
 
-	progname = va_arg(the_args, char*);						/* Get the program name.		*/
-	libname = va_arg(the_args, char*);						/* Get the library name.		*/
-	volname = va_arg(the_args, char*);						/* Get the volume name.			*/
 
 	memset( l_vol, ' ', 6 );
 	memset( l_lib, ' ', 8 );
@@ -177,34 +185,28 @@ va_dcl
 	}
 	if (l_lib[0] == ' ') 
 	{
-		get_defs(DEFAULTS_PL,l_lib);						/* Get the PROGLIB default.		*/
+		WL_get_defs(DEFAULTS_PL,l_lib);						/* Get the PROGLIB default.		*/
 	}
 	if (l_vol[0] == ' ') 
 	{
-		get_defs(DEFAULTS_PV,l_vol);						/* Get the PROGVOL default.		*/
+		WL_get_defs(DEFAULTS_PV,l_vol);						/* Get the PROGVOL default.		*/
 	}
 	l_lib[8] = '\0';
 	l_vol[6] = '\0';
 
-	parmcnt = *(va_arg(the_args, short*));						/* Get the parameter count.		*/
+	parmcnt = *parmcnt_ptr;								/* Get the parameter count.		*/
 	arg_count -= 4;
 	if (parmcnt > MAX_LINKPROC_PARMS || parmcnt < 0)
 	{
-		werrlog(ERRORCODE(2),parmcnt,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(28502),parmcnt,0,0,0,0,0,0,0);
 		return;
 	}
 
-	mode = IS_SUBMIT;
-	p = wfname(&mode,l_vol,l_lib,progname,filespec);				/* expand the name 			*/
+	mode = 0;
+	p = WL_wfname(&mode,l_vol,l_lib,progname,filespec);				/* expand the name 			*/
 	*p = (char)0;
 
-#ifdef VMS
-	memset(command,' ',sizeof(command));						/* Init the command string.		*/
-	command[0] = '@';								/* Start command with an '@' symbol.	*/
-	strcpy(&command[1],filespec);							/* Now add the name of the procedure.	*/
-	cpos = strlen(filespec) + 1;							/* Find out the end of the string.	*/
-#endif
-#if defined(MSDOS) || defined(WIN32)
+#if defined(WIN32)
 	memset(command,' ',sizeof(command));						/* Init the command string.		*/
 	strcpy(command,filespec);							/* Now add the name of the procedure.	*/
 	cpos = strlen(filespec);							/* Find out the end of the string.	*/
@@ -216,25 +218,13 @@ va_dcl
 		memcpy(parmtext[i], va_arg(the_args, char*), parmlen[i]);		/* Get the parameter.			*/
 		arg_count -= 2;
 		parmtext[i][parmlen[i]] = '\0';
-#ifdef VMS
-		if ((cpos + parmlen[i]) > sizeof(command)-4)
-		{
-			werrlog(ERRORCODE(6),parmcnt,0,0,0,0,0,0,0);			/* Write an error, line too big.	*/
-			wexit(-1);							/* BAD.					*/
-		}
-
-		command[cpos++] = ' ';							/* Insert a space.			*/
-		command[cpos++] = '\"';							/* And Quotes.				*/
-		memcpy(&command[cpos],parmtext[i],parmlen[i]);
-		cpos += parmlen[i];
-		command[cpos++] = '\"';							/* Close Quotes.			*/
-#endif
-#if defined(MSDOS) || defined(WIN32)
+#if defined(WIN32)
 		if (parmlen[i] > 0)
 		{
 			if ((cpos + parmlen[i] + 3) > 128)
 			{
-				werrlog(ERRORCODE(6),parmcnt,0,0,0,0,0,0,0);		/* Write an error, line too big.	*/
+				WL_werrlog_error(WERRCODE(28508),"LINKPROC","CMD", 
+					"Command line is too long");			/* Write an error, line too big.	*/
 				wexit(-1);						/* BAD.					*/
 			}
 
@@ -258,39 +248,15 @@ va_dcl
 
 	va_end(the_args);
 
-#ifdef VMS
-	savelevel = linklevel();							/* Save the link-level			*/
-	newlevel();									/* increment the link-level		*/
-	command[cpos] = '\0';								/* Null terminate.			*/
-	status = spawn2 (3,command,"",&vms_status);					/* Then execute the command.		*/
-	if (status != SS$_NORMAL && status != RMS$_NORMAL && status != CLI$_NORMAL)
-	{
-		if (status == RMS$_DNF || status == RMS$_DEV || RMS$_FNF) status = 20;	/* File not found.			*/
-		else if (status == RMS$_PRV) status = 28;				/* Insufficient priveledge or file prot.*/
-		else status = 52;							/* Invalid file.			*/
-	}
-	else 
-	{
-		status = 0;								/* Successful.				*/
-		ppunlink(savelevel);							/* Putparm UNLINK			*/
-	}
-	wswap( &status );
-	PUTBIN(retcode,&status,4);
-	setlevel(savelevel);								/* Restore the link-level		*/
-	return;
-#endif
 
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 	if ( !fexists(filespec) )
 	{
-		int4 twenty=20;
-		wswap( &twenty );
-		PUTBIN(retcode,&twenty,sizeof(twenty));					/* File Not Found			*/
-		werrlog(ERRORCODE(3),filespec,0,0,0,0,0,0,0);
+		WL_put_swap( retcode, 20 );			/* File Not Found			*/
+		WL_wtrace("LINKPROC","NOTFOUND","File not found [%s]",filespec);
 		return;
 	}
 
-	ftyp = runtype(filespec);							/* get the run type			*/
+	ftyp = WL_runtype(filespec);							/* get the run type			*/
 
 	switch(ftyp)
 	{
@@ -299,21 +265,22 @@ va_dcl
 		break;
 
 	case RUN_ACCESS:
+		{
+			WL_put_swap( retcode, 28 );
+			WL_wtrace("LINKPROC","ACCESS","Unable to access file [%s]",filespec);
+			return;
+		}
 	case RUN_UNKNOWN:
 		{
-			int4	l28=28;							/* Access denied.			*/
-			wswap( &l28 );
-			PUTBIN(retcode,&l28,4);
-			werrlog(ERRORCODE(5),filespec,0,0,0,0,0,0,0);
+			WL_put_swap( retcode, 28 );		/* Access denied.			*/
+			WL_wtrace("LINKPROC","UNKNOWN","Unknown runtype file [%s]",filespec);
 			return;
 		}
 
 	default:
 		{
-			int4	l52=52;							/* Invalid file type.			*/
-			wswap( &l52 );
-			PUTBIN(retcode,&l52,4);
-			werrlog(ERRORCODE(7),filespec,0,0,0,0,0,0,0);
+			WL_put_swap( retcode, 52 );		/* Invalid file type.			*/
+			WL_wtrace("LINKPROC","FILETYPE","Invalid file type for file [%s]",filespec);
 			return;
 		}
 	}
@@ -321,7 +288,7 @@ va_dcl
 	*retcode = 0;
 
 #ifdef unix
-	if (vsharedscreen())								/* If screen is shared		*/
+	if (VL_vsharedscreen())								/* If screen is shared		*/
 	{
 		vwang_stty_save();							/* Save the current stty values		*/
 	}
@@ -330,7 +297,7 @@ va_dcl
 	vwang_shut();									/* Reset the terminal.			*/
 
 #ifdef unix
-	if (vsharedscreen())								/* If screen is shared			*/
+	if (VL_vsharedscreen())								/* If screen is shared			*/
 	{
 		/*
 		**	Force the stty into a SANE state.
@@ -348,8 +315,8 @@ va_dcl
 			char *sh_parm[17];
 			int idx;
 
-			setprogdefs(l_vol,l_lib);					/* Set up PROGLIB and PROGVOL		*/
-			clearprogsymb();						/* Clear PROGLIB/VOL from symbol	*/
+			WL_set_progdefs_env(l_vol,l_lib);				/* Set up PROGLIB and PROGVOL		*/
+			WL_clear_progdefs();						/* Clear PROGLIB/VOL from symbol	*/
 
 			memset(sh_parm,(char)0,sizeof(sh_parm));
 			idx=0;
@@ -359,56 +326,53 @@ va_dcl
 				sh_parm[idx++]=parmtext[i];				/* elem 2 in sh_parm 			*/
 			sh_parm[idx] = '\0';						/* null terminate it			*/
 
-			newlevel();							/* Increment the link-level		*/
+			WL_newlevel();							/* Increment the link-level		*/
 			execvp(sh_parm[0],sh_parm);
 
-			werrlog(ERRORCODE(4),filespec,errno,0,0,0,0,0,0);
+			werrlog(WERRCODE(28504),filespec,errno,0,0,0,0,0,0);
 			*retcode=fixerr(errno);
 			exit(*retcode);
 		}
 		default:								/* is parent process 			*/
 		{
-			wwaitpid(pid,&l_compcode);
+			WL_wwaitpid(pid,&l_compcode);
 			l_retcode = 0;
 		}
 	}
 
 	signal(SIGCLD,  SIG_IGN);							/* Ignore DEATH-OF-CHILD signal		*/
 
-	if (vsharedscreen())								/* If screen is shared			*/
+	if (VL_vsharedscreen())								/* If screen is shared			*/
 	{
 		vwang_stty_restore();							/* Restore the saved stty values	*/
 	}
 #endif /* unix */
 
-#if defined(MSDOS) || defined(WIN32)
-	newlevel();
-	l_retcode = wsystem(command);
+#if defined(WIN32)
+	WL_newlevel();
+	l_retcode = WL_wsystem(command);
 	l_compcode = 0;
-	oldlevel();
-#endif /* MSDOS || WIN32 */
+	WL_oldlevel();
+#endif /*  WIN32 */
 
 	vwang_synch();								/* Resync the video				*/
-	load_defaults();							/* Reload defaults in case they changed		*/
+	WL_load_defaults();							/* Reload defaults in case they changed		*/
 	vwang_set_reinitialize(TRUE);						/* Set so return from link re-inits screen	*/
 
-	ppunlink(linklevel());								/* Putparm UNLINK			*/
+	WL_ppunlink(WL_linklevel());						/* Putparm UNLINK			*/
 
-	wswap( &l_retcode );
-	PUTBIN(retcode,&l_retcode,4);
+	WL_put_swap( retcode, l_retcode );
 
 	if ( compcode )
 	{
-		wswap( &l_compcode );
-		PUTBIN(compcode,&l_compcode,4);
+		WL_put_swap( compcode, l_compcode );
 	}
 	return;
 
-#endif /* unix || MSDOS || WIN32 */
 }
 
 #ifdef unix
-static fixerr(int code)
+static int fixerr(int code)
 {
 	switch (code)
 	{
@@ -430,14 +394,77 @@ static fixerr(int code)
 /*
 **	History:
 **	$Log: linkproc.c,v $
+**	Revision 1.37  2003/01/31 17:14:05  gsl
+**	Fix Wall warnings and copyright
+**	
+**	Revision 1.36  2003/01/31 17:09:48  gsl
+**	Fix Wall warnings and copyright
+**	
+**	Revision 1.35  2003/01/31 17:03:35  gsl
+**	Fix Wall warnings and copyright
+**	
+**	Revision 1.34  2003/01/31 17:00:12  gsl
+**	Fix Wall warnings and copyright
+**	
+**	Revision 1.33  2003/01/31 16:58:26  gsl
+**	Fix Wall warnings and copyright
+**	
+**	Revision 1.32  2003/01/29 19:42:49  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.31  2003/01/20 18:34:02  gsl
+**	Changed to use stdarg.h
+**	
+**	Revision 1.30  2002/12/11 20:33:37  gsl
+**	Enhance tracing of runtype
+**	
+**	Revision 1.29  2002/12/10 20:54:13  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.28  2002/12/10 17:09:18  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.27  2002/12/09 21:09:28  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.26  2002/07/16 16:24:55  gsl
+**	Globals
+**	
+**	Revision 1.25  2002/07/15 17:09:59  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.24  2002/07/12 19:10:13  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.23  2002/07/12 17:00:57  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.22  2002/07/11 20:29:10  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.21  2002/07/11 15:21:43  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.20  2002/07/10 21:05:18  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.19  2002/07/09 04:14:00  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.18  2002/06/21 20:49:29  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.17  2002/06/21 03:10:37  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.16  1998/07/31 19:41:48  gsl
 **	change NAME_LENGTH to COB_FILEPATH_LEN.
 **	
 **	Revision 1.15  1997-11-21 16:36:19-05  gsl
-**	Fixed the vsharedscreen() logic to work from help and add the sync logic.
+**	Fixed the VL_vsharedscreen() logic to work from help and add the sync logic.
 **
 **	Revision 1.14  1997-09-22 12:32:59-04  gsl
-**	Change isdebug() to the more general vsharedscreen()
+**	Change isdebug() to the more general VL_vsharedscreen()
 **
 **	Revision 1.13  1996-11-13 15:49:14-05  gsl
 **	Changes for NT

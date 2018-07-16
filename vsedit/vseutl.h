@@ -1,24 +1,31 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+
 
 /*
 **	File:		vseutl.h
 **
 **	Purpose:	To ...
-**
-**
-**	History:
-**	mm/dd/yy	Written by ...
 **
 */
 
@@ -35,6 +42,9 @@ void vse_untabify(char *str, int size);
 /*
 **	History:
 **	$Log: vseutl.h,v $
+**	Revision 1.6  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
 **	Revision 1.5  1996/09/03 22:24:13  gsl
 **	drcs update
 **	

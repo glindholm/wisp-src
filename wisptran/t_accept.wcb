@@ -1,4 +1,4 @@
-000100* Copyright (c) 1995 DevTech Migrations, All rights reserved.
+000100**   Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
 000200* $Id:$
 000300*
 000400* FILE:   T_ACCEPT.WCB
@@ -107,6 +107,8 @@
 010720 01  MY-RECORD.
 010730 	   05 MY-SUB-FIELD PIC X(20).
 010800
+010810 01  CCYYMMDD      PIC 9(8).
+010820 01  CCYYDDD       PIC 9(7).
 010900
 011000******************************************************************
 011100
@@ -153,6 +155,13 @@
 015010*    DISPLAY "ACCEPT".
 015100     DISPLAY "ACCEPT".
 015200
+015210 P04.
+015211
+015212*    ACCEPT CCYYMMDD   FROM DATE YYYYMMDD
+015213     ACCEPT CCYYMMDD   FROM DATE YYYYMMDD
+015214
+015215*    ACCEPT CCYYDDD   FROM DAY YYYYDDD
+015216     ACCEPT CCYYDDD   FROM DAY YYYYDDD.
 015300
 015400******************************************************************
 015500* ALL DONE.

@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1995-2001 NeoMedia Technologies, All rights reserved.
-	$Id:$
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
 */
+
 /*
 **	File:		proto.h
 **
@@ -32,16 +51,17 @@ extern char *packed_decimal(void);
 void xtab_log(const char* fileName, int lineNum, const char* xtype, const char *tabData);
 
 /* wisp_pic.c */
-extern int pic_size(char *the_pic);
-extern int pic_dp(char *the_pic);
-extern int pic_fac(char *the_pic);
-extern uint4 pic_edit(char *the_pic);
-extern uint4 pic_zmask(char *the_pic);
+extern int WL_pic_size(char *the_pic);
+extern int WL_pic_dp(char *the_pic);
+extern int WL_pic_fac(char *the_pic);
 /* wmalloc.c */
 #include "wmalloc.h"
 
 /* wt_cli.c */
 extern int get_cli(int argc, char *argv[]);
+extern void load_option_file(void);
+extern void load_key_file(void);
+extern void validate_options(void);
 
 /* wt_debug.c */
 extern int debug_set_level(char *levels);
@@ -79,7 +99,7 @@ extern cob_file_context *get_curr_cob_context(void);
 extern int copy_file(char *the_file);
 extern int rcpy_compare(struct rcpy_struct *p1, struct rcpy_struct *p2);
 extern int trimname(char *filename);
-extern int using_ufb_test(char *item);
+extern int using_ufb_test(const char *item);
 extern char *wfgets(char *s, int n, FILE *stream);
 extern cob_file *open_cob_file(char *filename, int openmode, int copybook);
 extern int close_cob_file(cob_file *cob_file_ptr);
@@ -96,8 +116,6 @@ extern NODE configuration_section(NODE the_statement);
 extern int set_dpcomma(void);
 extern int is_dpcomma(void);
 extern int isafigcon1(const char *item);
-extern void init_figcons(void);
-extern void finish_figcons(void);
 
 /* wt_input.c */
 extern NODE input_output_section(NODE the_statement);
@@ -116,6 +134,9 @@ extern void write_tlog(TOKEN* tokptr, const char* product, char serverity, const
 #endif
 int iscomment(const char* the_line);
 
+/* wt_opcls.c */
+void gen_wfopen(int col, int fnum, int open_mode);
+
 /* wt_scrn.c */
 extern NODE parse_display_ws_record(NODE next_statement);
 extern void gen_screen_storage(void);
@@ -129,6 +150,7 @@ extern int got_occurs(char *data_name, char *count);
 extern int get_occurs(char *data_name, char *count);
 
 /* wt_utils.c */
+#define strpos WT_strpos
 extern int strpos(const char *src, const char *srch);
 extern int stredt(char *src, const char *srch, const char *repl);
 extern char* make_fac(char *fac, const char *src);
@@ -138,7 +160,8 @@ extern char* gen_data_name(char* dest, const char* prefix, const char* base, con
 extern char* sp_trunc(char *text);
 extern int uppercase(char *str);
 extern int lowercase(char *str);
-extern int paracmp(char *str, char strtab[512][40], int tabcnt);
+extern int paracmp(const char *str, char strtab[512][40], int tabcnt);
+extern int instrlist(const char *test_str, char* strlist[], int list_cnt);
 extern int noncase_eq(const char *str1, const char *str2);
 extern int strchrcnt(char *string, char chr);
 
@@ -148,6 +171,11 @@ const char *get_prog_fname(int fnum);
 const char *get_prog_nname(int fnum);
 const char *get_prog_prname(int fnum);
 const char *get_prog_status(int fnum);
+
+void safemove(char *dest, const char *src, int len);
+char *remove_quotes(char *literal);
+int is_quote(char data);
+int is_literal(const char* literal);
 
 /* wt_wsdat.c */
 extern int ws_init(void);
@@ -173,9 +201,33 @@ extern void gen_data_conv(void);
 /*
 **	History:
 **	$Log: proto.h,v $
-**	Revision 1.14  2001/09/13 13:57:20  gsl
-**	xtab_log()
+**	Revision 1.22  2003/03/17 17:22:15  gsl
+**	Change to use  WFOPEN4
 **	
+**	Revision 1.21  2003/03/11 19:26:46  gsl
+**	Add validate_options() routine which checks for option conficts.
+**	
+**	Revision 1.20  2003/03/03 22:08:40  gsl
+**	rework the options and OPTION file handling
+**	
+**	Revision 1.19  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.18  2002/08/12 20:13:52  gsl
+**	quotes and literals
+**	
+**	Revision 1.17  2002/07/10 21:06:36  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.16  2002/07/02 21:15:40  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.15  2002/05/16 21:36:42  gsl
+**	unneeded protos
+**	
+**	Revision 1.14  2001-09-13 09:57:20-04  gsl
+**	xtab_log()
+**
 **	Revision 1.13  1999-09-07 10:33:17-04  gsl
 **	Remove unneeded prototypes and fix.
 **

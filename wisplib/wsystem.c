@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #include <stdio.h>
 #include <string.h>
@@ -18,7 +31,7 @@ static char rcsid[]="$Id:$";
 #include <signal.h>
 
 /*
-**	Routine:	wsystem()
+**	Routine:	WL_wsystem()
 **
 **	Function:	To replace system().
 **
@@ -37,7 +50,7 @@ static char rcsid[]="$Id:$";
 **
 */
 
-int wsystem(const char* cmd)
+int WL_wsystem(const char* cmd)
 {
 	int 	rc;
 	void	(*save_sig)();
@@ -52,7 +65,7 @@ int wsystem(const char* cmd)
 
 
 /*
-**	Routine:	run_unixcommand_silent()
+**	Routine:	WL_run_unixcommand_silent()
 **
 **	Function:	Run a unix command silently.
 **
@@ -65,7 +78,7 @@ int wsystem(const char* cmd)
 **
 **
 */
-int run_unixcommand_silent(const char* command)
+int WL_run_unixcommand_silent(const char* command)
 {
 	int 	rc;
 	void	(*save_sig)();
@@ -83,7 +96,7 @@ int run_unixcommand_silent(const char* command)
 		char	buff[1024];
 		while (fgets(buff, sizeof(buff), pipe) != NULL)
 		{
-			size_t i;
+			int i;
 			i = strlen(buff);
 			if (i > 0 && '\n' == buff[i-1]) 
 			{
@@ -102,6 +115,8 @@ int run_unixcommand_silent(const char* command)
 
 	signal(SIGCLD,save_sig);
 
+	wtrace("UNIXCOMMAND","RETURN","rc=[%d]",rc);
+
 	return rc;
 }
 
@@ -109,7 +124,7 @@ int run_unixcommand_silent(const char* command)
 
 #ifdef WIN32
 /*
-**	ROUTINE:	wsystem()
+**	ROUTINE:	WL_wsystem()
 **
 **	FUNCTION:	Emulate the system() routine (as on unix)
 **
@@ -130,25 +145,37 @@ int run_unixcommand_silent(const char* command)
 #include <stdio.h>
 #include "win32spn.h"
 
-int wsystem(const char* cmd)
+int WL_wsystem(const char* cmd)
 {
-	return win32spawnlp(NULL, cmd, SPN_WAIT_FOR_CHILD);
+	return WL_win32spawnlp(NULL, cmd, SPN_WAIT_FOR_CHILD);
 }
 
-int wsystem_standalone(const char* cmd)
+int WL_wsystem_standalone(const char* cmd)
 {
-	return win32spawnlp(NULL, cmd, SPN_STANDALONE_CHILD);
+	return WL_win32spawnlp(NULL, cmd, SPN_STANDALONE_CHILD);
 }
 #endif /* WIN32 */
 /*
 **	History:
 **	$Log: wsystem.c,v $
-**	Revision 1.19.2.1  2002/08/16 21:47:04  gsl
-**	Alpha Port 4402f
+**	Revision 1.24  2003/05/01 20:59:58  gsl
+**	trace return on in run_unixcommand_silent()
 **	
-**	Revision 1.19  2001-11-01 10:43:05-05  gsl
+**	Revision 1.23  2003/01/31 19:08:36  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.22  2002/07/24 18:27:01  gsl
+**	globals
+**	
+**	Revision 1.21  2002/07/10 21:05:38  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.20  2002/07/09 19:58:54  gsl
+**	Add missing include string.h
+**	
+**	Revision 1.19  2001/11/01 15:43:05  gsl
 **	In run_unixcommand_silent() remove the trailing NL
-**
+**	
 **	Revision 1.18  2001-10-29 10:37:04-05  gsl
 **	Add include stdio.h
 **
@@ -166,7 +193,7 @@ int wsystem_standalone(const char* cmd)
 **	Add a wtrace()
 **
 **	Revision 1.13  1997-07-12 19:02:03-04  gsl
-**	Change WIN32 to use our special win32spawnlp() instead of the
+**	Change WIN32 to use our special WL_win32spawnlp() instead of the
 **	generic spawnvp().
 **
 **	Revision 1.12  1997-05-02 22:02:40-04  gsl

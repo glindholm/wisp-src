@@ -1,13 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /* READFDR.C ... This routine simulates some of the Wang-VS READFDR subroutine operation.					*/
 
@@ -15,13 +26,13 @@ static char rcsid[]="$Id:$";
 #include <sys/stat.h>
 
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include <time.h>
 #include <stdarg.h>
+
 #include "idsistd.h"
 #include "wcommon.h"
-#include "movebin.h"
-#include "cobrun.h"
 #include "werrlog.h"
 #include "wisplib.h"
 #include "wfname.h"
@@ -31,9 +42,9 @@ static char rcsid[]="$Id:$";
 #include "wfvision.h"
 #include "wdefines.h"
 #include "wperson.h"
+#include "vssubs.h"
 
 
-#define		ROUTINE		51000
 
 static int bFromReadfdr4 = 0;
 static char *pReadfdr;
@@ -92,12 +103,12 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 	char 	tmp[20];
 	char 	tmp_bs[19];
 
-	wtrace(pReadfdr, "ENTRY", "File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s]", cpFile, cpLib, cpVol);
+	WL_wtrace(pReadfdr, "ENTRY", "File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s]", cpFile, cpLib, cpVol);
 
-	GETBIN(&l_mode, mode, sizeof(l_mode) );						/* Move to local var.			*/
+	l_mode = WL_get_swap(mode);
 	if (l_mode != 0 )
 	{
-		werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(51002),0,0,0,0,0,0,0,0);
 		return;
 	}
 
@@ -106,12 +117,12 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 	memcpy(l_vol, cpVol, SIZEOF_VOL);
 	
 /*	va_start(the_args, mode); */
-	arg_count = va_count(the_args);
+	arg_count = WL_va_count();
 
 	arg_count -= 4;
 	wfname_mode = 0;
 
-	end_name = wfname(&wfname_mode,l_vol,l_lib,l_file,filespec);			/* generate a file name			*/
+	end_name = WL_wfname(&wfname_mode,l_vol,l_lib,l_file,filespec);			/* generate a file name			*/
 	*end_name = '\0';								/* Null terminate			*/
 
 	access_code = READFDR_RC_20_FILE_NOT_FOUND;					/* Assume not found			*/
@@ -129,7 +140,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 
 		if (access_code != READFDR_RC_0_SUCCESS ) 
 		{
-			wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Unable to access file.", l_field);
+			WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Unable to access file.", l_field);
 			continue;
 		}
 		
@@ -143,7 +154,6 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 			long stat_size;
 			rc = WL_stat_size_long(filespec, &stat_size);
 #endif
-
 			if ( rc != 0 )
 			{
 				access_code = READFDR_RC_32_STAT_ERROR;
@@ -156,7 +166,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 #else
 				if (sizeof(stat_size) == sizeof(long))
 				{
-					sprintf(tmp_bs,"%018ld",stat_size);
+					sprintf(tmp_bs,"%018ld",(long)stat_size);
 				}
 				else
 				{
@@ -164,7 +174,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 				}
 #endif
 				strncpy(temp_ptr,tmp_bs,18);
-				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%18.18s]", l_field, temp_ptr);
+				WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%18.18s]", l_field, temp_ptr);
 			}
 		}
 		else if (0==memcmp(l_field,"CD",2) ||			/* Creation date.	    YYMMDD	*/
@@ -190,7 +200,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 						tm_ptr->tm_mday);
 
 					memcpy(temp_ptr,tmp,6);
-					wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%6.6s]", l_field, temp_ptr);
+					WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%6.6s]", l_field, temp_ptr);
 				}
 				else /* "CX" */
 				{
@@ -200,7 +210,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 						tm_ptr->tm_mday);
 
 					memcpy(temp_ptr,tmp,8);
-					wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%8.8s]", l_field, temp_ptr);
+					WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%8.8s]", l_field, temp_ptr);
 				}
 			}
 		}
@@ -215,9 +225,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 		}
 		else if (0==memcmp(l_field,"EA",2))			/* Number of extents Int(4) always 1	*/
 		{
-			l_long = 1;
-			wswap(&l_long);					/* swap the words			*/
-			PUTBIN(temp_ptr, &l_long, sizeof(l_long));
+			WL_put_swap(temp_ptr, 1);
 		}
 		else if (0==memcmp(l_field,"ED",2))			/* Expiration date Alpha(6) always 991231	*/
 		{
@@ -236,7 +244,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 
 			if (READFDR_RC_0_SUCCESS == access_code)
 			{
-				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%1.1s]", l_field, temp_ptr);
+				WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%1.1s]", l_field, temp_ptr);
 			}
 		}
 		else if (0==memcmp(l_field,"MD",2) ||			/* Mod date YYMMDD 			*/
@@ -261,7 +269,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 						tm_ptr->tm_mday);
 
 					memcpy(temp_ptr,tmp,6);
-					wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%6.6s]", l_field, temp_ptr);
+					WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%6.6s]", l_field, temp_ptr);
 				}
 				else /* "MX" */
 				{
@@ -271,7 +279,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 						tm_ptr->tm_mday);
 
 					memcpy(temp_ptr,tmp,8);
-					wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%8.8s]", l_field, temp_ptr);
+					WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%8.8s]", l_field, temp_ptr);
 				}
 			}
 		}
@@ -281,9 +289,8 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 
 			if (READFDR_RC_0_SUCCESS == access_code)
 			{
-				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%ld]", l_field, l_long);
-				wswap(&l_long);				/* swap the words			*/
-				PUTBIN(temp_ptr, &l_long, sizeof(l_long));
+				WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%ld]", l_field, l_long);
+				WL_put_swap(temp_ptr, l_long);
 			}
 		}
 		else if (0==memcmp(l_field,"RL",2) ||			/* Record Len/Size Int(4)		*/
@@ -293,9 +300,8 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 
 			if (READFDR_RC_0_SUCCESS == access_code)
 			{
-				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%ld]", l_field, l_long);
-				wswap(&l_long);				/* swap the words			*/
-				PUTBIN(temp_ptr, &l_long, sizeof(l_long));
+				WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%ld]", l_field, l_long);
+				WL_put_swap(temp_ptr, l_long);
 			}
 		}
 		else if (0==memcmp(l_field,"RT",2))			/* Record type Alpha(1) 		*/
@@ -304,7 +310,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 
 			if (READFDR_RC_0_SUCCESS == access_code)
 			{
-				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%1.1s]", l_field, temp_ptr);
+				WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%1.1s]", l_field, temp_ptr);
 			}
 			
 		}
@@ -314,7 +320,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 
 			if (READFDR_RC_0_SUCCESS == access_code)
 			{
-				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%1.1s]", l_field, temp_ptr);
+				WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%1.1s]", l_field, temp_ptr);
 			}
 		}
 		else if (0==memcmp(l_field,"IV",2))			/* ISAM Version Alpha(2) 		*/
@@ -335,27 +341,26 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 
 			if (READFDR_RC_0_SUCCESS == access_code)
 			{
-				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%2.2s]", l_field, temp_ptr);
+				WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%2.2s]", l_field, temp_ptr);
 			}
 		}
 		else
 		{
-			werrlog(ERRORCODE(4),l_field,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(51004),l_field,0,0,0,0,0,0,0);
 			access_code = READFDR_RC_40_INVALID_INPUT_PARAM;
 		}
 
 		if (READFDR_RC_0_SUCCESS != access_code)
 		{
-			wtrace(pReadfdr, "FIELD", "Field=[%2.2s] failed with access_code=[%ld]", l_field, access_code);
+			WL_wtrace(pReadfdr, "FIELD", "Field=[%2.2s] failed with access_code=[%ld]", l_field, access_code);
 		}
 	}
        
-	wtrace(pReadfdr, "RETURN", "Retcode=[%ld]", access_code);
+	WL_wtrace(pReadfdr, "RETURN", "Retcode=[%ld]", access_code);
 	if ( arg_count == 1 )
 	{
 		temp_ptr = va_arg(the_args, char *);					/* Get the return code pointer.		*/
-		wswap(&access_code);							/* swap the words			*/
-		PUTBIN(temp_ptr, &access_code, sizeof(access_code) );
+		WL_put_swap(temp_ptr, access_code);
 	}
 /*	va_end(the_args); */
 }
@@ -384,12 +389,12 @@ static int4 fileinfo(const char* path, const char* code, void* raw_field)
 {
 	int4 rc;
 
-	rc = cisaminfo( path, code, raw_field );
+	rc = WL_cisaminfo( path, code, raw_field );
 
 	if (READFDR_RC_24_NO_FILE_HEADER == rc ||
 	    READFDR_RC_68_UNKNOWN_FILE_FORMAT == rc)
 	{
-		rc = visioninfo( path, code, raw_field );
+		rc = WL_visioninfo( path, code, raw_field );
 	}
 
 	if (READFDR_RC_24_NO_FILE_HEADER == rc ||
@@ -432,7 +437,7 @@ static int4 unstructured_fileinfo(const char* path, const char* code, void* raw_
 
 	if (-1 == style)	/* First time set the style */
 	{
-		if (get_wisp_option("READFDRV1"))
+		if (WL_get_wisp_option("READFDRV1"))
 		{
 			style = 1;
 		}
@@ -534,8 +539,44 @@ static int4 unstructured_fileinfo(const char* path, const char* code, void* raw_
 /*
 **	History:
 **	$Log: readfdr.c,v $
-**	Revision 1.22.2.1  2002/10/09 21:03:02  gsl
-**	Huge file support
+**	Revision 1.35  2003/02/04 16:30:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.34  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.33  2003/01/29 21:50:08  gsl
+**	Switch to use vssubs.h
+**	
+**	Revision 1.32  2002/12/10 17:09:17  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.31  2002/10/18 19:14:10  gsl
+**	Cleanup
+**	
+**	Revision 1.30  2002/10/08 15:44:39  gsl
+**	Change int8 to INT8 to avoid conficts
+**	
+**	Revision 1.29  2002/10/04 21:04:35  gsl
+**	fix typo
+**	
+**	Revision 1.28  2002/10/04 21:00:54  gsl
+**	Change to use WL_stat_xxx() routines
+**	
+**	Revision 1.27  2002/07/16 16:24:53  gsl
+**	Globals
+**	
+**	Revision 1.26  2002/07/12 19:10:15  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.25  2002/07/12 17:00:59  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.24  2002/07/11 20:29:12  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.23  2002/07/10 21:05:22  gsl
+**	Fix globals WL_ to make unique
 **	
 **	Revision 1.22  2001/11/08 16:53:20  gsl
 **	fix warnings
@@ -565,7 +606,7 @@ static int4 unstructured_fileinfo(const char* path, const char* code, void* raw_
 **
 **	Revision 1.14  1999-09-08 19:41:33-04  gsl
 **	Added READFDR4 plus reorged from nexted switched to if-elseif-else.
-**	Added wtrace() throughout
+**	Added WL_wtrace() throughout
 **
 **	Revision 1.13  1998-05-14 17:12:58-04  gsl
 **	Add header

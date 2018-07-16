@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 
 #include <stdio.h>
@@ -27,12 +48,19 @@ char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for th
 	int	num;
 	char	where[80];
 
-	if (nowarnings && sever == 'W') return;
+	if (opt_nowarnings && sever == 'W') return;
 
 	if (tokptr && tokptr->context)
 	{
 		ptr = context_infile_name(tokptr->context);
-		num = context_infile_count(tokptr->context);
+		if (0 == tokptr->line)
+		{
+			num = context_infile_count(tokptr->context);
+		}
+		else
+		{
+			num = tokptr->line;
+		}
 		if (tokptr->column)
 		{
 			sprintf(where,"(%s:%d.%d)",ptr,num,tokptr->column);
@@ -54,7 +82,7 @@ char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for th
 	}
 
 
-	if (logging)
+	if (opt_logging)
 	{
 		if (sever != ' ')							/* if severity set to space, skip	*/
 		     fprintf(logfile,"%%%s-%c-%s %s ",facil,sever,mess,where);		/* write facility, severity, message	*/
@@ -82,7 +110,7 @@ char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for th
 	}
 }
 
-write_log(facil,sever,mess,lform,p0,p1,p2,p3,p4,p5,p6,p7)				/* write a log line to the current log	*/
+int write_log(facil,sever,mess,lform,p0,p1,p2,p3,p4,p5,p6,p7)				/* write a log line to the current log	*/
 char *facil,sever,*mess;								/* facility, severity, message		*/
 char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for the text	*/
 {
@@ -110,6 +138,18 @@ int iscomment(const char* the_line)
 /*
 **	History:
 **	$Log: wt_io.c,v $
+**	Revision 1.20  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.19  2003/02/04 18:43:32  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.18  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.17  2002/08/13 16:10:44  gsl
+**	On an error report the line number from the token if available
+**	
 **	Revision 1.16  1999/09/07 14:41:32  gsl
 **	fix return types
 **	

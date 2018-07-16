@@ -1,10 +1,23 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include "intdef.h"
 #include "kcsifunc.h"
 
-static char sccsid[]= "@(#)kexists.c	1.4 1/23/93";
 
 static int4 starter, count, found;
 
@@ -46,8 +59,8 @@ int KCSI_ckexists(char *file, char *lib, char *vol)
 /*
 **	History:
 **	$Log: kexists.c,v $
-**	Revision 1.6.2.1  2002/11/12 15:56:28  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.9  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.8  2002/07/25 15:20:26  gsl
 **	Globals

@@ -1,8 +1,29 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
-**	ROUTINE:	vwait()
+**	ROUTINE:	VL_vwait()
 **
 **	FUNCTION:	Sleep for a while
 **
@@ -31,7 +52,7 @@ static char rcsid[]="$Id:$";
 #ifndef NO_USLEEP /* !NO_USLEEP (double negative) - have a usleep() so use it */
 
 #include <unistd.h>
-void vwait(int seconds, int hundredths)
+void VL_vwait(int seconds, int hundredths)
 {
 	unsigned sleep_secs;
 	
@@ -56,7 +77,7 @@ void vwait(int seconds, int hundredths)
 
 extern unsigned sleep(unsigned secs);
 
-void vwait(int seconds, int hundredths)
+void VL_vwait(int seconds, int hundredths)
 {
 	unsigned sleep_secs;
 	
@@ -76,7 +97,7 @@ void vwait(int seconds, int hundredths)
 #ifdef WIN32
 #include <windows.h>
 
-void vwait(int seconds, int hundredths)
+void VL_vwait(int seconds, int hundredths)
 {
 	Sleep(seconds * 1000 + hundredths * 10);
 }
@@ -86,6 +107,12 @@ void vwait(int seconds, int hundredths)
 /*
 **	History:
 **	$Log: vwait.c,v $
+**	Revision 1.15  2003/01/31 19:25:55  gsl
+**	Fix copyright header
+**	
+**	Revision 1.14  2002/07/15 20:16:16  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.13  2002/02/14 15:48:55  gsl
 **	Merged the SCO changes for 4.4.01
 **	SCO does not have usleep() so use old method to simulate

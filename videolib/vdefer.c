@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 This seems to revolve around 2 variables, "optimization", and "deferred".
@@ -8,7 +29,7 @@ I think:
 The optimization level is the "requested" level of optimization.
 While "deferred" is what is being deferred (held until later).
 
-The "true" line and col (tcur_lin, tcur_col) is where the cursor really is
+The "true" line and col (VL_tcur_lin, VL_tcur_col) is where the cursor really is
 while the vcur_lin and vcur_col is the logical position. The "true" values
 are only valid when motion (vmove) has been deferred (VOP_DEFER_MOTION_ONLY 
 or greater).
@@ -53,22 +74,22 @@ static enum e_vdefer deferred = VDEFER_OFF;					/* Assume actions are not deferr
 
 /*					Subroutine entry point.									*/
 
-enum e_vdefer vdeferred(void)
+enum e_vdefer VL_vdeferred(void)
 {
 	return deferred;
 }
 
-int vdefer_restore(void)
+int VL_vdefer_restore(void)
 {
 	return vdefer(VDEFER_RESTORE);
 }
-int vdefer_save(void)
+int VL_vdefer_save(void)
 {
 	return vdefer(VDEFER_SAVE);
 }
 
 
-int vdefer(enum e_vdefer state)								/* State is one of SAVE or RESTORE.	*/
+int VL_vdefer(enum e_vdefer state)								/* State is one of SAVE or RESTORE.	*/
 {
 	register int i, t0, t1, ret;							/* Some working registers.		*/
 	enum e_vop op_save;								/* Location to save optimization.	*/
@@ -89,8 +110,8 @@ int vdefer(enum e_vdefer state)								/* State is one of SAVE or RESTORE.	*/
 		{
 			if (VDEFER_OFF == deferred)					/* Are we already deferred?		*/
 			{
-				tcur_lin = vcur_lin;					/* Save where we are.			*/
-				tcur_col = vcur_col;
+				VL_tcur_lin = vcur_lin;					/* Save where we are.			*/
+				VL_tcur_col = vcur_col;
 				deferred = VDEFER_MOTION_ONLY;				/* Flag that we have motion deferred.	*/
 			}
 			ret = SUCCESS;							/* Flag success.			*/
@@ -107,12 +128,12 @@ int vdefer(enum e_vdefer state)								/* State is one of SAVE or RESTORE.	*/
 			{
 				if (deferred == VDEFER_OFF)				/* Is position already saved?		*/
 				{
-					tcur_lin = vcur_lin;				/* Yes, then remember where we are.	*/
-					tcur_col = vcur_col;				/* Remember the column too.		*/
+					VL_tcur_lin = vcur_lin;				/* Yes, then remember where we are.	*/
+					VL_tcur_col = vcur_col;				/* Remember the column too.		*/
 				}
 				tcur_atr = vcur_atr;					/* Remember the character rendition.	*/
 				tchr_set = vchr_set;					/* Remember the character set.		*/
-				imemcpy(tcur_set,vcur_set,VSET_TABLE_SIZE);		/* Remember the Terminal setup.		*/
+				VL_imemcpy(tcur_set,vcur_set,VSET_TABLE_SIZE);		/* Remember the Terminal setup.		*/
 				trol_top = vrol_top;					/* Remember the scrolling region.	*/
 				trol_bot = vrol_bot;
 				deferred = VDEFER_RESTORE;				/* And now we're deferred.		*/
@@ -125,7 +146,7 @@ int vdefer(enum e_vdefer state)								/* State is one of SAVE or RESTORE.	*/
 		{
 			ret = SUCCESS;							/* Assume all is well.			*/
 
-			vbuffering(VBUFF_START);					/* Turn on logical buffering.		*/
+			VL_vbuffering_start();					/* Turn on logical buffering.		*/
 
 			if (deferred == VDEFER_MOTION_ONLY)				/* Are we just deferring motion.	*/
 			{
@@ -134,8 +155,8 @@ int vdefer(enum e_vdefer state)								/* State is one of SAVE or RESTORE.	*/
 				deferred = VDEFER_OFF;					/* Now we're not deferred.		*/
 				t0 = vcur_lin;						/* Load temporary.			*/
 				t1 = vcur_col;
-				vcur_lin = tcur_lin;					/* Where we really are.			*/
-				vcur_col = tcur_col;
+				vcur_lin = VL_tcur_lin;					/* Where we really are.			*/
+				vcur_col = VL_tcur_col;
 				vmove(t0,t1);						/* Move to the requested location.	*/
 				optimization = op_save;					/* Restore current optimization.	*/
 			}
@@ -155,7 +176,7 @@ int vdefer(enum e_vdefer state)								/* State is one of SAVE or RESTORE.	*/
 
 				t0 = vcur_atr;						/* Load temporary.			*/
 				vcur_atr = tcur_atr;					/* What they really are.		*/
-				vmode(t0);						/* Now restore the real rendition.	*/
+				VL_vmode(t0);						/* Now restore the real rendition.	*/
 
 				t0 = vchr_set;						/* Load temporary.			*/
 				vchr_set = tchr_set;					/* What it really is.			*/
@@ -169,13 +190,13 @@ int vdefer(enum e_vdefer state)								/* State is one of SAVE or RESTORE.	*/
 
 				t0 = vcur_lin;						/* Load temporary.			*/
 				t1 = vcur_col;
-				vcur_lin = tcur_lin;					/* Where we really are.			*/
-				vcur_col = tcur_col;
+				vcur_lin = VL_tcur_lin;					/* Where we really are.			*/
+				vcur_col = VL_tcur_col;
 				vmove(t0,t1);						/* Move to the requested location.	*/
 
 				optimization = op_save;					/* Restore current optimization.	*/
 			}
-			vbuffering(VBUFF_END);						/* Restore automatic buffering.		*/
+			VL_vbuffering_end();						/* Restore automatic buffering.		*/
 			break;								/* All done.				*/
 		}
 
@@ -212,6 +233,18 @@ enum e_vop voptlevel(void)
 /*
 **	History:
 **	$Log: vdefer.c,v $
+**	Revision 1.16  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.15  2002/07/17 21:06:01  gsl
+**	VL_ globals
+**	
+**	Revision 1.14  2002/07/15 20:16:08  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.13  2002/07/15 17:10:03  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.12  1997/07/12 21:32:57  gsl
 **	Make deferred variable local
 **	

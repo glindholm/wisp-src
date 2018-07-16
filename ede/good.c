@@ -1,11 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990			*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 
 /*					Include standard header files.								*/
@@ -19,7 +36,7 @@ static char rcsid[]="$Id:$";
 
 /*						Entry point.									*/
 
-main(argc,argv) int argc; char *argv[];								/* Determine which goodie.	*/
+int main(argc,argv) int argc; char *argv[];								/* Determine which goodie.	*/
 {
 	if (argc != 2) 										/* Did we get a selection?	*/
 	{
@@ -28,10 +45,10 @@ main(argc,argv) int argc; char *argv[];								/* Determine which goodie.	*/
 		exit(0);
 	}
 
-	vstate(DEFAULT);
-	verase(FULL_SCREEN);
-	vscreen(NARROW|DARK);
-	vmove(0,0);
+	VL_vstate(DEFAULT);
+	VL_verase(FULL_SCREEN);
+	VL_vscreen(NARROW|DARK);
+	VL_vmove(0,0);
 
 	if (strcmp(argv[1],"CLOCK") == 0) gclock();						/* Determine what to run.	*/
 	else if (strcmp(argv[1],"clock") == 0) gclock();
@@ -64,19 +81,31 @@ main(argc,argv) int argc; char *argv[];								/* Determine which goodie.	*/
 	else if (strcmp(argv[1],"TIMEZONES") == 0) gzones();
 	else
 	{
-		vbell();
-		vmove(23,0); vprint("%s is an invalid selection.\n",argv[1]);
+		VL_vbell();
+		VL_vmove(23,0); vprint("%s is an invalid selection.\n",argv[1]);
 		vprint("Valid selections are: calc, calend, clock, notepad or puzzle.\n");
 		vprint("Depress any key to continue...");
-		vgetm();
+		VL_vgetm();
 		vprint("\n");
 	}
-	vexit();
+	VL_vexit();
 	return 0;
 }
 /*
 **	History:
 **	$Log: good.c,v $
+**	Revision 1.12  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.11  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.10  2002/07/16 14:11:51  gsl
+**	VL_ globals
+**	
+**	Revision 1.9  2002/07/15 20:16:05  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.8  1996/09/13 18:02:43  gsl
 **	Fix headers and warnings for NT
 **	

@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1996-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wmalloc.c
 **
@@ -45,7 +66,7 @@ static char rcsid[]="$Id:$";
 */
 
 /*
-**	ROUTINE:	wmalloc()
+**	ROUTINE:	wisp_malloc()
 **
 **	FUNCTION:	WISP malloc plus error checking
 **
@@ -68,7 +89,8 @@ void *wisp_malloc(size_t size)
 	ptr = malloc(size);
 	if (ptr) return ptr;
 	
-	werrlog(104,"%%WMALLOC-F-FAILED malloc failed", 0, 0, 0, 0, 0, 0, 0);
+	WL_werrlog_error(WERRCODE(104),"MALLOC", "FAILED", 
+		"malloc(%d) failed.", size);
 	wexit(1);
 	
 	return NULL;
@@ -81,7 +103,8 @@ void *wisp_calloc(size_t nelem, size_t elsize)
 	ptr = calloc(nelem, elsize);
 	if (ptr) return ptr;
 	
-	werrlog(104,"%%WCALLOC-F-FAILED calloc failed", 0, 0, 0, 0, 0, 0, 0);
+	WL_werrlog_error(WERRCODE(104),"CALLOC", "FAILED", 
+		"calloc(%d , %d) failed.", nelem, elsize);
 	wexit(1);
 	
 	return NULL;
@@ -100,8 +123,14 @@ char *wisp_strdup(const char *string)
 /*
 **	History:
 **	$Log: wmalloc.c,v $
-**	Revision 1.5.2.1  2002/10/03 13:55:11  gsl
-**	Change wstrdup() -> wisp_strdup()
+**	Revision 1.8  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.7  2002/12/09 19:15:37  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.6  2002/07/02 21:15:34  gsl
+**	Rename wstrdup
 **	
 **	Revision 1.5  1998/10/21 12:42:42  gsl
 **	In wstrdup() if a NULL is passed then a NULL will be returned.

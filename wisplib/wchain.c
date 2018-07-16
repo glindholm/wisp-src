@@ -1,24 +1,49 @@
-static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
-#ifdef VMS
-#include <descrip.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef unix
+#include <unistd.h>
 #endif
 
+
 #include "idsistd.h"
+#include "wisplib.h"
 #include "werrlog.h"
 #include "wcommon.h"
 #include "wdefines.h"
 #include "wfname.h"
 #include "filext.h"
 #include "runtype.h"
-#include "wisplib.h"
+#include "level.h"
+#include "vwang.h"
 
 #ifdef unix
 #include "wrunconf.h"
 #endif
-
-
 
 
 #ifdef unix
@@ -27,7 +52,6 @@ static char rcsid[]="$Id:$";
 void WCHAIN( volname, libname, filename )						/* Chain to new program; NO RETURN.	*/
 char	*volname, *libname, *filename;
 {
-#define		ROUTINE		70000
 	char	*end_name;
 	int4	mode;
 	extern	char	**environ;
@@ -35,32 +59,34 @@ char	*volname, *libname, *filename;
 	int	ftyp;
 	int	savelevel;
 
-	werrlog(ERRORCODE(1),volname, libname, filename,0,0,0,0,0);
+	WL_wtrace("WCHAIN","ENTRY",
+		"Entry into WCHAIN vol(%6.6s) lib(%8.8s) file(%8.8s)",
+		volname, libname, filename);
 
-	mode = IS_SUBMIT;	
-	end_name = wfname( &mode, volname, libname, filename, path );	
+	mode = 0;	
+	end_name = WL_wfname( &mode, volname, libname, filename, path );	
 	*end_name = '\0';
 
 	strcpy(temp,path);
-	if ( !fexists(temp) )
+	if ( !WL_fexists(temp) )
 	{
-		werrlog(ERRORCODE(2),path,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(70002),path,0,0,0,0,0,0,0);
 		return;
 	}
 
 	strcpy(path,temp);
 
-	ftyp = isexec(path);
+	ftyp = WL_isexec(path);
 	if ( ftyp != ISEXEC && ftyp != ISACU )
 	{
-		werrlog(ERRORCODE(4),path,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(70004),path,0,0,0,0,0,0,0);
 		return;
 	}
 
 	vwang_shut();								/* reset the terminal				*/
 
-	savelevel = linklevel();						/* Save the link-level in case RUN fails	*/
-	zerolevel();								/* Set link-level to zero.			*/
+	savelevel = WL_linklevel();						/* Save the link-level in case RUN fails	*/
+	WL_zerolevel();								/* Set link-level to zero.			*/
 
 	if (ftyp == ISEXEC)
 	{
@@ -68,8 +94,8 @@ char	*volname, *libname, *filename;
 
 		vwang_synch();							/* ReSync Video.				*/
 	
-		werrlog(ERRORCODE(6),path,errno,0,0,0,0,0,0);
-		setlevel(savelevel);						/* Restore the link-level			*/
+		werrlog(WERRCODE(70006),path,errno,0,0,0,0,0,0);
+		WL_setlevel(savelevel);						/* Restore the link-level			*/
 		return;
 	}
 
@@ -77,11 +103,11 @@ char	*volname, *libname, *filename;
 	{
 		struct wruncfg cfg;
 		char	options[sizeof(cfg.wrun_options)];
-		char	*eptr, *optr;
+		char	*optr;
 		int	arg;
 		char	*sh_parm[64];
 
-		wrunconfig(&cfg);
+		WL_wrunconfig(&cfg);
 
 		strcpy(options,cfg.wrun_options);
 
@@ -108,16 +134,10 @@ char	*volname, *libname, *filename;
 
 		vwang_synch();								/* ReSync Video.			*/
 
-		werrlog(ERRORCODE(8),cfg.wrun_runcbl,options,path,errno,0,0,0,0);
-		setlevel(savelevel);						/* Restore the link-level			*/
+		werrlog(WERRCODE(70008),cfg.wrun_runcbl,options,path,errno,0,0,0,0);
+		WL_setlevel(savelevel);						/* Restore the link-level			*/
 		return;
 	}
-}
-
-void wchain( volname, libname, filename )						/* Lower case equivalent.		*/
-char	*volname, *libname, *filename;
-{
-	WCHAIN( volname, libname, filename );
 }
 #endif	/* unix */
 
@@ -125,22 +145,58 @@ char	*volname, *libname, *filename;
 void WCHAIN( volname, libname, filename )
 char	*volname, *libname, *filename;
 {
-#define		ROUTINE		70000
-
-	werrlog(ERRORCODE(1),volname, libname, filename,0,0,0,0,0);
-	werrlog(102,"(WCHAIN) Function NOT-SUPPORTED",0,0,0,0,0,0,0);
+	WL_werrlog_error(WERRCODE(70000),"WCHAIN", "ENTRY", 
+		"WCHAIN routine is NOT SUPPORTED");
 }
 #endif	/* not defined */
 
 /*
 **	History:
 **	$Log: wchain.c,v $
-**	Revision 1.15.2.2  2002/11/14 21:12:26  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.30  2003/06/23 15:01:52  gsl
+**	Removed lowercase wchain() api
 **	
-**	Revision 1.15.2.1  2002/10/09 19:20:35  gsl
-**	Update fexists.c to match HEAD
-**	Rename routines WL_xxx for uniqueness
+**	Revision 1.29  2003/03/19 21:11:44  gsl
+**	Remove USE_PVPL flag
+**	
+**	Revision 1.28  2003/03/12 18:18:10  gsl
+**	FIx -Wall warnings
+**	
+**	Revision 1.27  2003/02/04 16:02:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.26  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.25  2002/12/10 21:59:21  gsl
+**	fis WERRCODE number
+**	
+**	Revision 1.24  2002/12/10 20:54:09  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.23  2002/12/09 21:09:33  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.22  2002/12/09 19:15:36  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.21  2002/07/12 19:10:18  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.20  2002/07/11 15:21:44  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.19  2002/07/10 21:05:29  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.18  2002/07/09 04:13:55  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.17  2002/06/21 20:49:30  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.16  2002/06/21 03:10:43  gsl
+**	Remove VMS & MSDOS
 **	
 **	Revision 1.15  1998/10/14 18:02:42  gsl
 **	Add include of runtype.h

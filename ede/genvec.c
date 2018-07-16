@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 	GENVEC		General Program Vectoring Routine.
@@ -23,13 +38,22 @@ void GENVEC(
 	char	*inparms,		/* Input parameters				*/
 	char	*outparms)		/* Output parameters				*/
 {
-	werr_message_box("GENVEC: unable to vector program. Aborting!");
-	wexit(0);
+	WL_werr_message_box("GENVEC: unable to vector program. Aborting!");
+	WL_wexit(0);
 }
 
 /*
 **	History:
 **	$Log: genvec.c,v $
+**	Revision 1.11  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.10  2002/07/10 21:06:34  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.9  2002/07/09 04:14:07  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
 **	Revision 1.8  1996/09/13 17:54:33  gsl
 **	Fix warnings for NT
 **	

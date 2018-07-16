@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 
 #ifdef WIN32
@@ -31,49 +52,15 @@ unsigned sleep(unsigned secs)
 #endif /* WIN32 */
 
 
-#if defined(MSDOS) && !defined(WATCOM)
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <sys/types.h>
-
-
-/*
-**	Routine:	sleep()   (for MSDOS)
-**
-**	Function:	sleep for MSDOS Intel C Code builder 1.0e
-**
-**	Description:	1.0e Code Builder doesn't come with sleep()
-**
-**	Arguments:
-**	secs		The number of seconds to sleep.
-**
-**	Globals:	None
-**
-**	Return:		None
-**
-**	Warnings:	None
-**
-**
-*/
-
-unsigned sleep(unsigned secs)
-{
-	time_t	wake;
-
-	wake = secs + time( NULL );
-	while( wake > time( NULL ) );
-
-	return( 0 );
-}
-
-#endif /* MSDOS */
-
 /*
 **	History:
 **	$Log: sleepdos.c,v $
+**	Revision 1.10  2003/01/31 19:25:57  gsl
+**	Fix copyright header
+**	
+**	Revision 1.9  2002/07/18 21:04:20  gsl
+**	Remove MSDOS code
+**	
 **	Revision 1.8  1997/07/08 20:20:17  gsl
 **	Add sleep() routine for WIN32
 **	

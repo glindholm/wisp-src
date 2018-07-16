@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1995-2002 NeoMedia Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		initwisp.c
 **
@@ -10,7 +29,7 @@ static char rcsid[]="$Id:$";
 **	Purpose:	Initialize the WISP runtime
 **
 **	Routines:	
-**	initwisp2()	The COBOL called routine to do initialization.
+**	INITWISP3()	The COBOL called routine to do initialization.
 */
 
 #if !(defined(unix) || defined(WIN32))
@@ -28,7 +47,6 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <varargs.h>
 #include <string.h>
 #include <sys/types.h>
 
@@ -38,7 +56,6 @@ static char rcsid[]="$Id:$";
 #include "wcommon.h"
 
 #include "vwang.h"
-#include "cobrun.h"
 #include "wglobals.h"
 #include "filext.h"
 #include "wperson.h"
@@ -49,6 +66,7 @@ static char rcsid[]="$Id:$";
 #include "wsb.h"
 #include "wispvers.h"
 #include "platsubs.h"
+#include "wanguid.h"
 
 /*
 **	Structures and Defines
@@ -67,214 +85,125 @@ static char rcsid[]="$Id:$";
 */
 
 static int license_checked(int set);
-void license_warning(void);
+void WL_license_warning(void);
 
 
 /*
-	INITWISP is OLD and has been replaced by initwisp2()
+	INITWISP3() - called as the first action in COBOL
 
-=================================================================
-	INITWISP 	Perform initialization of wisped software.
+	- Sets the error logging level
+	- Sets the runname
+	- Sets the PROGRAM-ID
+	- Sets the Start time
+	- Sets the link-level
+	- Sets the noswap option
+	- Checks the license
+	- Installs the signal handler
 
-	Parameters	WISP-APPLICATION-NAME	char[8]
-			Word-Swap-Flag		int
-			W-Error-Flag		int
 */
-
-void initwisp(void)
-{
-	printf("\n\r %%WISP-F-INITWISP \n\r");
-	printf(" The routine \"initwisp\" is no longer in use and has \n\r");
-	printf(" been replaced by \"initwisp2\" please re-WISP.\n\r\n\r");
-	exit(0);
-}
-
-void setrunname(void)
-{
-	printf("\n\r %%WISP-F-SETRUNNAME \n\r");
-	printf(" The routine \"setrunname\" is no longer in use and has \n\r");
-	printf(" been replaced by \"initwisp2\" please re-WISP.\n\r\n\r");
-	exit(0);
-}
 	
-void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
-		char	wisp_lib_version[1],						/* The LIBRARY version			*/
-		char	cobol_type[3],							/* The type of COBOL			*/
-		char	wisp_application_name[8],					/* The name of the program		*/
-		char	wisprunname[8],							/* The first appl name this run unit	*/
-		int4	*swap_on,							/* Swap_on == 0 forces swaping off	*/
-		int4	*err_flag)							/* Err_flag != 0 Changes error logging	*/
+void INITWISP3(	char	wisp_tran_version[WISP_VERSION_SIZE],	/* The TRANSLATOR version		*/
+		char	wisp_application_name[8],	/* The name of the program		*/
+		char	wisprunname[8],			/* The first appl name this run unit	*/
+		int4	*swap_on)			/* Swap_on == 0 forces swaping off	*/
 {
-#define		ROUTINE		24000
+	static  int first = 1;
 
-	static  int 	already = 0;							/* Have we already done it?		*/
-
-	werrset();									/* get runtime w_err_flag override.	*/
-
-	if ( *wisp_lib_version != 20 &&							/* Accept 20 (2.0a-2.0f,3x)		*/
-	     *wisp_lib_version != LIBRARY_VERSION )
+	if (first)
 	{
-		werrlog(ERRORCODE(6),(int) *wisp_lib_version, LIBRARY_VERSION,0,0,0,0,0,0);
-		wexit(1L);
-	}
+		first = 0;
 
-	wtrace("INITWISP2","VERSION", "Runtime=[%s] Cobol=[%3.3s] Wisptran=[%20.20s] Platform=[%s]",
-	       wisp_version(), cobol_type, wisp_tran_version, WL_platform_name());
-
-	/*=========================================================================*/
-
-	if (already) 									/* Already did it!			*/
-	{
-		if( memcmp(WISPRUNNAME,"ACULINK ",8) == 0 ||				/* Reset RUNNAME only if ACULINK	*/
-		    memcmp(WISPRUNNAME,"ACUUSING",8) == 0    )				/* 		      or ACUUSING	*/
-		{
-			memcpy(WISPRUNNAME,wisp_application_name,8);			/* Set the RUN name in C.		*/
-		}
-		memcpy(wisprunname,WISPRUNNAME,8);					/* Set the COBOL wisprunname		*/
-		setprogid(wisp_application_name);					/* Set the program id in C.		*/
-
-		wtrace("INITWISP2","ENTRY","APPNAME=[%8.8s] LINKLEVEL=[%d] GID=[%d][0x%08X]",
-		       wisp_application_name, linklevel(), wgetpgrp(), wgetpgrp());
-
-		wtrace_timestamp("INITWISP2");
-		return;
-	}
-
-	/*=========================================================================*/
+		wisp_set_WSTARTTIME();
 
 #if defined(DEBUG) || defined(_DEBUG)
 #ifdef WIN32
-	if (getenv("WISPDEBUGBREAK"))
-	{
-		extern void vrawDebugBreak(void);
+		if (getenv("WISPDEBUGBREAK"))
+		{
+			extern void vrawDebugBreak(void);
 
-		vrawDebugBreak();
-	}
+			vrawDebugBreak();
+		}
 #endif /* WIN32 */
 #endif /* DEBUG */
 
-	already = 1;
 
-	time(&WSTARTTIME);
+		WL_werr_override();	/* Check for error logging override.	*/
+		WL_load_options();
 
-	newlevel();									/* Increment the link-level		*/
-	wgetpgrp();									/* Call to Set the Process Group ID.	*/
+		WL_newlevel();		/* Increment the link-level		*/
+		WL_wgetpgrp();		/* Call to Set the Process Group ID.	*/
 
-	wtrace("INITWISP2","FIRST","APPNAME=[%8.8s] LINKLEVEL=[%d] GID=[%d][0x%08X]",
-	       wisp_application_name, linklevel(), wgetpgrp(), wgetpgrp());
+		wtrace("INITWISP3","FIRST","APPNAME=[%8.8s] LINKLEVEL=[%d] GID=[%d][0x%08X] COBOL=[%s%s] PLAT=[%s] USER=[%s]",
+		       wisp_application_name, WL_linklevel(), WL_wgetpgrp(), WL_wgetpgrp(),
+		       (wisp_acu_cobol()?"ACU":""),(wisp_mf_cobol()?"MF":""), 
+		       WL_platform_name(), WL_longuid());
+		WL_wtrace_timestamp("INITWISP3");
 
-	memcpy(WISPTRANVER,wisp_tran_version,20);					/* Get the translator version		*/
-	WISPTRANVER[20] = NULL_CHAR;
+		wisp_set_runname(wisp_application_name);
 
-	memcpy(WISPRUNNAME,wisp_application_name,8);					/* Set the RUN name in C.		*/
-	memcpy(wisprunname,wisp_application_name,8);					/* Set the RUN name in COBOL.		*/
-	setprogid(wisp_application_name);						/* Set the program id name in C.	*/
+		if (!WL_wbackground())
+		{
+			vwang_pre_init();
+		}
 
-	if (!wbackground())
-	{
-		vwang_pre_init();							/* Determine if COBOL debugger running	*/
+		WSETFILEXT(" ");								/* Set file extension to spaces.	*/
+		WL_set_internal_retcode(0);							/* Set RETURN-CODE to zero.		*/
+		wisp_set_progname("");
+		wisp_set_screenname("");
+
+		if (wisp_get_noswap() && (*swap_on == 1))					/* Swapping was off, now they want it on*/
+		{
+			werrlog(WERRCODE(24002),0,0,0,0,0,0,0,0);
+		}
+		wisp_set_noswap( ! *swap_on );							/* Set/reset the flags.			*/
+
+		WL_license_warning();								/* Check the WISP license		*/
+
+		WL_save_progdefs();								/* Save PROGLIB/PROGVOL values		*/
+
+		/*
+		**	Set up the standard wisp signal handling
+		*/
+		wisp_signal_handler();
 	}
 
+	/*=========================================================================*/
 
-	if      ( !memcmp(cobol_type,"VAX",3) )
+	if( memcmp(wisp_get_runname(),"ACULINK ",WISP_RUNNAME_SIZE) == 0 ||	/* Reset RUNNAME only if ACULINK	*/
+	    memcmp(wisp_get_runname(),"ACUUSING",WISP_RUNNAME_SIZE) == 0    )	/* 		      or ACUUSING	*/
 	{
-		vax_cobol = TRUE;
-		run_cobol = COBOL_VAX;
-		memcpy(filelock,"91",2);
-		memcpy(hardlock,"92",2);
-		memcpy(softlock,"90",2);
+		wisp_set_runname(wisp_application_name);			/* Set the RUN name in C.		*/
 	}
-	else if ( !memcmp(cobol_type,"LPI",3) )
-	{
-		lpi_cobol = TRUE;
-		run_cobol = COBOL_LPI;
-		memcpy(filelock,"93",2);
-		memcpy(hardlock,"99",2);
-		memcpy(softlock,"99",2);
-	}
-	else if ( !memcmp(cobol_type,"ACU",3) )
-	{
-		acu_cobol = TRUE;
-		run_cobol = COBOL_ACU;
-		memcpy(filelock,"93",2);
-		memcpy(hardlock,"99",2);
-		memcpy(softlock,"99",2);
-	}
-	else if ( !memcmp(cobol_type,"AIX",3) )
-	{
-		aix_cobol = TRUE;
-		run_cobol = COBOL_AIX;
-		memcpy(filelock,"9A",2);
-		memcpy(hardlock,"9D",2);
-		memcpy(softlock,"9D",2);
-	}
-	else if ( !memcmp(cobol_type,"MF ",3) )
-	{
-		mf_cobol  = TRUE;
-		run_cobol = COBOL_MF;
-		memcpy(filelock,"9A",2);
-		memcpy(hardlock,"9D",2);
-		memcpy(softlock,"9D",2);
-	}
-	else if ( !memcmp(cobol_type,"DMF",3) )
-	{
-		mf_cobol  = TRUE;
-		run_cobol = COBOL_MF;
-		memcpy(filelock,"9A",2);
-		memcpy(hardlock,"9D",2);
-		memcpy(softlock,"9D",2);
-	}
-	else
-	{
-		run_cobol = COBOL_OTHER;
-		memcpy(filelock,"93",2);
-		memcpy(hardlock,"99",2);
-		memcpy(softlock,"99",2);
-	}
+	memcpy(wisprunname,wisp_get_runname(),WISP_RUNNAME_SIZE);		/* Set the COBOL wisprunname		*/
+	WL_setprogid(wisp_application_name);					/* Set the program id in C.		*/
 
-	WSETFILEXT(" ");								/* Set file extension to spaces.	*/
-	WL_set_internal_retcode(0);							/* Set RETURN-CODE to zero.		*/
-	wisp_progname[0] = '\0';
-	wisp_screen[0] = '\0';
+	wtrace("INITWISP3","ENTRY",
+	       "APPNAME=[%8.8s] RUNNAME=[%8.8s] LEVEL=[%d] GID=[%d][0x%08X] VER=[%s] TRAN=[%20.20s]",
+	       wisp_application_name, wisp_get_runname(), WL_linklevel(), WL_wgetpgrp(), WL_wgetpgrp(),
+	       wisp_version(), wisp_tran_version);
 
-	if (noswap_words && (*swap_on == 1))						/* Swapping was off, now they want it on*/
-	{
-		werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);
-	}
-	noswap_words = ! *swap_on;							/* Set/reset the flags.			*/
+	/*=========================================================================*/
 
-	if (*err_flag)									/* Is the w_err_flag being set?		*/
-	{
-		w_err_flag = *err_flag;							/* Get the flag.			*/
-	}
+}
 
-	load_options();									/* Load the opt_xxxx variables		*/
-
-	if (opt_errflag_found)
-	{
-		w_err_flag = opt_errflag;
-	}
-	werrset();									/* get runtime w_err_flag override.	*/
-
-	license_warning();								/* Check the WISP license		*/
-
-	saveprogdefs();									/* Save PROGLIB/PROGVOL values		*/
-
-	/*
-	**	Set up the standard wisp signal handling
-	*/
-	wisp_signal_handler();
-
-	wtrace_timestamp("INITWISP2");
+void INITWISP2(	char	wisp_tran_version[20],		/* The TRANSLATOR version		*/
+		char	wisp_lib_version[1],		/* The LIBRARY version	(OBSOLETE)	*/
+		char	cobol_type[3],			/* The type of COBOL	(OBSOLETE)	*/
+		char	wisp_application_name[8],	/* The name of the program		*/
+		char	wisprunname[8],			/* The first appl name this run unit	*/
+		int4	*swap_on,			/* Swap_on == 0 forces swaping off	*/
+		int4	*err_flag)			/* (OBSOLETE)				*/
+{
+	INITWISP3(wisp_tran_version, wisp_application_name, wisprunname, swap_on);
 }
 
 
 /*
-**	Routine:	license_warning()
+**	Routine:	WL_license_warning()
 **
 **	Function:	To check the WISP license and issue warning messages if not valid.
 **
-**	Description:	This routine calls validate_license() to check if the WISP license has been installed
+**	Description:	This routine calls WLIC_validate_license() to check if the WISP license has been installed
 **			and is valid.  If not installed it issues a warning.  If timed out or invalid it issues
 **			an error and exits.
 **			No checking is done if in background.
@@ -296,19 +225,24 @@ void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
 
 #include "wlicense.h"
 
-void license_warning(void)
+void WL_license_warning(void)
 {
 	int pfkey, currow, curcol;
 	HWSB	hWsb;
 	int	code;
+	char	version_mess[80];
+	char	platform_mess[80];
+	char	*contact_message;
+	int	row;
+	char	*license_check_mess = "UNKNOWN";
 
 	if (wbackground()) return;						/* don't check in background			*/
 
 	if (license_checked(0)) return;						/* If license already checked then return	*/
 
-	code = validate_license();						/* Validate the license file			*/
+	code = WLIC_validate_license();						/* Validate the license file			*/
 
-	if (code == LICENSE_OK) 
+	if (code == LICENSE_CHECK_OK) 
 	{
 		license_checked(1);						/* Mark the license as checked.			*/
 		return;
@@ -320,39 +254,80 @@ void license_warning(void)
 
 	wsb_add_text(hWsb,1,0,"****  WISP License Information  ****");
 	wsb_add_text(hWsb,3,0,"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR " NeoMedia Technologies Inc.");
-	wsb_add_text(hWsb,4,0,"2201 Second Street Suite 402, Fort Myers FL 33901 (239) 337-3434");
+	wsb_add_text(hWsb,4,0,"Web: " WISP_WEBSITE "  Email: " WISP_EMAIL);
+
+	sprintf(version_mess ,"WISP Version %s", wisp_version());
+	sprintf(platform_mess,"%s (%2.2s - %s)", 
+		WL_platform_name(), WL_platform_code(), WL_platform_define());
+	wsb_add_text(hWsb,6,0,version_mess);
+	wsb_add_text(hWsb,7,0,platform_mess);
+
+	contact_message = "Please contact your WISP vendor or NeoMedia for assistance.";
+
+	row = 12;
 
 	switch (code)
 	{
-	case LICENSE_MISSING:
-		wsb_add_text(hWsb,10,0,"****  WARNING  ****");
-		wsb_add_text(hWsb,12,0,"This machine has not been licensed to use the WISP runtime system.");
-		wsb_add_text(hWsb,13,0,"Please run the wlicense program to install the WISP license.");
-		wsb_add_text(hWsb,15,0,"****  WARNING  ****");
+	case LICENSE_CHECK_MISSING:
+		license_check_mess = "MISSING";
+		wsb_add_text(hWsb,row++,0,"****  WARNING  ****");
+		row++;
+		wsb_add_text(hWsb,row++,0,"This machine has not been licensed to use the WISP runtime system.");
+		wsb_add_text(hWsb,row++,0,"Please run the wlicense program to install the WISP license.");
+		row++;
+		wsb_add_text(hWsb,row++,0,"****  WARNING  ****");
 		wsb_add_text(hWsb,24,0,"Press (ENTER) to continue.");
 		break;
-	case LICENSE_TIMEDOUT:
-		wsb_add_text(hWsb,10,0,"****  TIMED OUT  ****");
-		wsb_add_text(hWsb,12,0,"The WISP demo license for this machine has timed out.");
-		wsb_add_text(hWsb,13,0,"Please contact NeoMedia at the above number for assistance.");
-		wsb_add_text(hWsb,15,0,"****  TIMED OUT  ****");
+	case LICENSE_CHECK_TIMEDOUT:
+		license_check_mess = "TIMEDOUT";
+		wsb_add_text(hWsb,row++,0,"****  TIMED OUT  ****");
+		row++;
+		wsb_add_text(hWsb,row++,0,"The WISP demo license for this machine has timed out.");
+		wsb_add_text(hWsb,row++,0,contact_message);
+		row++;
+		wsb_add_text(hWsb,row++,0,"****  TIMED OUT  ****");
 		wsb_add_text(hWsb,24,0,"Press (ENTER) to EXIT.");
 		break;
-	case LICENSE_INVALID:
-	case LICENSE_UNKNOWN:
+	case LICENSE_CHECK_VERSION:
+		license_check_mess = "VERSION";
+		wsb_add_text(hWsb,row++,0,"****  INVALID LICENSE VERSION  ****");
+		row++;
+		wsb_add_text(hWsb,row++,0,"The WISP license version is invalid for this release.");
+		wsb_add_text(hWsb,row++,0,contact_message);
+		row++;
+		wsb_add_text(hWsb,row++,0,"****  INVALID LICENSE VERSION  ****");
+		wsb_add_text(hWsb,24,0,"Press (ENTER) to EXIT.");
+		break;
+	case LICENSE_CHECK_UNLIMITED:
+		license_check_mess = "UNSUPPORTED";
+		wsb_add_text(hWsb,row++,0,"****  UNSUPPORTED LICENSE  ****");
+		row++;
+		wsb_add_text(hWsb,row++,0,"An unsupported WISP license type (UNLIMITED) has been detected.");
+		wsb_add_text(hWsb,row++,0,contact_message);
+		row++;
+		wsb_add_text(hWsb,row++,0,"****  UNSUPPORTED LICENSE  ****");
+		wsb_add_text(hWsb,24,0,"Press (ENTER) to EXIT.");
+		break;
+	case LICENSE_CHECK_INVALID:
+	case LICENSE_CHECK_UNKNOWN:
 	default:
-		wsb_add_text(hWsb,10,0,"****  INVALID LICENSE  ****");
-		wsb_add_text(hWsb,12,0,"An invalid WISP runtime license has been installed on this machine.");
-		wsb_add_text(hWsb,13,0,"Please run the wlicense program to install the correct WISP license.");
-		wsb_add_text(hWsb,15,0,"****  INVALID LICENSE  ****");
+		license_check_mess = "INVALID";
+		wsb_add_text(hWsb,row++,0,"****  INVALID LICENSE  ****");
+		row++;
+		wsb_add_text(hWsb,row++,0,"An invalid WISP runtime license has been installed on this machine.");
+		wsb_add_text(hWsb,row++,0,"Please run the wlicense program to install the correct WISP license.");
+		row++;
+		wsb_add_text(hWsb,row++,0,"****  INVALID LICENSE  ****");
 		wsb_add_text(hWsb,24,0,"Press (ENTER) to EXIT.");
 		break;
 	}
+
+	WL_wtrace("LICENSE", "ERROR", "WISP License check failed [%s]",license_check_mess);
 	
 	wsb_display_and_read(hWsb, "001216X", &pfkey, &currow, &curcol);
 	wsb_delete(hWsb);
 
-	if (code == LICENSE_MISSING) 						/* only a warning				*/
+	if (code == LICENSE_CHECK_MISSING) 					/* only a warning				*/
 	{
 		license_checked(1);						/* Mark the license as checked			*/
 		return;
@@ -404,7 +379,7 @@ static int license_checked(int set)
 		int	gid;
 		int4	mask;
 		
-		gid = wgetpgrp();	/* get the Process Group ID.			*/
+		gid = WL_wgetpgrp();	/* get the Process Group ID.			*/
 
 		/*
 		 *	Mung the GID so it isn't recognizable.
@@ -455,12 +430,12 @@ static int license_checked(int set)
 	if (set)
 	{
 		sprintf(buff,"WISPLICENSE=%s",mid);				/* set env variable - message was displayed	*/
-		setenvstr(buff);
+		WL_setenvstr(buff);
 		return(1);
 	}
 	else
 	{
-		if (ptr = getenv("WISPLICENSE"))				/* see if license already checked 		*/
+		if ((ptr = getenv("WISPLICENSE")))				/* see if license already checked 		*/
 		{
 			if (0==strcmp(ptr,mid)) return(1);			/* If WISPLICENSE is equal to machine id - OK	*/
 		}
@@ -472,17 +447,121 @@ static int license_checked(int set)
 /*
 **	History:
 **	$Log: initwisp.c,v $
-**	Revision 1.31.2.4  2003/02/10 14:48:53  gsl
-**	Add platform to trace
+**	Revision 1.66  2003/06/13 17:36:12  gsl
+**	ENTERPRISE License
 **	
-**	Revision 1.31.2.3  2002/11/14 21:12:23  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.65  2003/06/12 20:54:29  gsl
+**	Add support for ENTERPRISE licenses with a version number and remove
+**	support for UNLIMITED license.
 **	
-**	Revision 1.31.2.2  2002/11/06 21:25:31  gsl
+**	Revision 1.64  2003/04/28 15:31:09  gsl
+**	Add version and platform to license warning screen
+**	
+**	Revision 1.63  2003/04/04 20:05:01  gsl
+**	missing include
+**	
+**	Revision 1.62  2003/04/04 19:41:43  gsl
+**	Streamline the traceing
+**	
+**	Revision 1.61  2003/03/07 20:11:37  gsl
+**	Use defines for all the field sizes passed from Cobol to C
+**	
+**	Revision 1.60  2003/02/07 20:45:14  gsl
+**	Add platform to version display
+**	
+**	Revision 1.59  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.58  2003/01/31 21:40:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.57  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.56  2002/12/12 19:57:00  gsl
+**	INITWISP3
+**	
+**	Revision 1.55  2002/12/10 20:54:14  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.54  2002/12/04 15:30:41  gsl
+**	Cleanup ordering for first time in.
+**	Load OPTIONS earlier to set WISPDEBUG earlier
+**	Mark OBSOLETE args
+**	
+**	Revision 1.53  2002/12/04 14:39:26  gsl
+**	Cleanup ordering for first time in.
+**	Load OPTIONS earlier to set WISPDEBUG earlier
+**	Mark OBSOLETE args
+**	
+**	Revision 1.52  2002/12/03 22:15:14  gsl
+**	Replace the w_err_flag bitmask with wispdebug mode that can be set to "FULL"
+**	"ERRORS" or "NONE" to simplify.
+**	
+**	Revision 1.51  2002/11/06 20:41:44  gsl
 **	Change address to Suite 402
 **	
-**	Revision 1.31.2.1  2002/09/06 16:18:33  gsl
-**	Fix phone numbers
+**	Revision 1.50  2002/10/18 19:14:10  gsl
+**	Cleanup
+**	
+**	Revision 1.49  2002/10/11 20:39:51  gsl
+**	Detect runtime Cobol type without needing INITWISP call.
+**	For ACU set in sub85.c,
+**	For utils set via WRUNCONFIG
+**	Default to MF on UNIX
+**	
+**	Revision 1.48  2002/07/31 21:00:30  gsl
+**	globals
+**	
+**	Revision 1.47  2002/07/29 15:46:50  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
+**	
+**	Revision 1.46  2002/07/12 19:10:12  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.45  2002/07/12 17:00:57  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.44  2002/07/11 20:29:09  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.43  2002/07/11 15:21:41  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.42  2002/07/10 21:05:17  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.41  2002/07/09 04:14:01  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.40  2002/07/02 21:15:25  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.39  2002/07/02 04:08:03  gsl
+**	Cleanup cobol types
+**	
+**	Revision 1.38  2002/07/01 04:02:38  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.37  2002/06/26 20:52:16  gsl
+**	Fix phone number
+**	
+**	Revision 1.36  2002/06/25 18:18:39  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 1.35  2002/06/25 17:46:04  gsl
+**	Remove WISPFILEXT as a global, now must go thru set/get routines
+**	
+**	Revision 1.34  2002/06/21 20:49:28  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.33  2002/06/21 03:49:29  gsl
+**	Remove LPI & DMF & softlock
+**	
+**	Revision 1.32  2002/06/21 03:10:36  gsl
+**	Remove VMS & MSDOS
 **	
 **	Revision 1.31  2002/03/28 14:44:57  gsl
 **	Use define for copyright year
@@ -539,7 +618,6 @@ static int license_checked(int set)
 **	Change address
 **
 **	Revision 1.14  1996-12-12 12:57:50-05  gsl
-**	Changed DevTech to NeoMedia
 **
 **	Revision 1.13  1996-08-22 17:24:03-07  gsl
 **	Call wgetpgrp() at start to initialize gid

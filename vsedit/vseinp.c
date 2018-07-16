@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*----
 This is the initial input GETPARM screen. if vse_native is true 
@@ -25,10 +40,7 @@ It returns the value of the pressed pfkey
 #ifdef unix
 static char lang_opts[]="(COBOL=wcb/cob,PROCEDURE=wps,BASIC=bas,SHELL=sh,none)";
 #endif
-#ifdef VMS
-static char lang_opts[]="(COBOL=wcb/cob,PROCEDURE=wps,BASIC=bas,COM=com,none)";
-#endif
-#if defined(MSDOS) || defined(WINNT)
+#ifdef WIN32
 static char lang_opts[]="(COBOL=wcb/cob,PROCEDURE=wps,BASIC=bas,BATCH=bat,none)";
 #endif
 static char specify1[]="Please specify the name of the file to be edited.";
@@ -53,7 +65,7 @@ int vse_input(char *emsg)
 	}
 
 	gppfkeys=GP_PF_05|GP_PF_16;
-	wswap(&gppfkeys);
+	WL_wswap(&gppfkeys);
 
 	GPSETUP();
 	GPSTD("INPUT   ","EDITOR",1);
@@ -97,6 +109,15 @@ int vse_input(char *emsg)
 /*
 **	History:
 **	$Log: vseinp.c,v $
+**	Revision 1.14  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.13  2002/07/12 17:17:07  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.12  2002/06/26 01:42:50  gsl
+**	Remove VMS code
+**	
 **	Revision 1.11  1996/09/03 22:24:07  gsl
 **	drcs update
 **	

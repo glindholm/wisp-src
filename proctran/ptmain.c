@@ -1,5 +1,29 @@
-static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
+static char rcsid[]="$Id:$"; /* USED BELOW */
 
 /*
 **	File:		ptmain.c
@@ -15,8 +39,6 @@ static char rcsid[]="$Id:$";
 **			handler()	Define the exit handler.  One for UNIX and one for VMS.
 **
 **
-**	History:
-**			mm/dd/yy	Written by ...
 **
 */
 
@@ -26,11 +48,6 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <signal.h>
 
-#ifdef VMS
-#include <ssdef.h>
-#include <chfdef.h>
-#include <climsgdef.h>
-#endif
 
 #include "pgcommon.h"
 #include "pgstruct.h"
@@ -49,19 +66,12 @@ static char MODDATE[20];
 static char *sargv[50];									/* Save the argv			*/
 static void wcbname(char* out_name, char* in_name);					/* Generate the output file name from	*/
 
-#ifdef VMS
-static unsigned long stval[5] = {SS$_ACCVIO, SS$_ABORT, 200956 ,0 ,0 };
-#endif
 
-main(argc,argv)
+int main(argc,argv)
 int argc;
 char *argv[];
 {
-#ifdef VMS
-        long handler();
-#else
         void handler();
-#endif
         char *p,*e;
 	int i;
 
@@ -86,9 +96,6 @@ char *argv[];
 	logfile = stdout;								/* Define a file for error logs		*/
 
 											/*  Set up the exit handler for signals.*/
-#ifdef VMS
-	lib$establish(handler);
-#endif
 
 #ifdef unix
 	if (getenv("DBPROC"))
@@ -126,9 +133,6 @@ char *argv[];
 		init_literals();							/* Initialize literals used.		*/
 		doit();									/* Do the generation.			*/
 	}
-#ifdef VMS										/*  Set back so uses VAX signal handler.*/
-	lib$revert();
-#endif
 	return 0;
 }
 
@@ -180,76 +184,30 @@ void handler()
 }
 #endif
 
-#ifdef VMS
-long handler(sigargs,mechargs)								/* New signal handler for PROCTRAN.	*/
-struct chf$signal_array *sigargs;
-struct chf$mech_array *mechargs;
-{
-	unsigned long mstat;
-	int cont;
-
-	cont = FALSE;									/* Assume do not continue from signal.	*/
-	if (sigargs->chf$l_sig_name > 400) cont = TRUE;
-	mstat = lib$match_cond(&sigargs->chf$l_sig_name, &stval[0], &stval[1], &stval[2]);
-
-	if ( cont == TRUE && mstat == 0) return(SS$_CONTINUE);				/* If no match then continue.		*/
-
-	switch (mstat) 
-	{
-		case 1:
-		{
-			fprintf(stderr,"\n Signal ACCESS VIOLATION ... ");
-			break;
-		}
-		case 2:
-		{
-			fprintf(stderr,"\n Signal ABORT ... ");
-			break;
-		}
-		case 3:
-		{
-			fprintf(stderr,"\n  New switch added.  Do a SET COMMAND PROCTRAN with new PROCTRAN.CLD or reboot.\n");
-			break;
-		}
-		default:								/* Else, display message.		*/
-		{
-			fprintf(stderr,"\n  Unknown SIGNAL (%x) detected ... ",sigargs->chf$l_sig_name);
-			break;
-		}
-	}
-
-	if (mstat != 3)
-	{
-		if (num_outlines > 13)
-		{
-			fprintf(stderr,"writing file.\n");
-			fprintf(stderr,"     Out file: %s line: %d\n",out_fname,num_outlines);
-		}
-		else
-		{
-			fprintf(stderr,"reading file.\n");
-			fprintf(stderr,"     In file: %s line: %d\n",cli_infile,num_lineins);
-		}
-
-		fprintf(stderr,"     Contact NeoMedia Migrations, Inc. with sample code OR comment line and try again!\n");
-	}
-
-        fprintf(stderr,"\n  PROCTRAN exiting.\n");
-#ifndef __ALPHA
-	/*
-	**	This has not yet been implemented for VMS/ALPHA
-	*/
-	sys$unwind(mechargs->chf$l_mch_savr0);						/* Unwind the call stack by the depth 	*/
-#endif
-        exit(mstat);									/* between established and when condition*/
-}											/* was signaled.			*/
-#endif
 
 /*
 **	History:
 **	$Log: ptmain.c,v $
-**	Revision 1.11.2.1  2002/09/05 19:22:32  gsl
+**	Revision 1.18  2003/02/05 21:15:03  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.17  2003/02/05 15:50:12  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.16  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.15  2003/02/04 19:19:09  gsl
+**	fix header
+**	
+**	Revision 1.14  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.13  2002/09/04 18:10:18  gsl
 **	LINUX
+**	
+**	Revision 1.12  2002/06/26 01:42:50  gsl
+**	Remove VMS code
 **	
 **	Revision 1.11  1997/04/21 15:37:46  scass
 **	Corrected double copyright definition.
@@ -258,7 +216,6 @@ struct chf$mech_array *mechargs;
 **	Corrected copyright.
 **
 **	Revision 1.9  1996-12-12 13:31:43-05  gsl
-**	DevTech -> NeoMedia
 **
 **	Revision 1.8  1996-09-13 08:56:58-07  gsl
 **	Remove explicit strchr() def

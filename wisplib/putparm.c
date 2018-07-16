@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		putparm.c
 **
@@ -24,12 +43,12 @@ static char rcsid[]="$Id:$";
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <ctype.h>
-#include <varargs.h>									/* This routine uses variable args.	*/
+#include <stdarg.h>									/* This routine uses variable args.	*/
 
 #include "idsistd.h"
-#include "movebin.h"
 #include "werrlog.h"
 #include "sharemem.h"
 #include "putparm.h"
@@ -65,7 +84,7 @@ static char rcsid[]="$Id:$";
 */
 
 static int      test_next_arg();
-static int4 	write_putparm(char *function, int4 ucount, char *prname, FMTLIST *fmtlist, char pfkey, 
+static int4 	write_putparm(const char *function, int4 ucount, char *prname, FMTLIST *fmtlist, char pfkey, 
 				char *pp_label, char *pp_reflbl, char cleanup);
 static int 	block_fmtlist(FMTLIST *fmtlist, char *receiver, int4 *rlen, int4 *tlen);
 
@@ -75,17 +94,14 @@ static int 	block_fmtlist(FMTLIST *fmtlist, char *receiver, int4 *rlen, int4 *tl
 **	PUTPARM('R',                  PPlabel, Reciever, RecvLength, Totlength,       PFkey,                    Cleanup, RC)
 **	PUTPARM('C',                 [PPlabel], RC)
 */
-int PUTPARM(va_alist)
-va_dcl
+int PUTPARM(const char* pp_function, ...)
 {
-#define		ROUTINE		48000
-
 	va_list the_args;								/* A pointer to traverse the stack.	*/
 	int	arg_count;								/* Called with this many arguments.	*/
 	int4	usage_count, keyword_count;
-	int4	*long_item;
-	int4	swap_me, *return_code;
-	char	*pp_function, *prname, *pplabel_arg, *byte_pointer;			/* Pointers to args off the stack.	*/
+	int4	*int4_ptr;
+	int4	*return_code;
+	char	*prname, *pplabel_arg, *byte_pointer;
 	char 	pp_label[LABEL_SIZE + 1], pp_reflbl[LABEL_SIZE + 1];
 	int	rc_fl, idx;
 	int4	ret;
@@ -97,7 +113,9 @@ va_dcl
 	char	*pfkey_rcvr, assign_pfk, cleanup_opt;
 	char	**m_kwdata;
 
-	werrlog( ERRORCODE(1),0,0,0,0,0,0,0,0 );
+	va_start(the_args, pp_function); 
+	arg_count = WL_va_count();
+	WL_wtrace("PUTPARM","ENTRY","Function=[%c] args=%d", *pp_function, arg_count);
 
 	return_code = (int4 *)NULL;							/* initialize ret code pointer		*/
 	rc_fl = FALSE;									/* Init flag, if have return code addrs.*/
@@ -105,14 +123,8 @@ va_dcl
 	strcpy(pp_reflbl,"        ");							/* Init label.				*/
 
 	process_ref = FALSE;
-
-	va_start(the_args);    		 						/* Init. pointer to top of stack.	*/
-	arg_count = va_count(the_args);							/* How many args are there ?	      	*/
                                                                                                                                   
-	va_start(the_args);								/* Init. pointer to top of stack.	*/
-                                                                                                                                  
-	pp_function = va_arg(the_args, char*);						/* What type of putparm are we doin' ?	*/
-	arg_count -= 1;									/* One less argument.			*/
+	arg_count -= 1;	/* Count arg1 pp_function */
 
 	switch (*pp_function)
 	{
@@ -124,29 +136,27 @@ va_dcl
 			break;
 		default:
 		{
-			werrlog(ERRORCODE(18),*pp_function,0,0,0,0,0,0,0);		/* Function not implemented.		*/
+			werrlog(WERRCODE(48018),*pp_function,0,0,0,0,0,0,0);		/* Function not implemented.		*/
 			return(0);
 		}
 	}										/* Test for USAGE COUNT or PRNAME.	*/
 											/* If C,R,M test for PUTPARM label.	*/
-	long_item     = va_arg(the_args, int4*);					/* Address of the usage count, maybe.	*/
+	int4_ptr     = va_arg(the_args, int4*);						/* Address of the usage count, maybe.	*/
 	arg_count -= 1;									/* One less argument.			*/
-	byte_pointer = (char *) long_item;
+	byte_pointer = (char *) int4_ptr;
 
 	usage_count = 1;								/* Default to this value.		*/
 	if (('D' == *pp_function || 'E' == *pp_function) &&
-	    longargtest(byte_pointer, 2) 			)			/* Did they specify the usage count ?	*/
+	    WL_longargtest(byte_pointer, 2) 			)			/* Did they specify the usage count ?	*/
 	{
-		GETBIN(&swap_me,long_item,sizeof(int4));
-		wswap(&swap_me);							/* Swap the byte order.			*/
-		usage_count = swap_me;				   			/* Set local variable.			*/
+		usage_count = WL_get_swap(int4_ptr);
 
 		prname = va_arg(the_args, char*);					/* Address of the prname.		*/
 		arg_count -= 1;								/* One less argument.			*/
 	}
 	else
 	{                                                               	        /* Nope.  First byte is not a null.	*/
-		prname = (char *) long_item;						/* This argument is the prname.		*/
+		prname = (char *) int4_ptr;						/* This argument is the prname.		*/
 		pplabel_arg = prname;							/* pplabel for "R", "M", and "C"	*/
 	}
 
@@ -158,22 +168,22 @@ va_dcl
 	{										/* PUTPARM label is in prname for 'C'.	*/
 		if ( 1 == arg_count )
 		{
-			long_item = va_arg(the_args,int4*);				/* Get the PUTPARM return code address.	*/
-			return_code = long_item;					/* Save the address of the return code.	*/
+			int4_ptr = va_arg(the_args,int4*);				/* Get the PUTPARM return code address.	*/
+			return_code = int4_ptr;						/* Save the address of the return code.	*/
 		}
 		else
 		{
-			return_code = long_item;
+			return_code = int4_ptr;
 			pplabel_arg = "        ";					/* Trigger an ERASE-ALL			*/
 		}
 
 		if (pplabel_arg && ' ' != pplabel_arg[0])				/* If a label was supplied then		*/
 		{
 			SHMH	*prb;
-			prb = get_prb_area(NULL,pplabel_arg,OK_USED);			/* find the PRB				*/
+			prb = WL_get_prb_area(NULL,pplabel_arg,OK_USED);			/* find the PRB				*/
 			if (prb)
 			{
-				ret = (int4)erase_prb(prb);				/* erase the prb			*/
+				ret = (int4)WL_erase_prb(prb);				/* erase the prb			*/
 			}
 			else
 			{
@@ -182,12 +192,11 @@ va_dcl
 		}
 		else	/* Erase all PRB's at this level */
 		{
-			ret = (int4)erase_prb_level();					/* Erase all PRB's at this level	*/
+			ret = (int4)WL_erase_prb_level();					/* Erase all PRB's at this level	*/
 		}
 
-		wswap(&ret);
-		PUTBIN(return_code,&ret,sizeof(int4));
-		cleanup_shrfil();
+		WL_put_swap( return_code, ret );
+		WL_cleanup_shrfil();
 		return(0);								/* Done with function 'C'.		*/
 	}
 
@@ -195,10 +204,8 @@ va_dcl
 	ret = 0;									/* Continue processing.			*/
 
 	keyword_count = 0;								/* Initialize keyword count		*/
-	long_item = va_arg(the_args, int4*);						/* Addr. of the no. of keywords, maybe.	*/
+	int4_ptr = va_arg(the_args, int4*);						/* Addr. of the no. of keywords, maybe.	*/
 	arg_count -= 1;									/* One less argument.			*/
-	GETBIN(&swap_me,long_item,sizeof(int4));					/* Get a local copy to be swapped.	*/
-	wswap(&swap_me);								/* Swap the byte order.			*/
 	if (test_next_arg(the_args,arg_count))						/* Are there any more arguments ?	*/
 	{										/* Yes, so test which function.		*/
 /*
@@ -208,34 +215,33 @@ va_dcl
 */
 		if ('R' == *pp_function)						/* Is 'R' so is the receiver and no	*/
 		{									/*  keywords to be processed,		*/
-			r_receiver  = (char *)long_item;				/* Set local copy of this value.	*/
-			long_item = va_arg(the_args, int4*);				/* Addr. of the receiver length.	*/
-			rlptr = long_item;						/* Save the pointer.			*/
-			GETBIN(&rcvr_len,rlptr,sizeof(int4));
-			wswap(&rcvr_len);						/* Swap the byte order.			*/
-			long_item = va_arg(the_args, int4*);				/* Addr. of the total length, maybe.	*/
+			r_receiver  = (char *)int4_ptr;					/* Set local copy of this value.	*/
+
+			rlptr = va_arg(the_args, int4*);				/* Addr. of the receiver length.	*/
+			rcvr_len = WL_get_swap(rlptr);
+
+			int4_ptr = va_arg(the_args, int4*);				/* Addr. of the total length, maybe.	*/
 			arg_count -= 1;							/* One less argument.			*/
 			if (test_next_arg(the_args,arg_count))				/* Are there any more arguments ?	*/
 			{								/* Yes, so test which function.		*/
-				tlptr = long_item;
-				GETBIN(&tot_len,tlptr,sizeof(int4));			/* Set local copy of this value.	*/
-				wswap(&tot_len);					/* Swap the byte order.			*/
+				tlptr = int4_ptr;
+				tot_len = WL_get_swap(tlptr);
 			}
 			else								/* Nope.  This is the return code.	*/
 			{
 				tlptr = NULL;
-				return_code = long_item;				/* Save the address of the return code.	*/
+				return_code = int4_ptr;					/* Save the address of the return code.	*/
 				rc_fl = TRUE;
 			}
 		} 									/* else is the keyword count.		*/
 		else 
 		{
-			keyword_count = swap_me;					/* Set local copy of this value.	*/
+			keyword_count = WL_get_swap(int4_ptr);				/* Set local copy of this value.	*/
 		}
 	}
 	else
 	{										/* Nope.  This is the return code.	*/
-		return_code = long_item;						/* Save the address of the return code.	*/
+		return_code = int4_ptr;							/* Save the address of the return code.	*/
 		rc_fl = TRUE;
 	}
                         
@@ -261,12 +267,12 @@ va_dcl
 		*/
 		if (!fmtlist) 
 		{
-			p = fmtlist = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
-			if ('M' == *pp_function) m_kwdata = (char **)wcalloc((size_t)keyword_count,sizeof(char *));
+			p = fmtlist = (FMTLIST *)wisp_calloc(1,sizeof(FMTLIST));
+			if ('M' == *pp_function) m_kwdata = (char **)wisp_calloc((size_t)keyword_count,sizeof(char *));
 		}
 		else
 		{
-			p->next = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
+			p->next = (FMTLIST *)wisp_calloc(1,sizeof(FMTLIST));
 			p = p->next;
 		}
 		p->next = NULL;
@@ -276,8 +282,7 @@ va_dcl
 		if ('M' == *pp_function) m_kwdata[idx] = valptr;			/* Save ptr to keyword data receiver.	*/
 		lenptr	= va_arg(the_args,int4*);
 		arg_count -= 3;
-		GETBIN(&len,lenptr,sizeof(int4));
-		wswap(&len);
+		len = WL_get_swap(lenptr);
 		if (-1 == len)
 		{
 			/*
@@ -304,7 +309,7 @@ va_dcl
 		else if (0==memcmp(p->keyword,"LIBRARY ",KEYWORD_SIZE)) { p->len = MAX(p->len,8); }
 		else if (0==memcmp(p->keyword,"VOLUME  ",KEYWORD_SIZE)) { p->len = MAX(p->len,6); }
 
-		p->value = (char *)wcalloc((int)(p->len+1),(int)sizeof(char));		/* grab space 				*/
+		p->value = (char *)wisp_calloc((int)(p->len+1),(int)sizeof(char));		/* grab space 				*/
 		if (p->len > len) memset(p->value,' ',(size_t)p->len);			/* if special case then blank fill	*/
 		memcpy(p->value,valptr,(int)len);					/* copy len bytes 			*/
 	}
@@ -401,10 +406,10 @@ va_dcl
 		/*
 		**	This section handles both 'R' and 'M' requests.
 		*/
-		parm_area = get_prb_area(NULL,pplabel_arg,OK_USED);		/* Search for label match.			*/
+		parm_area = WL_get_prb_area(NULL,pplabel_arg,OK_USED);		/* Search for label match.			*/
 		if (parm_area)							/* If reference label found.			*/
 		{								
-			ret = load_fmtlist(parm_area,&ref_fmtlist);		/* Load the ref PRB into a fmtlist		*/
+			ret = WL_load_fmtlist(parm_area,&ref_fmtlist);		/* Load the ref PRB into a fmtlist		*/
 			if (0==ret && 'M' == *pp_function)
 			{
 				/*
@@ -416,7 +421,7 @@ va_dcl
 					FMTLIST	*p;
 					int	ii;
 
-					mergex_fmtlist(ref_fmtlist,fmtlist);	/* Merge the ref into the dest fmtlist		*/
+					WL_mergex_fmtlist(ref_fmtlist,fmtlist);	/* Merge the ref into the dest fmtlist		*/
 					for(p=fmtlist,ii=0; p; p=p->next,ii++)	/* Replace the updated values			*/
 					{
 						memcpy(m_kwdata[ii],p->value,(int)(p->len));
@@ -431,16 +436,14 @@ va_dcl
 				**	The whole fmtlist is written to the receiver as a formated block.
 				*/
 				block_fmtlist(ref_fmtlist,r_receiver,&rcvr_len,&tot_len);
-				wswap(&rcvr_len);		
-				PUTBIN(rlptr,&rcvr_len,sizeof(int4));		/* Return # bytes used by receiver.		*/
+				WL_put_swap( rlptr, rcvr_len );			/* Return # bytes used by receiver.		*/
 				if (tlptr)
 				{
-					wswap(&tot_len);			/* Total bytes needed				*/
-					PUTBIN(tlptr,&tot_len,sizeof(int4));
+					WL_put_swap(tlptr, tot_len);		/* Total bytes needed				*/
 				}
 			}
 
-			free_fmtlist(ref_fmtlist);				/* Free the reference fmtlist			*/
+			WL_free_fmtlist(ref_fmtlist);				/* Free the reference fmtlist			*/
 
 			if (0==ret)
 			{
@@ -448,7 +451,7 @@ va_dcl
 
 				if ('C' == cleanup_opt || 'c' == cleanup_opt)	/* Cleanup the referenced PUTPARM.		*/
 				{
-					erase_prb(parm_area);
+					WL_erase_prb(parm_area);
 				}
 			}
 		}
@@ -467,7 +470,7 @@ va_dcl
 		{
 			SHMH	*ref_prb;
 
-			ref_prb = get_prb_area(NULL,pp_reflbl,OK_USED);			/* Search for label match.		*/
+			ref_prb = WL_get_prb_area(NULL,pp_reflbl,OK_USED);			/* Search for label match.		*/
 			if (ref_prb)							/* If reference label found.		*/
 			{
 				/*
@@ -478,17 +481,17 @@ va_dcl
 				if (fmtlist)
 				{
 					FMTLIST	*ref_fmtlist;
-					ret = load_fmtlist(ref_prb,&ref_fmtlist);	/* Load the reference fmtlist		*/
+					ret = WL_load_fmtlist(ref_prb,&ref_fmtlist);	/* Load the reference fmtlist		*/
 
 					if (0==ret && ref_fmtlist)			/* If OK then merge the fmtlists	*/
 					{
-						mergex_fmtlist(ref_fmtlist,fmtlist);
+						WL_mergex_fmtlist(ref_fmtlist,fmtlist);
 					}
-					free_fmtlist(ref_fmtlist);
+					WL_free_fmtlist(ref_fmtlist);
 
 					if ('C' == cleanup_opt || 'c' == cleanup_opt)	/* Cleanup the referenced PUTPARM.	*/
 					{
-						erase_prb(ref_prb);
+						WL_erase_prb(ref_prb);
 					}
 					memset(pp_reflbl,' ',LABEL_SIZE);		/* Clear the reflbl - it's been done	*/
 				}
@@ -505,11 +508,10 @@ va_dcl
 		}
 	}
 
-	free_fmtlist(fmtlist);
-	cleanup_shrfil();								/* Cleanup shared memory		*/
+	WL_free_fmtlist(fmtlist);
+	WL_cleanup_shrfil();								/* Cleanup shared memory		*/
 
-	wswap(&ret);
-	PUTBIN(return_code,&ret,sizeof(int4));						/* Set the return code for PUTPARM.	*/
+	WL_put_swap(return_code, ret);
 	return(0);
 }                                                                                                                                 
 
@@ -521,21 +523,11 @@ static int test_next_arg(args,cnt)							/* Return TRUE if there is another arg.
 va_list args;										/* on the stack.			*/
 int cnt;										/* NOTE: This does not adjust the ptr	*/
 {											/*       to the arguments above!	*/
-#ifdef VMS
-	char *tst_scratch;
-
-	if (!cnt) return(FALSE);							/* No more arguments to get.		*/
-
-	tst_scratch = va_arg(args, char*);						/* Address of the next argument.	*/
-	if (tst_scratch) return(TRUE);							/* Return TRUE, have an address.	*/
-	else		 return (FALSE);						/* Return FALSE, no address available.	*/
-#else  /* !VMS */
 
 	if (cnt > 0)
 		return (TRUE);
 	else
 		return (FALSE);
-#endif
 }
 
 /*
@@ -571,7 +563,7 @@ int cnt;										/* NOTE: This does not adjust the ptr	*/
 **
 */
 
-static int4 write_putparm(char *function, int4 ucount, char *prname, FMTLIST *fmtlist, char pfkey, 
+static int4 write_putparm(const char *function, int4 ucount, char *prname, FMTLIST *fmtlist, char pfkey, 
 			char *pp_label, char *pp_reflbl, char cleanup)
 {
 	int 	mem_needed;
@@ -592,7 +584,7 @@ static int4 write_putparm(char *function, int4 ucount, char *prname, FMTLIST *fm
 
 	if ( pp_label[0] && pp_label[0] != ' ' )					/* If Labeled then delete previous	*/
 	{										/* (Only 1 PRB with a given label.)	*/
-		erase_prb(get_prb_area(NULL,pp_label,OK_USED));				/* Get & erase the labeled PRB		*/
+		WL_erase_prb(WL_get_prb_area(NULL,pp_label,OK_USED));			/* Get & erase the labeled PRB		*/
 	}
 #endif
 	if ( pp_label[0] && pp_label[0] != ' ' )
@@ -600,12 +592,12 @@ static int4 write_putparm(char *function, int4 ucount, char *prname, FMTLIST *fm
 		/*
 		**	Only one PRB with a given label allowed at a given level.
 		*/
-		erase_prb_label_level(pp_label);
+		WL_erase_prb_label_level(pp_label);
 	}
 
-	size_fmtlist(fmtlist,&keyword_count,&mem_needed);				/* Get size values for fmtlist		*/
+	WL_size_fmtlist(fmtlist,&keyword_count,&mem_needed);				/* Get size values for fmtlist		*/
 
-	shmaddr = get_sh_seg(prname,pp_label,mem_needed,&id,&size);			/* get the memory if first write.	*/
+	shmaddr = WL_get_sh_seg(prname,pp_label,mem_needed,&id,&size);			/* get the memory if first write.	*/
 	if (!shmaddr)									/* Some kind of error when trying to	*/
 	{										/* the shared memory address.		*/
 		return(12L);
@@ -619,7 +611,7 @@ static int4 write_putparm(char *function, int4 ucount, char *prname, FMTLIST *fm
 	pputparm->keyw_cnt 	= keyword_count;					/* and keyword count 			*/
 	pputparm->status 	= P_OK;
 
-	write_fmtlist(pputparm,fmtlist);
+	WL_write_fmtlist(pputparm,fmtlist);
 
 	pputparm->pfkey = pfkey;
 	if (strcmp(pp_label,"        ")) memcpy(pputparm->label,pp_label,LABEL_SIZE);	/* Copy the PUTPARM label to structure	*/
@@ -628,13 +620,13 @@ static int4 write_putparm(char *function, int4 ucount, char *prname, FMTLIST *fm
 	else				  memset(pputparm->reflbl,0,LABEL_SIZE);	/*  else set it to NULL.		*/
 	pputparm->cleanup = cleanup;
 
-	finish_sh_seg(size);								/* Update counters			*/
+	WL_finish_sh_seg(size);								/* Update counters			*/
 
 	return(0L);
 }
 
 /*
-**	Routine:	write_fmtlist()
+**	Routine:	WL_write_fmtlist()
 **
 **	Function:	To write a fmtlist to PRB
 **
@@ -655,7 +647,7 @@ static int4 write_putparm(char *function, int4 ucount, char *prname, FMTLIST *fm
 **	08/28/92	Written by GSL
 **
 */
-int write_fmtlist(SHMH *prb, FMTLIST *fmtlist)
+int WL_write_fmtlist(SHMH *prb, FMTLIST *fmtlist)
 {
 	char	*dest;
 	FMTLIST	*p;
@@ -666,14 +658,14 @@ int write_fmtlist(SHMH *prb, FMTLIST *fmtlist)
 
 	for (p=fmtlist; p; p=p->next)						/* Loop thru and write each keywshm item	*/
 	{	
-		offs = load_keywshm((KEYWSHM *)dest,p);
+		offs = WL_load_keywshm((KEYWSHM *)dest,p);
 		dest += offs;
 	}
 	return(0);
 }
 
 /*
-**	Routine:	size_fmtlist()
+**	Routine:	WL_size_fmtlist()
 **
 **	Function:	To calc the size of this fmtlist. (Memory needed and keyword count)
 **
@@ -694,7 +686,7 @@ int write_fmtlist(SHMH *prb, FMTLIST *fmtlist)
 **	08/28/92	Written by GSL
 **
 */
-int size_fmtlist(FMTLIST *fmtlist, int *cnt, int *mem)
+int WL_size_fmtlist(FMTLIST *fmtlist, int *cnt, int *mem)
 {
 	FMTLIST	*p;
 
@@ -710,7 +702,7 @@ int size_fmtlist(FMTLIST *fmtlist, int *cnt, int *mem)
 }
 
 /*
-**	Routine:	load_fmtlist()
+**	Routine:	WL_load_fmtlist()
 **
 **	Function:	To load a fmtlist from a PRB in shared memory.
 **
@@ -733,7 +725,7 @@ int size_fmtlist(FMTLIST *fmtlist, int *cnt, int *mem)
 **
 */
 
-int load_fmtlist(SHMH *parm_area, FMTLIST **fmtlist_ptr)
+int WL_load_fmtlist(SHMH *parm_area, FMTLIST **fmtlist_ptr)
 {
 	int	i;
 	int	ret;
@@ -749,7 +741,7 @@ int load_fmtlist(SHMH *parm_area, FMTLIST **fmtlist_ptr)
 		char	*prb_keyword;						/* Pointer to actual keyword in PRB		*/
 		int2	len;
 
-		prb_keystruct = find_prb_keyword(parm_area,NULL,i);		/* Get pointer to keyword struct		*/
+		prb_keystruct = WL_find_prb_keyword(parm_area,NULL,i);		/* Get pointer to keyword struct		*/
 
 		if (!prb_keystruct)
 		{
@@ -759,11 +751,11 @@ int load_fmtlist(SHMH *parm_area, FMTLIST **fmtlist_ptr)
 
 		if (!*fmtlist_ptr) 
 		{
-			p = *fmtlist_ptr = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
+			p = *fmtlist_ptr = (FMTLIST *)wisp_calloc(1,sizeof(FMTLIST));
 		}
 		else
 		{
-			p->next = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
+			p->next = (FMTLIST *)wisp_calloc(1,sizeof(FMTLIST));
 			p = p->next;
 		}
 		p->next = NULL;
@@ -771,10 +763,10 @@ int load_fmtlist(SHMH *parm_area, FMTLIST **fmtlist_ptr)
 		prb_keyword = (char *)prb_keystruct + sizeof(KEYWSHM);		/* Get ptr to keyword in PRB			*/
 		memcpy(p->keyword,prb_keyword,KEYWORD_SIZE);			/* copy the keyword in (incl. spaces) */
 
-		len = a_int2(&prb_keystruct->value_len);			/* Load the value into dest.			*/
+		len = WL_a_int2(&prb_keystruct->value_len);			/* Load the value into dest.			*/
 		p->len = (int4)len;						/* set len */
 
-		p->value = (char *)wcalloc((int)len+1,(int)sizeof(char));	/* grab space */
+		p->value = (char *)wisp_calloc((int)len+1,(int)sizeof(char));	/* grab space */
 		memcpy(p->value,prb_keyword+KEYWORD_SIZE,(int)len);		/* copy len bytes */
 		p->special = prb_keystruct->special;
 	}
@@ -784,7 +776,7 @@ int load_fmtlist(SHMH *parm_area, FMTLIST **fmtlist_ptr)
 }
 
 /*
-**	Routine:	mergex_fmtlist()
+**	Routine:	WL_mergex_fmtlist()
 **
 **	Function:	To merge (exclusive) two fmtlist's
 **
@@ -808,7 +800,7 @@ int load_fmtlist(SHMH *parm_area, FMTLIST **fmtlist_ptr)
 **
 */
 
-int mergex_fmtlist(FMTLIST *src, FMTLIST *dest)
+int WL_mergex_fmtlist(FMTLIST *src, FMTLIST *dest)
 {
 	FMTLIST	*s, *d;
 	int	rc;
@@ -839,7 +831,7 @@ int mergex_fmtlist(FMTLIST *src, FMTLIST *dest)
 }
 
 /*
-**	Routine:	merge_fmtlist()
+**	Routine:	WL_merge_fmtlist()
 **
 **	Function:	To merge (additive) two fmtlist's
 **
@@ -863,7 +855,7 @@ int mergex_fmtlist(FMTLIST *src, FMTLIST *dest)
 **
 */
 
-int merge_fmtlist(FMTLIST *src, FMTLIST **dest_ptr)
+int WL_merge_fmtlist(FMTLIST *src, FMTLIST **dest_ptr)
 {
 	FMTLIST	*s, *d, *append_list, *p;
 	int	rc;
@@ -902,18 +894,18 @@ int merge_fmtlist(FMTLIST *src, FMTLIST **dest_ptr)
 		{
 			if (!append_list) 
 			{
-				p = append_list = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
+				p = append_list = (FMTLIST *)wisp_calloc(1,sizeof(FMTLIST));
 			}
 			else
 			{
-				p->next = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
+				p->next = (FMTLIST *)wisp_calloc(1,sizeof(FMTLIST));
 				p = p->next;
 			}
 			p->next = NULL;
 
 			memcpy(p->keyword,s->keyword,KEYWORD_SIZE);			/* copy the keyword in (incl. spaces) */
 			p->len = s->len;						/* set len */
-			p->value = (char *)wcalloc((int)p->len+1,(int)sizeof(char));	/* grab space */
+			p->value = (char *)wisp_calloc((int)p->len+1,(int)sizeof(char));	/* grab space */
 			memcpy(p->value,s->value,(int)p->len);				/* copy len bytes */
 			p->special = s->special;
 		}
@@ -944,7 +936,7 @@ int merge_fmtlist(FMTLIST *src, FMTLIST **dest_ptr)
 }
 
 /*
-**	Routine:	free_fmtlist()
+**	Routine:	WL_free_fmtlist()
 **
 **	Function:	To free a fmtlist
 **
@@ -965,7 +957,7 @@ int merge_fmtlist(FMTLIST *src, FMTLIST **dest_ptr)
 **
 */
 
-int free_fmtlist(FMTLIST *fmtlist)
+int WL_free_fmtlist(FMTLIST *fmtlist)
 {
 	FMTLIST	*p;
 
@@ -1038,7 +1030,7 @@ static int block_fmtlist(FMTLIST *fmtlist, char *receiver, int4 *rlen, int4 *tle
 			memcpy(ptr,p->keyword,KEYWORD_SIZE);			/* 1-8 		KEYWORD				*/
 			ptr += KEYWORD_SIZE;
 			ll = p->len;	
-			wswap(&ll);						/* Swap the length field for output		*/
+			WL_wswap(&ll);						/* Swap the length field for output		*/
 			memcpy(ptr,&ll,4);					/* 9-12		LENGTH				*/
 			ptr += 4;
 			memcpy(ptr,p->value,(int)(p->len));			/* 13-end	VALUE				*/
@@ -1053,14 +1045,14 @@ static int block_fmtlist(FMTLIST *fmtlist, char *receiver, int4 *rlen, int4 *tle
 }
 
 /*
-	find_prb_keyword	Return a pointer to the keyword in a PRB.
+	WL_find_prb_keyword	Return a pointer to the keyword in a PRB.
 
 		key; 		Keyword to search for (if kw_num==0)
 		parm_a;		Parm area ptr (SHMH *)
 		kw_num;		Relative keyword to find (if kw_num != 0)
 */
 
-KEYWSHM *find_prb_keyword(SHMH *parm_a, char *key, int kw_num)
+KEYWSHM *WL_find_prb_keyword(SHMH *parm_a, char *key, int kw_num)
 {
 	char 	l_keyword[KEYWORD_SIZE+1], 					/* Local keyword (Null terminated)		*/
 		d_keyword[KEYWORD_SIZE+1];					/* Keyword from PRB (Null terminated)		*/
@@ -1082,7 +1074,7 @@ KEYWSHM *find_prb_keyword(SHMH *parm_a, char *key, int kw_num)
 		if (p) *p=(char)0;						/* terminate the string.			*/
 	}
 
-	cnt = a_int2(&parm_a->keyw_cnt);					/* Get the number of keywords in PRB		*/
+	cnt = WL_a_int2(&parm_a->keyw_cnt);					/* Get the number of keywords in PRB		*/
 
 	str = (char *)parm_a;
 	str += sizeof(SHMH);							/* Point to first keyword			*/
@@ -1101,14 +1093,14 @@ KEYWSHM *find_prb_keyword(SHMH *parm_a, char *key, int kw_num)
 		{
 			return( ptr_shm );						/* Return the ptr			*/
 		}
-	        offs = a_int2(&ptr_shm->next_offs);				/* Get offset to next keyword		*/
+	        offs = WL_a_int2(&ptr_shm->next_offs);				/* Get offset to next keyword		*/
 	}
 	return( 0 );
 }
 
 
 /*
-	search_parm_area	Search a given PRB for a keyword (or by number -- kw_num) and return the value in dest.
+	WL_search_parm_area	Search a given PRB for a keyword (or by number -- kw_num) and return the value in dest.
 				If keyword found, dest is set to spaces (for maxlen) then loaded with the value found.
 				Returns 0 if not found.  If kw_num != 0 then it also loads the keyword into key.
 
@@ -1119,13 +1111,13 @@ KEYWSHM *find_prb_keyword(SHMH *parm_a, char *key, int kw_num)
 
 */
 
-int search_parm_area(char *dest, char *key, int4 maxlen, SHMH *parm_a)
+int WL_search_parm_area(char *dest, char *key, int4 maxlen, SHMH *parm_a)
 {
 	KEYWSHM	*prb_keystruct;						/* Pointer to keyword struct in PRB			*/
 	char	*prb_keyword;						/* Pointer to actual keyword in PRB			*/
 	int2	len;
 
-	prb_keystruct = find_prb_keyword(parm_a,key,0);
+	prb_keystruct = WL_find_prb_keyword(parm_a,key,0);
 
 	if (!prb_keystruct)						/* Not found						*/
 	{
@@ -1134,7 +1126,7 @@ int search_parm_area(char *dest, char *key, int4 maxlen, SHMH *parm_a)
 
 	prb_keyword = (char *)prb_keystruct + sizeof(KEYWSHM);		/* Get ptr to keyword in PRB				*/
 
-	len = a_int2(&prb_keystruct->value_len);			/* Load the value into dest.		*/
+	len = WL_a_int2(&prb_keystruct->value_len);			/* Load the value into dest.		*/
 	memset(dest,' ',(int)maxlen);
 	strncpy(dest,prb_keyword+KEYWORD_SIZE, ((len > (int)maxlen) ? (int)maxlen : len));
 
@@ -1144,6 +1136,39 @@ int search_parm_area(char *dest, char *key, int4 maxlen, SHMH *parm_a)
 /*
 **	History:
 **	$Log: putparm.c,v $
+**	Revision 1.25  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.24  2003/01/29 21:08:11  gsl
+**	Change PUTPARM to use stdarg.h
+**	
+**	Revision 1.23  2002/12/10 20:54:12  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.22  2002/12/09 21:09:30  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.21  2002/07/16 16:24:54  gsl
+**	Globals
+**	
+**	Revision 1.20  2002/07/12 17:00:59  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.19  2002/07/11 20:29:11  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.18  2002/07/10 21:05:22  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.17  2002/07/09 04:13:59  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.16  2002/07/02 21:15:27  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.15  2002/06/21 03:10:39  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.14  1998/08/03 21:09:20  jlima
 **	Support Logical Volume Translation to long file names containing eventual embedded blanks.
 **	
@@ -1161,7 +1186,7 @@ int search_parm_area(char *dest, char *key, int4 maxlen, SHMH *parm_a)
 **	fix for NT
 **
 **	Revision 1.9  1995-05-15 06:08:26-07  gsl
-**	Added call to erase_prb_label_level() to erase an existing putparm
+**	Added call to WL_erase_prb_label_level() to erase an existing putparm
 **	with the same label at the same linklevel.
 **	Replaced numeric literals with meaningful defines.
 **	Added trace calls to werrlog() for entry into all the routines.

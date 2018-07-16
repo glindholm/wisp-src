@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wexit.c
 **
@@ -10,7 +31,7 @@ static char rcsid[]="$Id:$";
 **	Purpose:	Comment exit point
 **
 **	Routines:	
-**	wexit()		Perform cleanup then terminal process
+**	WL_wexit()	Perform cleanup then terminal process
 */
 
 /*
@@ -25,14 +46,11 @@ static char rcsid[]="$Id:$";
 #include "vwang.h"
 #include "wisplib.h"
 #include "level.h"
-#include "wexit.h"
 
-#define		ROUTINE		65400
-
-extern int shutexitcobol(int exit_code);
+extern void WL_shutexitcobol(int exit_code);
 
 /*
-**	ROUTINE:	wexit()
+**	ROUTINE:	WL_wexit()
 **
 **	FUNCTION:	Preform cleanup then terminate the process
 **
@@ -56,53 +74,26 @@ extern int shutexitcobol(int exit_code);
 **	WARNINGS:	None
 **
 */
-void WL_wexit(int4 num)
+void WL_wexit(int4 exit_code)
 {
-	int	exit_code;
+	WL_wtrace("WEXIT", "ENTRY", "wexit(%ld) linklevel=%d", (long)exit_code, WL_linklevel()); 
+	WL_wtrace_timestamp("WEXIT");
 
-	wtrace("WEXIT", "ENTER", "wexit(%ld) linklevel=%d", (long)num, linklevel()); 
-	wtrace_timestamp("WEXIT");
-
-	if (0 == num)
+	if (0 == exit_code)
 	{
-		LINKCOMPCODE = 0;							/* Non-error termination of LINK	*/
+		wisp_set_LINKCOMPCODE(0);						/* Non-error termination of LINK	*/
 	}
 	else
 	{
-		LINKCOMPCODE = 16;							/* Abnormal termination of LINK		*/
+		wisp_set_LINKCOMPCODE(16);						/* Abnormal termination of LINK		*/
 	}
 	
 
-#ifdef VMS
-	if ( num == 0 ) 
-	{
-		exit_code = 1;								/* Change to VMS style exit code	*/
-	}
-	else
-	{
-		/*
-		**	WISP coded return codes == (RC * 10000 + 1)
-		**	the "+ 1" is to make them VMS warnings/informational codes.
-		**	LINK knows how to decode.
-		*/
-		exit_code = num * 10000 + 1;
-	}
-#else					/* unix and MSDOS */
-	if ( 2 == sizeof(int) )								/* int == short (16 bits; like MSDOS).	*/
-	{
-		exit_code = (int)( num % 10000L );					/* Preserve the last 4 decimal digits.	*/
-	}
-	else										/* int == int4 (32 bits; unix or VMS).	*/
-	{
-		exit_code = num;
-	}
+	WISPEXIT();
 
-	wexith();
-#endif
-
-	if (run_cobol)
+	if (wisp_acu_cobol() || wisp_mf_cobol())
 	{
-		shutexitcobol(exit_code);	/* this is the COBOL specific routine to shutdown cobol and exit		*/
+		WL_shutexitcobol(exit_code);	/* this is the COBOL specific routine to shutdown cobol and exit		*/
 	}
 	else
 	{
@@ -113,8 +104,41 @@ void WL_wexit(int4 num)
 /*
 **	History:
 **	$Log: wexit.c,v $
-**	Revision 1.15.2.1  2002/11/14 15:23:38  gsl
-**	Change wexit() to WL_wexit()
+**	Revision 1.27  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.26  2002/12/10 17:09:14  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.25  2002/12/09 21:09:33  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.24  2002/10/18 19:14:07  gsl
+**	Cleanup
+**	
+**	Revision 1.23  2002/07/19 22:07:14  gsl
+**	Renaming cobol api routines for global uniqueness
+**	
+**	Revision 1.22  2002/07/12 19:10:18  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.21  2002/07/11 15:21:44  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.20  2002/07/10 21:05:30  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.19  2002/07/09 04:13:54  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.18  2002/07/02 04:00:37  gsl
+**	change acu_cobol and mf_cobol to wisp_acu_cobol() and wisp_mf_cobol()
+**	
+**	Revision 1.17  2002/07/01 04:02:42  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.16  2002/06/21 03:10:44  gsl
+**	Remove VMS & MSDOS
 **	
 **	Revision 1.15  1998/05/12 14:53:36  gsl
 **	Added wtrace_timestamp()

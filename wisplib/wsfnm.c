@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wsfnm.c
 **
@@ -60,7 +81,7 @@ static char rcsid[]="$Id:$";
 */
 
 #include <stdio.h>									/* Allow standard I/O.			*/
-#include <varargs.h>									/* Allow variable number of arguments	*/
+#include <stdarg.h>									/* Allow variable number of arguments	*/
 #include <stdlib.h>
 #include <string.h>
 
@@ -74,15 +95,14 @@ static char rcsid[]="$Id:$";
 /*
 **	Globals and Externals
 */
-extern char NC_pfkey[3], NC_order_area[4];						/* Define global in WSFNS so accessible	*/
-extern int wsfns_toggle;								/* Define global in WSFNS so accessible */
-extern char cur_toggle_val;								/* Var to hold current toggle value.	*/
-void hfio();
-unsigned char *wsfnm_cscn;								/* Current pos in long screen pointer.	*/
+extern char WLNC_pfkey[3], WLNC_order_area[4];						/* Define global in WSFNS so accessible	*/
+extern int  WLNC_toggle;								/* Define global in WSFNS so accessible */
+extern char WLNC_cur_toggle_val;							/* Var to hold current toggle value.	*/
 
 /*
 **	Static data
 */
+static unsigned char *wsfnm_cscn;							/* Current pos in long screen pointer.	*/
 static short screen_len, scrl_len;							/* Values for each screen setup.	*/
 static short st_scrl, end_scrl;
 
@@ -92,14 +112,12 @@ static short st_scrl, end_scrl;
 static void do_erase();
 static void blank_msg_line();
 
-#define		ROUTINE		85500
 
-int WSFNM(va_alist)
-va_dcl
+int WSFNM(char* z1_fn, ...)
 {
 	va_list		the_args;							/* A pointer to traverse the stack.	*/
 	int		arg_count, i;							/* Ptrs and local copies of passed param.*/
-	unsigned char	*z1_fn, *z1_rec, *z1_beepfl;					/* Input/output params from WSFNM call.	*/
+	unsigned char	*z1_rec, *z1_beepfl;						/* Input/output params from WSFNM call.	*/
         short           *z1_pf, *z1_col, *z1_row; 
 	short		*z1_screenlines, *z1_slast, *z1_sfirst, *z1_line, *z1_pos;
 	short		realline;
@@ -107,32 +125,30 @@ va_dcl
 	int		another_screen, snum, l_used;
 	short		cur_scrl_len;
 	char		wsfns_func[3];
-	int4		vcount;
 
-	werrlog(ERRORCODE(1),"?",0,0,0,0,0,0,0);					/* Say we are here.			*/
+	WL_wtrace("WSFNM","ENTRY","Entry into WSFNM Function=[%2.2s]",z1_fn);
 
-	check_first_time_netroncap();							/* Check environment if first time in.	*/
-	*wisp_progname = (char)0;							/* Set the progname name to spaces.	*/
-	*wisp_screen = (char)0;								/* Set the screen name to spaces.	*/
+	WLNC_check_first_time_netroncap();						/* Check environment if first time in.	*/
+	wisp_set_progname("");								/* Set the progname name to spaces.	*/
+	wisp_set_screenname("");							/* Set the screen name to spaces.	*/
 
-	va_start(the_args);								/* Set pointer to top of stack.		*/
-	arg_count = va_count(the_args);							/* How many args are there ?		*/
+	va_start(the_args, z1_fn);							/* Set pointer to top of stack.		*/
+	arg_count = WL_va_count();							/* How many args are there ?		*/
 	if (arg_count == 0)								/* No arguments passed.			*/
 	{
-		werrlog(ERRORCODE(4),func_type,arg_count,0,0,0,0,0,0);			/* Invalid call. Record message.	*/
+		werrlog(WERRCODE(85504),func_type,arg_count,0,0,0,0,0,0);		/* Invalid call. Record message.	*/
 		return(16);
 	}
-	va_start(the_args);								/* Go back to the top of the stack.	*/
-	z1_fn = va_arg(the_args, unsigned char *);					/* Get function type from arg stack.	*/
+	/* z1_fn = va_arg(the_args, unsigned char *); */				/* Get function type from arg stack.	*/
 	arg_count--;									/* One less argument.			*/
 	for (i = 0; i < 2; i++)  func_type[i] = *z1_fn++;				/* Copy function to variable.		*/
 	func_type[i] = '\0';								/* Null terminate the string.		*/
-	werrlog(ERRORCODE(1),func_type,0,0,0,0,0,0,0);					/* Say we are here.			*/
+	WL_wtrace("WSFNM","ENTRY","Entry into WSFNM(%2.2s)",func_type);
 	if (memcmp(func_type,"OM",2) == 0)						/* Is it function OM?			*/
 	{
 		if (arg_count != 5)
 		{
-			werrlog(ERRORCODE(2),func_type,arg_count,0,0,0,0,0,0);		/* Invalid call. Record message.	*/
+			werrlog(WERRCODE(85502),func_type,arg_count,0,0,0,0,0,0);		/* Invalid call. Record message.	*/
 			return(16);
 		}
 		z1_screenlines = va_arg(the_args, short *);
@@ -147,7 +163,7 @@ va_dcl
 	{
 		if (arg_count != 4)
 		{
-			werrlog(ERRORCODE(2),func_type,arg_count,0,0,0,0,0,0);		/* Invalid call. Record message.	*/
+			werrlog(WERRCODE(85502),func_type,arg_count,0,0,0,0,0,0);		/* Invalid call. Record message.	*/
 			return(16);
 		}
 		z1_rec = va_arg(the_args, unsigned char*);				/* Get the pointer to the screen.	*/
@@ -161,20 +177,20 @@ va_dcl
 		}
 		else
 		{
-			werrlog(ERRORCODE(8),func_type,*z1_line,0,0,0,0,0,0);		/* Invalid row. Record message.	*/
+			werrlog(WERRCODE(85508),func_type,*z1_line,0,0,0,0,0,0);		/* Invalid row. Record message.	*/
 			return(16);
 		}
 
 		z1_pos = va_arg(the_args, short *);					/* Get the column to position to.	*/
 		if ((*z1_pos < 0) || (*z1_pos > 80))
 		{
-			werrlog(ERRORCODE(6),func_type,*z1_pos,0,0,0,0,0,0);		/* Invalid column. Record message.	*/
+			werrlog(WERRCODE(85506),func_type,*z1_pos,0,0,0,0,0,0);		/* Invalid column. Record message.	*/
 			return(16);
 		}
 
 		z1_beepfl = va_arg(the_args, unsigned char*);				/* Assign flag to beep. 		*/
 
-		hfio((unsigned char)WRITE_ALL,z1_rec);					/* Display header and footer.		*/
+		WLNC_hfio((unsigned char)WRITE_ALL,z1_rec);				/* Display header and footer.		*/
 
 		if ((*z1_line < st_scrl) || (*z1_line > end_scrl)) 			/* Use the first scroll region?		*/
 		{
@@ -191,19 +207,19 @@ va_dcl
 		another_screen = 1;
 		while (another_screen)
 		{
-			vcount = 7;
-			wvaset( &vcount );
 			strcpy(wsfns_func,"DS");					/* Save screen for PF30 func.		*/
-			WSFNS(wsfns_func,wsfnm_cscn,&realline,z1_pos,z1_beepfl,&cur_scrl_len);
+			WL_set_va_count(6);
+			WSFNS(wsfns_func, wsfnm_cscn, &realline, z1_pos, z1_beepfl, &cur_scrl_len);
 			strcpy(wsfns_func,"AS");					/* Display and read screen.		*/
-			WSFNS(wsfns_func,wsfnm_cscn,&realline,z1_pos,z1_beepfl,&st_scrl,&cur_scrl_len);
-			if (memcmp(NC_pfkey,"02",2) == 0) 				/* Go to top of scroll region by PF2.	*/
+			WL_set_va_count(7);
+			WSFNS(wsfns_func, wsfnm_cscn, &realline, z1_pos, z1_beepfl, &st_scrl, &cur_scrl_len);
+			if (memcmp(WLNC_pfkey,"02",2) == 0) 	 			/* Go to top of scroll region by PF2.	*/
 			{
 				snum = 1;						/* Set to first page.			*/
 				wsfnm_cscn = &z1_rec[(st_scrl-1)*80];			/* Set ptr to beginning of scroll reg.	*/
 				cur_scrl_len = scrl_len;				/* Set back to full scroll region.	*/
 			}
-			else if (memcmp(NC_pfkey,"00",2) != 0)				/* Return processing to COBOL program.	*/
+			else if (memcmp(WLNC_pfkey,"00",2) != 0)			/* Return processing to COBOL program.	*/
 			{								/* so far in screen.			*/
 				another_screen = 0;					/* No more screens to display or not a	*/
 			}
@@ -230,12 +246,12 @@ va_dcl
 				*z1_pos = 0;						/* Set so positions on 1st mod field.	*/
 				*z1_line = 0;
 			}
-			if (wsfns_toggle)
+			if (WLNC_toggle)
 			{
-				hfio((unsigned char)WRITE_ALL,z1_rec);			/* Display header and footer.		*/
+				WLNC_hfio((unsigned char)WRITE_ALL,z1_rec);		/* Display header and footer.		*/
 			}
 		}
-		hfio((unsigned char)READ_ALL,z1_rec);					/* Restore header and footer info.	*/
+		WLNC_hfio((unsigned char)READ_ALL,z1_rec);				/* Restore header and footer info.	*/
 	}
 	else if (memcmp(func_type,"PM",2) == 0)						/* Is it function PM?			*/
 	{										/* Return cursor position and PFkey.	*/
@@ -243,81 +259,83 @@ va_dcl
 		z1_pf = va_arg(the_args, short *);					/* Get address of pfkey passed.		*/
 		z1_row = va_arg(the_args, short *);					/* Get address of cursor row.		*/
 		z1_col = va_arg(the_args, short *);					/* Get address of cursor column.	*/
-		vcount = 4;
-		wvaset( &vcount );
+		WL_set_va_count( 4 );
 		WSFNS(wsfns_func,z1_pf,z1_row,z1_col);					/* Make a call to WSFNS.		*/
 		return(0);
 	}
 	return(0);
 }
 
-void hfio(function, scn_ptr)								/* Call VWANG to display header and	*/
+void WLNC_hfio(function, scn_ptr)							/* Call VWANG to display header and	*/
 unsigned char function;									/* Function to be performed.		*/
 unsigned char *scn_ptr;									/* footer areas.			*/
 {
-	unsigned char	*terminate_list;						/* Parameters for vwang			*/
+	char		*terminate_list;						/* Parameters for vwang			*/
 	unsigned char	*ldispa, l_numl;						/* Local pointers for vwang.		*/
 	char		wcc, save_oa[4];						/* WANG order area for screen display	*/
-	char 		vw_mod[2];							/* Parameters for vwang PFkey pressed.	*/
+	unsigned char 	vw_mod[2];							/* Parameters for vwang PFkey pressed.	*/
 	int		st_row, i;
 
 	st_row = 1;									/* Set the starting header line #.	*/
 	wcc = POSITION_CURSOR;								/* Assign Write Control Character	*/
 
-	NC_order_area[ROW_NUMBER_BYTE]	= (unsigned char)st_row;	   		/* Starting screen line number for data.*/
-	NC_order_area[WCC_BYTE]            = wcc;					/* Set the WCC byte.			*/
-	NC_order_area[CURSOR_COL_BYTE]     = (unsigned char)1;				/* Position cursor at column.		*/
-	NC_order_area[CURSOR_ROW_BYTE]     = (unsigned char)1;				/* Position cursor at row.		*/
+	WLNC_order_area[ROW_NUMBER_BYTE]	= (unsigned char)st_row;	   	/* Starting screen line number for data.*/
+	WLNC_order_area[WCC_BYTE]            = wcc;					/* Set the WCC byte.			*/
+	WLNC_order_area[CURSOR_COL_BYTE]     = (unsigned char)1;			/* Position cursor at column.		*/
+	WLNC_order_area[CURSOR_ROW_BYTE]     = (unsigned char)1;			/* Position cursor at row.		*/
 
 	ldispa = (scn_ptr - 4);								/* Point to display area minus 4 bytes.	*/
 	for (i = 0; i < 4; i++) save_oa[i] = ldispa[i];					/* Save 4 bytes of program data area.	*/
-	for (i = 0; i < 4; i++) ldispa[i] = NC_order_area[i];				/* Concatenate order area with screen.	*/
+	for (i = 0; i < 4; i++) ldispa[i] = WLNC_order_area[i];				/* Concatenate order area with screen.	*/
 	l_numl = st_scrl - 1;								/* Set the number of lines to display.	*/
 
-	if (wsfns_toggle)
+	if (WLNC_toggle)
 	{
-		ldispa[4] = cur_toggle_val;						/* Move current toggle value into 	*/
+		ldispa[4] = WLNC_cur_toggle_val;					/* Move current toggle value into 	*/
 	}										/*  (1,1) header area of screen.	*/
-	terminate_list = (unsigned char *)"A";
-	vwang(&function, ldispa, &l_numl, terminate_list, NC_pfkey, vw_mod);
+	terminate_list = "A";
+	vwang(&function, ldispa, &l_numl, terminate_list, WLNC_pfkey, vw_mod);
 
-	NC_pfkey[2] = '\0';								/* Null terminate the string.		*/
-	for (i = 0; i < 4; i++) NC_order_area[i] = ldispa[i];				/* Save the returned vwang order area.	*/
+	WLNC_pfkey[2] = '\0';								/* Null terminate the string.		*/
+	for (i = 0; i < 4; i++) WLNC_order_area[i] = ldispa[i];				/* Save the returned vwang order area.	*/
 	for (i = 0; i < 4; i++) ldispa[i] = save_oa[i];					/* Restore program data area.		*/
 
 	st_row = st_scrl + scrl_len;							/* Set the starting footer line #.	*/
-	NC_order_area[ROW_NUMBER_BYTE]	= (unsigned char)st_row;	   		/* Starting screen line number for data.*/
+	WLNC_order_area[ROW_NUMBER_BYTE]	= (unsigned char)st_row;	   	/* Starting screen line number for data.*/
 
 	ldispa = &scn_ptr[end_scrl*80];							/* Set to address of footer area.	*/
 	ldispa = (ldispa - 4);								/* Point to display area minus 4 bytes.	*/
 	for (i = 0; i < 4; i++) save_oa[i] = ldispa[i];					/* Save 4 bytes of program data area.	*/
-	for (i = 0; i < 4; i++) ldispa[i] = NC_order_area[i];				/* Concatenate order area with screen.	*/
+	for (i = 0; i < 4; i++) ldispa[i] = WLNC_order_area[i];				/* Concatenate order area with screen.	*/
 	l_numl = screen_len - end_scrl;							/* Set the number of lines to display.	*/
-	if (wsfns_toggle)
+	if (WLNC_toggle)
 	{
 		int temp;
 
 		temp = (l_numl * 80) + 3;						/* Calculate position in footer.	*/
-		ldispa[temp] = cur_toggle_val;						/*  Move current toggle val into (24,80)*/
-		set_toggle_value();
+		ldispa[temp] = WLNC_cur_toggle_val;					/*  Move current toggle val into (24,80)*/
+		WLNC_set_toggle_value();
 	}
 
-	gen_ncpfkey(0,(char**)&ldispa,l_numl*80,NULL,NULL);				/* Set up PFkey window if have EDE.	*/
+	if (EDE_using())
+	{
+		gen_ncpfkey(0,(char**)&ldispa,l_numl*80,NULL,NULL);			/* Set up PFkey window if have EDE.	*/
+	}
 											/* Don't need st_win and end_win because*/
-	vwang(&function, ldispa, &l_numl, terminate_list, NC_pfkey, vw_mod);		/* temp screen is just pfkey area.	*/
+	vwang(&function, ldispa, &l_numl, terminate_list, WLNC_pfkey, vw_mod);		/* temp screen is just pfkey area.	*/
 
-	NC_pfkey[2] = '\0';								/* Null terminate the string.		*/
-	for (i = 0; i < 4; i++) NC_order_area[i] = ldispa[i];				/* Save the returned vwang order area.	*/
+	WLNC_pfkey[2] = '\0';								/* Null terminate the string.		*/
+	for (i = 0; i < 4; i++) WLNC_order_area[i] = ldispa[i];				/* Save the returned vwang order area.	*/
 	for (i = 0; i < 4; i++) ldispa[i] = save_oa[i];					/* Restore program data area.		*/
 }
 
-static void do_erase(num_scrl_lines)								/* Call VWANG to erase bottom of scroll	*/
+static void do_erase(num_scrl_lines)							/* Call VWANG to erase bottom of scroll	*/
 int num_scrl_lines;									/* region.				*/
 {
 	unsigned char	function;							/* Parameters for vwang			*/
 	unsigned char	*edispa, e_numl;						/* Local pointers for vwang.		*/
 	char		wcc;								/* WANG order area for screen display	*/
-	char 		vw_mod[2];							/* Parameters for vwang PFkey pressed.	*/
+	unsigned char 	vw_mod[2];							/* Parameters for vwang PFkey pressed.	*/
 	int		st_row;
 	char 		blscreen[1924];							/* Generate a blank screen to pass to	*/
 											/* VWANG.				*/
@@ -334,16 +352,17 @@ int num_scrl_lines;									/* region.				*/
 	e_numl = scrl_len - num_scrl_lines;						/* Set the number of lines to display.	*/
 
 	function = WRITE_ALL;								/* Display blank lines in scroll region.*/
-	vwang(&function, edispa, &e_numl, NULL, NC_pfkey, vw_mod);
-	NC_pfkey[2] = '\0';								/* Null terminate the string.		*/
+	vwang(&function, edispa, &e_numl, NULL, WLNC_pfkey, vw_mod);
+	WLNC_pfkey[2] = '\0';								/* Null terminate the string.		*/
 }
 
-static void blank_msg_line()									/* Call VWANG to erase message line.	*/
+static void blank_msg_line()								/* Call VWANG to erase message line.	*/
 {
-	unsigned char	function, terminate_list[2];					/* Parameters for vwang			*/
+	unsigned char	function;							/* Parameters for vwang			*/
+	char		terminate_list[2];
 	unsigned char	*edispa, e_numl;						/* Local pointers for vwang.		*/
 	char		wcc;								/* WANG order area for screen display	*/
-	char 		vw_mod[2];							/* Parameters for vwang PFkey pressed.	*/
+	unsigned char 	vw_mod[2];							/* Parameters for vwang PFkey pressed.	*/
 	int		st_row;
 	char		blank_msg[80+4+1];						/* Blank message line for VWANG.	*/
 	unsigned char	*cptr;
@@ -372,7 +391,7 @@ static void blank_msg_line()									/* Call VWANG to erase message line.	*/
 	e_numl = 1;									/* Set the number of lines to read.	*/
 
 	function = READ_ALL;			    					/* Read message line from screen.	*/
-	vwang(&function, edispa, &e_numl, terminate_list, NC_pfkey, vw_mod);
+	vwang(&function, edispa, &e_numl, terminate_list, WLNC_pfkey, vw_mod);
 
 	cptr = edispa;									/* Point to message line.		*/
 	cptr += 4;									/* Step past order area.		*/
@@ -384,12 +403,48 @@ static void blank_msg_line()									/* Call VWANG to erase message line.	*/
 
 	function = WRITE_ALL;								/* Display blank message line.		*/
 	e_numl = 1;									/* Set the number of lines to read.	*/
-	vwang(&function, edispa, &e_numl, terminate_list, NC_pfkey, vw_mod);
+	vwang(&function, edispa, &e_numl, terminate_list, WLNC_pfkey, vw_mod);
 }
 
 /*
 **	History:
 **	$Log: wsfnm.c,v $
+**	Revision 1.27  2003/06/27 15:54:03  gsl
+**	fix EDE API
+**	
+**	Revision 1.26  2003/02/21 20:29:21  gsl
+**	Switch to stdarg.h
+**	
+**	Revision 1.25  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.24  2002/12/10 20:54:07  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.23  2002/12/09 21:09:34  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.22  2002/08/01 15:07:35  gsl
+**	type warnings
+**	
+**	Revision 1.21  2002/08/01 14:45:10  gsl
+**	type warnings
+**	
+**	Revision 1.20  2002/07/16 16:24:51  gsl
+**	Globals
+**	
+**	Revision 1.19  2002/07/12 20:40:42  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.18  2002/07/12 17:01:05  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.17  2002/07/11 20:29:19  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.16  2002/07/10 21:05:37  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.15  1996/07/15 17:21:43  gsl
 **	Fix argument warning
 **	

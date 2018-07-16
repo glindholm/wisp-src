@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 Various general purpose getparm routines
 ------*/
@@ -8,7 +22,6 @@ Various general purpose getparm routines
 #include "intdef.h"
 #include "kcsifunc.h"
 
-static char sccs_id[]="@(#)gp.c	1.1 12/23/92";
 
 static int4 gppf_tran(int gppf);
 
@@ -34,8 +47,7 @@ Display and read a getparm, and return the translated PF code
 ------*/
 int4 GP_display_and_read()
 {
-	WL_set_va_count(2);
-	GETPARM(&GP_arg,&GP_cnt);
+	GETPARM2(GP_arg,GP_cnt);
 	return(GP_pfkey = gppf_tran(GP_pfrcvr[0]));
 }
 
@@ -55,8 +67,11 @@ static int4 gppf_tran(int gppf)
 /*
 **	History:
 **	$Log: gp.c,v $
-**	Revision 1.8.2.1  2002/11/12 15:56:24  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.12  2003/02/19 22:16:13  gsl
+**	Add GETPARM2() the 2 arg interface to GETPARM()
+**	
+**	Revision 1.11  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.10  2002/10/24 14:20:39  gsl
 **	Make globals unique

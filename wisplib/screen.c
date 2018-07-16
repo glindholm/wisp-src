@@ -1,13 +1,25 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 
 /*
@@ -16,34 +28,27 @@ static char rcsid[]="$Id:$";
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>                                                                             /* Include time definitions.    */
+#include <string.h>
+#include <time.h>
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
-#include <varargs.h>
-
-#ifdef MSDOS
-#include <io.h>
-#endif
-
-#include <varargs.h>
+#include <stdarg.h>
 
 #include "idsistd.h"
 #include "vwang.h"
 #include "wcommon.h"
-#include "vwang.h"									/* Include file for wisp screen defs.	*/
+#include "vwang.h"
 #include "werrlog.h"
 #include "wperson.h"
 #include "wdefines.h"
-#include "movebin.h"
 #include "wanguid.h"
 #include "wfname.h"
 #include "wisplib.h"
+#include "vssubs.h"
 #include "wmalloc.h"
 #include "screen.h"
 #include "osddefs.h"
-
-#define ROUTINE		57000
 
 struct CPOS_STRUCT
 {
@@ -52,13 +57,11 @@ struct CPOS_STRUCT
 };
 
 /* 
-**	SCREEN(status, ufb_addr, func_type, output_rcvr, cpos) 
+**	SCREEN(status, ufb_addr, func_type, output_rcvr, [cpos]) 
 */
-void SCREEN(va_alist)
-va_dcl
+void SCREEN(const char *status, const void *ufb_addr, const char *func_type, char *output_rcvr, ...)
 {
 	va_list	the_args;	
-	char 	*status, *ufb_addr, *func_type, *output_rcvr;
 	struct CPOS_STRUCT *cpos;
 
 	struct	CRT_STRUCT                                                              /* Screen structure definition.		*/
@@ -69,37 +72,29 @@ va_dcl
 	unsigned char vwfunc;								/* Funxtion performed by VWANG.		*/
 	unsigned char nlines;
 	int screen_size;
-	char pfkey[2],									/* Receive the PFKEY value from VWANG.	*/
-	     vwang_status[2],								/* Returned status from VWANG.		*/
-	     *work_area;   								/* Dynamically allocated storage.	*/
+	char pfkey[2];									/* Receive the PFKEY value from VWANG.	*/
+	unsigned char vwang_status[2];							/* Returned status from VWANG.		*/
+	char *work_area;   								/* Dynamically allocated storage.	*/
 	char print_file[9];
 	int s_arg_cnt=0;
 	int retcd;
 	
-	werrlog(ERRORCODE(1),'?',0,0,0,0,0,0,0);
+	WL_wtrace("SCREEN","ENTRY","Function[%c]", *func_type);
 
-	va_start(the_args);
-	s_arg_cnt = va_count(the_args);
-	va_start(the_args);
-
-	status = va_arg(the_args, char*);
-	ufb_addr = va_arg(the_args, char*);
-	func_type = va_arg(the_args, char*);
-	output_rcvr = va_arg(the_args, char*);
+	s_arg_cnt = WL_va_count();
 	if (s_arg_cnt == 5)
 	{
+		va_start(the_args, output_rcvr);
 		cpos = va_arg(the_args, struct CPOS_STRUCT *);
+		va_end(the_args);
 	}
-	va_end(the_args);
-
-	werrlog(ERRORCODE(1),*func_type,0,0,0,0,0,0,0);
 	
 	vwfunc = READ_ALL;								/* Cause VWANG to return entire screen.	*/
 	nlines = 24;									/* Tell VWANG to return 24 lines.	*/
 	screen_size = 1920;								/* Size of the screen. 24 X 80.		*/
 
 	memcpy(print_file,"##      ",8);
-	memcpy(&print_file[2],wanguid3(),3);
+	memcpy(&print_file[2],WL_wanguid3(),3);
 	
 
 	crt_record.order_area[0] = 1;							/* Initialize order area just like a	*/
@@ -107,7 +102,7 @@ va_dcl
 	crt_record.order_area[2] = 0;							/* reading the entire screen.		*/
 	crt_record.order_area[3] = 0;
 
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		/*
 		**	For Native screens a blank screen area is returned.
@@ -132,28 +127,28 @@ va_dcl
 		}
 		case 'N':								/* Return printable image of screen	*/
 		{
-			strip_facs(crt_record.screen_area, screen_size,WANG_TYPE);	/* Remove all FAC characters.		*/
+			WL_strip_facs(crt_record.screen_area, screen_size,WANG_TYPE);	/* Remove all FAC characters.		*/
 											/* Open up and output file.		*/
-			retcd = di_write_file(crt_record.screen_area, 1920, 80, output_rcvr, print_file);	
+			retcd = WL_di_write_file(crt_record.screen_area, 1920, 80, output_rcvr, print_file);	
 			break;								/* Done with case action.		*/
 		}
 		case 'P':								/* Create a printable image w/ borders.	*/
 		{
-			strip_facs(crt_record.screen_area, screen_size,WANG_TYPE);      /* Remove non-printing characters.	*/
-			work_area = wmalloc(3060);	/* 3060 = (80+10)*(24+10) */	/* Allocate neccessary space for image.	*/
-			border_screen(work_area, crt_record.screen_area, 80, 80, 24);	/* Border it up.			*/
-			retcd = di_write_file(work_area, 3060, 90, output_rcvr, print_file); /* Open and output file.		*/
+			WL_strip_facs(crt_record.screen_area, screen_size,WANG_TYPE);      /* Remove non-printing characters.	*/
+			work_area = wisp_malloc(3060);	/* 3060 = (80+10)*(24+10) */	/* Allocate neccessary space for image.	*/
+			WL_border_screen(work_area, crt_record.screen_area, 80, 80, 24);/* Border it up.			*/
+			retcd = WL_di_write_file(work_area, 3060, 90, output_rcvr, print_file); /* Open and output file.		*/
 			break;								/* Done with case action.		*/
 		}
 	    	default:								/* No default action.  Give error msg.	*/
 		{             
-			werrlog(ERRORCODE(2),*func_type,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(57002),*func_type,0,0,0,0,0,0,0);
 			break;
 		}
 	}
 	if (retcd)									/* Some error when trying to print	*/
 	{										/* the current screen.			*/
-		werrlog(ERRORCODE(8),retcd,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(57008),retcd,0,0,0,0,0,0,0);
 	}
 
 	if (s_arg_cnt==5)
@@ -162,12 +157,12 @@ va_dcl
 		
 		col = crt_record.order_area[OA_CURSOR_COL];				/* reading the entire screen.		*/
 		row = crt_record.order_area[OA_CURSOR_ROW];
-		PUTBIN(&(cpos->row),&row,sizeof(int4));
-		PUTBIN(&(cpos->col),&col,sizeof(int4));
+		memcpy(&(cpos->row),&row,sizeof(int4));
+		memcpy(&(cpos->col),&col,sizeof(int4));
 	}
 }                                                     
 											/* Remove all FAC characters, replacing	*/
-void strip_facs(		/*  with a space.			*/
+void WL_strip_facs(		/*  with a space.			*/
 	char *string_addr,	/* Address of string to be stripped.	*/
 	int string_len,		/* Length of that string.		*/
 	int type)		/* 0=Wang screen map (with FACs & 0x0b), 1=vchr_map */
@@ -177,9 +172,9 @@ void strip_facs(		/*  with a space.			*/
 	unsigned char psb_char, psb_select;						/* Pseudo blank character.		*/
 	char	def_psb_select;
 	
-	wpload();
-	get_defs(DEFAULTS_PSB_CHAR,&def_psb_select);
-	get_psb_char(def_psb_select,(char*)&psb_char,(char*)&psb_select);
+	WL_wpload();
+	WL_get_defs(DEFAULTS_PSB_CHAR,&def_psb_select);
+	WL_get_psb_char(def_psb_select,(char*)&psb_char,(char*)&psb_select);
 
 	l_string_addr = (unsigned char *)string_addr;					/* Get the passed value.		*/
 	i = string_len;		     							/* Ditto.				*/
@@ -248,7 +243,7 @@ void strip_facs(		/*  with a space.			*/
 
 }                                                                                                                                 
 											/* WRITE_FILE.C ... 			*/
-int di_write_file(			/* Open up a printer output file.	*/
+int WL_di_write_file(			/* Open up a printer output file.	*/
 	char *text,			/* Pointer to the stuff to be printed.	*/
 	int  text_len,			/* Length values.			*/
 	int  rec_len,			/* Length values.			*/
@@ -280,10 +275,10 @@ int di_write_file(			/* Open up a printer output file.	*/
         time_data = time(NULL);
         strcpy(head_line_2, ctime(&time_data));                                         /* Set up header lines.                 */
 
-	strcpy(id,longuid());								/* Get the user id.			*/
-        sprintf(head_line_1, "WORKSTATION  %4ld -  USER %3s - %s",(long) workstation(),wanguid3(),id);
+	strcpy(id,WL_longuid());								/* Get the user id.			*/
+        sprintf(head_line_1, "WORKSTATION  %4ld -  USER %3s - %s",(long) WL_workstation(),WL_wanguid3(),id);
 
-	wpload();
+	WL_wpload();
 	retcd = 0;									/* Init return code to success.		*/
 	l_filelibvol = filelibvol;     							/* Get initial value.			*/
 	l_text = text;									/* Get intial value.			*/
@@ -304,14 +299,13 @@ int di_write_file(			/* Open up a printer output file.	*/
 	mode = 0;									/* Initial mode value.  All bits off.	*/
 	mode |= IS_OUTPUT;								/* Set the output bit on.		*/
 	mode |= IS_PRINTFILE;                                                          	/* Set the print file bit on.		*/
-	mode |= IS_BACKFILL;                                                          	/* Set so will return temp fil, vol,lib.*/
 
-	scratchp = wfname(&mode, volume, library, file, native_filename);		/* Construct the native filename.	*/
+	scratchp = WL_wfname_backfill(&mode, volume, library, file, native_filename);	/* Construct the native filename.	*/
 	*scratchp = (char)0;
 
 	makepath(native_filename);							/* Ensure the path exists		*/
 
-	if (mode & IS_BACKFILL)								/* Set to return default names used.	*/
+	/* if (mode & IS_BACKFILL) -- Always true */					/* Set to return default names used.	*/
 	{
 		l_filelibvol = filelibvol;						/* Get initial value.			*/
  		memcpy(l_filelibvol,file, 8);						/* First 8 characters are the filename.	*/
@@ -324,7 +318,7 @@ int di_write_file(			/* Open up a printer output file.	*/
 	out_file = fopen(native_filename,FOPEN_WRITE_TEXT);
 	if (!out_file)
 	{
-		werrlog(ERRORCODE(4),native_filename,errno,0,0,0,0,0,0);
+		werrlog(WERRCODE(57004),native_filename,errno,0,0,0,0,0,0);
 		return(0);
 	}
 
@@ -360,32 +354,19 @@ int di_write_file(			/* Open up a printer output file.	*/
 	}
 	fclose(out_file);		 						/* Close the file.			*/
 
-	get_defs(DEFAULTS_PM,&def_prt_mode);
-	get_defs(DEFAULTS_PC,&def_prt_class);
-	get_defs(DEFAULTS_FN,&def_prt_form);
+	WL_get_defs(DEFAULTS_PM,&def_prt_mode);
+	WL_get_defs(DEFAULTS_PC,&def_prt_class);
+	WL_get_defs(DEFAULTS_FN,&def_prt_form);
 
-#ifdef VMS
-	if ('O'==def_prt_mode)
-	{
-		/*
-		**	If ON-LINE printing then the printing has already happened.
-		**	No need to call wprint() to spool the file.
-		*/
-		return(retcd);
-	}
-#endif /* VMS */
 
-	wprint(native_filename,def_prt_mode,NULL,1,def_prt_class,def_prt_form,&retcd);
+	WL_wprint(native_filename,def_prt_mode,NULL,1,def_prt_class,def_prt_form,&retcd);
 
-#ifdef VMS
-	wdellock(&mode,native_filename);
-#endif
 	return(retcd);
 }
 
                                              						/* BORDER_SCREEN.C ... 			*/
 											/* Take a screen and create borders.	*/
-void border_screen(
+void WL_border_screen(
 	char *work_area,   	/* Address of destination.		*/
 	char *screen_image,	/* Address of screen image.		*/
 	int  image_rec_size,	/* Size of the image on the screen.	*/
@@ -406,8 +387,8 @@ void border_screen(
 
 	work_area_size = bordered_line_length * bordered_lines;				/* Compute amount of space needed for	*/
 			 								/* final image.	    			*/
-	num_line_1 = wmalloc(bordered_line_length);					/* Allocate required space.		*/
-	num_line_2 = wmalloc(bordered_line_length);					/* Allocate required space.		*/
+	num_line_1 = wisp_malloc(bordered_line_length);					/* Allocate required space.		*/
+	num_line_2 = wisp_malloc(bordered_line_length);					/* Allocate required space.		*/
 
         memset(num_line_1, ' ', image_rec_size); 					/* Initialize the string to spaces.	*/
 	memset(num_line_2, ' ', image_rec_size);					/* Ditto.				*/
@@ -542,17 +523,15 @@ void border_screen(
 	memset(l_work_area, '*', bordered_line_length);					/* Insert a full line of asterisks.	*/
 }
 
-void screen_print(void)
+void WL_screen_print(void)
 {
 	char	status[1];
 	int4	ufb = 0;
 	char	filelibvol[40];
-	int4	cnt;
 	
-	sprintf(filelibvol,"##%3.3s                 ",wanguid3());
+	sprintf(filelibvol,"##%3.3s                 ",WL_wanguid3());
 
-	cnt = 4;
-	wvaset(&cnt);
+	WL_set_va_count(4);
 	SCREEN(status, &ufb, "P", filelibvol);
 	
 }
@@ -560,6 +539,57 @@ void screen_print(void)
 /*
 **	History:
 **	$Log: screen.c,v $
+**	Revision 1.38  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.37  2003/01/31 18:54:38  gsl
+**	Fix copyright header
+**	
+**	Revision 1.36  2003/01/17 18:00:48  gsl
+**	Switch SCREEN to use stdarg.h
+**	
+**	Revision 1.35  2002/12/10 20:54:12  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.34  2002/12/09 21:09:30  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.33  2002/08/01 14:09:11  gsl
+**	type warnings
+**	
+**	Revision 1.32  2002/07/16 16:24:52  gsl
+**	Globals
+**	
+**	Revision 1.31  2002/07/12 19:10:16  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.30  2002/07/12 17:01:00  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.29  2002/07/11 20:29:13  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.28  2002/07/10 21:05:23  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.27  2002/07/10 04:27:36  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.26  2002/07/02 21:15:28  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.25  2002/06/28 04:02:59  gsl
+**	Work on native version of wfopen and wfname
+**	
+**	Revision 1.24  2002/06/27 04:12:42  gsl
+**	Clean up status/mode bits
+**	
+**	Revision 1.23  2002/06/26 06:26:21  gsl
+**	Mode/status bit field changes
+**	
+**	Revision 1.22  2002/06/21 03:10:40  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.21  1998/12/09 14:39:57  gsl
 **	Use FOPEN mode defines
 **	

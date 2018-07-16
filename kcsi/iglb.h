@@ -1,13 +1,27 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 extern char inq_tokens[81];
 extern int  inq_token;
 extern char *inq_inqs;
 /*
 **	History:
 **	$Log: iglb.h,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:25  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.7  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
 **	
 **	Revision 1.6  2002/10/24 15:48:32  gsl
 **	Make globals unique

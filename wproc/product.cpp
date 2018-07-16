@@ -1,5 +1,5 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) 1996-2003 NeoMedia Technologies Inc. All rights reserved.
 //
 //	Project:	WPROC
 //	Id:		$Id:$
@@ -21,7 +21,16 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+#	To change WPROC version number change WPROC_VERSION:.
+#	wisp/src/wproc/product.cpp
+#	wisp/src/doc/wproc.txt
+*/
+#define WPROC_VERSION		5000
+#define WPROC_VERSION_STR	"v5.0.00"
+
 extern "C" char *wisp_version(void);
+extern "C" char *WL_platform_name(void);
 
 char *product_copyright() {
    static char notice[256];
@@ -49,10 +58,10 @@ char *product_copyright() {
    strcat(notice, " v2.0x Copyright (c) 1991-1992 Lexical Software. All Rights Reserved.");
 #else
    char wproc_version[80];
-   sprintf(wproc_version," version %s    (WL=%s)\n", product_version_str(), wisp_version());
+   sprintf(wproc_version," version %s (WL=%s) [%s]\n", product_version_str(), wisp_version(), WL_platform_name());
    strcat(notice, wproc_version);
    strcat(notice, "Copyright (c) 1991-1993 Lexical Software. All rights reserved.\n");
-   strcat(notice, "Copyright (c) 1994-2002 NeoMedia Technologies, Inc.\nAll Rights Reserved.\n");
+   strcat(notice, "Copyright (c) 1994-2003 NeoMedia Technologies, Inc.\nAll Rights Reserved.\n");
 #endif
    return notice;
 }
@@ -97,6 +106,27 @@ char *demo_notice() {
 //
 //	History:
 //	$Log: product.cpp,v $
+//	Revision 1.24  2003/06/26 16:18:35  gsl
+//	version numbers
+//	
+//	Revision 1.23  2003/06/11 19:08:46  gsl
+//	Fixed so only set PV/PL before a run if not blank
+//	
+//	Revision 1.22  2003/02/07 20:49:06  gsl
+//	Add platform to version display
+//	
+//	Revision 1.21  2003/02/07 20:45:14  gsl
+//	Add platform to version display
+//	
+//	Revision 1.20  2003/02/05 15:40:14  gsl
+//	Fix copyright headers
+//	
+//	Revision 1.19  2003/01/24 20:38:53  gsl
+//	Change year to 2003
+//	
+//	Revision 1.18  2002/10/18 20:56:28  gsl
+//	Cleanup WPROC version numbering
+//	
 //	Revision 1.17  2002/04/03 22:00:38  gsl
 //	2002
 //	
@@ -140,7 +170,6 @@ char *demo_notice() {
 //	----------------------------
 //	revision 1.10
 //	date: 1996-12-12 13:24:29-05;  author: gsl;  state: V3_9_90;  lines: +1 -1
-//	DevTech -> NeoMedia
 //	----------------------------
 //	revision 1.9
 //	date: 1996-07-25 14:16:03-04;  author: gsl;  state: Exp;  lines: +0 -0

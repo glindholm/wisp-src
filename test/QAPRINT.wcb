@@ -147,6 +147,7 @@
            03  ERR-FLAG                   PIC X(01).
            03  PFK-BYTE                   PIC X(01).
 
+       01  DATE-BUF  PIC X(20).
 
       ******************************************************************
 
@@ -324,11 +325,6 @@
       ******************************************************************
       *
 
-       01  PRINT-FILE-SCREEN USAGE IS DISPLAY-WS.
-           03  FILLER PIC X(50) ROW 5 COL 20
-               VALUE 
-               "THE PRINT FILE IS OPEN, PRESS (ENTER) TO CLOSE IT".
-
 
        01  FILE-LIB-VOL USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 5 COL 20
@@ -392,6 +388,86 @@
 	   03  FILLER PIC X(60) ROW 22 COL 20 VALUE
 	       "Press (ENTER) to close and print the file.".
 
+       01  KW-PM	PIC XX VALUE "PM".
+       01  KW-PC	PIC XX VALUE "PC".
+       01  KW-FN	PIC XX VALUE "FN".
+       01  KW-PR	PIC XX VALUE "PR".
+       01  KW-LI	PIC XX VALUE "LI".
+
+       01  DEF-PM	PIC X.
+       01  DEF-PC	PIC X.
+       01  DEF-FN.
+           05  DEF-FN-HIGH	BINARY.
+           05  DEF-FN-BIN	BINARY.
+       01  DEF-FN-NUM	PIC 999.
+       01  DEF-PR.
+           05  DEF-PR-HIGH	BINARY.
+           05  DEF-PR-BIN	BINARY.
+       01  DEF-PR-NUM	PIC 999.
+       01  DEF-LI.
+           05  DEF-LI-HIGH	BINARY.
+           05  DEF-LI-BIN	BINARY.
+       01  DEF-LI-NUM	PIC 999.
+
+       01  PRINT-DEFAULTS-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(42) ROW 1 COL 20
+               VALUE 
+               "PRINT DEFAULTS ".
+
+           03  FILLER PIC X(10) ROW  5 COL 10 
+		VALUE "PRNTMODE =".
+           03  FILLER PIC X(10) ROW  6 COL 10 
+		VALUE "PRTCLASS =".
+           03  FILLER PIC X(10) ROW  7 COL 10 
+		VALUE "FORM_NUM =".
+           03  FILLER PIC X(10) ROW  8 COL 10 
+		VALUE "PRINTER  =".
+           03  FILLER PIC X(10) ROW  9 COL 10 
+		VALUE "LINES    =".
+
+           03  FILLER PIC X(1) ROW  5 COL 21 
+               SOURCE DEF-PM		OBJECT DEF-PM.
+           03  FILLER PIC X(1) ROW  6 COL 21 
+               SOURCE DEF-PC		OBJECT DEF-PC.
+           03  FILLER PIC 999 ROW  7 COL 21 
+               SOURCE DEF-FN-NUM	OBJECT DEF-FN-NUM.
+           03  FILLER PIC 999 ROW  8 COL 21 
+               SOURCE DEF-PR-NUM	OBJECT DEF-PR-NUM.
+           03  FILLER PIC 999 ROW  9 COL 21 
+               SOURCE DEF-LI-NUM	OBJECT DEF-LI-NUM.
+
+	   03  FILLER PIC X(60) ROW 24 COL 20 VALUE
+	       "Press (ENTER) to SET DEFAULTS.".
+
+
+
+       01  PRINT-FILE-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(60) ROW 3 COL 10 VALUE
+               "(1) CREATE PRINT FILE PRNTMODE=S (Use PRFILE)".
+           03  FILLER  PIC X(60) ROW 4 COL 10 VALUE
+               "(2) CREATE PRINT FILE PRNTMODE=H (Use PRFILE)".
+           03  FILLER  PIC X(60) ROW 5 COL 10 VALUE
+               "(3) CREATE PRINT FILE PRNTMODE=K (Use PRFILE2)".
+           03  FILLER  PIC X(60) ROW 6 COL 10 VALUE
+               "(4) CREATE PRINT FILE PRNTMODE=P (Use PRFILE3)".
+
+           03  FILLER  PIC X(60) ROW 8 COL 10 VALUE
+               "(12) DISPRINT".
+
+           03  FILLER PIC X(4) ROW 15 COL 10 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 15 COL 20 
+               SOURCE PRINT-FILE-NAME OBJECT PRINT-FILE-NAME.
+
+           03  FILLER PIC X(7) ROW 16 COL 10 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 16 COL 20 
+               SOURCE PRINT-LIBRARY OBJECT PRINT-LIBRARY.
+
+           03  FILLER PIC X(6) ROW 17 COL 10 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 17 COL 20 
+               SOURCE PRINT-VOLUME OBJECT PRINT-VOLUME.
+
+           03  FILLER  PIC X(24) ROW 24 COL 10 VALUE
+               "PRESS (16) TO EXIT".
 
 
        01  PRINTING-SCREEN USAGE IS DISPLAY-WS.
@@ -413,6 +489,8 @@
                "(6) NO NAME PRINT FILE.".
            03  FILLER  PIC X(41) ROW 15 COL 20 VALUE
                "(7) LITERAL NAME PRINT FILE.".
+           03  FILLER  PIC X(41) ROW 17 COL 20 VALUE
+               "(10) SET PRINT DEFAULTS".
            03  FILLER  PIC X(41) ROW 21 COL 20 VALUE
                "(12) CALL DISPRINT".
 
@@ -431,10 +509,10 @@
        PRINTING-TESTS.
 
            DISPLAY AND READ PRINTING-SCREEN ON CRT
-           PFKEYS 1, 2, 3, 4, 5, 6, 7, 12, 16.
+           PFKEYS 1, 2, 3, 4, 5, 6, 7, 10, 12, 16.
 
            IF PF-KEY = "01" THEN
-              PERFORM DO-PRINT-FILE
+              PERFORM DO-PRINT-FILE-SCREEN
               GO TO PRINTING-TESTS
            ELSE IF PF-KEY = "02" THEN
               PERFORM DO-TEMP-PRINT-FILE
@@ -454,6 +532,9 @@
            ELSE IF PF-KEY = "07" THEN
               PERFORM DO-LITERAL-PRINT
               GO TO PRINTING-TESTS
+           ELSE IF PF-KEY = "10" THEN
+              PERFORM SET-PRINT-DEFS
+              GO TO PRINTING-TESTS
            ELSE IF PF-KEY = "12" THEN
               CALL "DISPRINT"
               GO TO PRINTING-TESTS
@@ -462,6 +543,31 @@
 
            GO TO PRINTING-TESTS.
 
+       EXTRACT-PRINT-DEFS.
+           CALL "EXTRACT" USING
+		KW-PM,	DEF-PM,
+		KW-PC,	DEF-PC,
+		KW-FN,	DEF-FN,
+		KW-PR,	DEF-PR,
+		KW-LI,	DEF-LI,
+	   MOVE DEF-FN-BIN	TO DEF-FN-NUM.
+	   MOVE DEF-PR-BIN	TO DEF-PR-NUM.
+	   MOVE DEF-LI-BIN	TO DEF-LI-NUM.
+
+       SET-PRINT-DEFS.
+           PERFORM EXTRACT-PRINT-DEFS.
+
+           DISPLAY AND READ PRINT-DEFAULTS-SCREEN ON CRT.
+
+	   MOVE DEF-FN-NUM	TO DEF-FN-BIN.
+	   MOVE DEF-PR-NUM	TO DEF-PR-BIN.
+	   MOVE DEF-LI-NUM	TO DEF-LI-BIN.
+           CALL "SET" USING
+		KW-PM,	DEF-PM,
+		KW-PC,	DEF-PC,
+		KW-FN,	DEF-FN,
+		KW-PR,	DEF-PR,
+		KW-LI,	DEF-LI.
 
        DO-ZERO-PRINT.
 
@@ -508,29 +614,83 @@
 
 	   DISPLAY "Created LITERAL-FILE".
 
+       DO-PRINT-FILE-SCREEN.
+
+	   PERFORM UNTIL PF-KEY = "16"
+               DISPLAY AND READ PRINT-FILE-SCREEN ON CRT
+               ONLY PFKEYS 1, 2, 3, 4, 12, 16
+
+	       IF PF-KEY = "01" THEN
+	           MOVE "S" TO DEF-PM
+		   CALL "SET" USING KW-PM DEF-PM
+		   PERFORM DO-PRINT-FILE
+	       END-IF
+	       IF PF-KEY = "02" THEN
+	           MOVE "H" TO DEF-PM
+		   CALL "SET" USING KW-PM DEF-PM
+		   PERFORM DO-PRINT-FILE
+	       END-IF
+	       IF PF-KEY = "03" THEN
+	           MOVE "K" TO DEF-PM
+		   CALL "SET" USING KW-PM DEF-PM
+		   PERFORM DO-PRINT-FILE
+	       END-IF
+	       IF PF-KEY = "04" THEN
+	           MOVE "P" TO DEF-PM
+		   CALL "SET" USING KW-PM DEF-PM
+		   PERFORM DO-PRINT-FILE
+	       END-IF
+               IF PF-KEY = "12" THEN
+	           CALL "DISPRINT"
+	       END-IF
+           END-PERFORM.
+
        DO-PRINT-FILE.
 
            OPEN OUTPUT PRINT-FILE.
 
-           MOVE "THIS IS A TEST1" TO PRINT-RECORD-SHORT.
-           WRITE PRINT-RECORD FROM PRINT-RECORD-SHORT
-               AFTER ADVANCING 2.
-           MOVE "THIS IS A TEST2" TO PRINT-RECORD-SHORT.
-           WRITE PRINT-RECORD FROM PRINT-RECORD-SHORT
-               AFTER ADVANCING 2.
-           MOVE "THIS IS A TEST3" TO PRINT-RECORD-SHORT.
-           WRITE PRINT-RECORD FROM PRINT-RECORD-SHORT
-               AFTER ADVANCING 2.
-           MOVE "THIS IS A TEST4" TO PRINT-RECORD-SHORT.
-           WRITE PRINT-RECORD FROM PRINT-RECORD-SHORT
-               AFTER ADVANCING 2.
+           MOVE "***************************************" 
+	       TO PRINT-RECORD.
+           WRITE PRINT-RECORD AFTER ADVANCING 2.
+
+           MOVE "WISP PRINTING TEST" 
+	       TO PRINT-RECORD.
+           WRITE PRINT-RECORD AFTER ADVANCING 2.
+
+	   MOVE SPACES TO PRINT-RECORD.
+	   STRING 
+		"FILE [" PRINT-FILE-NAME "] "
+		"LIB  [" PRINT-LIBRARY "] "
+		"VOL  [" PRINT-VOLUME "] "
+		DELIMITED BY SIZE
+		INTO PRINT-RECORD.
+           WRITE PRINT-RECORD AFTER ADVANCING 2.
+
+	   ACCEPT DATE-BUF FROM DATE4.
+	   MOVE SPACES TO PRINT-RECORD.
+	   STRING
+	        "DATE: " DATE-BUF
+		DELIMITED BY SIZE
+		INTO PRINT-RECORD.
+           WRITE PRINT-RECORD AFTER ADVANCING 2.
+
+           PERFORM EXTRACT-PRINT-DEFS.
+	   MOVE SPACES TO PRINT-RECORD.
+	   STRING 
+		"PRNTMODE=[" DEF-PM "] "
+		"PRTCLASS=[" DEF-PC "] "
+		"FORM_NUM=[" DEF-FN-NUM "] "
+		"PRINTER=["  DEF-PR-NUM "] "
+		"LINES=["    DEF-LI-NUM "] "
+		DELIMITED BY SIZE
+		INTO PRINT-RECORD.
+           WRITE PRINT-RECORD AFTER ADVANCING 2.
+
+           MOVE "***************************************" 
+	       TO PRINT-RECORD.
+           WRITE PRINT-RECORD AFTER ADVANCING 2..
 
            CLOSE PRINT-FILE.
-
-	   DISPLAY "Created [" PRINT-FILE-NAME
-		   "] in [" PRINT-LIBRARY
-		   "] on [" PRINT-VOLUME
-		   "]".
 
 
        DO-PRINT-CONTINUATION.

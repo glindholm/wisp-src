@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 **	File:		prompt.c
@@ -34,8 +49,8 @@ static char rcsid[]="$Id:$";
 #include "idsistd.h"
 #include "prompt.h"
 
-static void printhelp(char* help);
-static char *upstr();
+static void printhelp(const char* help);
+static char *upstr(char* str);
 
 /*
 **	Routine:	prompt_list()		Accept from a list of values.
@@ -63,15 +78,11 @@ static char *upstr();
 **
 */
 
-int prompt_list(message,defstr,list,help)
-char	*message;
-char	*defstr;
-char	*list;
-char	*help;
+int prompt_list(const char *message, const char *defstr, const char *list, const char *help)
 {
 	char	prompt[256], instr[256], uplist[256];
 
-	if (defstr)
+	if (defstr && *defstr)
 	{
 		sprintf(prompt,"%s (%s) [%s]",message,list,defstr);
 	}
@@ -85,20 +96,20 @@ char	*help;
 		printf("%s ? ",prompt);
 		if (NULL == fgets(instr, sizeof(instr), stdin)) 
 		{
-			return(-1);
+			return(PROMPT_RC_EXIT);
 		}
 		else
 		{
 			char *ptr;
-			if (ptr = strchr(instr,'\n')) *ptr = (char)0;
-			if (ptr = strchr(instr,'\r')) *ptr = (char)0;
+			if ((ptr = strchr(instr,'\n'))) *ptr = (char)0;
+			if ((ptr = strchr(instr,'\r'))) *ptr = (char)0;
 		}
 
 		if (0 == strlen(instr))
 		{
-			if (defstr)
+			if (defstr && *defstr)
 			{
-				return(0);
+				return(PROMPT_RC_DEFAULT);
 			}
 			else
 			{
@@ -111,7 +122,7 @@ char	*help;
 		}
 		else if (0==strcmp(instr,"."))
 		{
-			return( -1 );
+			return( PROMPT_RC_EXIT );
 		}
 		else
 		{
@@ -128,7 +139,10 @@ char	*help;
 
 			while(tok)
 			{
-				if (0==strcmp(instr,tok)) return(pos);
+				if (0==strcmp(instr,tok)) 
+				{
+					return(pos);
+				}
 				tok = strtok(NULL,",");
 				pos++;
 			}
@@ -166,17 +180,12 @@ char	*help;
 **
 */
 
-int prompt_text(message,defstr,empty,help,text)
-char	*message;
-char	*defstr;
-int	empty;
-char	*help;
-char	*text;
+int prompt_text(const char* message, const char* defstr, int empty, const char* help, char* text)
 {
 	char	prompt[256];
 	char	instr[256];
 
-	if (defstr)
+	if (defstr && *defstr)
 	{
 		sprintf(prompt,"%s [%s]",message,defstr);
 	}
@@ -190,27 +199,27 @@ char	*text;
 		printf("%s ? ",prompt);
 		if (NULL == fgets(instr, sizeof(instr), stdin)) 
 		{
-			return(-1);
+			return(PROMPT_RC_EXIT);
 		}
 		else
 		{
 			char *ptr;
-			if (ptr = strchr(instr,'\n')) *ptr = (char)0;
-			if (ptr = strchr(instr,'\r')) *ptr = (char)0;
+			if ((ptr = strchr(instr,'\n'))) *ptr = (char)0;
+			if ((ptr = strchr(instr,'\r'))) *ptr = (char)0;
 		}
 
 		strcpy(text, instr);
 
 		if (0 == strlen(text))
 		{
-			if (defstr)
+			if (defstr && *defstr)
 			{
 				strcpy(text,defstr);
-				return(0);
+				return(PROMPT_RC_DEFAULT);
 			}
 			else if (empty)
 			{
-				return(2);
+				return(PROMPT_RC_EMPTY);
 			}
 			else
 			{
@@ -223,11 +232,11 @@ char	*text;
 		}
 		else if (0==strcmp(text,"."))
 		{
-			return( -1 );
+			return(PROMPT_RC_EXIT);
 		}
 		else
 		{
-			return(1);
+			return(PROMPT_RC_USER_VALUE);
 		}
 	}
 }
@@ -257,15 +266,11 @@ char	*text;
 **
 */
 
-int prompt_num(message,defstr,help,outnum)
-char	*message;
-char	*defstr;
-char	*help;
-int4	*outnum;
+int prompt_num (const char *message, const char *defstr, const char *help, int4 *outnum)
 {
 	char	prompt[256], instr[256];
 
-	if (defstr)
+	if (defstr && *defstr)
 	{
 		sprintf(prompt,"%s [%s]",message,defstr);
 	}
@@ -279,20 +284,20 @@ int4	*outnum;
 		printf("%s ? ",prompt);
 		if (NULL == fgets(instr, sizeof(instr), stdin)) 
 		{
-			return(-1);
+			return(PROMPT_RC_EXIT);
 		}
 		else
 		{
 			char *ptr;
-			if (ptr = strchr(instr,'\n')) *ptr = (char)0;
-			if (ptr = strchr(instr,'\r')) *ptr = (char)0;
+			if ((ptr = strchr(instr,'\n'))) *ptr = (char)0;
+			if ((ptr = strchr(instr,'\r'))) *ptr = (char)0;
 		}
 
 		if (0 == strlen(instr))
 		{
-			if (defstr)
+			if (defstr && *defstr)
 			{
-				return(0);
+				return(PROMPT_RC_DEFAULT);
 			}
 			else
 			{
@@ -305,20 +310,20 @@ int4	*outnum;
 		}
 		else if (0==strcmp(instr,"."))
 		{
-			return( -1 );
+			return( PROMPT_RC_EXIT );
 		}
 		else
 		{
 			char	*ptr;
 
 			*outnum = (int4) strtol(instr,&ptr,10);
-			if (ptr == instr || (!isspace(*ptr) && *ptr !='\0'))
+			if (ptr == instr || (!isspace((int)*ptr) && *ptr !='\0'))
 			{
 				printf("\nInvalid number.\nPlease enter a number.\n\n");
 			}
 			else
 			{
-				return(1);
+				return(PROMPT_RC_USER_VALUE);
 			}
 		}
 	}
@@ -344,7 +349,7 @@ int4	*outnum;
 **
 */
 
-static void printhelp(char* help)
+static void printhelp(const char* help)
 {
 	if (help)
 	{
@@ -377,8 +382,7 @@ static void printhelp(char* help)
 **
 */
 
-static char *upstr(str)
-char *str;
+static char *upstr(char* str)
 {
 	for (; *str; str++)
 	{
@@ -389,11 +393,26 @@ char *str;
 /*
 **	History:
 **	$Log: prompt.c,v $
-**	Revision 1.7.2.2  2002/09/06 15:27:25  gsl
+**	Revision 1.14  2003/06/17 16:12:54  gsl
+**	No default value can be specified by either a NULL or empty string
+**	
+**	Revision 1.13  2003/05/27 20:53:08  gsl
+**	Update PROMPT prototypes and add defines for return codes
+**	
+**	Revision 1.12  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.11  2003/02/04 18:50:26  gsl
+**	fix copyright header
+**	
+**	Revision 1.10  2003/02/04 18:29:12  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.9  2002/09/06 15:06:43  gsl
 **	When changing gets() to fgets() you have to now strip off the trailing NL (and CR)
 **	
-**	Revision 1.7.2.1  2002/09/05 19:22:24  gsl
-**	LINUX
+**	Revision 1.8  2002/09/05 14:20:08  gsl
+**	gets()->fgets()
 **	
 **	Revision 1.7  1996/07/24 23:36:46  gsl
 **	Fix warnings for NT

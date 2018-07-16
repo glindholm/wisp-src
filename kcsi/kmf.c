@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies, Inc, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #ifdef KCSI_MFX
 
@@ -16,6 +30,8 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <ctype.h>
 
+#include "kcsifunc.h"
+#include "kcsit.h"
 #include "kcsio.h"
 #include "mffcd.h"
 #include "kcsimem.h"
@@ -34,6 +50,8 @@ static char rcsid[]="$Id:$";
 /*
 **      Globals and Externals
 */
+extern int cobinit (void);
+extern int KCSEXTFH();
 
 /*
 **      Static data
@@ -95,7 +113,6 @@ static void call_ixfile(int io_op_type, int io, KFB* kfb)
 {
 	FCD* user_fcd;
 	char op_code[2];
-	char*   parms[5];
 	static int first = 1;
 	
 	if (first)
@@ -134,13 +151,8 @@ static void call_ixfile(int io_op_type, int io, KFB* kfb)
 **      08/07/97        Written by SMC
 **
 */
-ksam_file_space(KFB* kfb)
+void ksam_file_space(KFB* kfb)
 {
-	char mode[4];
-	char count[4];
-	char rc[4];
-	int idx;
-
 	kcsitrace(1, "kmf:ksam_file_space()", "enter", "%s", kfb->_sys_name);
 
 	kfb->_space = 1;
@@ -176,7 +188,7 @@ does not.
 **      08/01/97        Written by MoB
 **
 */
-ksam_open_shared(KFB* kfb)
+void ksam_open_shared(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_open_shared()", "enter", "%s", kfb->_sys_name);
 	ksam_open_io( kfb );
@@ -202,7 +214,7 @@ ksam_open_shared(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_open_input(KFB* kfb)
+void ksam_open_input(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_open_input()", "enter", "%s", kfb->_sys_name);
 	do_open(kfb, MFIO_OPEN_INPUT);
@@ -228,7 +240,7 @@ ksam_open_input(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_open_io(KFB* kfb)
+void ksam_open_io(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_open_io()", "enter", "%s", kfb->_sys_name);
 	do_open(kfb, MFIO_OPEN_IO);
@@ -517,7 +529,7 @@ static void init_for_open(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_unlock(KFB* kfb)
+void ksam_unlock(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_unlock()", "enter", "%s", kfb->_sys_name);
 
@@ -545,11 +557,8 @@ ksam_unlock(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_open_output(KFB* kfb)
+void ksam_open_output(KFB* kfb)
 {
-	register int idx;
-	int2 l_nkeys;
-
 	kcsitrace(1, "kmf:ksam_open_output()", "enter", "%s", kfb->_sys_name);
 
 	init_for_open_output( kfb );
@@ -579,7 +588,7 @@ ksam_open_output(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_close(KFB* kfb)
+void ksam_close(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_close()", "enter", "%s", kfb->_sys_name);
 
@@ -636,7 +645,7 @@ ksam_close(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_read(KFB* kfb)
+void ksam_read(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_read()", "enter", "%s", kfb->_sys_name);
 
@@ -672,7 +681,7 @@ ksam_read(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_hold(KFB* kfb)
+void ksam_hold(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_hold()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;		/* Set to read along the primary key path */
@@ -732,10 +741,9 @@ static FCD* set_mfio(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_read_next(KFB* kfb)
+void ksam_read_next(KFB* kfb)
 {
 	FCD* user_fcd;
-	int io;
 
 	kcsitrace(1, "kmf:ksam_read_next()", "enter", "%s", kfb->_sys_name);
 	user_fcd = set_mfio( kfb );
@@ -764,7 +772,7 @@ ksam_read_next(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_read_previous(KFB* kfb)
+void ksam_read_previous(KFB* kfb)
 {
 	FCD* user_fcd;
 
@@ -793,7 +801,7 @@ ksam_read_previous(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_hold_next(KFB* kfb)
+void ksam_hold_next(KFB* kfb)
 {
 	FCD* user_fcd;
 
@@ -822,7 +830,7 @@ ksam_hold_next(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_read_keyed(KFB* kfb)
+void ksam_read_keyed(KFB* kfb)
 {
 	FCD* user_fcd;
 
@@ -853,7 +861,7 @@ ksam_read_keyed(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_hold_keyed(KFB* kfb)
+void ksam_hold_keyed(KFB* kfb)
 {
 	FCD* user_fcd;
 
@@ -884,7 +892,7 @@ ksam_hold_keyed(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_start_eq(KFB* kfb)
+void ksam_start_eq(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_start_eq()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;
@@ -911,7 +919,7 @@ ksam_start_eq(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_start_nlt(KFB* kfb)
+void ksam_start_nlt(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_start_nlt()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;
@@ -938,7 +946,7 @@ ksam_start_nlt(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_start_gt(KFB* kfb)
+void ksam_start_gt(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_start_gt()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;
@@ -965,7 +973,7 @@ ksam_start_gt(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_start_eq_keyed(KFB* kfb)
+void ksam_start_eq_keyed(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_start_eq_keyed()", "enter", "%s", kfb->_sys_name);
 	do_start(kfb, MFIO_START_EQ);
@@ -991,7 +999,7 @@ ksam_start_eq_keyed(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_start_nlt_keyed(KFB* kfb)
+void ksam_start_nlt_keyed(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_start_nlt_keyed()", "enter", "%s", kfb->_sys_name);
 	do_start(kfb, MFIO_START_NLT);
@@ -1017,7 +1025,7 @@ ksam_start_nlt_keyed(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_start_gt_keyed(KFB* kfb)
+void ksam_start_gt_keyed(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_start_gt_keyed()", "enter", "%s", kfb->_sys_name);
 	do_start(kfb, MFIO_START_NLT);
@@ -1043,7 +1051,7 @@ ksam_start_gt_keyed(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_start_last(KFB* kfb)
+void ksam_start_last(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_start_last()", "enter", "%s", kfb->_sys_name);
 	kfb->_status = EBADARG;
@@ -1107,7 +1115,7 @@ been issued before the rewrite or delete so these are released.
 **      08/01/97        Written by MoB
 **
 */
-ksam_write(KFB* kfb)
+void ksam_write(KFB* kfb)
 {
 	FCD* user_fcd;
 
@@ -1136,7 +1144,7 @@ ksam_write(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_rewrite(KFB* kfb)
+void ksam_rewrite(KFB* kfb)
 {
 	FCD* user_fcd;
 
@@ -1165,7 +1173,7 @@ ksam_rewrite(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_delete(KFB* kfb)
+void ksam_delete(KFB* kfb)
 {
 	FCD* user_fcd;
 
@@ -1196,7 +1204,7 @@ ksam_delete(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_table_info(KFB* kfb)
+void ksam_table_info(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_table_info()", "enter", "%s", kfb->_sys_name);
 	ksam_file_info( kfb );
@@ -1224,7 +1232,7 @@ ksam_table_info(KFB* kfb)
 **      08/01/97        Written by MoB
 **
 */
-ksam_file_info(KFB* kfb)
+void ksam_file_info(KFB* kfb)
 {
 	kcsitrace(1, "kmf:ksam_file_info()", "enter", "%s", kfb->_sys_name);
 	local_file_info( kfb );
@@ -1262,7 +1270,6 @@ static void local_file_info(KFB* kfb)
 	MFKDA*	mkey;
 	FCD*	user_fcd;
 	int2	l_nkeys;
-	char*   parms[5];
 	unsigned char hold_open_mode;
 
 	kcsitrace(1, "kmf:local_file_info()", "enter", "%s", kfb->_sys_name);
@@ -1679,8 +1686,14 @@ static void retrieve_number(char* src, void* dest, int len)
 /*
 **	History:
 **	$Log: kmf.c,v $
-**	Revision 1.26.2.1  2002/11/12 15:56:29  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.34  2003/05/07 17:57:37  gsl
+**	-Wall
+**	
+**	Revision 1.33  2003/05/07 17:52:53  gsl
+**	-Wall
+**	
+**	Revision 1.32  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.31  2002/10/24 14:20:37  gsl
 **	Make globals unique

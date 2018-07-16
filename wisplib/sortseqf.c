@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		sortseqf.c
 **
@@ -19,17 +40,20 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #ifdef unix
 #include <fcntl.h>
+#include <unistd.h>
 #endif
 
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #if defined(WIN32)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <io.h>
+#include <process.h>
 #endif
 
 #include "idsistd.h"
@@ -39,6 +63,7 @@ static char rcsid[]="$Id:$";
 #include "wispcfg.h"
 #include "wperson.h"
 #include "werrlog.h"
+#include "wdefines.h"
 
 
 #ifndef O_BINARY
@@ -53,7 +78,7 @@ static char rcsid[]="$Id:$";
 
 
 /*
-	sortseqf:	Sort a sequential file.
+	WL_sortseqf:	Sort a sequential file.
 
 
 		- Validate data.
@@ -242,7 +267,7 @@ static int ssbytenormal(void);
 */
 
 /*
-**	Routine:	sortseqf()
+**	Routine:	WL_sortseqf()
 **
 **	Function:	Sort a sequential file
 **
@@ -268,17 +293,17 @@ static int ssbytenormal(void);
 **
 */
 
-int sortseqf( char *infile, char *outfile, char *tmpdir, int memsizek, char filetype, int recsize, char *recend, 
+int WL_sortseqf( char *infile, char *outfile, char *tmpdir, int memsizek, char filetype, int recsize, char *recend, 
 		int numkeys, struct s_sortkeys sortkeys[], int errlevel, FILE *errfile, char *errbuff )
 {
-	const char* l_tmpdir = (tmpdir) ? tmpdir : wtmpdir(NULL);		/* Local tmpdir.				*/
+	const char* l_tmpdir = (tmpdir) ? tmpdir : WL_systmpdir(NULL);		/* Local tmpdir.				*/
 	int	l_memsizek;							/* Local memsizek.				*/
 	char	messstr[80];							/* Error message string buffer.			*/
 	int	i;								/* Temp loop counter index.			*/
 	int	rc;								/* Return code.					*/
-	char	tmpfile[80];							/* Temp filename buff				*/
-	char	mrgfile[80];							/* Merge filename buff				*/
-	char	swapfile[80];							/* Buffer used to swap the temp & merge files	*/
+	char	tmpfile[WISP_FILEPATH_LEN];					/* Temp filename buff				*/
+	char	mrgfile[WISP_FILEPATH_LEN];					/* Merge filename buff				*/
+	char	swapfile[WISP_FILEPATH_LEN];					/* Buffer used to swap the temp & merge files	*/
 	int	f_infile;							/* File ptr for infile.				*/
 	int	f_outfile;							/* File ptr for outfile.			*/
 	int	f_tmpfile;							/* File ptr for tmpfile.			*/
@@ -290,7 +315,6 @@ int sortseqf( char *infile, char *outfile, char *tmpdir, int memsizek, char file
 	int	tmpfile_active;							/* Is there data in the tmpfile.		*/
 	int	mrgfile_active;							/* Is there data in the mrgfile.		*/
 	int	fully_loaded;							/* Flag if all records have been loaded & sorted*/ 
-	char*	ptr;
 
 	g_init_load = 1;							/* Initalize the loadmem() routine.		*/
 	g_init_cmp = 1;								/* Initalize the compare() routine.		*/
@@ -324,16 +348,13 @@ int sortseqf( char *infile, char *outfile, char *tmpdir, int memsizek, char file
 	}
 	g_outfileopen = 0;
 
-#ifdef TESTING
-printf("tmpdir=%s\n\n\n\n",l_tmpdir);
-#endif
 
 	l_memsizek = (!memsizek) ? DEF_MEMSIZEK : memsizek;			/* If no memsizek then use default		*/
 	l_memsizek = (l_memsizek < MIN_MEMSIZEK) ? MIN_MEMSIZEK : l_memsizek;
 	l_memsizek = (l_memsizek > MAX_MEMSIZEK) ? MAX_MEMSIZEK : l_memsizek;
-#ifdef TESTING
-printf("sortseqf:l_memsizek=%d\n",l_memsizek);
-#endif
+
+	WL_wtrace("SORTSEQF","ARGS","Infile=[%s] Outfile=[%s] Tmpdir=[%s] MemsizeK=[%d] Filetype=[%c]",
+		infile, outfile, l_tmpdir, l_memsizek, filetype);
 
 	switch(filetype)							/* Validate filetype.				*/
 	{
@@ -482,17 +503,14 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 	g_infileopen = 1;
 	g_total_rec = 0;
 
-#ifdef OLD
-	sprintf(buff,"%s%06d.1",DEF_TMPPREFIX,pid);				/* Build temp file filename			*/
-	buildfilepath(tmpfile, l_tmpdir, buff);
-	sprintf(buff,"%s%06d.2",DEF_TMPPREFIX,pid);				/* Build merge file filename			*/
-	buildfilepath(mrgfile, l_tmpdir, buff);
-#endif /* OLD */
 
-	ptr = tempnam(l_tmpdir,"sort");
-	strcpy(tmpfile,ptr);
-	strcpy(mrgfile,ptr);
-	free(ptr);
+	/* Generate base name for tmp sort files */
+	{
+		char buff[80];
+		sprintf(buff, "sort_%s_%lx_%ld", WL_splitname(infile), (unsigned long)getpid(), time(NULL));
+		WL_buildfilepath(tmpfile, l_tmpdir, buff);
+	}
+	strcpy(mrgfile, tmpfile);
 	
 	strcat(tmpfile, ".1");
 	strcat(mrgfile, ".2");
@@ -511,9 +529,6 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 		memblock = (char *)malloc((size_t)memsize);
 		if ( memblock )
 		{
-#ifdef TESTING
-printf("sortseqf:memsize=%d\n",memsize);
-#endif
 			break;
 		}
 
@@ -545,15 +560,7 @@ printf("sortseqf:memsize=%d\n",memsize);
 	}
 	else g_sortindex_size = DEF_SORTINDEX;						/* Else use the default value.		*/
 
-#ifdef TESTING
-printf("sortseqf:g_sortindex_size=%d\n",g_sortindex_size);
-#endif
-
 	g_sortindex_bytes = sizeof(struct s_recindex *)*g_sortindex_size;		/* Calc bytes to alloc			*/
-
-#ifdef TESTING
-printf("sortseqf:g_sortindex_bytes=%d\n",g_sortindex_bytes);
-#endif
 
 	g_sortindex = (struct s_recindex **)malloc((size_t)g_sortindex_bytes); 		/* Ptr to Index to recindex 		*/
 	if (!g_sortindex)								/* If malloc failed.			*/
@@ -565,9 +572,8 @@ printf("sortseqf:g_sortindex_bytes=%d\n",g_sortindex_bytes);
 
 	g_recindex_bytes = sizeof(struct s_recindex)*g_sortindex_size;			/* Calc bytes to alloc			*/
 
-#ifdef TESTING
-printf("sortseqf:g_recindex_bytes=%d\n",g_recindex_bytes);
-#endif
+	WL_wtrace("SORTSEQF","VARS","sortindex_size=[%d] sortindex_bytes=[%d] recindex_bytes=[%d]",
+		g_sortindex_size, g_sortindex_bytes, g_recindex_bytes);
 
 	g_recindex  = (struct s_recindex *)malloc((size_t)g_recindex_bytes);		/* Array of struct that point		*/
 											/*  to records in memblock		*/
@@ -627,9 +633,8 @@ printf("sortseqf:g_recindex_bytes=%d\n",g_recindex_bytes);
 		/*
 		**	Sort the in memory block of data
 		*/
-#ifdef TESTING
-printf("qsort: %d items\n",g_numelements);
-#endif
+
+		WL_wtrace("SORTSEQF","QSORT","Sorting %d items",g_numelements);
 
 		qsort( (char *)g_sortindex, (size_t)g_numelements, sizeof(struct s_recindex *), (int(*)(const void*,const void*))compare);
 
@@ -659,6 +664,7 @@ printf("qsort: %d items\n",g_numelements);
 		}
 		else if (!fully_loaded && !tmpfile_active)			/* (2) First chunk				*/
 		{
+			WL_wtrace("SORTSEQF","TMPFILE","Using tmpfile=[%s]",tmpfile);
 
 			f_tmpfile = open(tmpfile,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY|O_LARGEFILE,0666); /* Open tmpfile for output.		*/
 
@@ -755,18 +761,19 @@ printf("qsort: %d items\n",g_numelements);
 		close(f_outfile);
 		if ( rc > WARNING )
 		{
-			unlink(outfile);
+			wisp_unlink(outfile);
 		}
 	}
 	if ( tmpfile_active )
 	{
-		unlink(tmpfile);
+		wisp_unlink(tmpfile);
 	}
 	if ( mrgfile_active )
 	{
-		unlink(mrgfile);
+		wisp_unlink(mrgfile);
 	}
 
+	WL_wtrace("SORTSEQF","RETURN","rc=[%d]",rc);
 	return(rc);
 }
 
@@ -1172,14 +1179,14 @@ static int cmp_binary(struct s_recindex *index1, struct s_recindex *index2, int 
 		if ( sizeof(int2) != 2 )
 		{
 			bad = 1;
-			sprintf(messstr,"[sizeof(int2) = %d]",sizeof(int2));
+			sprintf(messstr,"[sizeof(int2) = %lu]",(unsigned long)sizeof(int2));
 			g_cmp_rc = reporterr(ERR_SIZEINT,messstr);
 			
 		}
 		if ( sizeof(int4) != 4 )
 		{
 			bad = 1;
-			sprintf(messstr,"[sizeof(int4) = %d]",sizeof(int4));
+			sprintf(messstr,"[sizeof(int4) = %lu]",(unsigned long)sizeof(int4));
 			g_cmp_rc = reporterr(ERR_SIZEINT,messstr);
 		}
 	}
@@ -1281,14 +1288,14 @@ static int cmp_float(struct s_recindex *index1, struct s_recindex *index2, int o
 		if ( sizeof(FLOAT4) != 4 )
 		{
 			bad = 1;
-			sprintf(messstr,"[sizeof(FLOAT4) = %d]",sizeof(FLOAT4));
+			sprintf(messstr,"[sizeof(FLOAT4) = %lu]",(unsigned long)sizeof(FLOAT4));
 			g_cmp_rc = reporterr(ERR_SIZEFLOAT,messstr);
 			
 		}
 		if ( sizeof(FLOAT8) != 8 )
 		{
 			bad = 1;
-			sprintf(messstr,"[sizeof(FLOAT8) = %d]",sizeof(FLOAT8));
+			sprintf(messstr,"[sizeof(FLOAT8) = %lu]",(unsigned long)sizeof(FLOAT8));
 			g_cmp_rc = reporterr(ERR_SIZEFLOAT,messstr);
 		}
 	}
@@ -1835,24 +1842,8 @@ static void load_decimal(double *d, char *p, int len)
 
 static int loadyy(const char* ptr, int len)
 {
-	static int first = 1;
-	static int pivotyear;
-	int    yyyy = 0;
+	unsigned int    yyyy = 0;
 	
-	if (first)
-	{
-		const char *ptr;
-		
-		first = 0;
-		pivotyear = -1;		/* Default to no pivot year */
-
-		if ((ptr = get_wisp_option("YYPIVOTYEAR")) && *ptr)
-		{
-			sscanf(ptr, "%d", &pivotyear);
-		}
-		wtrace("SORT","PIVOT", "Using YY pivot year [%d]", pivotyear);
-	}
-
 	if (len != 2)
 	{
 		return 0;	/* Low value */
@@ -1878,16 +1869,9 @@ static int loadyy(const char* ptr, int len)
 		return 0;	/* low value */
 	}
 	
-	if (yyyy > pivotyear)
-	{
-		yyyy += 1900;
-	}
-	else
-	{
-		yyyy += 2000;
-	}
+	yyyy = WL_convertyy2yyyy(yyyy, WL_currentyear(), WL_yypivotyear());
 	
-	return yyyy;	
+	return (int)yyyy;	
 }
 
 
@@ -2336,11 +2320,32 @@ static int ssbytenormal(void)
 /*
 **	History:
 **	$Log: sortseqf.c,v $
-**	Revision 1.18.2.2  2002/11/19 16:24:05  gsl
-**	Define O_LARGEFILE for ALPHA and SCO
+**	Revision 1.32  2003/05/19 19:08:27  gsl
+**	-Wall
 **	
-**	Revision 1.18.2.1  2002/10/09 21:03:03  gsl
-**	Huge file support
+**	Revision 1.31  2003/05/06 18:27:25  gsl
+**	-Wall
+**	
+**	Revision 1.30  2003/03/27 21:22:54  gsl
+**	Use DATE6's pivot year routines
+**	
+**	Revision 1.29  2003/02/04 16:30:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.28  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.27  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.26  2003/01/21 21:00:24  gsl
+**	remove tempnam() add tracing
+**	
+**	Revision 1.25  2002/12/11 17:03:08  gsl
+**	use wisp_unlink()
+**	
+**	Revision 1.24  2002/11/19 16:28:43  gsl
+**	Define O_LARGEFILE for ALPHA and SCO
 **	
 **	Revision 1.23  2002/10/08 17:05:10  gsl
 **	Define _LARGEFILE64_SOURCE to define O_LARGEFILE on LINUX

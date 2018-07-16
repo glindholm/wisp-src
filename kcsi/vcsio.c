@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*---
 vcsio.c
 Imitates the KCSIO program as a shell into VISION calls.
@@ -18,6 +32,10 @@ Cloned from KCSI_ccsio.c for routine names.
 #include <ctype.h>
 #include <errno.h>
 
+#ifdef unix
+#include <unistd.h>
+#endif
+
 #include "iocode.h"
 #include "kcsio.h"
 #include "gp.h"
@@ -26,7 +44,6 @@ Cloned from KCSI_ccsio.c for routine names.
 #include "kcsifunc.h"
 #include "visn3.h"
 
-static char sccsid[]="@(#)vcsio.c	1.11 3/19/94";
 
 /*
 #define	DEBUG
@@ -464,10 +481,10 @@ static void open_output(KFB *kfb)
 
 static void close_file(KFB *kfb)
 {
-	kcsitrace(1, "close_file()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+	kcsitrace(1, "close_file()", "enter", "[%.1s] %.80s", kfb->_org, kfb->_sys_name);
 
 	switch(kfb->_org[0])
-		{
+	{
 		case 'I':
 			ksam_close(kfb);
 			break;
@@ -485,7 +502,7 @@ static void close_file(KFB *kfb)
 			rel_close(kfb);
 #endif
 			break;
-		}
+	}
 	logit(kfb);
 }
 /*----
@@ -1152,7 +1169,7 @@ static void logit(KFB *kfb)
 
 void kcsio_wfopen(int4 mode,KFB *kfb)
 {
-	wfopen2(&mode,
+	WFOPEN2(&mode,
 			kfb->_volume,kfb->_library,kfb->_name,kfb->_sys_name,
 			"KCSI    ", kfb->_prname);
 	KCSI_strunc(kfb->_sys_name);
@@ -1171,8 +1188,14 @@ int KCSI_e_trans(int code)
 /*
 **	History:
 **	$Log: vcsio.c,v $
-**	Revision 1.14.2.1  2002/11/12 15:56:39  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.29  2003/06/10 16:49:50  gsl
+**	fix trace in close_file()
+**	
+**	Revision 1.28  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.27  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.26  2002/10/24 14:20:33  gsl
 **	Make globals unique

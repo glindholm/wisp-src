@@ -1,21 +1,29 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 #include "vscrglb.h"
 #include "wispscr.h"
 #include "kcsifunc.h"
 
-static char sccs_id[]="@(#)vscrhelp.c	1.1 8/15/93";
 
 WISPSCR_FLDS(CR_hof) = {
 {LEN(0)	ROW(4)	COL(3)	VALUE("Some Helpful Information")},
 {LASTITEM}};
-
-static char hofpfs[]="00X";
-static char status[3];
-static int crt_row, crt_col;
-
 
 static char *name_and_type_help_text[]={
 "TYPE     - File type options are:",
@@ -142,8 +150,11 @@ static void cr_help(char **text)
 /*
 **	History:
 **	$Log: vscrhelp.c,v $
-**	Revision 1.5.2.1  2002/11/12 15:56:42  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.11  2003/02/20 19:29:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.10  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.9  2002/10/24 14:20:31  gsl
 **	Make globals unique

@@ -1,9 +1,16 @@
 #
-# makefile for WISP for NT/95 utilities DISPRINT.
+#	Copyright (c) 1998-2003 NeoMedia Technologies, All rights reserved.
+#	$Id:$
 #
+# makefile for WISP for WIN32 utilities DISPRINT.
+#
+ACUDIR=C:\Acucorp\ACUCBL600\ACUGT
+WISPDIR=C:\WISP5000
 
-WISPTRAN=wisp.exe
-CCBL=ccbl32.exe
+WISPTRAN=$(WISPDIR)\bin\wisp.exe
+WISPFLAGS= -u ACU50
+COBOL=$(ACUDIR)\bin\ccbl32.exe
+COBFLAGS=-Da4 -Gd -Za -C50 -Z50
 
 default:
 	@echo '#'
@@ -17,15 +24,11 @@ default:
 	@echo '#     $$ nmake /f disprint.umf acn'
 	@echo '#'
 
-acu:	disprint.wcb
-	$(WISPTRAN) -VACU disprint.wcb
-	$(CCBL) -da4 -o disprint disprint.cob
+acu:	DISPRINT.wcb
+	$(WISPTRAN) -VACU $(WISPFLAGS) DISPRINT.wcb
+	$(COBOL) $(COBFLAGS) -o DISPRINT.acu DISPRINT.cob
 
-acn:	disprint.wcb
-	$(WISPTRAN) -VACN disprint.wcb
-	$(CCBL) -da4 -o disprint disprint.cob
-
-mf:	disprint.wcb
-	$(WISPTRAN) -VMF disprint.wcb
-	cob.exe -i disprint.cob
+acn:	DISPRINT.wcb
+	$(WISPTRAN) -VACN $(WISPFLAGS) DISPRINT.wcb
+	$(COBOL) $(COBFLAGS) -o DISPRINT.acu DISPRINT.cob
 

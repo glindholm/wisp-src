@@ -1,15 +1,26 @@
-/* 
-	Copyright (c) 1995-2001 NeoMedia Technologies, All rights reserved.
-	$Id:$
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
 */
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+
 
 #ifndef WISP_H
 #define WISP_H
@@ -22,7 +33,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _MSC_VER
+#ifdef unix
+#include <unistd.h>
+#endif
+
+#ifdef WIN32
 #include <io.h>
 #endif
 
@@ -51,55 +66,34 @@
 #define EXIT_OK			0
 #define EXIT_WITH_ERR		1
 #define EXIT_FAST		2
-#define EXIT_AND_RUN		-2							/* Exit WISP and re run it.		*/
+#define EXIT_AND_RUN		-2		/* Exit WISP and re run it.		*/
 
-EXT char prog_id[40];								/* the program id of this program		*/
+EXT char prog_id[40];					/* the program id of this program		*/
+EXT char linein[256];					/* The current input line.			*/
 
-EXT char linein[256];								/* The current input line.			*/
-EXT char templine[256];
-
-EXT int re_copy	   INIT_FALSE;							/* Is this the scond time for this copy lib.	*/
-EXT int cpy_seq    INIT_FALSE;							/* Copy lib sequence counter.			*/
+EXT int re_copy	   INIT_FALSE;				/* Is this the scond time for this copy lib.	*/
 
 #define MAX_PARAGRAPHS		512							/* How many paragraphs can be copied.	*/
 
-EXT int  proc_paras_cnt		INIT_FALSE;						/* How many were read.			*/
-EXT int  decl_paras_cnt		INIT_FALSE;						/* How many paragraphs were in decl.	*/
-EXT int  decl_performs_cnt	INIT_FALSE;						/* How many performs' were in decl.	*/
-EXT int  proc_performs_cnt	INIT_FALSE;						/* How many performs from the proc div	*/
+EXT int  proc_paras_cnt		INIT_ZERO;						/* How many were read.			*/
+EXT int  decl_paras_cnt		INIT_ZERO;						/* How many paragraphs were in decl.	*/
+EXT int  decl_performs_cnt	INIT_ZERO;						/* How many performs' were in decl.	*/
 
-EXT char proc_paras[MAX_PARAGRAPHS][40];						/* The list.				*/
-EXT char decl_paras[MAX_PARAGRAPHS][40];						/* The names in the declaratives.	*/
-EXT char decl_performs[MAX_PARAGRAPHS][40];						/* The performs in the Declaratives.	*/
-EXT char proc_performs[MAX_PARAGRAPHS][40];						/* The performs from the proc div.	*/
+EXT char proc_paras[MAX_PARAGRAPHS][40];		/* The list.				*/
+EXT char decl_paras[MAX_PARAGRAPHS][40];		/* The names in the declaratives.	*/
+EXT char decl_performs[MAX_PARAGRAPHS][40];		/* The performs in the Declaratives.	*/
 
-EXT int  blank_count	INIT_FALSE;							/* How many items to blank.		*/
-EXT int  nfs_count	INIT_FALSE;							/* How many SELECTs to skip file status	*/
-EXT int  sf_count	INIT_FALSE;							/* How many SORT files.			*/
+EXT int  opt_copy_declarative_para_cnt	INIT_ZERO;					/* How many performs from the proc div	*/
+EXT int  opt_blank_when_zero_cnt INIT_ZERO;						/* How many items to blank.		*/
+EXT int  opt_no_file_status_cnt	INIT_ZERO;						/* How many SELECTs to skip file status	*/
+EXT int  opt_sort_file_cnt	INIT_ZERO;						/* How many SORT files.			*/
 
-#define MAX_STATUS_ITEMS	32							/* The max to allow.			*/
-#define MAX_SF_ITEMS		32
-
-EXT char sf_item[MAX_SF_ITEMS][40];							/* The identified SORT files.		*/
-EXT char nfs_item[MAX_STATUS_ITEMS][40];						/* The list of status's to skip.	*/
-
-#define MAX_BLANK_ITEMS		100
-EXT char blank_item[MAX_BLANK_ITEMS][40];						/* Screen items to be blank when zero.	*/
 
 #define MAX_FIGCONS2		255							/* Maximum nuber of 2 byte fig cons.	*/
 
 EXT char fig_cons[MAX_FIGCONS2][32];							/* names of figcons that are 2 bytes	*/
 EXT int  fig_val [MAX_FIGCONS2][2];							/* their values				*/
-EXT int  fig_count INIT_FALSE;								/* the counter				*/
-
-EXT int  dump_ifbuff	INIT_FALSE;							/* Currently dumping the IF buffer.	*/
-EXT int  delrecon	INIT_FALSE;							/* Should we just delete RECORD CONTAINS*/
-EXT int  do_xref	INIT_FALSE;							/* Keep cross ref information.		*/
-EXT int  do_xtab	INIT_FALSE;							/* Keep cross ref tab file.		*/
-EXT int  do_dlink	INIT_FALSE;							/* Do VMS dynamic link.			*/
-EXT int  nowarnings	INIT_FALSE;							/* Don't show WARNINGS messages.	*/
-EXT int  swap_words	INIT_TRUE;							/* We have to swap words when asked.	*/
-EXT int	 use_optional	INIT_TRUE;							/* Use the OPTIONAL phrase on SEQ-SEQ.	*/
+EXT int  fig_count INIT_ZERO;								/* the counter				*/
 
 struct c_list
 	{
@@ -112,17 +106,8 @@ struct c_list
 typedef struct c_list c_list;
 EXT c_list *xref_ptr;									/* Pointer to cross ref list.		*/
 
-#define STRING_BUFFER_SIZE 4096
-
 EXT int in_decl		INIT_FALSE;							/* Are we in the declaratives section?	*/
-EXT int has_lit		INIT_FALSE;							/* Does the current line have a literal?*/
-EXT int isalit		INIT_FALSE;							/* Is the current input open literal?	*/
-EXT int has_cont	INIT_FALSE;							/* Does this line have a continuation?	*/
-EXT int ws_blank	INIT_TRUE;							/* Allow BLANK WHEN ZERO in WS.		*/
-EXT int trans_lib	INIT_FALSE;							/* Don't translate library names.	*/
 EXT int decl_stop_exit	INIT_FALSE;							/* STOP RUN or EXIT PROGRAM in DECLAR	*/
-
-EXT int g_newline	INIT_FALSE;							/* Last get_parm() read a newline.	*/
 
 EXT int division INIT_FALSE;								/* Which division are we scanning?	*/
 
@@ -133,91 +118,171 @@ EXT int division INIT_FALSE;								/* Which division are we scanning?	*/
 #define WORKING_STORAGE_SECTION		4
 #define PROCEDURE_DIVISION		5
 
-EXT int pmode 		INIT_FALSE;							/* Parsing mode (if any)		*/
-#define DISPLAY		3
-EXT int copy_sect 	INIT_FALSE;							/* SECTION copy mode.			*/
-EXT int copy_to_dcl_file 	INIT_FALSE;						/* Paragraph copying mode.		*/
-EXT int copy_to_dtp_file 	INIT_FALSE;						/* Declarative copy mode.		*/
-EXT int ptype;										/* the parm type (first last middle)	*/
-EXT int kwproc    	INIT_TRUE;							/* flag to stop keyword processing.	*/
-EXT int d_period  	INIT_FALSE;							/* flag to indicate a period is found	*/
-EXT int keepstop  	INIT_FALSE;							/* Keep STOP RUN statements.		*/
-EXT int changestop	INIT_FALSE;							/* Change STOP RUN to EXIT PROGRAM	*/
-EXT int trap_start	INIT_FALSE;							/* Trap START timeouts.			*/
+EXT int copy_sect 		INIT_FALSE;		/* SECTION copy mode.			*/
+EXT int copy_to_dcl_file 	INIT_FALSE;		/* Paragraph copying mode.		*/
+EXT int copy_to_dtp_file 	INIT_FALSE;		/* Declarative copy mode.		*/
 
 
-/*						Common variables								*/
+#define FAC_OF_PREFIX		"FAC-OF-"
+#define ORDER_AREA_PREFIX	"ORDER-AREA-"
 
-EXT int do_optfile INIT_FALSE;								/* Flag to process the option file.	*/
-#define MAX_PARMS 	36
-EXT int 	p_parms[MAX_PARMS];							/* the offset of the parms in the line	*/
-EXT char 	parms  [MAX_PARMS] [81];						/* 36 parms				*/
-EXT char 	o_parms[MAX_PARMS] [81];						/* 36 output parms in this statement	*/
+#define DOUBLE_QUOTE '"'
+#define SINGLE_QUOTE '\''
 
-EXT char area_a[8];									/* The text found in area a		*/
-EXT int area_a_num;									/* The number it represents (if any)	*/
 
-EXT int blanklines 	INIT_FALSE;							/* Blank lines are no no's		*/
-EXT int comments 	INIT_FALSE;							/* Comments are not ok			*/
-EXT int compress 	INIT_TRUE;							/* Compress screen output		*/
-EXT int copylib 	INIT_FALSE;							/* Generate copy libs			*/
-EXT int copy_only 	INIT_FALSE;							/* don't just copy it, process it.	*/
-EXT int logging 	INIT_FALSE;							/* no logging by default		*/
-EXT int log_stats 	INIT_FALSE;							/* no stats either.			*/
-EXT int data_conv	INIT_FALSE;							/* Default to not data conversion	*/
-EXT int x4dbfile	INIT_FALSE;							/* Do not add check for database file	*/
 
-EXT int  vax_cobol 	INIT_FALSE;							/* VAX COBOL				*/
-EXT int  lpi_cobol 	INIT_FALSE;							/* LPI COBOL				*/
-EXT int  acu_cobol 	INIT_FALSE;							/* ACUCOBOL 				*/
-EXT int  acn_cobol 	INIT_FALSE;							/* ACUCOBOL (NATIVE)			*/
-EXT int  aix_cobol 	INIT_FALSE;							/* AIX VS COBOL 			*/
-EXT int  mf_cobol 	INIT_FALSE;							/* Micro Focus COBOL 			*/
-EXT int  mfoc_cobol 	INIT_FALSE;							/* Micro Focus Object COBOL		*/
-EXT int  mfse_cobol 	INIT_FALSE;							/* Micro Focus Server Express COBOL 	*/
-EXT int  dmf_cobol 	INIT_FALSE;							/* Micro Focus MSDOS COBOL 		*/
-EXT int  unix_cobol 	INIT_FALSE;							/* Any UNIX COBOL 			*/
-EXT int  dos_cobol 	INIT_FALSE;							/* Any DOS COBOL 			*/
-EXT int  nt_cobol 	INIT_FALSE;							/* Any NT COBOL 			*/
-EXT char cobol_type[4];									/* The type of COBOL			*/
+/* 
+** PROCESSING STATUS FIELDS 
+*/
+EXT int wrote_special_names	INIT_FALSE;		/* Was SPECIAL-NAMES written		*/
+EXT int del_use			INIT_FALSE;		/* not deleting a USE procedure.	*/
+EXT int lock_clear_para		INIT_FALSE;		/* Gen WISP-RECORD-LOCK-CLEAR para	*/
 
-EXT int init_move INIT_FALSE;								/* don't change move spaces to initial	*/
-EXT int init_data INIT_TRUE;								/* program id is initial.		*/
-EXT int do_locking INIT_TRUE;								/* generate record locking logic	*/
-EXT int del_use    INIT_FALSE;								/* not deleting a USE procedure.	*/
-EXT int fdfiller   INIT_TRUE;								/* allow fillers in fd's		*/
-EXT int wsfiller   INIT_TRUE;								/* allow fillers in working-storage	*/
-EXT int do_keyfile INIT_FALSE;								/* Don't look for key files.		*/
-EXT int proc_display INIT_TRUE;								/* Process DISPLAY statements.		*/
-EXT int manual_locking INIT_FALSE;							/* LOCK mode is MANUAL			*/
+/*
+**	Translation Options
+*/
 
-EXT int lock_clear_para INIT_FALSE;							/* Gen WISP-RECORD-LOCK-CLEAR para	*/
+EXT int  acu_cobol 		INIT_FALSE;		/* ACUCOBOL 				*/
+EXT int  acn_cobol 		INIT_FALSE;		/* ACUCOBOL (NATIVE)			*/
+EXT int  mf_cobol 		INIT_FALSE;		/* Micro Focus COBOL 			*/
+EXT int  mfoc_cobol 		INIT_FALSE;		/* Micro Focus Object COBOL		*/
+EXT int  mfse_cobol 		INIT_FALSE;		/* Micro Focus Server Express COBOL 	*/
+EXT int  unix_cobol 		INIT_FALSE;		/* Any UNIX COBOL 			*/
+EXT char cobol_type[4];					/* The type of COBOL			*/
 
-EXT char hard_lock[5];									/* The file status for hard lock	*/
-EXT char soft_lock[5];									/* The file status for soft lock	*/
-EXT char bin2_type[8];									/* The thing to convert BINARY to.	*/
-EXT char bin4_type[8];									/* The thing to create 4 byte binary.	*/
-EXT char packdec[8]; 									/* The thing to convert COMP to		*/
+EXT char hard_lock[5];					/* The file status for hard lock	*/
+EXT char soft_lock[5];					/* The file status for soft lock	*/
+EXT char bin2_type[8];					/* The thing to convert BINARY to.	*/
+EXT char bin4_type[8];					/* The thing to create 4 byte binary.	*/
+EXT char packdec[8]; 					/* The thing to convert COMP to		*/
 
-EXT int  wrote_special_names INIT_FALSE;						/* Was SPECIAL-NAMES written		*/
 
-#define QUOTE_CHAR '"'
-#define QUOTE_STR  "\""
+EXT int opt_compressed_screens  INIT_TRUE;		/* Compress screen output		*/
+EXT int opt_gen_copylib 	INIT_FALSE;		/* Generate copy libs			*/
+EXT int opt_noprocess 		INIT_FALSE;		/* don't process it just copy it, 	*/
+EXT int opt_logging 		INIT_FALSE;		/* no logging by default		*/
+EXT int opt_log_stats 		INIT_FALSE;		/* no stats either.			*/
+EXT int opt_data_conv		INIT_FALSE;		/* Default to not data conversion	*/
+EXT int opt_x4dbfile		INIT_FALSE;		/* Do not add check for database file	*/
+EXT int opt_xref		INIT_FALSE;		/* Keep cross ref information.		*/
+EXT int opt_xtab		INIT_FALSE;		/* Keep cross ref tab file.		*/
+EXT int opt_nowarnings		INIT_FALSE;		/* Don't show WARNINGS messages.	*/
+EXT int opt_init_move		INIT_FALSE;		/* don't change move spaces to initial	*/
+EXT int opt_init_data		INIT_FALSE;		/* program id is initial.		*/
+EXT int opt_gen_dms_locking	INIT_TRUE;		/* generate record locking logic	*/
+EXT int opt_fdfiller		INIT_TRUE;		/* allow fillers in fd's		*/
+EXT int opt_wsfiller		INIT_TRUE;		/* allow fillers in working-storage	*/
+EXT int opt_keyfile_flag	INIT_FALSE;		/* Don't look for key files.		*/
+EXT int opt_optfile_flag	INIT_FALSE;		/* Flag to process the option file.	*/
+EXT int opt_manual_locking	INIT_FALSE;		/* LOCK mode is MANUAL			*/
 
+EXT int opt_keep_config_computer	INIT_FALSE;	/* #KEEP_CONFIG_COMPUTER */
+EXT int opt_translate_config_computer	INIT_FALSE;	/* #TRANSLATE_CONFIG_COMPUTER */
+EXT int opt_change_level77		INIT_FALSE;	/* #CHANGE_LEVEL77 */
+EXT int opt_dont_force_area_a_levels	INIT_FALSE;	/* #DONT_FORCE_AREA_A_LEVELS */
+EXT int opt_copybook_ext_cpy		INIT_FALSE;	/* #COPYBOOK_EXT_CPY */	
+EXT int opt_copybook_ext_lib		INIT_FALSE;	/* #COPYBOOK_EXT_LIB */	
+EXT int opt_native			INIT_FALSE;	/* #NATIVE */
+EXT int opt_nogetlastfileop		INIT_FALSE;	/* #NOGETLASTFILEOP */
+EXT int opt_nosleep			INIT_FALSE;	/* #NOSLEEP */
+EXT int opt_forcegenwispcpy		INIT_FALSE;	/* #FORCEGENWISPCPY */
+EXT int opt_sign_trailing_separate	INIT_FALSE;	/* #SIGN_TRAILING_SEPARATE */
+EXT int opt_deldatarecords		INIT_FALSE;	/* #DELETE_DATA_RECORDS */
+EXT int opt_nodisplay_processing	INIT_FALSE;	/* #NO_DISPLAY_PROCESSING */
+EXT int opt_no_ws_blank_when_zero	INIT_FALSE;	/* #NO_WS_BLANK_WHEN_ZERO */
+EXT int opt_keep_stop_run  		INIT_FALSE;	/* #KEEP_STOP_RUN - (default).	*/
+EXT int opt_change_stop_run		INIT_FALSE;	/* #CHANGE_STOP_RUN - Change STOP RUN to EXIT PROGRAM	*/
+EXT int opt_delete_record_contains	INIT_FALSE;	/* #DELETE_RECORD_CONTAINS */
+EXT int opt_no_word_swap		INIT_FALSE;	/* #NO_WORD_SWAP */
+EXT int	opt_no_seq_seq_optional		INIT_FALSE;	/* #NO_SEQ_SEQ_OPTIONAL - Use the OPTIONAL phrase on SEQ-SEQ files. */
+EXT int	opt_symbzero			INIT_FALSE;
+
+#define MAX_BLANK_ITEMS		100
+EXT char* opt_blank_when_zero_item[MAX_BLANK_ITEMS];	/* #BLANK_WHEN_ZERO - Screen items to be blank when zero.	*/
+
+#define MAX_STATUS_ITEMS	32							/* The max to allow.			*/
+EXT char* opt_no_file_status_item[MAX_STATUS_ITEMS];	/* #NO_FILE_STATUS -  Prevent WISP from adding file status	*/
+
+#define MAX_SF_ITEMS		32
+EXT char* opt_sort_file_item[MAX_SF_ITEMS];		/* #SORT_FILE - The identified SORT files.		*/
+
+EXT char* opt_copy_declarative_para[MAX_PARAGRAPHS];	/* #COPY_DECLARATIVE - Copy named declarative para to procedure div	*/
 
 #endif /* WISP_H */
 
 /*
 **	History:
 **	$Log: wisp.h,v $
-**	Revision 1.16  2002/03/21 22:02:44  gsl
-**	Add mfoc_cobol and mfse_cobol
+**	Revision 1.35  2003/03/10 18:55:45  gsl
+**	Added nosleep option and for ACU default to using C$SLEEP instead
+**	of WFWAIT on a READ with HOLD
 **	
+**	Revision 1.34  2003/03/07 21:44:20  gsl
+**	rremove unused opt_native_acu flag
+**	
+**	Revision 1.33  2003/03/07 17:00:07  gsl
+**	For ACU default to using "C$GETLASTFILEOP" to retrieve the last file op.
+**	Add option #NOGETLASTFILEOP to use if not C$GETLASTFILEOP is
+**	not available.
+**	
+**	Revision 1.32  2003/03/03 22:08:40  gsl
+**	rework the options and OPTION file handling
+**	
+**	Revision 1.31  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.30  2003/02/25 21:56:03  gsl
+**	cleanup some global "parm" variables
+**	
+**	Revision 1.29  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.28  2003/02/04 16:02:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.27  2003/01/21 16:25:57  gsl
+**	remove VMS /DLINK option
+**	
+**	Revision 1.26  2003/01/15 18:23:33  gsl
+**	add #SIGN_TRAILING_SEPARATE support for MF
+**	
+**	Revision 1.25  2002/12/12 21:31:30  gsl
+**	When #NATIVE and Acubol then set the opt_native_acu and
+**	the opt_getlastfileop options flags
+**	
+**	Revision 1.24  2002/10/14 19:08:01  gsl
+**	Remove the -c options as obsolete since comments are now always
+**	included in the output.
+**	
+**	Revision 1.23  2002/08/13 18:47:29  gsl
+**	#DELETE_DATA_RECORDS
+**	
+**	Revision 1.22  2002/08/12 20:13:51  gsl
+**	quotes and literals
+**	
+**	Revision 1.21  2002/07/25 17:53:35  gsl
+**	Fix FAC-OF- prefix
+**	
+**	Revision 1.20  2002/07/18 21:04:26  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.19  2002/06/21 20:49:32  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.18  2002/05/22 20:25:59  gsl
+**	#KEEP_CONFIG_COMPUTER and #TRANSLATE_CONFIG_COMPUTER options
+**	
+**	Revision 1.17  2002/05/16 21:55:40  gsl
+**	new options
+**	
+**	Revision 1.16  2002-03-21 17:02:44-05  gsl
+**	Add mfoc_cobol and mfse_cobol
+**
 **	Revision 1.15  2001-09-13 09:58:49-04  gsl
-**	Add do_xtab -X flag
+**	Add opt_xtab -X flag
 **
 **	Revision 1.14  1998-06-06 14:57:39-04  gsl
-**	Add manual_locking flag
+**	Add opt_manual_locking flag
 **
 **	Revision 1.13  1998-03-04 15:58:15-05  gsl
 **	Enlarge prog_id to 40 characters for cobol-85

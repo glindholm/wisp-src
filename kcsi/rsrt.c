@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 
 This is a sort that allows any size input file
@@ -22,7 +36,7 @@ sorts.
 Basic flow for using these routines
 the sort struct must be declared within the user program as
 
-SORT sort[MAX_SORTS]; and should not be dereferenced until the
+RPT_ASORT sort[MAX_SORTS]; and should not be dereferenced until the
 sort is completed.
 
 1.	rpt_sort_clear()
@@ -51,13 +65,12 @@ sort is completed.
 #include "kcsifunc.h"
 
 
-static char sccsid[]="@(#)rsrt.c	1.5 7/13/93";
 
 static char work_rec[(MAX_KEY * MAX_SORTS) + (MAX_LEN * 2)];
 
 static KCSIO_BLOCK sort_file;
 /*static struct keydesc sort_key;*/
-static SORT *sort;
+static RPT_ASORT *sort;
 
 #define UNIQUE_LEN	9	/* Added when necessary to make unique keys*/
 static long unique;
@@ -67,10 +80,10 @@ static long unique;
 #define	DATA_KEY_LEN(x)	(FULL_KEY_LEN(x) - UNIQUE_LEN)
 
 
-static void sort_key_init(SORT *srt,struct keydesc *ky);
+static void sort_key_init(RPT_ASORT *srt,struct keydesc *ky);
 static void clean_up(KCSIO_BLOCK *sf);
 static int sort_ret(KCSIO_BLOCK *sf,char *rec);
-static char *bld_key(SORT* srt, char* dest, char* rec);
+static char *bld_key(RPT_ASORT* srt, char* dest, char* rec);
 
 
 /*----
@@ -79,7 +92,7 @@ static char *bld_key(SORT* srt, char* dest, char* rec);
 /*----
 May be used to quickly clear out a sort struct array
 ------*/
-void rpt_sort_clear(SORT *sr)
+void rpt_sort_clear(RPT_ASORT *sr)
 {
 	int idx;
 	for(idx = 0 ; idx < MAX_SORTS ; ++idx, ++sr)
@@ -149,7 +162,7 @@ struct keydesc *ky;
 /*----
 Clean up loose ends in the sort specification and create sort file.
 ------*/
-int rpt_sort_init(SORT *sr,int rl)
+int rpt_sort_init(RPT_ASORT *sr,int rl)
 {
 	rpt_sort_squeeze(sr);
 	sort_key_init(sr,&sort_file._key[0]);
@@ -164,10 +177,10 @@ int rpt_sort_init(SORT *sr,int rl)
 Squeeze the sort defintion where the length is set to zero
 as this is an illegal length for a sort.
 ------*/
-void rpt_sort_squeeze(SORT *srt)
+void rpt_sort_squeeze(RPT_ASORT *srt)
 {
 	int idx;
-	SORT *tsrt;
+	RPT_ASORT *tsrt;
 
 	tsrt = srt;
 	++tsrt;
@@ -190,7 +203,7 @@ void rpt_sort_squeeze(SORT *srt)
 Build the sort key starting at position 0 with a length equal to the sum
 of the lengths of the sort keys.
 ------*/
-static void sort_key_init(SORT *srt,struct keydesc *ky)
+static void sort_key_init(RPT_ASORT *srt,struct keydesc *ky)
 {
 	int idx;
 
@@ -227,7 +240,7 @@ char *work;
  */
 static int sort_rel(sf,s,r)
 KCSIO_BLOCK *sf;
-SORT *s;
+RPT_ASORT *s;
 char *r;
 {
 	int temp;
@@ -297,7 +310,7 @@ int len;
 Pull the key fields from the main record into the start of the record.
 and modify as needed.
 ------*/
-static char *bld_key(SORT* srt, char* dest, char* rec)
+static char *bld_key(RPT_ASORT* srt, char* dest, char* rec)
 {
 	int idx;
 	char *work;
@@ -359,7 +372,7 @@ static int sort_ret(KCSIO_BLOCK *sf,char *rec)
 		}
 	strcpy(sf->_io,READ_NEXT_RECORD);
 	KCSI_ccsio(sf,work_rec);
-	if(rc = sf->_status)
+	if((rc = sf->_status) != 0)
 		{
 		strcpy(sf->_io,CLOSE_FILE);
 		KCSI_ccsio(sf,work_rec);
@@ -386,8 +399,14 @@ static void clean_up(KCSIO_BLOCK *sf)
 /*
 **	History:
 **	$Log: rsrt.c,v $
-**	Revision 1.5.2.1  2002/11/12 15:56:36  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.14  2003/02/20 19:29:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.13  2003/02/17 22:05:58  gsl
+**	Fix ambiguous SORT reference
+**	
+**	Revision 1.12  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.11  2002/10/24 15:48:31  gsl
 **	Make globals unique

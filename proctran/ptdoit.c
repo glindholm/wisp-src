@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1995-97 NeoMedia Technologies Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		ptdoit.c
 **
@@ -343,6 +366,7 @@ static void process_linein(int *num_cmds,int *num_var,int *scn_num,int *filler_n
 	char *start_ptr, *cstr;
 	int num_asn, more;
 
+	cstr = NULL;
 	lcnt = 0;									/* Init the looping field indicators.	*/
 	captr = (char *)0;
 	num_par = 0;									/* Init number of parameters.		*/
@@ -961,6 +985,9 @@ static void write_screen_info()								/* Write out the COBOL source for	*/
 
 			for (cnt = 0; cnt < 3; cnt++)
 			{
+				cstr = NULL;
+				ctyp = '\0';
+
 				cfl = 0;
 				cl = 24 + cnt;
 				if (cnt == 0 && *cur_scn->pf_key == '&')
@@ -1267,13 +1294,13 @@ static void p_putparm_keys(int *num_var,int *num_val)					/* Process the putparm
 			cur_prg->sub_flag = 1;						/* Get the type of the variable.	*/
 			get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,num_val,'T');
 			strcat(cur_pp_key->val,"-");
-			*aptr++;							/* Step over open paren.		*/
+			aptr++;								/* Step over open paren.		*/
 			cstr = temp;
 			while (*aptr != ',') *cstr++ = *aptr++;				/* Copy start position as variable name.*/
 			*cstr = '\0';							/* Null terminate the temp string.	*/
 			strcat(cur_pp_key->val,temp);
 			strcat(cur_pp_key->val,"-");
-			*aptr++;							/* Step over open comma.		*/
+			aptr++;								/* Step over open comma.		*/
 			cstr = temp;
 			while (*aptr != ')') *cstr++ = *aptr++;				/* Copy length as variable name.	*/
 			*cstr = '\0';							/* Null terminate the temp string.	*/
@@ -1382,11 +1409,19 @@ static void check_write_string()							/* Check if need to write the STRING 	*/
 /*
 **	History:
 **	$Log: ptdoit.c,v $
+**	Revision 1.12  2003/02/05 21:15:03  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.11  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.10  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
 **	Revision 1.9  1997/04/21 15:06:17  scass
 **	Corrected copyright.
 **	
 **	Revision 1.8  1996-12-12 13:36:36-05  gsl
-**	\]devtech -. NeoMedia
 **
 **	Revision 1.7  1996-09-12 16:15:20-07  gsl
 **	All the calls to get_type_len() were passing &num_val as the 4th arg

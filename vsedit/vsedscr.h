@@ -1,6 +1,24 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 #ifndef	_VSEDSCR_H
 #define	_VSEDSCR_H
@@ -18,11 +36,11 @@
 #define	INIT_ALL_PFS
 #endif	/* _VSEDSCR_C */
 
-EXTERN_DEF	char ed_scr[2000];	/* Was overflowing at 1924 */
+EXTERN_DEF	unsigned char ed_scr[2000];	/* Was overflowing at 1924 */
 EXTERN_DEF	char ed_pfs[]	INIT_ALL_PFS;
 EXTERN_DEF	char ed_pfcode[3];
-EXTERN_DEF	char ed_status[3];
-EXTERN_DEF	char ed_oa[4];
+EXTERN_DEF	unsigned char ed_status[3];
+EXTERN_DEF	unsigned char ed_oa[4];
 
 EXTERN_DEF	char ed_top1[81],ed_top2[81],ed_top3[81],ed_top4[81];
 
@@ -137,6 +155,12 @@ void file_bottom(void);
 /*
 **	History:
 **	$Log: vsedscr.h,v $
+**	Revision 1.11  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.10  2002/08/01 15:57:51  gsl
+**	type warnings
+**	
 **	Revision 1.9  1996/09/03 22:24:04  gsl
 **	drcs update
 **	

@@ -192,10 +192,6 @@ SOURCE=.\menuvect.wcb
 
 SOURCE=..\acu\wrun32wisp_ede.mak
 # End Source File
-# Begin Source File
-
-SOURCE=..\acu\wwruncbl.mak
-# End Source File
 # End Group
 # Begin Source File
 

@@ -1,5 +1,19 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 extern DTYPE rpt_old[],rpt_new[];
 extern DTYPE wrk_dtype;
 extern RPT_OPT rpt_opt;
@@ -29,7 +43,7 @@ extern char rpt_inp_rec1[],rpt_inp_rec2[],rpt_inp_rec[];
 extern int rpt_inp_rec_len;
 extern int rpt_key_to_sec_idx;
 
-extern SORT rpt_sort[];
+extern RPT_ASORT rpt_sort[];
 
 extern char rpt_bld_fld[];
 
@@ -42,8 +56,11 @@ extern long rpt_total_records,rpt_record_count,rpt_sorted_records;
 /*
 **	History:
 **	$Log: rptglb.h,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:35  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.8  2003/02/17 22:05:58  gsl
+**	Fix ambiguous SORT reference
+**	
+**	Revision 1.7  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
 **	
 **	Revision 1.6  2002/10/24 14:20:34  gsl
 **	Make globals unique

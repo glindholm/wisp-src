@@ -1,24 +1,42 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	makepath.c	was createpath.c and creatpath() before MSDOS port.  Name shortened to < 8 characters. 
 */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #ifdef WIN32
 #include <io.h>
 #include <direct.h>
+#endif
+#ifdef unix
+#include <unistd.h>
 #endif
 
 #include "idsistd.h"
@@ -42,7 +60,7 @@ static char rcsid[]="$Id:$";
 #endif
 
 /*
-**	ROUTINE:	makepath( )
+**	ROUTINE:	WL_makepath( )
 **
 **	FUNCTION:	Makes the path up to but not including the filename.
 **
@@ -59,7 +77,7 @@ static char rcsid[]="$Id:$";
 **	WARNINGS:	There is no possible way to ASSERT that the received path is a cstr.
 **
 */
-int	makepath(const char* fullpath )
+int	WL_makepath(const char* fullpath )
 {
 	char 	buff[WISP_FILEPATH_LEN];
 	int	i,rc;
@@ -121,7 +139,7 @@ int	makepath(const char* fullpath )
 	**	First try the simple case: Strip off the filename and
 	**	see if the directory exists.
 	*/
-	if (ptr = strrchr(buff,DS))
+	if ((ptr = strrchr(buff,DS)))
 	{
 		/* Find the last directory separator and null it out */
 		*ptr = '\0';
@@ -137,7 +155,7 @@ int	makepath(const char* fullpath )
 
 	for( i = ps; i < (int)strlen(buff); i++ )				/* Start at the PS position and search forward	*/
 	{
-		if (ptr = strchr(&buff[i],DS))
+		if ((ptr = strchr(&buff[i],DS)))
 		{
 			*ptr = '\0';
 			if (!fexists(buff))					/* See if the directory exists, If it doesn't	*/
@@ -166,6 +184,21 @@ int	makepath(const char* fullpath )
 /*
 **	History:
 **	$Log: makepath.c,v $
+**	Revision 1.21  2003/01/31 21:40:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.20  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.19  2003/01/31 18:25:18  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.18  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.17  2002/07/10 04:27:37  gsl
+**	Rename global routines with WL_ to make unique
+**	
 **	Revision 1.16  2001/10/31 20:37:44  gsl
 **	Removed VMS
 **	Added chmod(0777) after a mkdir()

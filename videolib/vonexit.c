@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -12,31 +33,42 @@ static char rcsid[]="$Id:$";
 #include	"video.h"
 #include	"vlocal.h"
 #include	"vmodules.h"
+#include	"vdata.h"
 
 /*					Subroutine entry point.									*/
 
-vonexit(new) int new;									/* Change the exit defaults.		*/
+int VL_vonexit(int new_op)									/* Change the exit defaults.		*/
 {
-	extern int exit_options;							/* Reference the exit options.		*/
-
-	if ((new & WIDE) && (new & NARROW))						/* Validate width requests.		*/
+	if ((new_op & WIDE) && (new_op & NARROW))						/* Validate width requests.		*/
 	{
-		vre("vonexit(%o)-F-Cannot have both WIDE and NARROW screen on exit.",new);
+		vre("vonexit(%o)-F-Cannot have both WIDE and NARROW screen on exit.",new_op);
 		return(FAILURE);
 	}
-	if ((new & LIGHT) && (new & DARK))						/* Validate color.			*/
+	if ((new_op & LIGHT) && (new_op & DARK))						/* Validate color.			*/
 	{
-		vre("vonexit(%o)-F-Cannot have both LIGHT and DARK screen on exit.",new);
+		vre("vonexit(%o)-F-Cannot have both LIGHT and DARK screen on exit.",new_op);
 		return(FAILURE);
 	}
 
-	exit_options = new;								/* Store the new exit options.		*/
+	VL_exit_options = new_op;								/* Store the new exit options.		*/
 	
 	return(SUCCESS);								/* Now let the caller know how it went.	*/
 }
 /*
 **	History:
 **	$Log: vonexit.c,v $
+**	Revision 1.13  2003/02/04 17:05:01  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.12  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.11  2002/07/15 20:16:11  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.10  2002/07/15 17:10:05  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.9  1996/10/11 22:16:13  gsl
 **	drcs update
 **	

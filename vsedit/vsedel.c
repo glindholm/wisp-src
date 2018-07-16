@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 #include <string.h>
@@ -100,14 +115,14 @@ int vse_ed_del(void)
 
 		vseunscr(ed_del_flds,ed_scr);
 
-		if (rc = validate_range(start_field, &start_line, end_field, &end_line))
+		if ((rc = validate_range(start_field, &start_line, end_field, &end_line)))
 		{
 			strcpy(emsg_field,vse_err(rc));
 		}
 
 		if(!rc)
 		{
-			if (rc = vse_ed_del_range(start_line,end_line))
+			if ((rc = vse_ed_del_range(start_line,end_line)))
 			{
 				strcpy(emsg_field,vse_err(rc));
 			}
@@ -160,6 +175,12 @@ int vse_ed_del_range(int4 start_line, int4 end_line)
 /*
 **	History:
 **	$Log: vsedel.c,v $
+**	Revision 1.13  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.12  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
 **	Revision 1.11  1996/09/03 22:24:00  gsl
 **	drcs update
 **	

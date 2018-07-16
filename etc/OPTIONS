@@ -1,5 +1,6 @@
 #######################################################################
-# Copyright (c) 2002 by NeoMedia Technologies Inc. All Rights Reserved.
+# Copyright (c) 2002-2003 by NeoMedia Technologies Inc. 
+# All Rights Reserved.
 #######################################################################
 #
 # OPTIONS:	The WISP runtime options file.
@@ -20,10 +21,10 @@
 
 # Set the error reporting level. This effects what messages get 
 # reported and get logged to the wisperr.log file.
-#    15 - Report and log exceptions only, this is the default.
-#    27 - Log everything, equivalent to WISPDEBUG=FULL.
-#ERRFLAG 15
-#ERRFLAG 27		
+#    ERRORS - Report and log exceptions only, this is the default.
+#    FULL   - Log everything. Turns on the Runtime Trace Facility.
+#    NONE   - Turn off all logging (not recommended.)
+#WISPDEBUG FULL
 
 # Turning signals off will cause a core file to be created on a
 # signal 10 or 11.
@@ -90,7 +91,7 @@
 # Example 1) Implementation for UniQue Print Queue on UNIX
 #
 #PQCMD ulp -q %CLASSOPT% -f%FORM% -n%COPIES% %PRTNUMOPT% %HOLDOPT% \
-#  %DELOPT% %REQOPT% %FILE%
+#  %DELOPT% %REQOPT% '%FILE%'
 #PQCLASSOPT  -C%CLASS%
 #PQPRTNUMOPT -P%PRTNUM%
 #PQHOLDOPT   -M hold
@@ -99,7 +100,7 @@
 #
 # Example 2) Implementation for LP on UNIX
 #
-#PQCMD lp -c -s -n%COPIES% %FORMMAP% %LPMAP% %PRMAP% %FILE% 
+#PQCMD lp -c -s -n%COPIES% %FORMMAP% %LPMAP% %PRMAP% '%FILE%' 
 #PQNOHOLD
 #PQDELETELOCAL
 #
@@ -210,11 +211,11 @@
 #
 #EXTDISPLAY
 
-# The DISPLAY8BIT option instruct the DISPLAY utility to display
+# The WISPDISPLAY8BIT option instruct the DISPLAY utility to display
 # 8-bit non-ASCII characters without CHARMAP substitution. If the
 # option NATIVECHARMAP is specified it will override this option.
 #
-#DISPLAY8BIT
+#WISPDISPLAY8BIT
 
 # The NATIVECHARMAP option instructs the runtime and utilities that
 # text data within the application is encoded using the "native" 
@@ -279,13 +280,17 @@ UTILSWINDOWS
 #
 #COSTARV2
 
-# The YYPIVOTYEAR options sets the pivot year for file sort 
-# keys of type "Y". These represent a two digit year (YY PIC 99) 
-# whose sort value is calculated based on YYPIVOTYEAR. 
+# The YYPIVOTYEAR options sets the pivot year for DATE6 and 
+# for file sort keys of type "Y". These represent a two digit 
+# year (YY PIC 99) whose value is calculated based on YYPIVOTYEAR. 
 # As a example, if pivot year is 30 then YY has a value range
 # of 1931-2030. 
 #
-#YYPIVOTYEAR -1		(Default 1900 - 1999)
+# If not set YYPIVOTYEAR defaults to current year plus 50,
+# this will put the current year in the middle of a 100 year
+# window. For 2003 the pivot year defaults to 53 which gives 
+# a range of 1954-2053.
+#
 #YYPIVOTYEAR 30		(1931 - 2030)
 
 # The DEBUGNOHIDE option is used on Windows NT/95 to tell the
@@ -316,15 +321,25 @@ UTILSWINDOWS
 # variable.
 #
 #VUTIL /usr/local/acucobol/bin/vutil
-#VUTIL \\server\share\acucobol\bin\vutil32.exe
+#VUTIL \\SERVER\ACUDIR\bin\vutil32.exe
 
 # The SHAREDMEMORYV1 option causes shared memory control files to
 # be named so they are compatiable with 4.3.06 and earlier versions 
 # of the runtime.  Use this option if you need to run earlier versions
 # of the runtime or utilities simultaneously with new runtimes of
-# utilties.
+# utilties.  (Also see USESHAREDMEMORY below.)
 #
 #SHAREDMEMORYV1
+
+# The USESHAREDMEMORY option can be specified on Unix to have the
+# runtime use the older true shared memory routines for GETPARM/PUTPARM
+# processing.  The current implementation uses temporary files to
+# store the PUTPARM data.  The only reason to use this option is if
+# you require compatibility with older utilities that use shared
+# memory for PUTPARM data.  
+# NOTE: If you enable the SHAREDMEMORYV1 option it will also enable
+# this option.
+#USESHAREDMEMORY
 
 # The READFDRV1 option causes READFDR/READFDR4 to behave as it did
 # pre-release 4.4 regarding Sequential and Relative files without
@@ -345,3 +360,70 @@ UTILSWINDOWS
 # indexed file into a sequential file.
 #
 #UNLOADREBUILD
+
+# The WISPTMPDIR option allows you to change the location of WISP
+# runtime temporary files.
+#
+#WISPTMPDIR /usr/tmp
+#WISPTMPDIR C:\TEMP
+
+# The WISPSYSTMPDIR option allows you to change the location of system
+# runtime temporary files.  This is currently only used for temporary
+# sort files.
+#
+#WISPSYSTMPDIR /tmp
+#WISPSYSTMPDIR C:\TEMP
+
+# The WISPSORTMEM option allows you to set the amount of memory the
+# file sort facility will use.  The number is specified in 'K' and
+# defaults to 2048 (2 mb). The valid range is 16 to 65535.
+#
+#WISPSORTMEM 2048
+
+# The WISPCPU option allows you to set the CPU ID returned by "EXTRACT"
+# keyword "C#". 
+# The value is an Alpha(4), spaces will be returned if not set.
+#
+#WISPCPU ccmm
+
+# The WISPNETID option allows you to set the Network Id returned by 
+# "EXTRACT" keyword "W$". 
+# The value is an Alpha(8), spaces will be returned if not set.
+#
+#WISPNETID netid
+
+# The WPROC option specifies the name or explicit location of the
+# WISP Procedure Interpreter.
+#
+#WPROC wproc
+
+# The WPROCDEBUG option specifies debug parameters to WPROC. This is
+# used in debugging only.
+#
+#WPROCDEBUG -d0
+
+# The ACPCONFIG option specifies directory of the ACPMAP file.
+#
+#ACPCONFIG /usr/local/wisp/acp
+
+# The ACPMAP option specifies the name of the ACPMAP file.
+#
+#ACPMAP ACPMAP
+
+# The WISPSCRATCHMODE option can specify earlier behavour for the 
+# SCRATCH vssub.  Two mode are supported 32 and 33.
+#
+#WISPSCRATCHMODE 33
+
+# The USEOLDVSDATE option cause vssubs DATE and DAY to behave as
+# they did prior to DATE6 support.
+# 
+#USEOLDVSDATE
+
+# The WISPPS1 option allows you to specify the shell prompt by
+# setting the PS1 environment variable value to use when you 
+# "shell out" from the WISP Command Processor on Unix with 
+# the "(11) Enter Commands" option.  If WISPPS1 is not specified 
+# then PS1 is not changed.
+#
+#WISPPS1 "*** WISP PS1 PROMPT ***> "

@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1996 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 /*
@@ -23,9 +43,6 @@
 /*
 **	Structures and Defines
 */
-#define wmalloc wisp_malloc
-#define wcalloc wisp_calloc
-#define wstrdup wisp_strdup
 
 /*
 **	Function Prototypes
@@ -39,8 +56,14 @@ extern char *wisp_strdup(const char *string);
 /*
 **	History:
 **	$Log: wmalloc.h,v $
-**	Revision 1.4.2.1  2002/10/03 13:55:11  gsl
-**	Change wstrdup() -> wisp_strdup()
+**	Revision 1.7  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.6  2002/07/10 21:06:36  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.5  2002/07/02 21:15:39  gsl
+**	Rename wstrdup
 **	
 **	Revision 1.4  1996/11/06 17:31:46  jockc
 **	Move from wisp/lib to wisp/common

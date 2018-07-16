@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /********************************************************************************************************************************
 *																*
@@ -7,34 +28,20 @@ static char rcsid[]="$Id:$";
 *																*
 ********************************************************************************************************************************/
 
-#if defined(unix) || defined(VMS) || defined(MSDOS_SORTX) || defined(WIN32)
-/*
-	For MSDOS this whole module gets included into sortx.c which defined MSDOS_SORTX.
-*/
 
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef MSDOS
-#include <search.h>
-#endif
 
-#include <varargs.h>                                                                    /* Allow variable number of arguments	*/
+#include <stdarg.h>                                                                    /* Allow variable number of arguments	*/
 #include "idsistd.h"
 #include "werrlog.h"
 #include "wisplib.h"
 
-#define		ROUTINE		60000
-
-
-#ifdef VMS
-#include <descrip.h>
-#endif
-
 static int4 keypos, keylen, elemsz;
 
 static	void local_sort(char* in, char* out, int4 e_cnt, int4 e_len, int4 s_start, 
-			int4 s_len, int s_type, int loc, int4 loc_sz);
+			int4 s_len, char s_type);
 
 static int ourcmp(const char** p1, const char** p2);
 static int ourrcmp(const char** p1, const char** p2);
@@ -43,121 +50,134 @@ static int binncmp(		/* compare two areas of memory		*/
 	const void *p2,		/* area two				*/
 	int4 len);		/* number of bytes to compare		*/
 
-void SORT(va_alist)
+/*
+	SORT()
 
-va_dcl
+	Arg4 thur Arg9 are optional but if one is included all previous args
+	must be included.
+
+	ARG1	Input		Alpha(var)
+	ARG2	Elements	Int(4)
+	ARG3	Element_length	Int(4)
+	ARG4	Output		Alpha(var)	Optional
+	ARG5	Start		Int(4)		Optional
+	ARG6	Sort_length	Int(4)		Optional
+	ARG7	Sort_type	Alpha(1)	Optional
+	ARG8	Locator_flag	Alpha(1)	Optional
+	ARG9	Locator_length	Int(4)		Optional
+*/
+void SORT(char* input_array, int4* element_count, int4* element_length, ...)
 {
-	va_list	the_args;								/* A pointer to traverse the stack.	*/
+	va_list	the_args;
 	int	arg_count;
-	char	*input_array, *output_array, *sort_type, *locator_flag;			/* Pointers to passed arguments.	*/
+	char	*output_array, *sort_type, *locator_flag;
 	char	l_sort_type, l_locator_flag;
-	int4	*element_count,  *element_length,  *sort_start,  *sort_length,  *locator_length;
-	int4	l_element_count, l_element_length, l_sort_start, l_sort_length, l_locator_length;	/* Local copies - wswap	*/
-	int4	i;
+	int4	*sort_start,  *sort_length,  *locator_length;
+	int4	l_element_count, l_element_length, l_sort_start, l_sort_length, l_locator_length;
+
+	va_start(the_args, element_length);
+	arg_count = WL_va_count();
+
+	WL_wtrace("SORT","ENTRY","Entry into SORT args=%d", arg_count);
 
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
+	/* ARG1	Input		Alpha(var)	*/
 
-	/********************************************************
-	*	Receive variable number of arguments		*
-	********************************************************/
-	va_start(the_args);								/* Set pointer to top of stack.		*/
-	arg_count = va_count(the_args);							/* How many args are there ?		*/
+	/* ARG2	Elements	Int(4)  */
+	l_element_count = WL_get_swap(element_count);
 
-	va_start(the_args);								/* Go back to the top of the stack.	*/
+	/* ARG3	Element_length	Int(4)	*/
+	l_element_length = WL_get_swap(element_length);
 
-	input_array  = va_arg(the_args, char*);						/* Get address of the input array	*/
-	output_array = input_array;							/* Default output array is input array	*/
-	arg_count -= 1;									/* One less argument.			*/
 
-	element_count = va_arg(the_args, int4*);					/* Get # of elements in input array	*/
-	arg_count -= 1;									/* One less argument.			*/
-	i = *element_count;
-	wswap(&i);
-	l_element_count = i;
-
-	element_length = va_arg(the_args, int4*);					/* Length of each input element		*/
-	arg_count -= 1;									/* One less argument.			*/
-	i = *element_length;
-	wswap(&i);
-	l_element_length = i;
-
-	l_sort_start = 1;								/* Default start sort key at position 1	*/
-	l_sort_length = l_element_length;						/* Default key length is entire element	*/
-	l_sort_type = 'A';								/* Default sort order is ascending	*/
-	l_locator_flag = 'S';								/* Default is standard sort		*/
-	l_locator_length = 0;
-
-	/********************************************************
-	*	Following are optional arguments 4 through 9	*
-	********************************************************/
-
-	if (arg_count > 0)
+	/* ARG4	Output		Alpha(var)	Optional */
+	if (arg_count >= 4)
 	{
 		output_array = va_arg(the_args, char*);					/* Get address of the output array	*/
-		arg_count -= 1;								/* One less argument.			*/
+	}
+	else
+	{
+		output_array = input_array;						/* Default output array is input array	*/
 	}
 
-	if (arg_count > 0)
+	/* ARG5	Start		Int(4)		Optional */
+	if (arg_count >= 5)
 	{
 		sort_start = va_arg(the_args, int4*);					/* Starting position of sort field (1+)	*/
-	 	arg_count -= 1;								/* One less argument.			*/
-		i = *sort_start;
-		wswap(&i);
-		l_sort_start = i;
+		l_sort_start = WL_get_swap(sort_start);
+	}
+	else
+	{
+		l_sort_start = 1;							/* Default start sort key at position 1	*/
 	}
 
-	if (arg_count > 0)
+	/* ARG6	Sort_length	Int(4)		Optional */
+	if (arg_count >= 6)
 	{
 		sort_length = va_arg(the_args, int4*);					/* Length of the sort field		*/
-	 	arg_count -= 1;								/* One less argument.			*/
-		i = *sort_length;
-		wswap(&i);
-		l_sort_length = i;
+		l_sort_length = WL_get_swap(sort_length);
+	}
+	else
+	{
+		l_sort_length = l_element_length;					/* Default key length is entire element	*/
 	}
 
-	if (arg_count > 0)
+	/* ARG7	Sort_type	Alpha(1)	Optional */
+	if (arg_count >= 7)
 	{
 		sort_type = va_arg(the_args, char*);					/* Ascending or Descending sort [A]	*/
 		l_sort_type = *sort_type;
-	 	arg_count -= 1;								/* One less argument.			*/
+	}
+	else
+	{
+		l_sort_type = 'A';							/* Default sort order is ascending	*/
 	}
 
-	if (arg_count > 0)
+	/* ARG8	Locator_flag	Alpha(1)	Optional */
+	if (arg_count >= 8)
 	{
 		locator_flag = va_arg(the_args, char*);					/* Flag for locator type sort		*/
 		l_locator_flag = *locator_flag;
-	 	arg_count -= 1;								/* One less argument.			*/
+	}
+	else
+	{
+		l_locator_flag = 'S';							/* Default is standard sort		*/
 	}
 
-	if (arg_count > 0)
+	/* ARG9	Locator_length	Int(4)		Optional */
+	if (arg_count == 9)
 	{
 		locator_length = va_arg(the_args, int4*);				/* Desired size of each locator element	*/
-	 	arg_count -= 1;								/* One less argument.			*/
-		i = *locator_length;
-		wswap(&i);
-		l_locator_length = i;
+		l_locator_length = WL_get_swap(locator_length);
 	}
-
+	else
+	{
+		l_locator_length = 0;
+	}
+	va_end(the_args);
 											/* standard c qsort()			*/
 	if (l_locator_flag == 'L' || l_locator_flag == 'l')				/* gen err if Locator requested		*/
 	{
-		werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(60002),0,0,0,0,0,0,0,0);
 		return;
 	}
 
 	if (l_element_length > 255)							/* check their parms			*/
 	{
-		werrlog(ERRORCODE(4),l_element_length,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(60004),l_element_length,0,0,0,0,0,0,0);
 		return;
 	}
 
 	if (l_sort_length+(l_sort_start-1) > l_element_length || l_sort_start > l_element_length)
 	{
-		werrlog(ERRORCODE(6),l_sort_start,l_sort_length,0,0,0,0,0,0);
+		werrlog(WERRCODE(60006),l_sort_start,l_sort_length,0,0,0,0,0,0);
 		return;
 
 	}
+
+	WL_wtrace("SORT","ARGS","Elements=[%d] Element Length=[%d], Start=[%d] Sort Length=[%d] Sort type=[%c]",
+		l_element_count, l_element_length, l_sort_start, l_sort_length, l_sort_type);
+
 											/* now call func to do the work 	*/
 	local_sort(input_array, 							/* source array 			*/
 		output_array, 								/* dest array 				*/
@@ -165,14 +185,12 @@ va_dcl
 		l_element_length,							/* length of each elem in source 	*/
 		l_sort_start,								/* sort field pos in element 		*/
 		l_sort_length,								/* sort field len in element 		*/
-		(int)l_sort_type,							/* sort type: 'A' or 'D' 		*/
-		(int)l_locator_flag,							/* standard sort or psuedo-pointer sort */
-		l_locator_length); 							/* size (bytes) of locator 		*/
+		l_sort_type);								/* sort type: 'A' or 'D' 		*/
 
 }
 
 static	void local_sort(char* in, char* out, int4 e_cnt, int4 e_len, int4 s_start, 
-			int4 s_len, int s_type, int loc, int4 loc_sz)
+			int4 s_len, char s_type)
 {
 	int (*comp)(const void*, const void*);						/* pointer to compare fn for qsort()	*/
 	char *buf, **p, **ptrs;
@@ -234,10 +252,33 @@ static int binncmp(		/* compare two areas of memory		*/
 	return 0;									/* areas are the same			*/
 }
 
-#endif /* unix || VMS || MSDOS_SORTX || WIN32 */
 /*
 **	History:
 **	$Log: sort.c,v $
+**	Revision 1.21  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.20  2003/01/20 18:15:45  gsl
+**	Changed to use stdarg.h
+**	
+**	Revision 1.19  2002/12/10 20:54:11  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.18  2002/12/09 21:09:31  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.17  2002/07/16 16:24:52  gsl
+**	Globals
+**	
+**	Revision 1.16  2002/07/12 17:01:01  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.15  2002/07/11 20:29:14  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.14  2002/06/21 03:10:41  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.13  1998/07/10 15:02:58  gsl
 **	Initialized the l_locator_length variable
 **	

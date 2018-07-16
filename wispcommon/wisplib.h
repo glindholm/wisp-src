@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1996 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 /*
@@ -29,54 +49,38 @@
 /*
 **	Function Prototypes
 */
-
-/* acustubs.c */
-void call_acucobol();
+int wisp_acu_cobol();
+int wisp_mf_cobol();
 
 /* backgrnd.c */
-int wbackground(void);
+#define wbackground	WL_wbackground
+int WL_wbackground(void);
 
 /* bit_x.c */
-void wsetstat(uint4 *smask, uint4 *cmask, uint4 *src);			/* Used to set/clear bits in a status field.	*/
-void bit_off(unsigned char *mask, unsigned char *src);
-void lbit_off(uint4 *mask, uint4 *src);
-void xx2byte(char *src,char *dst);
-void WMEMCPY(char *dst,char *src,short *len);				/* COBOL call able memcpy			*/
-
-/* bits.c */
-void BITPACK(unsigned char *in_ptr,unsigned char *out_ptr, int4 *in_len);
-void BITUNPK(unsigned char *in_ptr, unsigned char *out_ptr, int4 *in_len);
-
-/* btransl.c */
-int *btransl(char *in_string,short *len_flds,char *eb_as);
-
-/* coblink.c */
-void COBLINK(const char *progname);
+void WSETSTAT(const uint4 *smask, const uint4 *cmask, uint4 *src);	/* Used to set/clear bits in a status field.	*/
+void BIT_OFF(const unsigned char *mask, unsigned char *src);
+void LBIT_OFF(const uint4 *mask, uint4 *src);
+void BIT_ON(const unsigned char *mask,unsigned char *src);
+void LBIT_ON(const uint4 *mask,uint4 *src);
+void BIT_TEST(const unsigned char *mask, const unsigned char *src, char *value);
+void W99TOX(const char *src,char *dst);
+void WMEMCPY(char *dst, const char *src, const short *len); 		/* COBOL call able memcpy			*/
+void WGETCURPOS(const unsigned char mybytes[],short int mywords[]);
+void WSETFACBLINK(unsigned char *fac);
 
 /* date.c */
-#ifndef DATE_C
-void DATE(char* func, ...);
-void DATE2(char* func, ...);
-void DATE4(char* func, ...);
-void DATE6(char* func, ...);
-#endif
-
-/* day.c */
-void DAY(char* date, int4* dow);						/* Return the day of the week for a given date.	*/
-
-/* edestubs.c */
-int  gen_ncpfkey( int type, char** wsb, int num_chars, int* st_win, int* end_win);
-int  ws_bar_menu( int curset, int vr, int vc, int ak, int ar, unsigned char* nm, int dp );
-int  nc_pop_menu( int* filling, unsigned char* terminate_list, unsigned char* no_mod, unsigned char* pfkey );
+int WL_useoldvsdate(void);
+unsigned int WL_currentyear(void);
+unsigned int WL_yypivotyear(void);
+unsigned int WL_convertyy2yyyy(unsigned int yy_value, unsigned int currentyear, unsigned int yy_pivot);
 
 /* errgparm.c */
-void err_getparm(char* prname, char* messid, char* issuer, 
+void WL_err_getparm(char* prname, char* messid, char* issuer, 
 		 char* msg1, char* msg2, char* msg3, char* msg4, 
 		 char* msg5, char* msg6, char* msg7, char* msg8);
 
 /* extract.c */
-void EXTRACT(const char* first, ...);
-int4 workstation(void);
+int4 WL_workstation(void);
 
 /* fexists.c */
 #define fexists		WL_fexists
@@ -98,50 +102,35 @@ int WL_stat_size_long(const char* name, long *size);
 int WL_stat_size_int8(const char* name, INT8 *size);
 #endif
 
+
 /* filecopy.c */
-void FILECOPY();
-
-/* filgparm.c */
-void file_getparm2(int4 f_mode, char *file, char *lib, char *vol, const char *prname, 
-		char *issuer, int4 *entry_mode, char *getparm_type, char *native_path,
-		char *msg1, char *msg2, char *pfkey_rcvr, char intv_type,	
-		char *orig_file, char *prtclass, int4 *form, int4* copies);
-
-/* find.c */
-void FIND(char* the_file, char* the_lib, char* the_vol, int4 *starter, int4 *counter, char* receiver, ...);
+void FILECOPY(const char* arg1_infile,
+	      const char* arg2_inlib,
+	      const char* arg3_invol,
+	      const char* arg4_outfile,
+	      ...);
 
 /* findexts.c */
-int findexts(char* basename, char* base_ext);
+int WL_findexts(char* basename, char* base_ext);
+int WL_matchnative(char *native_vol, char *native_lib, char *native_file, char *native_ext, int nomodext, int is_lib );
 
 /* filesize.c */
 long WL_filesize(const char* path);
 
 /* getparm.c */
-void GETPARM();
-int use_last_prb();
-
-/* greclen.c */
-int greclen(const char* file_name);						/* Get record length of fixed_size record file. */
+void WL_use_last_prb(void);
 
 /* initglbs.c */
-int initglbs(char *wisprunname);							/* Init GLOBALS				*/
-int init_watcom(void);
-void wexitint(int sig);
-void wexitbug(int sig);
-void wexitsig(int sig);
+int  WL_initglbs(const char *wisprunname);							/* Init GLOBALS				*/
+void WL_wexitint(int sig);
+void WL_wexitbug(int sig);
+void WL_wexitsig(int sig);
 void wisp_signal_handler(void);
 
-/* link.c */
-#ifndef LINK_C
-void LINK2(const char *program, int4 len1, ...);
-#endif
-
-int findrun(char file[8],char lib[8], char vol[6], char* native, char linktype[1]);
-int firstproc(char* filepath);
+int WL_findrun(char file[8],char lib[8], char vol[6], char* native, char linktype[1]);
+int WL_firstproc(char* filepath);
 
 /* linksubs.c */
-void writeunixlink();
-void readunixlink();
 void LINKGARG();
 void ISRUNUSING();
 void LINKPARG();
@@ -149,137 +138,91 @@ void LINKNARG();
 void ACUGARGS();
 void ACUPARGS();
 void ACUNARGS();
-void writevmslink();
-void readvmslink();
-void VMSGARGS();
-void VMSNARGS();
-void wclink();
-int4 vms_to_wang_codes ( int4 vms_code );				/* Convert VMS return code to WANG LINK return code	*/
-
-void swap_put ( int4* destination, int4 new_value );
 
 
 /* longarg.c */
-int longargtest(char *ptr, int sigbytes);
+int WL_longargtest(char *ptr, int sigbytes);
 
 /* makepath.c */
-int makepath(const char* fullpath );
+#define makepath WL_makepath
+int WL_makepath(const char* fullpath );
 
 /* mngfile.c */
-int mngfile(void);
+int WL_mngfile(void);
 
 /* msdosfns.c */
-#if defined(MSDOS) || defined(WIN32)
-int getuid(void);
-const char	*ttyname(int fd);
-void PARSECOM( char* com_line, char* com_link );
+#if defined(WIN32)
+#define getuid	WL_getuid
+#define ttyname	WL_ttyname
+int		 WL_getuid(void);
+const char	*WL_ttyname(int fd);
 #endif
 
 /* nextfile.c */
-char *nextfile(char* path, char** context);
-char *s_nextfile(char* path, int* first);
+char *WL_nextfile(const char* path, char** context);
+char *WL_s_nextfile(const char* path, int* first);
 
 /* pwdname.c */
-void passwdname(char *name);
-
-/* readfdr.c */
-void READFDR(const char* cpFile, const char* cpLib, const char* cpVol, const int4* mode, ...);
-void READFDR4(const char* cpFile, const char* cpLib, const char* cpVol, const int4* mode, ...);
-
-#define READFDR_RC_0_SUCCESS			0
-#define READFDR_RC_4_VOLUME_NOT_FOUND		4
-#define READFDR_RC_16_LIBRARY_NOT_FOUND		16
-#define READFDR_RC_20_FILE_NOT_FOUND		20
-#define READFDR_RC_24_NO_FILE_HEADER		24
-#define READFDR_RC_32_STAT_ERROR		32
-#define READFDR_RC_40_INVALID_INPUT_PARAM	40
-#define READFDR_RC_44_IO_ERROR			44
-#define READFDR_RC_68_UNKNOWN_FILE_FORMAT	68
+void WL_passwdname(char *name);
 
 /* rename.c */
-void wrename();
-int file_rename(char* old_filename, char* new_filename);
+int WL_rename(const char* old_filename, const char* new_filename);
 
 /* retcode.c */
-void RETCODE(char code[3]);
-void setretcode(char* wispreturncode);
-void delete_retcode(void);
-
+#define WANG_RETCODE_LEN 3
+void RETCODE(char code[WANG_RETCODE_LEN]);
+void SETRETCODE(const char wispreturncode[WANG_RETCODE_LEN]);
+void WL_delete_retcode(void);
 int  WL_get_internal_retcode(void);
 void WL_set_internal_retcode(unsigned int rc);
 
 /* scratch.c */
 int wisp_unlink(const char *filename);
-void SCRATCH();
-
-/* screen.c */
-void strip_facs(		/*  with a space.			*/
-	char *string_addr,	/* Address of string to be stripped.	*/
-	int string_len,		/* Length of that string.		*/
-	int type);		/* 0=Wang screen map (with FACs & 0x0b), 1=vchr_map */
-
-int di_write_file(			/* Open up a printer output file.	*/
-	char *text,			/* Pointer to the stuff to be printed.	*/
-	int  text_len,			/* Length values.			*/
-	int  rec_len,			/* Length values.			*/
-	char *filelibvol, 		/* Pointer to the file to be opened.	*/
-	char *def_filename);		/* Pointer to the default file name.	*/
-
-void border_screen(
-	char *work_area,   	/* Address of destination.		*/
-	char *screen_image,	/* Address of screen image.		*/
-	int  image_rec_size,	/* Size of the image on the screen.	*/
-	int  screen_rec_size,	/* The size of the screen records.	*/
-	int  screen_rec_count);	/* The number of records. (screen rows)	*/
 
 /* setenvst.c */
 #include "setenvst.h"
 
 /* setprgid.c */
-void setprogid(const char *wisp_application_name);			/* Set global variable to current program id.	*/
+void WL_setprogid(const char *wisp_application_name);			/* Set global variable to current program id.	*/
 
 /* sortlink.c */
-void getsortinfo(char* filetype, int4* recsize, int4** sortcode_ptr);
-void SORTINFO(char* filetype, int4* recsize, int4* sortcode);
-
-/* spawn.c */
-int4 spawn2(int action, char* progname,char* message,uint4* status);
+void WL_getsortinfo(char* filetype, int4* recsize, int4** sortcode_ptr);
 
 /* vdisplay.c */
-int vdisplay(const char *file_name,int record_size);			/* VIDEO file display subroutine.	*/
+int WL_vdisplay(const char *file_name,int record_size);			/* VIDEO file display subroutine.	*/
 
 
 /* wcmatch.c */
-int wcmatch(char* pat, char* str, int sex, char	MATCHONE, char MATCHMANY);
+int WL_wcmatch(char* pat, char* str, int sex, char MATCHONE, char MATCHMANY);
 
 /* werrpath.c */
-char* werrpath(void);
+char* WL_werrpath(void);
 
 /* wexith.c */
-void wexith(void);
+void WL_wexith(void);
 void wispexit_cleanup(void);
 
+void WISPEXIT(void);
+
 /* wfclose.c */
-void wfclose(const char* fname);
 void WFCLOSE(const char* fname);
 
 /* wgetpgrp.c */
-int wgetpgrp(void);
+int WL_wgetpgrp(void);
 
 /* wispsort.c */
 void WISPSORT(char *sortparms, char *filetype, int4 *recsize, int4 *sortcode, int4 *returncode);
-void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, int4 *sortcode, int4 *returncode);
+void WL_wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, int4 *sortcode, int4 *returncode);
 
 /* wispsync.c */
 void WISPSHUT(void);
 void WISPSYNC(void);
 
 /* wpause.c */
-void wpause(int4* hsec);
-void hpause(int4 hundredths);
+void WL_hpause(int4 hundredths);
 
 /* wprint.c */
-void wprint(
+void WL_wprint(
 	const char *native_fname,		/* The native filepath to print.			*/
 	char	mode,				/* The printmode H, S, K, P, O.				*/
 	const char *disposition,		/* The disposition DS, DX, RS (NULL if not used)	*/
@@ -290,40 +233,43 @@ void wprint(
 	int	*return_code);			/* The return code.					*/
 
 /* wscreen.c */
-void WSCREEN();
-void wscreen();
+void WSCREEN(
+	unsigned char *screen,								/* Pointer to the screen structure.	*/
+	unsigned char *function,							/* Function to execute (for vwang)	*/
+	unsigned char *blockarg,							/* Screen structure block.		*/
+	unsigned char *lines,								/* Number of lines to write.		*/
+		 char *pfkeys,								/* Termination PF key string.		*/
+		 char *on_pfkeys,							/* pfkeys used in ON PFKEY		*/
+		 char *pfkey_ret,							/* Place to return key in.		*/
+	unsigned char *file_stat);							/* place to return file status.		*/
 
 /* wshelp.c */
-int wsh_help(int prog_running);								/* Put up the shell screen.		*/
-void get_psb_char(char def_select,char *pb_char, char *pb_select);
-int wsh_progprnt(int scrn_seq_no);							/* The screen seq. no.  Starts at 1.	*/
-int wsc_init(char *screen, int row, int col);						/* Initialize screen image for vwang().	*/
-int wput(char *screen, int row, int col, int fac, char *text);				/* Put text and fields into screen map.	*/
-int wpcen(char *screen, int row, int fac, char *text);					/* Put text and fields into screen map.	*/
-int wget(char *screen, int row, int col, char *text);					/* Retreive text from screen.		*/
-int ishelpactive(void);
-int sethelpactive(int flag);
-
-/* wspawn.c */
-void WSPAWN(short *action,char *progname,short *name_len,char *msg,short *msg_len);
+int  WL_wsh_help(int prog_running);							/* Put up the shell screen.		*/
+void WL_get_psb_char(char def_select,char *pb_char, char *pb_select);
+int  WL_wsc_init(unsigned char *screen, int row, int col);					/* Initialize screen image for vwang().	*/
+int  WL_put_screen_text(unsigned char *screen, int row, int col, unsigned int fac, char *text);		/* Put text and fields into screen map.	*/
+int  WL_put_screen_text_centered(unsigned char *screen, int row, unsigned int fac, char *text);		/* Put text and fields into screen map.	*/
+int  WL_get_screen_text(unsigned char *screen, int row, int col, char *text);			/* Retreive text from screen.		*/
+int  WL_ishelpactive(void);
+int  WL_sethelpactive(int flag);
 
 /* wswap.c */
-void WL_wswap(void *lword);
-void wswap(void *lword);
-void reversebytes(void *ptr, int len);							/* Reverse the bytes.			*/
-int bytenormal(void);
-int4 get_swap(const int4 *src);
-void put_swap(int4 *dest, int4 value);
+void WSWAP(void *lword);			/* wswap() -> WSWAP() -> WL_wswap()	*/
+void WL_wswap(void *lword);			/* swap the order of the words in a longword item (for WANG routines to use)	*/
+void WL_reversebytes(void *ptr, int len);	/* Reverse the bytes.			*/
+int  WL_bytenormal(void);
+int4 WL_get_swap(const int4 *src);
+void WL_put_swap(void *dest, int4 value);
 
 /* wsystem.c */
-int wsystem(const char* cmd);
-int run_unixcommand_silent(const char* command);
+int WL_wsystem(const char* cmd);
+int WL_run_unixcommand_silent(const char* command);
 
 /* wvaset.c */
-void wvaset(int4 *x);
-int va_count();
+void WVASET(int *x);
 void WL_set_va_count(int x);
-int WL_va_count();
+int  WL_va_count();
+void WVASETV(int4 x);	/* MF: CALL "WVASETV" USING VALUE nn */
 
 
 #endif /* wisplib_H */
@@ -331,21 +277,144 @@ int WL_va_count();
 /*
 **	History:
 **	$Log: wisplib.h,v $
-**	Revision 1.38.2.5  2002/11/14 21:12:29  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.84  2003/07/11 16:58:31  gsl
+**	Add WSWAP() as a replacement for wswap()
 **	
-**	Revision 1.38.2.4  2002/11/12 16:00:19  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.83  2003/06/27 15:54:03  gsl
+**	fix EDE API
 **	
-**	Revision 1.38.2.3  2002/10/09 21:17:35  gsl
-**	Huge file support
+**	Revision 1.82  2003/05/22 14:08:40  gsl
+**	Add WANG_RETCODE_LEN
 **	
-**	Revision 1.38.2.2  2002/10/09 19:20:37  gsl
-**	Update fexists.c to match HEAD
-**	Rename routines WL_xxx for uniqueness
+**	Revision 1.81  2003/04/21 20:02:29  gsl
+**	WL_initglbs() takes a const char*
+**	WL_use_last_prb() is void
 **	
-**	Revision 1.38.2.1  2002/10/03 13:49:50  gsl
-**	Change wmemcpy to WMEMCPY
+**	Revision 1.80  2003/03/27 21:21:54  gsl
+**	Pivot year routines for DATE6 support
+**	
+**	Revision 1.79  2003/02/17 22:07:18  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.78  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.77  2003/01/30 21:11:22  gsl
+**	Change RENAME to use stdarg.h
+**	
+**	Revision 1.76  2003/01/30 19:42:10  gsl
+**	change WL_file_rename() to WL_rename() cause also used for directories
+**	
+**	Revision 1.75  2003/01/30 15:20:57  gsl
+**	WL_file_rename() change args to const and add tracing
+**	
+**	Revision 1.74  2003/01/29 21:50:08  gsl
+**	Switch to use vssubs.h
+**	
+**	Revision 1.73  2003/01/29 16:21:12  gsl
+**	Add SET2()
+**	
+**	Revision 1.72  2003/01/29 15:10:35  gsl
+**	Fix SET() proto-type
+**	
+**	Revision 1.71  2003/01/28 20:15:01  gsl
+**	Change MF to use WVASETV
+**	
+**	Revision 1.70  2003/01/17 18:00:48  gsl
+**	Switch SCREEN to use stdarg.h
+**	
+**	Revision 1.69  2003/01/16 19:40:32  gsl
+**	Change SCRTACH to use stdarg.h
+**	
+**	Revision 1.68  2003/01/16 17:27:45  gsl
+**	Switch to stdarg
+**	
+**	Revision 1.67  2002/10/18 19:14:07  gsl
+**	Cleanup
+**	
+**	Revision 1.66  2002/10/08 15:44:38  gsl
+**	Change int8 to INT8 to avoid conficts
+**	
+**	Revision 1.65  2002/10/04 21:00:53  gsl
+**	Change to use WL_stat_xxx() routines
+**	
+**	Revision 1.64  2002/08/01 15:07:37  gsl
+**	type warnings
+**	
+**	Revision 1.63  2002/08/01 14:45:12  gsl
+**	type warnings
+**	
+**	Revision 1.62  2002/08/01 02:44:53  gsl
+**	fix type warning
+**	
+**	Revision 1.61  2002/07/31 20:24:28  gsl
+**	globals
+**	
+**	Revision 1.60  2002/07/30 22:00:34  gsl
+**	WSETFACBLINK
+**	
+**	Revision 1.59  2002/07/30 19:12:41  gsl
+**	SETRETCODE
+**	
+**	Revision 1.58  2002/07/29 21:13:27  gsl
+**	setretcode -> SETRETCODE
+**	
+**	Revision 1.57  2002/07/26 19:20:46  gsl
+**	bit routine globals (bit_on -> BIT_ON) etc.
+**	
+**	Revision 1.56  2002/07/26 18:19:17  gsl
+**	wscreen -> WSCREEN
+**	
+**	Revision 1.55  2002/07/23 21:24:54  gsl
+**	wrename -> RENAME
+**	
+**	Revision 1.54  2002/07/23 02:57:50  gsl
+**	wfclose -> WFCLOSE
+**	
+**	Revision 1.53  2002/07/20 00:31:18  gsl
+**	remove unused lbit_test
+**	
+**	Revision 1.52  2002/07/19 22:07:17  gsl
+**	Renaming cobol api routines for global uniqueness
+**	
+**	Revision 1.51  2002/07/16 16:24:58  gsl
+**	Globals
+**	
+**	Revision 1.50  2002/07/12 19:10:25  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.49  2002/07/12 17:17:03  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.48  2002/07/11 20:29:21  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.47  2002/07/11 16:11:45  gsl
+**	Fix warnings
+**	
+**	Revision 1.46  2002/07/10 21:06:35  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.45  2002/07/10 04:27:39  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.44  2002/07/10 01:36:00  gsl
+**	fix wmemcpy to WMEMCPY
+**	
+**	Revision 1.43  2002/06/26 06:25:12  gsl
+**	Proto for matchnative
+**	
+**	Revision 1.42  2002/06/26 04:25:02  gsl
+**	Cleanup mode/status bit fields
+**	
+**	Revision 1.41  2002/06/26 01:42:51  gsl
+**	Remove VMS code
+**	
+**	Revision 1.40  2002/06/25 18:18:38  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 1.39  2002/06/25 15:20:56  gsl
+**	Remove obsolete routines
 **	
 **	Revision 1.38  2001/11/27 21:34:46  gsl
 **	remove cuserid()
@@ -375,23 +444,23 @@ int WL_va_count();
 **	update prototypes for EXTRACT and FIND
 **
 **	Revision 1.29  1998-11-04 10:15:56-05  gsl
-**	Fix get_swap()
+**	Fix WL_get_swap()
 **
 **	Revision 1.28  1998-05-14 09:50:29-04  gsl
 **	remove wfvision.h and wfiledis.h stuff
 **
 **	Revision 1.27  1998-03-13 14:42:34-05  gsl
-**	Make wsystem() a const
+**	Make WL_wsystem() a const
 **
 **	Revision 1.26  1997-10-23 15:23:00-04  gsl
 **	Add use_internal_display() and link_display()
 **	And add "const" where needed
 **
 **	Revision 1.25  1997-10-21 09:51:09-04  gsl
-**	fi setprogid()
+**	fix SETPROGID()
 **
 **	Revision 1.24  1997-10-17 11:35:03-04  gsl
-**	Add get_swap() and put_swap()
+**	Add WL_get_swap() and WL_put_swap()
 **
 **	Revision 1.23  1997-05-13 16:14:56-04  scass
 **	Added DATE2 to library routines
@@ -442,7 +511,7 @@ int WL_va_count();
 **	add prototypes for NT
 **
 **	Revision 1.6  1996-07-08 10:15:32-07  gsl
-**	fix wswap() and reversebytes()
+**	fix wswap() and WL_reversebytes()
 **
 **	Revision 1.5  1996-07-03 16:32:59-07  gsl
 **	add prototypes

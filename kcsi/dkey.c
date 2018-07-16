@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include "kcsio.h"
@@ -12,7 +26,6 @@ static char rcsid[]="$Id:$";
 #include "dmnt.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)dkey.c	1.4 1/30/93";
 
 static void enter_key_init(char *idx,char *mode);
 static int enter_key_entry(char *idx,char *mode);
@@ -21,7 +34,7 @@ static void init_enter_facs(char *idx);
 static void init_enter_footers(char *mode);
 static void init_enter_pfs(char *mode);
 static void val_key_fields(char *idx);
-static void val_rel_key_fields();
+static void val_rel_key_fields(void);
 static void val_keyed_key_fields(char *idx);
 static void init_key_message_field(char *mode);
 static void move_key_fld(FIELD *fld,int key);
@@ -231,7 +244,7 @@ static void val_key_fields(char *idx)
 		val_keyed_key_fields(idx);
 }
 
-static void val_rel_key_fields()
+static void val_rel_key_fields(void)
 {
 	static char rnf[]="Error - Record Not Found";
 
@@ -321,7 +334,7 @@ void dte_load_first_record(char *idx)
 	if(dte_file_is_relative())		    
 	{			    
 		memcpy(dte_relative_record.fld,"1       ", REL_KEY_LEN);    
-		val_rel_key_fields(idx);
+		val_rel_key_fields();
 		if (!dte_screen_error)
 		{
 			dte_move_to_screen();
@@ -426,8 +439,11 @@ void dte_load_previous_record(char *idx)
 /*
 **	History:
 **	$Log: dkey.c,v $
-**	Revision 1.4.2.1  2002/11/12 15:56:23  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.18  2003/02/04 19:19:09  gsl
+**	fix header
+**	
+**	Revision 1.17  2003/01/29 14:51:44  gsl
+**	fix unused parameter in call val_rel_key_fields()
 **	
 **	Revision 1.16  2002/10/24 15:48:33  gsl
 **	Make globals unique

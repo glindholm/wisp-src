@@ -131,7 +131,14 @@ void wrun_message_box(char *line1, char *line2);
 **	Static Function Prototypes
 */
 
-void msgprintf(const char* format, ...);
+static void msgprintf(const char* format, ...);
+
+#ifdef unix
+static void saveterm();
+static void restoreterm();
+#endif
+
+
 
 #ifdef WIN32
 #ifndef WRUNT
@@ -159,7 +166,7 @@ int main	(int argc, char *argv[])
 	int	nooptions;
 	int	usingclause, parm_file_written;
 	char	argcount_string[20];
-	int	acu_cobol, aix_cobol, mf_cobol;
+	int	is_acu_cobol, is_mf_cobol;
 	int	rc;
 #ifdef unix
 	int	pid;
@@ -189,13 +196,6 @@ int main	(int argc, char *argv[])
 
 
 	parm_file_written = 0;
-
-#ifdef TEST
-	for(i=0; i<argc; i++)
-	{
-		printf("i=%2d  argv[i]=<%s>\n",i,argv[i]);
-	}
-#endif
 
 	showit = 0;
 	if (argc == 1) showit=1;						/* If only one arg then just show the default.	*/
@@ -244,6 +244,7 @@ int main	(int argc, char *argv[])
 				case 'I':
 				case 'O':
 				case 'R':
+				case 'T':
 				case 'Y':
 				{
 					strcat(options," ");
@@ -255,10 +256,6 @@ int main	(int argc, char *argv[])
 	}
 
 	if (nooptions) options[0] = '\0';					/* If -- then null the options string		*/
-
-#ifdef TEST
-	printf("options=<%s>\n",options);
-#endif
 
 	/*
 		Extract the program
@@ -273,10 +270,6 @@ int main	(int argc, char *argv[])
 		program[0] = '\0';
 	}
 
-#ifdef TEST
-	printf("program=<%s>\n",program);
-#endif
-
 	/*
 		Test for a USING clause
 	*/
@@ -286,7 +279,7 @@ int main	(int argc, char *argv[])
 	{
 		char buff[80];
 		strcpy(buff,argv[arg]);
-		upper_string(buff);
+		WL_upper_string(buff);
 		if (strcmp(buff,"USING") == 0)
 		{
 			usingclause = 1;
@@ -330,40 +323,21 @@ int main	(int argc, char *argv[])
 			msgprintf( "%%WRUN-F-PUTENV Unable to put environment varible %s.\n",WRUNOPTIONS_ENV );
 			exit(4);
 		}
-
-#ifdef TEST
-		{
-			char	*ptr;
-			ptr = getenv(WRUNOPTIONS_ENV);
-			printf("%s=<%s>\n",WRUNOPTIONS_ENV,ptr);
-		}
-#endif
 	}
 
 	/*
 		Load wrun config file info
 	*/
 
-	wrunconfig(&cfg);
+	WL_wrunconfig(&cfg);
 
-#ifdef TEST
-	printf("cfg.wrun_options=<%s>\n",cfg.wrun_options);
-	printf("cfg.wrun_runcbl =<%s>\n",cfg.wrun_runcbl);
-	printf("cfg.wrun_cobtype=<%s>\n",cfg.wrun_cobtype);
-#endif
-
-	acu_cobol = (strcmp(cfg.wrun_cobtype,"ACU")==0);
-	aix_cobol = (strcmp(cfg.wrun_cobtype,"AIX")==0);
-	mf_cobol  = (strcmp(cfg.wrun_cobtype,"MF" )==0);
+	is_acu_cobol = (strcmp(cfg.wrun_cobtype,WRUNCOBTYPE_ACU)==0);
+	is_mf_cobol  = (strcmp(cfg.wrun_cobtype,WRUNCOBTYPE_MF)==0);
 
 	if (!options[0] && !nooptions)
 	{
 		strcpy(options,cfg.wrun_options);
 	}
-
-#ifdef TEST
-	printf("options=<%s>\n",options);
-#endif
 
 	/*
 		Build the parameter list for exec
@@ -399,7 +373,7 @@ int main	(int argc, char *argv[])
 		    without		(RTS) (OPTIONS)          program      [arg1 arg2 arg3 ...]
 	*/
 	
-	if (acu_cobol)
+	if (is_acu_cobol)
 	{
 		if (usingclause)
 		{
@@ -419,7 +393,7 @@ int main	(int argc, char *argv[])
 			parm[arg++] = argv[i];					/* Add args to command line			*/
 		}
 	}
-	else if (aix_cobol || mf_cobol)
+	else if (is_mf_cobol)
 	{
 		if (usingclause)
 		{
@@ -455,7 +429,7 @@ int main	(int argc, char *argv[])
 	}
 	parm[arg++] = '\0';
 
-	if (!showit && usingclause && (aix_cobol || mf_cobol))
+	if (!showit && usingclause && is_mf_cobol)
 	{
 
 		for(i=0; i<parmcnt; i++)
@@ -463,20 +437,12 @@ int main	(int argc, char *argv[])
 			parm_list.parm[i] = argv[i+parg];
 			len_list.len[i] = strlen(parm_list.parm[i]);
 		}
-		writeunixlink(program, parmcnt, &parm_list, &len_list, linkkey);
+		WL_writeunixlink(program, parmcnt, &parm_list, &len_list, linkkey);
 
 		sprintf(buff,"%s=%s",WISP_LINK_ENV,linkkey);			/* Store the linkkey in env		*/
-		setenvstr(buff);
+		WL_setenvstr(buff);
 		parm_file_written = 1;
 	}
-
-
-#ifdef TEST
-	for(i=0; parm[i]; i++)
-	{
-		printf("i=%2d  parm[i]=<%s>\n",i,parm[i]);
-	}
-#endif
 
 	/*
 		Do the exec
@@ -488,11 +454,11 @@ int main	(int argc, char *argv[])
 		signal( SIGINT,  SIG_IGN );
 		signal( SIGQUIT, SIG_IGN );
 		signal( SIGILL,  SIG_IGN );
-#ifdef SIGEMT
-		signal( SIGEMT,  SIG_IGN );
-#endif
 		signal( SIGBUS,  SIG_IGN );
 		signal( SIGSEGV, SIG_IGN );
+#ifdef SIGEMT
+		signal( SIGEMT,  SIG_IGN );
+#endif /* SIGEMT */
 
 		saveterm();
 
@@ -510,11 +476,11 @@ int main	(int argc, char *argv[])
 			break;
 
 		default: /* Parent */
-			wwaitpid(pid,&rc);
+			WL_wwaitpid(pid,&rc);
 			restoreterm();
 		}
 #endif /* unix */
-#if defined(MSDOS) || defined(WIN32)
+#if defined(WIN32)
 		rc = spawnvp(P_WAIT,(const char *)parm[0],(const char **)parm);
 		if (rc == -1)
 		{
@@ -537,7 +503,7 @@ int main	(int argc, char *argv[])
 			msgprintf("\n");
 		}
 
-#endif /* MSDOS || WIN32 */
+#endif /*  WIN32 */
 	}
 	else
 	{
@@ -554,7 +520,7 @@ int main	(int argc, char *argv[])
 		sprintf(tmp,"COBOL \t\t= %s\n", cfg.wrun_cobtype);
 		strcat(line2, tmp);
 
-		if (acu_cobol)
+		if (is_acu_cobol)
 		{
 			char *ptr = getenv("A_CONFIG");
 			sprintf(tmp,"A_CONFIG \t= %s\n", ((ptr)?ptr:"NULL"));
@@ -584,10 +550,38 @@ int main	(int argc, char *argv[])
 }
 
 #ifdef unix
-#include "saveterm.c"
+/* #include "saveterm.c" OLD - used to include it here */
+
+#include <sys/types.h>
+#include <fcntl.h>
+#include <termio.h>
+
+typedef struct termio termio_t;
+static termio_t prev_termio;							/* The saved termio			*/
+
+static int fileid = -1;								/* File channel to fileno(stdin). 	*/
+
+static void saveterm()
+{
+	int	error;
+
+	fileid = fileno(stdin);							/* Get current terminal characteristics.*/
+	error = ioctl(fileid, TCGETA, &prev_termio);	 			/* These should be restored on exit. 	*/
+	if (error == -1)
+	{
+		fileid = -1;
+	}
+}
+
+static void restoreterm()
+{
+	if (fileid == -1 ) return;
+	ioctl(fileid, TCSETAW, &prev_termio);
+}
+
 #endif /* unix */
 
-void msgprintf(const char* format, ...)
+static void msgprintf(const char* format, ...)
 {
 	va_list args;
 
@@ -616,11 +610,51 @@ void msgprintf(const char* format, ...)
 /*
 **	History:
 **	$Log: wrun.c,v $
-**	Revision 1.19.2.2  2003/02/10 20:21:33  gsl
-**	Add platform to version
+**	Revision 1.33  2003/02/12 18:17:17  gsl
+**	remove TEST code
 **	
-**	Revision 1.19.2.1  2002/09/05 19:22:27  gsl
-**	LINUX
+**	Revision 1.32  2003/02/07 20:45:14  gsl
+**	Add platform to version display
+**	
+**	Revision 1.31  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.30  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.29  2002/12/31 16:04:22  gsl
+**	Copied saveterm.c instead of including it.
+**	Only place its used - will remove it.
+**	
+**	Revision 1.28  2002/10/14 17:26:50  gsl
+**	UPdated command line options that need a parameter
+**	
+**	Revision 1.27  2002/10/11 20:39:50  gsl
+**	Detect runtime Cobol type without needing INITWISP call.
+**	For ACU set in sub85.c,
+**	For utils set via WRUNCONFIG
+**	Default to MF on UNIX
+**	
+**	Revision 1.26  2002/09/04 18:14:17  gsl
+**	LINUX SIGEMT
+**	
+**	Revision 1.25  2002/07/18 21:04:24  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.24  2002/07/12 19:10:23  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.23  2002/07/11 14:33:55  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.22  2002/07/10 21:06:31  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.21  2002/07/09 04:13:49  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.20  2002/07/02 04:02:40  gsl
+**	remove aix_cobol fix conflicting names
 **	
 **	Revision 1.19  1999/05/26 15:21:48  gsl
 **	fix warning on WIN32 with WRUNT

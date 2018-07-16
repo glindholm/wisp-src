@@ -5,55 +5,59 @@
 #
 #################################################################
 #
-# Creating an Acucobol 5.2 runtime requires WISP 4.4.06 and 
-# KCSI 4.0.00 or later.
+# Use this makefile to build an Acucobol-GT 5.2 runtime 
+# with WISP 5.0.00 and KCSI 4.1.00.
+#
+# ACUDIR=C:\acucorp\acucbl520\acugt
 #
 # Follow these instructions carefully to build a custom Acucobol 
 # runtime that includes the WISP and KCSI runtime routines.  You are 
 # going to build the runtime from a temporary folder, that is a copy
-# of the Acucobol lib folder $(ACUDIR)\acugt\lib.  The Acucobol 
+# of the Acucobol lib folder $(ACUDIR)\lib.  The Acucobol 
 # runtime consists of two file, an exe and a dll. The custom WISP
 # version is named wrun32wispk.exe and wrun32wispk.dll.
 #
-# 1) Create the temporary folder $(ACUDIR)\acugt\bldwispk by copying
-#    and renaming the folder $(ACUDIR)\acugt\lib.  You can use
-#    Windows Explorer to do this by opening $(ACUDIR)\acugt and
+# 1) Create the temporary folder $(ACUDIR)\bldwispk by copying
+#    and renaming the folder $(ACUDIR)\lib.  You can use
+#    Windows Explorer to do this by opening $(ACUDIR) and
 #    selecting the lib folder then doing a Copy then Paste command.
 #
 # 2) Copy the needed WISP and KCSI files to the bldwispk folder. (You  
 #    will be replacing the sub85.c file with the one supplied by WISP.)
+#
 #       Copy $(KCSIDIR)\wrun32wisp_kcsi_acu52.mak 
 #            $(KCSIDIR)\kcsi_sub85_inc.c
-#            $(WISPDIR)\acu\sub85.c
-#            $(WISPDIR)\acu\wisprts.rc
+#            $(WISPDIR)\acu\acu52\sub85.c
+#            $(WISPDIR)\acu\acu52\wisprts.rc
+#            $(WISPDIR)\acu\wisp_sub85_inc.c
 #            $(WISPDIR)\acu\wispicon.ico
-#
-#       to   $(ACUDIR)\acugt\bldwispk
+#       to   $(ACUDIR)\bldwispk
 #
 # 3) Edit this file and set WISPDIR and KCSIDIR to the correct directory.
 #
-#       WISPDIR=C:\WISP44xx
-#       KCSIDIR=C:\KCSIACU4000
+#       WISPDIR=C:\WISPxxxx
+#       KCSIDIR=C:\KCSIACUxxxx
 #
 # 4) From a COMMAND/MSDOS window issue the NMAKE command.
 #    (You may need to first run the VCVARS32.bat file that comes with MS 
 #    Visual C++ in order to run NMAKE from a command prompt.)
 #
-#       $ cd $(ACUDIR)\acugt\bldwispk
+#       $ cd $(ACUDIR)\bldwispk
 #       $ "C:\Program Files\Microsoft Visual Studio\VC98\Bin\VCVARS32.BAT"
 #       $ NMAKE /f wrun32wisp_kcsi_acu52.mak
 #
 # 5) Copy the runtime files (wrun32wispk.exe and wrun32wispk.dll) to
 #    their run location.
-#       Copy $(ACUDIR)\acugt\bldwispk\wrun32wispk.exe
-#            $(ACUDIR)\acugt\bldwispk\wrun32wispk.dll 
 #
-#       to   $(ACUDIR)\acugt\bin
+#       Copy $(ACUDIR)\bldwispk\wrun32wispk.exe
+#            $(ACUDIR)\bldwispk\wrun32wispk.dll 
+#       to   $(ACUDIR)\bin
 #
 # 6) Copy and rename the Acucobol license file to match the new
 #    runtime name.
-#       Copy $(ACUDIR)\acugt\bin\wrun32.alc
-#       to   $(ACUDIR)\acugt\bin\wrun32wispk.alc
+#
+#       Copy $(ACUDIR)\bin\wrun32.alc
+#       to   $(ACUDIR)\bin\wrun32wispk.alc
 #
 #################################################################
 #
@@ -70,20 +74,17 @@
 # PMK: 0, 1
 #################################################################
 
-# Set the Acucobol directory here
-ACUDIR=C:\acucorp\acucbl520
-
 # Set the installed WISP and KCSI directory here.
-WISPDIR=C:\WISP4407
-KCSIDIR=C:\KCSIACU4000
+WISPDIR=C:\WISP5000
+KCSIDIR=C:\KCSIACU4100
 
 #  Set the runtime name here. (Do not include a file extension.)
 WRUN32=wrun32wispk
 
 ## WISP and KCSI libraries
 WISP_LIBS=     $(KCSIDIR)\kcsiacu.lib \
-               $(WISPDIR)\lib\wispm.lib \
-               $(WISPDIR)\lib\videom.lib
+               $(WISPDIR)\lib\wisp.lib \
+               $(WISPDIR)\lib\video.lib
 
 WISP_CFLAGS= /DKCSI 
 

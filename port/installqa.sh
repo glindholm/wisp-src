@@ -8,6 +8,8 @@
 #
 #	Desciption:	This routine "installs" the QA ship kit.
 #
+#	Warning:	The previous version of ${WISPSRC}/QA will be
+#			deleted.
 #
 
 if [ ! -d ${WISPSRC} ]
@@ -147,6 +149,7 @@ if [ -d $COBDIR ]
 then
 	cd ${WISPDIR}/mf
 	make COBDIR=${COBDIR} WISPDIR=${WISPDIR} -f wrunmf.umf
+	make COBDIR=${COBDIR} WISPDIR=${WISPDIR} -f wrunmf.umf rtsx4400
 	make COBDIR=${COBDIR} WISPDIR=${WISPDIR} EDEDIR=${WISPDIR}/ede -f wrunmf.umf ede
 else
 	echo

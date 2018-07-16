@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include <stdio.h>
 #include "dbsc.h"
 #include "dglb.h"
@@ -10,7 +24,6 @@ static char rcsid[]="$Id:$";
 #include "dmnt.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)dchg.c	1.4 1/30/93";
 
 static void change_records_init(char *idx);
 static int change_records_entry(char *idx);
@@ -28,19 +41,21 @@ int dte_change_records(char *idx,char *mode)
 {
 	int pf;
 
+	kcsitrace(1, "DATENTRY", "MODIFY", "Entry into Modify records");
+
 	while(1)
 		{
 		pf = dte_enter_the_key(idx,mode);
 		if(pf == 16)
-			return(16);
+			return(16);	/* (16) EXIT */
 		if(pf == 9)
-			return(9);
+			return(9);	/* (9) ADD records */
 		change_records_init(idx);
 		pf = change_records_entry(idx);
 		if(pf == 16)
-			return(16);
+			return(16);	/* (16) EXIT */
 		if(pf == 9)
-			return(9);
+			return(9);	/* (9) ADD records */
 		}
 }
 static void change_records_init(char *idx)
@@ -72,32 +87,32 @@ static int change_records_entry(char *idx)
 
 		dte_init_message_field();
 
-		if(Memeq(dte_pfkey_code,"16",2))
+		if(Memeq(dte_pfkey_code,"16",2))	/* (16) EXIT */
 			return(16);
-		if(Memeq(dte_pfkey_code,"09",2))
+		if(Memeq(dte_pfkey_code,"09",2))	/* (9) ADD */
 			return(9);
-		if(Memeq(dte_pfkey_code,"02",2))
+		if(Memeq(dte_pfkey_code,"02",2))	/* (2) FIRST */
 			{
 			dte_load_first_record(idx);
 			}
-		if(Memeq(dte_pfkey_code,"04",2))
+		if(Memeq(dte_pfkey_code,"04",2))	/* (4) PREVIOUS */
 			{
 			dte_load_previous_record(idx);
 			}
-		if(Memeq(dte_pfkey_code,"05",2))
+		if(Memeq(dte_pfkey_code,"05",2))	/* (5) NEXT */
 			{
 			dte_load_next_record(idx);
 			}
-		if(Memeq(dte_pfkey_code,"07",2))
+		if(Memeq(dte_pfkey_code,"07",2))	/* (7) PATH */
 			{
 			memcpy(idx,"000",IDX_LEN);
 			return(0);
 			}
-		if(Memeq(dte_pfkey_code,"01",2))
+		if(Memeq(dte_pfkey_code,"01",2))	/* (1) FIND */
 			{
 			return(0);
 			}
-		if(Memeq(dte_pfkey_code,"00",2))
+		if(Memeq(dte_pfkey_code,"00",2))	/* (ENTER) MODIFY */
 			{
 			val_chg_fields();
 			if(!dte_screen_error)
@@ -203,8 +218,11 @@ static void change_the_record()
 /*
 **	History:
 **	$Log: dchg.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:22  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.12  2003/04/04 19:42:02  gsl
+**	Add trace
+**	
+**	Revision 1.11  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.10  2002/10/24 15:48:34  gsl
 **	Make globals unique

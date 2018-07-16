@@ -81,58 +81,6 @@ CFG=shipkitwisp - Win32 Debug
 
 !ENDIF 
 
-# Begin Group "CONFIG"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\nt\ACUCONFIG
-# End Source File
-# Begin Source File
-
-SOURCE=..\nt\CHARMAP
-# End Source File
-# Begin Source File
-
-SOURCE=..\nt\CQMAP
-# End Source File
-# Begin Source File
-
-SOURCE=..\nt\FORMS
-# End Source File
-# Begin Source File
-
-SOURCE=..\nt\LGMAP
-# End Source File
-# Begin Source File
-
-SOURCE=..\nt\LPMAP
-# End Source File
-# Begin Source File
-
-SOURCE=..\etc\OPTIONS
-# End Source File
-# Begin Source File
-
-SOURCE=..\nt\PRMAP
-# End Source File
-# Begin Source File
-
-SOURCE=..\etc\W4WMAP
-# End Source File
-# Begin Source File
-
-SOURCE=..\etc\wispmsg.txt
-# End Source File
-# Begin Source File
-
-SOURCE=..\nt\wrun.cfg
-# End Source File
-# Begin Source File
-
-SOURCE=..\nt\wsysconf.cfg
-# End Source File
-# End Group
 # Begin Source File
 
 SOURCE=.\makewisp.umf

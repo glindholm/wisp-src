@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 	 WFACCESS ... A special routine to determine whether a file exists and whether the user has access to that file.
@@ -39,15 +52,16 @@ static char rcsid[]="$Id:$";
 #include <errno.h>
 #include <string.h>
 
-#ifdef _MSC_VER
+#ifdef WIN32
 #include <io.h>
 #endif
+#ifdef unix
+#include <unistd.h>
+#endif
 
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>                          
-#endif
 
 #include "idsistd.h"
 #include "wdefines.h"
@@ -58,205 +72,11 @@ static char rcsid[]="$Id:$";
 #include "wisplib.h"
 #include "werrlog.h"
 
-extern char wfilestat[2];								/* Last filestat form wfilechk		*/
 
-#ifdef VMS
-#include <file.h>	    								/* File definition include file.	*/
-#include <rms.h>
-#include <descrip.h>
-
-int wfaccess(char* native_path, int4* mode)
-{
-
-	char 	filename[81];			 					/* Pre allocated storage for file name.	*/
-	char 	tempname[81];
-        int  	file_stat;								/* Value returned by the open function.	*/
-	int  	file_desc;
-	int  	close_stat;
-	int  	x, ret_code, i;
-	char	*ptr;
-	unsigned dmode;
-	char dstr[81];
-	char object_name[81], expanded_name[81];					/* Output from $PARSE and $SEARCH	*/
-
-	struct FAB fab;									/* RMS data structures.			*/
-	struct NAM nam;
-
-	memcpy(filename,native_path,80);  						/* Move the filename in.		*/
-	ptr = memchr(filename,' ',80);
-	if ( ptr ) *ptr = NULL_CHAR;							/* Null terminate it.			*/
-	else filename[80] = NULL_CHAR;
-
-
-	if (*mode & IS_IO)								/* Is this an IO open ?			*/
-	{										/* Yup.					*/
-		fab = cc$rms_fab; 							/* Intialize the FAB structure.		*/
-		fab.fab$l_dna = 0;							/* No default name.			*/
-		fab.fab$b_dns = 0;							/* No size either.			*/
-		fab.fab$l_fna = filename;						/* Set address of filename string.	*/
-		fab.fab$b_fns = strlen(filename);					/* Set the size of the filename string.	*/
-		fab.fab$l_nam = &nam;							/* Address of the NAM structure block.	*/
-		fab.fab$b_fac = FAB$M_DEL+FAB$M_GET+FAB$M_PUT+FAB$M_UPD;		/* Set access flags.		*/
-
-		nam = cc$rms_nam;							/* Initialize the NAM structure block.	*/
-		nam.nam$l_esa = expanded_name;						/* Set address of the expanded name.	*/
-		nam.nam$b_ess = sizeof(expanded_name);					/* Set size of expanded name string.	*/
-		nam.nam$l_rsa = object_name;						/* Set address of resultant string.	*/
-		nam.nam$b_rss = sizeof(object_name);					/* Set size of resultant name string.	*/
-		nam.nam$b_nop = NAM$M_NOCONCEAL;
-
-		if (*mode & IS_NOWRITE)							/* no writers will be allowed.		*/
-		{
-			fab.fab$b_shr = FAB$M_SHRGET;					/* Allow only read access.		*/
-		}
-		else									/* Allow writers.			*/
-		{
-			fab.fab$b_shr = FAB$M_SHRGET+FAB$M_SHRPUT+FAB$M_SHRUPD+FAB$M_SHRDEL;	/* Allow all access.		*/
-		}
-
-		ret_code = sys$open(&fab);						/* Attempt to open the file.		*/
-
-		if (fab.fab$w_ifi) sys$close(&fab);					/* Close the file.			*/
-
-		if (ret_code == RMS$_SUC || ret_code == RMS$_NORMAL)
-		{									/* All OK.				*/
-			return(ACC_ALLOWED);
-		}
-
-		goto report_in_access;							/* Now report what happened.		*/
-	}
-
-        if (*mode & IS_OUTPUT)								/* Is this an open output ?		*/
-	{    
-		fab = cc$rms_fab; 							/* Intialize the FAB structure.		*/
-		fab.fab$l_dna = 0;							/* No default name.			*/
-		fab.fab$b_dns = 0;							/* No size either.			*/
-		fab.fab$l_fna = filename;						/* Set address of filename string.	*/
-		fab.fab$b_fns = strlen(filename);					/* Set the size of the filename string.	*/
-		fab.fab$l_nam = &nam;							/* Address of the NAM structure block.	*/
-
-		nam = cc$rms_nam;							/* Initialize the NAM structure block.	*/
-		nam.nam$l_esa = expanded_name;						/* Set address of the expanded name.	*/
-		nam.nam$b_ess = sizeof(expanded_name);					/* Set size of expanded name string.	*/
-		nam.nam$l_rsa = object_name;						/* Set address of resultant string.	*/
-		nam.nam$b_rss = sizeof(object_name);					/* Set size of resultant name string.	*/
-		nam.nam$b_nop = NAM$M_NOCONCEAL;
-
-		ret_code = sys$parse(&fab);						/* Parse the name for $SEARCH.		*/
-		ret_code = sys$search(&fab);						/* Search for the file.			*/
-
-		switch( ret_code )
-		{
-		case	RMS$_FNF:
-		case	RMS$_NMF:	return(ACC_ALLOWED);
-
-		case	RMS$_NORMAL:	return(ACC_OUTEXISTS);
-
-		case	RMS$_DVI:	return(ACC_MISSING);
-
-		case	RMS$_DME:	return(ACC_SYSLIMIT);
-
-		case	RMS$_DEV:
-		case	RMS$_SUP:
-		case	RMS$_WCC:
-		case	RMS$_ESA:	return(ACC_BADDIR);
-
-		case	RMS$_SUPPORT:
-		case	RMS$_NET:
-		case	RMS$_DNR:
-		case	RMS$_NETFAIL:	return(ACC_NOLINK);
-
-		case	RMS$_PRV:	return(ACC_DENIED);
-
-		case	RMS$_DNF:	return(ACC_NODIR);
-
-		case	RMS$_RST:
-		case	RMS$_NOVALPRS:
-		case	RMS$_FND:
-		case	RMS$_RSS:
-		case	RMS$_NAM:
-		case	RMS$_FAB:
-		case	RMS$_CHN:
-		case	RMS$_RSL:
-		case	RMS$_IFI:
-		case	RMS$_ESL:
-		case	RMS$_BLN:
-		case	RMS$_SYS:
-		case	RMS$_STR:
-		case	RMS$_ACS:	return(ACC_UNKNOWN);
-		}
-		return(ACC_UNKNOWN);
-	}
-	else										/* Open it up for input.		*/
-	{
-
-		fab = cc$rms_fab; 							/* Intialize the FAB structure.		*/
-		fab.fab$l_dna = 0;							/* No default name.			*/
-		fab.fab$b_dns = 0;							/* No size either.			*/
-		fab.fab$l_fna = filename;						/* Set address of filename string.	*/
-		fab.fab$b_fns = strlen(filename);					/* Set the size of the filename string.	*/
-		fab.fab$l_nam = &nam;							/* Address of the NAM structure block.	*/
-
-		nam = cc$rms_nam;							/* Initialize the NAM structure block.	*/
-		nam.nam$l_esa = expanded_name;						/* Set address of the expanded name.	*/
-		nam.nam$b_ess = sizeof(expanded_name);					/* Set size of expanded name string.	*/
-		nam.nam$l_rsa = object_name;						/* Set address of resultant string.	*/
-		nam.nam$b_rss = sizeof(object_name);					/* Set size of resultant name string.	*/
-		nam.nam$b_nop = NAM$M_NOCONCEAL;
-
-		if (*mode & IS_NOWRITE)							/* no writers will be allowed.		*/
-		{
-			fab.fab$b_shr = FAB$M_SHRGET;					/* Allow only read access.		*/
-		}
-		else									/* Allow writers. Must be SPECIAL-INPUT.*/
-		{
-			fab.fab$b_shr = FAB$M_SHRGET+FAB$M_SHRPUT+FAB$M_SHRUPD+FAB$M_SHRDEL;	/* Allow all access.		*/
-		}
-
-		ret_code = sys$open(&fab);						/* Attempt to open the file.		*/
-		if (fab.fab$w_ifi) sys$close(&fab);					/* Close the file.			*/
-
-		if (ret_code == RMS$_SUC || ret_code == RMS$_NORMAL)
-		{
-			return(ACC_ALLOWED);
-		}
-
-report_in_access:
-		switch( ret_code )
-		{
-		case	RMS$_ACT:	return(ACC_INUSE);
-		case	RMS$_BUG_DDI:	return(ACC_BADDIR);
-		case	RMS$_CRMP:	return(ACC_SYSLIMIT);
-		case	RMS$_DIR:	return(ACC_BADDIR);
-		case	RMS$_DEV:	return(ACC_BADDIR);
-		case	RMS$_DME:	return(ACC_SYSLIMIT);
-		case	RMS$_DNF:	return(ACC_NODIR);
-		case	RMS$_DNR:	return(ACC_NOLINK);
-		case	RMS$_DVI:	return(ACC_MISSING);
-		case	RMS$_ENQ:	return(ACC_NOLOCK);
-		case	RMS$_FLK:	return(ACC_NOLOCK);
-		case	RMS$_FNF:	return(ACC_NOFILE);
-		case	RMS$_FNM:	return(ACC_BADDIR );
-		case	RMS$_IFI:	return(ACC_INUSE);
-		case	RMS$_NET:	return(ACC_NOLINK);
-		case	RMS$_NETFAIL:	return(ACC_NOLINK);
-		case	RMS$_NOD:	return(ACC_BADDIR );
-		case	RMS$_PRV:	return(ACC_DENIED);
-		case	RMS$_SUP:	return(ACC_BADDIR);
-		case	RMS$_SUPPORT:	return(ACC_NOLINK);
-		case	RMS$_SYN:	return(ACC_BADDIR);
-		}
-		
-		return(ACC_UNKNOWN);						/* RMS services open was not successful.*/
-	}                                                                                                                         
-}
-#endif	/* VMS */
-
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
-static int x_wfaccess(char* filename, int4* mode);
+static int x_wfaccess(char* filename, int is_output, int is_indexed);
 
 /*
-**	Routine:	wfaccess()
+**	Routine:	wisp_file_access()
 **
 **	Function:	To check the access of a file before it is opened by cobol.
 **
@@ -267,7 +87,8 @@ static int x_wfaccess(char* filename, int4* mode);
 **
 **	Arguments:
 **	native_path	The native file path as returned from wfname(). (Space padded)
-**	mode		The mode.
+**	is_output	Open outout
+**	is_indexed	Indexed file
 **
 **	Globals:	None
 **
@@ -289,15 +110,15 @@ static int x_wfaccess(char* filename, int4* mode);
 **	04/26/93	Changed to use fexists() instead of access() to check if file exists. GSL
 **
 */
-int wfaccess(char* native_path, int4* mode)
+int wisp_file_access(char* native_path, int is_output, int is_indexed)
 {
 	char 	filename[COB_FILEPATH_LEN + 1];	 				/* The filename (null terminated string)	*/
 	int	rc;
 
 	cobx2cstr(filename,native_path,COB_FILEPATH_LEN);  			/* Move the filename in.			*/
-	rc = x_wfaccess(filename, mode);
+	rc = x_wfaccess(filename, is_output, is_indexed);
 
-	if (wtracing())
+	if (WL_wtracing())
 	{
 		char	*result;
 		
@@ -314,13 +135,14 @@ int wfaccess(char* native_path, int4* mode)
 		default:		result = "ACC_????";		break;
 		}
 		
-		wtrace("WFACCESS","RESULT","File=[%s] Mode=[x0%08X] %s rc=%d ", filename, *mode, result, rc);
+		wtrace("WFACCESS","RESULT","File=[%s] is_output=%d is_indexed=%d %s rc=%d ", 
+			filename, is_output, is_indexed, result, rc);
 	}
 
 	return rc;
 }
 
-static int x_wfaccess(char* filename, int4* mode)
+static int x_wfaccess(char* filename, int is_output, int is_indexed)
 {
 	char	fileidx[81];							/* Filename with .idx extension			*/
 	int  	file_desc;
@@ -328,14 +150,14 @@ static int x_wfaccess(char* filename, int4* mode)
 	strcpy(fileidx,filename);						/* Construct fileidx				*/
 	strcat(fileidx,".idx");
 
-        if (*mode & IS_OUTPUT)							/* Is this an open output ?			*/
+        if (is_output)								/* Is this an open output ?			*/
 	{    
 		if (fexists( filename))						/* check if file exists				*/
 		{
 			return(ACC_OUTEXISTS);					/* File exists					*/
 		}
 
-		if (*mode & IS_INDEXED)						/* CISAM uses .idx for INDEXED			*/
+		if (is_indexed)						/* CISAM uses .idx for INDEXED			*/
 		{
 			if (fexists(fileidx))					/* check if idx file exists			*/
 			{
@@ -346,7 +168,7 @@ static int x_wfaccess(char* filename, int4* mode)
 		if (-1 != (file_desc = creat(filename, 00666)))			/* See if she'll open up.			*/
 		{
 			close(file_desc);
-			unlink(filename);
+			wisp_unlink(filename);
 			return( ACC_ALLOWED );
 		}
 										/* We got an error.				*/
@@ -355,12 +177,10 @@ static int x_wfaccess(char* filename, int4* mode)
 		switch( errno )
 		{
 		case ENOENT:	return( ACC_NODIR );
-#ifndef MSDOS
 		case ENOTDIR:	return( ACC_BADDIR );
 		case EROFS:	return( ACC_READONLY );
 		case EISDIR:	return( ACC_EXISTS );
 		case EFAULT:	return( ACC_BADDIR );
-#endif
 		}
 		return( ACC_UNKNOWN );
 	}
@@ -371,7 +191,7 @@ static int x_wfaccess(char* filename, int4* mode)
 			return(ACC_UNKNOWN);					/* File exists but access is unknown		*/
 		}
 
-		if (*mode & IS_INDEXED)						/* CISAM uses .idx for INDEXED			*/
+		if (is_indexed)							/* CISAM uses .idx for INDEXED			*/
 		{
 			if (fexists(fileidx))					/* check if idx file exists			*/
 			{
@@ -383,11 +203,34 @@ static int x_wfaccess(char* filename, int4* mode)
 
 	}                                                                                                                         
 }
-#endif	/* unix  || MSDOS || WIN32 */
 
 /*
 **	History:
 **	$Log: wfaccess.c,v $
+**	Revision 1.23  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.22  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.21  2002/12/11 17:03:09  gsl
+**	use wisp_unlink()
+**	
+**	Revision 1.20  2002/07/18 21:04:29  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.19  2002/07/10 21:05:30  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.18  2002/07/01 04:02:42  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.17  2002/06/27 04:12:41  gsl
+**	Clean up status/mode bits
+**	
+**	Revision 1.16  2002/06/21 01:23:18  gsl
+**	Remove VMS
+**	
 **	Revision 1.15  1998/08/03 21:15:25  jlima
 **	Support Logical Volume Translation to long file names containing eventual embedded blanks.
 **	

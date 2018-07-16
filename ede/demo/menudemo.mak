@@ -1,4 +1,4 @@
-#	Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.
+#	Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
 #	$Id:$
 #
 #
@@ -19,6 +19,8 @@
 
 WISPTRAN=wisp
 WISPFLAGS=-m -I . -1 -O menudemo.opt
+ACU_COBOL=ccbl32
+ACU_COBFLAGS=-Da4 -Gd -Za
 
 #
 #	Micro Focus	wcb --> int rule
@@ -30,20 +32,20 @@ WISPFLAGS=-m -I . -1 -O menudemo.opt
 #
 #	ACUCOBOL	wcb --> (no extension) rule
 #
-#	NOTE:  This rule does not create cbx files
+#	NOTE:  This rule does not create acu files
 #
-.wcb.cbx:
+.wcb.acu:
 	$(WISPTRAN) -VACU $(WISPFLAGS) $*.wcb
-	ccbl32 -da4 -o $* $*.cob
+	$(ACU_COBOL) $(ACU_COBFLAGS) -o $*.acu $*.cob
 
-.SUFFIXES: .int .cbx .wcb
+.SUFFIXES: .int .acu .wcb
 
 
 default:
 	@echo You must select a target of "acu" or "mf"
 
 
-acu: MCBBLD.CBX MCBEDIT.CBX MENUDISP.CBX MENULOGO.CBX MENUVECT.CBX MENUDEMO.CBX
+acu: MCBBLD.acu MCBEDIT.acu MENUDISP.acu MENULOGO.acu MENUVECT.acu MENUDEMO.acu
 
 mf:  MCBBLD.INT MCBEDIT.INT MENUDISP.INT MENULOGO.INT MENUVECT.INT MENUDEMO.INT
 

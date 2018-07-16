@@ -77,24 +77,199 @@ CFG=wispkit - Win32 Debug
 
 !ENDIF 
 
-# Begin Group "DOC"
+# Begin Group "SHIP"
 
-# PROP Default_Filter "txt;lis"
+# PROP Default_Filter ""
+# Begin Group "CONFIG"
+
+# PROP Default_Filter ""
+# Begin Group "videocap"
+
+# PROP Default_Filter "vcap"
+# Begin Source File
+
+SOURCE=..\videocap\aix_xterm.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\aixterm.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\ansi.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\ansidos.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\att605.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\decterm.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\dg_xterm.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\ibm3151.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\ibm8514.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\ipx_sun.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\ipx_xterm.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\msdos.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\qvt101p.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\rflvt220.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\sco_xterm.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\stddef.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\sun_cmd.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\uterm.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\uw_xterm.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\vt100.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\vt220.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\vt510.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\w4w_vt220.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\wincon.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\wy_vt100.vcap
+# End Source File
+# Begin Source File
+
+SOURCE=..\videocap\xterm.vcap
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=..\nt\ACUCONFIG
+# End Source File
+# Begin Source File
+
+SOURCE=..\nt\CHARMAP
+# End Source File
+# Begin Source File
+
+SOURCE=..\nt\CQMAP
+# End Source File
+# Begin Source File
+
+SOURCE=..\nt\FORMS
+# End Source File
+# Begin Source File
+
+SOURCE=..\nt\LGMAP
+# End Source File
+# Begin Source File
+
+SOURCE=..\nt\LPMAP
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\OPTIONS
+# End Source File
+# Begin Source File
+
+SOURCE=..\nt\PRMAP
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\W4WMAP
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\wispmsg.txt
+# End Source File
+# Begin Source File
+
+SOURCE=..\wproc\wproc.msg
+# End Source File
+# Begin Source File
+
+SOURCE=..\nt\wrun.cfg
+# End Source File
+# Begin Source File
+
+SOURCE=..\nt\wsysconf.cfg
+# End Source File
+# End Group
+# Begin Group "ETC"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=..\doc\aqmwisp.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\doc\nonascii.txt
+SOURCE=..\wisputils\disprint.mak
 # End Source File
 # Begin Source File
 
-SOURCE=..\doc\nttelnet.txt
+SOURCE=..\wisputils\disprint.umf
 # End Source File
 # Begin Source File
 
-SOURCE=..\doc\vcolors.txt
+SOURCE=..\wisputils\DISPRINT.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\make.include
+# End Source File
+# Begin Source File
+
+SOURCE=..\wisputils\SOFTLINK.wcb
 # End Source File
 # Begin Source File
 
@@ -102,16 +277,25 @@ SOURCE=..\doc\wisp_install_unix.txt
 # End Source File
 # Begin Source File
 
+SOURCE=..\doc\wisp_packlist.txt
+# End Source File
+# Begin Source File
+
 SOURCE=..\doc\wisp_relnotes.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\doc\wispacn.txt
+SOURCE=..\wisputils\WISPPLAT.wcb
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\wispmsg.txt
+SOURCE=..\wisptran\words.def
 # End Source File
+# Begin Source File
+
+SOURCE=..\doc\wproc.txt
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\doc\wispntdoc.txt

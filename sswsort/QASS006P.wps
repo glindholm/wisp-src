@@ -1,0 +1,131 @@
+* $Id:$
+*-------*---------*---------*---------*---------*---------*---------*--|
+
+*  QA SyncSort version of wsort.
+*
+*  QASS006P: MERGE 2 CONSEC FILES
+
+PROCEDURE QASS006P
+declare &retcode integer initial 0
+declare &testname as string(8) initial "QASS006P"
+message center "RUNNING QA SYNCSORT PROCEDURE ", &testname
+
+* Setup defaults
+declare &invol  as string(6) initial "VOLIN "
+declare &outvol as string(6) initial "VOLOUT"
+declare &inlib  as string(8) initial "SSIN    "
+declare &outlib as string(8) initial "SSOUT   "
+set invol=&invol, inlib=&inlib, outvol=&outvol, outlib=&outlib
+
+declare &infile as string(8) initial &testname
+declare &infile2 as string(8) initial "FILE2"
+declare &outfile as string(8) initial &testname
+
+* Cleanup from previous runs
+scratch &infile in &inlib on &invol
+scratch &infile2 in &inlib on &invol
+scratch &outfile in &outlib on &outvol
+
+* Create files
+run create
+	enter output file=&infile, library=&inlib, volume=&invol,
+			type="B", recsize=50
+	enter input 3
+	enter ascii start=1, end=20, incrment=2,
+			position=1, length=10
+	enter input 2
+	enter pad pad=".", position=11, length=40
+	enter input 16
+	enter input 16
+	enter eoj 16
+
+run create
+	enter output file=&infile2, library=&inlib, volume=&invol,
+			type="B", recsize=50
+	enter input 3
+	enter ascii start=2, end=20, incrment=2,
+			position=1, length=10
+	enter input 2
+	enter pad pad="-", position=11, length=40
+	enter input 16
+	enter input 16
+	enter eoj 16
+
+* Sort the file
+rc:run sort
+	enter options
+		function="MERGE",
+		stable="NO",
+		reformat="NO"
+	enter input
+		file=&infile, library=&inlib, volume=&invol,
+		filetype="F", recsize=50, select="NO"
+	enter input
+		file=&infile2, library=&inlib, volume=&invol, 
+		filetype="F", recsize=50
+	enter input
+	enter keys 
+		keys=1,
+		post1=1,  length1=10, type1="C", order1="A"
+	enter output
+		file=&outfile, library=&outlib, volume=&outvol
+
+*
+* Check the SORT return code
+*
+assign &retcode = rc
+
+if &retcode = 0 then goto verifysize
+prompt	center "RUNNING QA SYNCSORT PROCEDURE ", &testname;;;
+	center "SORT failed with RC = ", &retcode;;;;;
+	center "Press (ENTER) to continue"
+
+return code = &retcode
+
+*
+* Verify the sorted file size
+*
+verifysize:
+declare &mode integer initial 0
+declare &bytesize string(18)
+declare &expectsize string(18) initial "000000000000001000"
+declare &readfdr4rc integer
+
+run "READFDR4" using &outfile, &outlib, &outvol, &mode,
+	"BS", &bytesize, &readfdr4rc
+
+if &readfdr4rc = 0 then goto checkbytesize
+prompt	center "RUNNING QA SYNCSORT PROCEDURE ", &testname;;;
+	center "READFDR4 ERROR RC=", &readfdr4rc;;;;;
+	center "Press (ENTER) to continue"
+return code = &readfdr4rc
+
+checkbytesize:
+if &bytesize = &expectsize then goto displayfile
+
+prompt	center "RUNNING QA SYNCSORT PROCEDURE ", &testname;;;
+	center "FILE SIZE ERROR";;;
+       "Expecting: ", &expectsize;
+       "Found:     ", &bytesize;;;;;
+	center "Press (ENTER) to continue"
+assign &retcode = 99
+
+*
+* Display the sorted file size
+*
+displayfile:
+prompt  center "RUNNING QA SYNCSORT PROCEDURE ", &testname;;;;;
+	center "About to display OUTPUT file:";;
+	center &outfile, " IN ", &outlib, " ON ", &outvol;;
+	center "Records=20,  Size=50,  Key=1:10,  Order=1-20";;
+	center "(In DISPLAY you can set record size with PF11)";;;
+	center "Press (ENTER) to continue"
+
+run display
+	enter input file=&outfile, library=&outlib, volume=&outvol
+	enter options recsize=50
+
+
+return code = &retcode
+*-------*---------*---------*---------*---------*---------*---------*--|
+

@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	pwdname.c
@@ -21,9 +34,9 @@ static char rcsid[]="$Id:$";
 #include "wanguid.h"
 
 #ifdef WIN32
-void passwdname(char* name)
+void WL_passwdname(char* name)
 {
-	strcpy(name, longuid());
+	strcpy(name, WL_longuid());
 }
 #endif	/* WIN32 */
 
@@ -32,7 +45,7 @@ void passwdname(char* name)
 #include <unistd.h>
 #include <pwd.h>
 
-void passwdname(char* name)
+void WL_passwdname(char* name)
 {
 	struct  passwd *p;
 	uid_t   euid;
@@ -46,7 +59,7 @@ void passwdname(char* name)
 	}
 	else
         {
-		sprintf(name,longuid());
+		sprintf(name,WL_longuid());
         }
 }
 #endif	/* unix */
@@ -54,8 +67,17 @@ void passwdname(char* name)
 /*
 **	History:
 **	$Log: pwdname.c,v $
-**	Revision 1.14.2.1  2002/10/03 13:54:25  gsl
-**	missing include
+**	Revision 1.18  2003/01/31 18:54:38  gsl
+**	Fix copyright header
+**	
+**	Revision 1.17  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.16  2002/07/10 21:05:22  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.15  2002/06/21 03:10:39  gsl
+**	Remove VMS & MSDOS
 **	
 **	Revision 1.14  2001/11/27 22:02:19  gsl
 **	Change to use longuid()

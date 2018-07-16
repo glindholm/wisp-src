@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -18,12 +39,18 @@ static char rcsid[]="$Id:$";
 
 /*						Subroutine entry point.								*/
 
-void vuserexit()									/* Dummy user exit stubs.		*/
+void VL_vuserexit()									/* Dummy user exit stubs.		*/
 {
 }											/* User to supply his/her own.		*/
 /*
 **	History:
 **	$Log: vuserex.c,v $
+**	Revision 1.11  2003/01/31 19:25:55  gsl
+**	Fix copyright header
+**	
+**	Revision 1.10  2002/07/15 20:56:41  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.9  1996/10/11 22:16:24  gsl
 **	drcs update
 **	

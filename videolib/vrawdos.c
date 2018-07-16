@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*           VIDEO - Video Interactive Development Environment          */
 			/*                      Copyright (c) 1987-1993                         */
@@ -53,26 +74,21 @@ static void xd_clr_menu();
 /*
  * Globals whose storage is defined in other compilation units:
  *
- * int vb_pure:         This will be TRUE (non-zero) when the higher
+ * int VL_vb_pure:         This will be TRUE (non-zero) when the higher
  *                      layers are intending to write output that should
  *                      not be post processed. If this flag is FALSE. then
  *                      any line-feed ('\012') character seen in the output
  *                      stream will have a carriage return ('\015') character
  *                      pre-pended to it.
  *
- * int vb_count:        This is the count of how many characters are currently
- *                      in the output buffer. It is read by higher layers
- *                      of Video for optimization purposes.
  *
  * int debugging:       This is a debugging hook flag which will cause any
  *                      output data in the buffer owned by this compilation
  *                      unit to be flushed to the output device immediately.
  *
  */
-extern int vb_pure;
-extern int vb_count;
-extern int debugging;
-extern int video_inited;
+extern int VL_vb_pure;
+extern int VL_video_inited;
 
 #ifdef  NO_ERRNO
 extern  int     errno ;
@@ -171,7 +187,6 @@ static int vrawinit()
 	fflush(stdout);                                                                 /* Flush all pending output on the      */
 	fflush(stderr);                                                                 /* stdout and stderr channels. Then grab*/
 											/* the fileno for the stdout file and   */
-	vb_count = 0;                                                                   /* At start of local buffer.            */
 
 	initcolors();
 
@@ -194,7 +209,7 @@ static int vrawinit()
 	out_atr = attributes[0];
 
 	vraw_init_flag = TRUE;                                                                  /* Mark as initialized.         */
-	video_inited = TRUE;                                                                    /* Set  - video was initialized.*/
+	VL_video_inited = TRUE;                                                                    /* Set  - video was initialized.*/
 	return (SUCCESS);
 }                                                                                               /* end of vrawinit().           */
 
@@ -358,7 +373,7 @@ int vrawputc(ch) char ch;                       /* Output single char.  */
 {
 	unsigned char x[2];                     /* Working string.      */
 
-	if ((ch == 0) || vb_pure)
+	if ((ch == 0) || VL_vb_pure)
 	{
 		xputc(ch);                      /* Output if a null.    */
 	}
@@ -453,7 +468,7 @@ int vrawerrno()
  * Procedure to shut down pending inputs in anticipation of the creation
  * of a sub process.
  */
-void vshut()
+void VL_vshut()
 {
 }
 
@@ -552,7 +567,7 @@ static  unsigned        char    xgetc_w()
 		}
 		else if ( ch == 3 )                     /* Abort on control C.  */
 		{
-			vexit();
+			VL_vexit();
 			exit(0);
 		}
 		else if ( ch == 24 )                    /* Debug on control X.  */
@@ -637,7 +652,7 @@ char ch;
 		{
 			out_row++;
 		}
-		if( ! vb_pure )
+		if( ! VL_vb_pure )
 		{
 			out_col = 0;
 		}
@@ -1255,6 +1270,24 @@ void vraw_stty_sync()
 /*
 **	History:
 **	$Log: vrawdos.c,v $
+**	Revision 1.18  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.17  2002/07/17 21:06:03  gsl
+**	VL_ globals
+**	
+**	Revision 1.16  2002/07/16 14:11:48  gsl
+**	VL_ globals
+**	
+**	Revision 1.15  2002/07/16 13:40:21  gsl
+**	VL_ globals
+**	
+**	Revision 1.14  2002/07/15 20:16:12  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.13  2002/07/15 17:10:05  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.12  1997/07/09 15:57:16  gsl
 **	Remove unsupported erase codes
 **	

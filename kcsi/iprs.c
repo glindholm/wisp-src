@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include <stdio.h>
 #include <ctype.h>
 #include "strtkn.h"
@@ -10,7 +24,6 @@ static char rcsid[]="$Id:$";
 #include "rptcob.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)iprs.c	1.5 8/3/93";
 
 /*----
 The primary addition to the inquiry program from a 'C' perspective
@@ -416,7 +429,7 @@ static void add_to_dest(char *str)
 	int len;
 	char *tstr, *get_inq_tkn_str();
 
-	if(tstr = get_inq_tkn_str(inq_token))
+	if((tstr = get_inq_tkn_str(inq_token)) != NULL)
 	    str = tstr;
 	len = strlen(str);
 	if (len > (INQ_FIELD_LEN - didx))
@@ -562,8 +575,11 @@ static void squeeze_rfls()
 /*
 **	History:
 **	$Log: iprs.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:26  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.9  2003/02/20 19:29:55  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.8  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.7  2002/10/24 15:48:32  gsl
 **	Make globals unique

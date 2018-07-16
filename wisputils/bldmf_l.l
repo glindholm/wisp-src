@@ -51,7 +51,7 @@ of [^A-Z-]OF[^A-Z-]
 \n  { cont_str=FALSE; ++line_number; }
 %%
 
-nextwcbfile()
+void nextwcbfile()
 {
 #ifdef YY_NEW_FILE
 	static int first=1;

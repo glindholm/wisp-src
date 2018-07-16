@@ -1,7 +1,19 @@
-/* 
-	Copyright (c) 1996 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 
 /*
 **	File:		kcsifunc.h
@@ -161,7 +173,7 @@ char *kcsi_strupr(char* str);
 int first_inq_tkn();
 int next_inq_tkn();
 char *get_inq_tkn_str(int tkn);
-char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_path);
+char *WL_wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_path);
 void KMATCH(char *rc,char *g1,char *g2);
 void KCSIO(char *kio,char *ufb,char *recarea);
 void KDISP(char* fspec,char* type, char* rc);
@@ -268,28 +280,29 @@ int  KCSI_ckexists(char *file, char *lib, char *vol);
 
 #include "wfname.h"
 #include "wisplib.h"
+#include "vssubs.h"
+#include "filext.h"
+#include "wfiledis.h"
+#include "getopt.h"
 
-void WL_wswap(void *lword);			/* swap the order of the words in a longword item (for WANG routines to use)	*/
-void GETPARM();
-void SCRATCH();
 void WL_wpload(void);
-void WFCLOSE(const char* fname);								/* This routine is called after COBOL*/
-int  WL_link_display(const char *file_name);
-void SET();
-void WISPSORT(char *sortparms, char *filetype, int4 *recsize, int4 *sortcode, int4 *returncode);
-int getopt( int argc, char *const argv[], const char *flags);
-void setwispfilext(char* wispfilext);
 
 #endif /* kcsifunc_H */
 
 /*
 **	History:
 **	$Log: kcsifunc.h,v $
-**	Revision 1.14.2.2  2003/02/06 18:12:41  gsl
-**	fix prototype mismatch warnings for EXTRACT and FIND
+**	Revision 1.37  2003/02/17 22:07:18  gsl
+**	move VSSUB prototypes to vssubs.h
 **	
-**	Revision 1.14.2.1  2002/11/12 15:56:27  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.36  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.35  2003/01/29 15:10:57  gsl
+**	Fix wisplib prototypes
+**	
+**	Revision 1.34  2003/01/28 20:11:06  gsl
+**	fix prototype problems
 **	
 **	Revision 1.33  2002/10/24 15:48:32  gsl
 **	Make globals unique

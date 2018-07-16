@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 #include <string.h>
@@ -17,12 +32,12 @@ static char rcsid[]="$Id:$";
 #include "vseglb.h"
 #include "vsescr.h"
 
-static char naf_scr[1924];
+static unsigned char naf_scr[1924];
 static char naf_pfs[]="00X";
-static char naf_func[]={03};
-static char naf_lines[]={24};
+static unsigned char naf_func[]={03};
+static unsigned char naf_lines[]={24};
 static char naf_pfcode[3];
-static char naf_status[3];
+static unsigned char naf_status[3];
 
 static VSESCR_FLDS(naf_flds) = {
 {LEN(0)	ROW(9)	COL(18)	VALUE("Requested function is not currently available")},
@@ -54,6 +69,12 @@ static void init_anaf(VSEFLD *flds)
 /*
 **	History:
 **	$Log: vsenaf.c,v $
+**	Revision 1.12  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.11  2002/08/01 15:31:11  gsl
+**	type warnings
+**	
 **	Revision 1.10  1996/09/03 22:24:10  gsl
 **	drcs update
 **	

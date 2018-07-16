@@ -35,8 +35,8 @@ void show_memory(char *kind, void* ptr, size_t size);
 //
 //	History:
 //	$Log: memory.hpp,v $
-//	Revision 1.5.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.6  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.5  1998/08/31 19:13:56  gsl
 //	drcs update

@@ -69,7 +69,13 @@
 extern char	*sys_errlist[];
 #endif
 
-static void get_validation();
+static void get_validation(	char	licensekey[LICENSE_KEY_SIZE],
+				char	*machineid,
+				char	valcode[VALIDATION_CODE_SIZE]);
+static void get_appcode_validation(	char	licensekey[LICENSE_KEY_SIZE],
+					char	*appcode,
+					char	valcode[VALIDATION_CODE_SIZE]);
+
 static void exit_wlicense();
 static void assistance();
 static void putheader();
@@ -81,22 +87,32 @@ static int  WLIC_write_license(char	*custname,
 		char	platform[2],
 		char	*licensekey,
 		int	lictype,
+		int4	version_number,
 		char	licdate[8],
 		char	expdate[8],
 		char	*machineid,
-		char	*valcode);
+		char	*valcode,
+		char	*appcode);
 
 
 /*
-**	Routine:	main()		[xlicense]
-**
-**				wlicense	WISP
+**	Routine:	main()		[wlicense]
 **
 **	Function:	To install the license.
 **
-**	Description:	This routine validate the LICENSE KEY displays the MACHINE ID and prompts for the VALIDATION CODE.
+**	Description:	This routine validate the LICENSE KEY displays the MACHINE ID 
+**			and prompts for the VALIDATION CODE.
 **			If all is correct it creates the license file with this info.
 **			It will give detail instructions to the user.
+**
+**	Input:		stdin
+**
+**	Output:		stdout
+**			wisp license file
+**
+**	Return:		None
+**
+**	Warnings:	None
 **
 */
 
@@ -110,9 +126,11 @@ char	*argv[];
 	int	licensetype;
 	char	licensedate[20];
 	char	expdate[20];
-	char	licensekey[20];
+	char	licensekey[80];
 	char	machineid[MAX_MACHINEID_LENGTH+1];
-	char	valcode[20];
+	char	valcode[80] = { "" };
+	char	appcode[80] = { "" };
+	int4	version_number = 0;
 
 	int	rc;
 	int	done;
@@ -124,7 +142,7 @@ char	*argv[];
 	putheader();
 
 	/* Ensure we can get the machineid */
-	if (0 != getmachineid(machineid))
+	if (0 != WL_getmachineid(machineid))
 	{
 		printf("\n");
 		printf("------------------------------------------------------------------\n");
@@ -141,15 +159,22 @@ char	*argv[];
 
 	/* Display License Info */
 	{
-		printf("PLATFORM:        [%s]\n", WL_platform_name());
-		printf("MACHINE ID:      [%s]\n", machineid);
-		printf("LICENSE FILE:    [%s]\n", license_filepath());
+		printf("PLATFORM:         [%s]\n", WL_platform_name());
+		printf("MACHINE ID:       [%s]\n", machineid);
+		printf("LICENSE FILE:     [%s]\n", WLIC_license_filepath());
 	}
 
-	if (0 == get_license_info(licensekey, valcode))
+	if (0 == WLIC_get_license_info(licensekey, valcode, appcode))
 	{
-		printf("LICENSE KEY:     [%s]\n", licensekey);
-		printf("VALIDATION CODE: [%s]\n", valcode);
+		printf("LICENSE KEY:      [%s]\n", licensekey);
+		if (valcode[0] != '\0')
+		{
+			printf("VALIDATION CODE:  [%s]\n", valcode);
+		}
+		if (appcode[0] != '\0')
+		{
+			printf("APPLICATION CODE: [%s]\n", appcode);
+		}
 
 	}
 
@@ -176,13 +201,13 @@ char	*argv[];
 	**	Check if license file already exists.
 	*/
 
-	if (0 == access(license_filepath(),0000))
+	if (0 == access(WLIC_license_filepath(),0000))
 	{
 		already_exists = 1;
 		printf("\n");
 		printf("-----------------------------------------------------------\n");
-		printf("WARNING - A %s license file already exists.\n",product_name());
-		printf("WARNING - Continuing will delete the previous %s license file.\n",product_name());
+		printf("WARNING - A %s license file already exists.\n",WLIC_product_name());
+		printf("WARNING - Continuing will delete the previous %s license file.\n",WLIC_product_name());
 		printf("-----------------------------------------------------------\n");
 		printf("\n");
 
@@ -193,7 +218,7 @@ char	*argv[];
 	else
 	{
 		printf("\n");
-		sprintf(helpbuff,"Enter Y to continue the %s license installation.\nEnter N to exit.",product_name());
+		sprintf(helpbuff,"Enter Y to continue the %s license installation.\nEnter N to exit.",WLIC_product_name());
 		rc = prompt_list("Do you wish to continue","y","y,n",helpbuff);
 		if (rc == -1 || rc == 2) exit(0);
 	}
@@ -228,7 +253,7 @@ char	*argv[];
 	while(!done)
 	{
 		printf("\n");
-		sprintf(helpbuff, "Enter the %s software LICENSE KEY exactly as it is was given to you.\n",product_name());
+		sprintf(helpbuff, "Enter the %s software LICENSE KEY exactly as it is was given to you.\n",WLIC_product_name());
 		strcat(helpbuff,"Enter a period (.) to exit.");
 		rc = prompt_text("Enter the LICENSE KEY",NULL,1,helpbuff,buff);
 		switch(rc)
@@ -237,9 +262,10 @@ char	*argv[];
 			exit(0);
 			break;
 		case 1: /* text was entered */
-			upper_string(buff);
-			unformatkey(licensekey,buff);
-			if (bklickey(&custnum,platform,&licensetype,licensedate,expdate,licensekey))
+			WL_upper_string(buff);
+			WLIC_unformatkey(licensekey,buff);
+			if (WLIC_bklickey(&custnum,platform,&licensetype,licensedate,expdate,
+				&version_number,licensekey))
 			{
 				printf("------------------------------------------------\n");
 				printf("SORRY - You have entered an invalid LICENSE KEY.\n");
@@ -298,16 +324,36 @@ char	*argv[];
 		**	If running on a CLIENT then the machineid is 
 		**	generated from the SERVER name.
 		*/
-		if (0 != strcmp(wispserver(), computername(NULL)) &&
+		if (0 != strcmp(wispserver(), WL_computername(NULL)) &&
 		    0 != strcmp(wispserver(), DEF_WISPSERVER)        )
 		{
 			*machineid = '\0';
-			encodemachid(wispserver(), machineid);
+			WL_encodemachid(wispserver(), machineid);
 		}
 		get_validation(licensekey,machineid,valcode);
 		break;
 #endif
 	case LICENSE_UNLIMITED:
+		printf("\n");
+		/*      123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 */
+		printf("---------------------------------------------------------------------------\n");
+		printf("WARNING - You have entered an OLD sytle UNLIMITED license key. \n");
+		printf("WARNING - This release of WISP does not support UNLIMITED license keys.\n");
+		printf("WARNING - Contact your WISP vendor or NeoMedia for assistance.\n");
+		printf("---------------------------------------------------------------------------\n");
+		printf("\n");
+
+		help = "Enter Y to continue.\nEnter N to exit the program.";
+		rc = prompt_list("Do you wish to continue",NULL,"y,n",help);
+		if (rc != 1) 
+		{ 
+			exit_wlicense(0);
+		}
+
+		break;
+	case LICENSE_ENTERPRISE:
+		*machineid = '\0';
+		get_appcode_validation(licensekey,appcode,valcode);
 		break;
 	case LICENSE_TIMED:
 		break;
@@ -331,14 +377,14 @@ char	*argv[];
 		**	Make file writable first in case
 		**	we are overwriting an existing license file.
 		*/
-		chmod(license_filepath(),0666);
+		chmod(WLIC_license_filepath(),0666);
 #endif
 
-		if ( 0 != unlink(license_filepath()))
+		if ( 0 != unlink(WLIC_license_filepath()))
 		{
 			printf("----------------------------------------------------------\n");
 			printf("SORRY - Unable to delete license file %s [errno = %d %s]\n",
-				license_filepath(),errno,sys_errlist[errno]);
+				WLIC_license_filepath(),errno,sys_errlist[errno]);
 			printf("----------------------------------------------------------\n");
 			assistance();
 			finish_ok();
@@ -349,14 +395,15 @@ char	*argv[];
 	/*
 	**	Create the new license file
 	*/
-	rc = WLIC_write_license(custname,custnum,platform,licensekey,licensetype,licensedate,expdate,machineid,valcode);
+	rc = WLIC_write_license(custname,custnum,platform,licensekey,licensetype,
+		version_number,licensedate,expdate,machineid,valcode,appcode);
 	switch(rc)
 	{
 	case 0:
 		break;
 	case 1:
 		printf("----------------------------------------------------------\n");
-		printf("SORRY - Unable to open file %s [errno = %d %s]\n",license_filepath(),errno,sys_errlist[errno]);
+		printf("SORRY - Unable to open file %s [errno = %d %s]\n",WLIC_license_filepath(),errno,sys_errlist[errno]);
 		printf("----------------------------------------------------------\n");
 		assistance();
 		finish_ok();
@@ -364,7 +411,7 @@ char	*argv[];
 		break;
 	case 2:
 		printf("----------------------------------------------------------\n");
-		printf("SORRY - Unable to write file %s [errno = %d %s]\n",license_filepath(),errno,sys_errlist[errno]);
+		printf("SORRY - Unable to write file %s [errno = %d %s]\n",WLIC_license_filepath(),errno,sys_errlist[errno]);
 		printf("----------------------------------------------------------\n");
 		assistance();
 		finish_ok();
@@ -372,7 +419,7 @@ char	*argv[];
 		break;
 	default:
 		printf("----------------------------------------------------------\n");
-		printf("SORRY - Error writing file %s [errno = %d %s]\n",license_filepath(),errno,sys_errlist[errno]);
+		printf("SORRY - Error writing file %s [errno = %d %s]\n",WLIC_license_filepath(),errno,sys_errlist[errno]);
 		printf("----------------------------------------------------------\n");
 		assistance();
 		finish_ok();
@@ -382,9 +429,9 @@ char	*argv[];
 
 	printf("\n");
 	printf("The %s license file %s has been created.\n\n",
-		product_name(),license_filepath());
+		WLIC_product_name(),WLIC_license_filepath());
 
-	catfile(license_filepath());
+	catfile(WLIC_license_filepath());
 	printf("\n");
 
 	finish_ok();
@@ -426,10 +473,9 @@ static void finish_ok(void)
 **
 */
 
-static void get_validation(licensekey,machineid,valcode)
-char	licensekey[LICENSE_KEY_SIZE];
-char	*machineid;
-char	valcode[VALIDATION_CODE_SIZE];
+static void get_validation(	char	licensekey[LICENSE_KEY_SIZE],
+				char	*machineid,
+				char	valcode[VALIDATION_CODE_SIZE])
 {
 	int	rc;
 	char	*help;
@@ -437,10 +483,10 @@ char	valcode[VALIDATION_CODE_SIZE];
 	char	buff[80];
 	char	helpbuff[1024];
 
-	formatkey(licensekey,flickey);
+	WLIC_formatkey(licensekey,flickey);
 
 	/*                12345678901234567890123456789012345678901234567890123456789012345678901234567890			*/
-	sprintf(helpbuff,"In order to install this %s license you will need a VALIDATION CODE.\n",product_name());
+	sprintf(helpbuff,"In order to install this %s license you will need a VALIDATION CODE.\n",WLIC_product_name());
 	strcat (helpbuff,"A VALIDATION CODE can be received by emailing NeoMedia at ");
 	strcat (helpbuff,WISP_EMAIL);
 	strcat (helpbuff,"\n");
@@ -467,10 +513,10 @@ char	valcode[VALIDATION_CODE_SIZE];
 
 		if (rc == 1)
 		{
-			upper_string(buff);
+			WL_upper_string(buff);
 
 			if (VALIDATION_CODE_SIZE != strlen(buff) ||
-			    0 != ckvalcode(licensekey,machineid,buff))
+			    0 != WLIC_ckvalcode(licensekey,machineid,buff))
 			{
 				printf("\n");
 				printf("----------------------------------------------------\n");
@@ -487,6 +533,90 @@ char	valcode[VALIDATION_CODE_SIZE];
 		assistance();
 	}
 }
+
+/*
+**	Routine:	get_appcode_validation()
+**
+**	Function:	To get the appcode and validation code from the user.
+**
+**	Description:	This routine will prompt the user to enter the appcode and 
+**			validation code.  It will give a description of
+**			how to get the validation code.  
+**			It will then ensure that a valid code was entered.
+**
+**	Input:		licensekey		the license key
+**			appcode			the applicarion code
+**			stdin
+**
+**	Output:		valcode			the validation code
+**			stdout
+**
+**	Return:		None
+**
+**	Warnings:	If an invalid VALIDATION CODE was entered then this routine 
+**			will call exit_wlicense() and not return 
+**			to the caller.  Likewise it will call exit_wlicense() if the 
+**			prompt routines recieve an exit request.
+**
+*/
+
+static void get_appcode_validation(	char	licensekey[LICENSE_KEY_SIZE],
+					char	*appcode,
+					char	valcode[VALIDATION_CODE_SIZE])
+{
+	int	rc;
+	char	*help;
+	char	flickey[80];
+	char	buff[80];
+	char	helpbuff[1024];
+	int	done;
+
+	WLIC_formatkey(licensekey,flickey);
+
+	/*                12345678901234567890123456789012345678901234567890123456789012345678901234567890			*/
+	sprintf(helpbuff,"In order to install this %s license you will need the APPLICATION CODE \n",WLIC_product_name());
+	strcat (helpbuff,"and the VALIDATION CODE for this license.  If you don't have them contact \n");
+	strcat (helpbuff,"your WISP vendor or NeoMedia at ");
+	strcat (helpbuff,WISP_EMAIL);
+	strcat (helpbuff,"\n");
+	strcat (helpbuff,"\n");
+	strcat (helpbuff,"You may enter a period (.) to exit.\n");
+	help = helpbuff;
+
+	printf("\n%s\n",help);
+	rc = prompt_text("Enter the APPLICATION CODE",NULL,1,help,appcode);
+	if (rc == PROMPT_RC_EXIT) exit_wlicense();
+	WL_upper_string(appcode);
+
+	done = 0;
+	while(!done)
+	{
+		rc = prompt_text("Enter the VALIDATION CODE",NULL,1,help,buff);
+		if (rc == PROMPT_RC_EXIT) exit_wlicense();
+
+		if (rc == 1)
+		{
+			WL_upper_string(buff);
+
+			if (VALIDATION_CODE_SIZE != strlen(buff) ||
+			    0 != WLIC_ckvalcode(licensekey,appcode,buff))
+			{
+				printf("\n");
+				printf("----------------------------------------------------\n");
+				printf("SORRY - you have entered an invalid VALIDATION CODE.\n");
+				printf("----------------------------------------------------\n");
+			}
+			else
+			{
+				memcpy(valcode,buff,VALIDATION_CODE_SIZE);
+				return;
+			}
+		}
+
+		assistance();
+	}
+}
+
 
 /*
 **	Routine:	exit_wlicense()
@@ -567,11 +697,11 @@ static void putheader()
 {
 /*		123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567890				*/
 	printf("\n");
-	printf("                **** %s %s LICENSE INSTALLATION TOOL ****\n",product_name(), wisp_version());
+	printf("                **** %s %s LICENSE INSTALLATION TOOL ****\n",WLIC_product_name(), wisp_version());
 	printf("         Copyright (c) 1994-" WISP_COPYRIGHT_YEAR_STR " by NeoMedia Technologies Incorporated\n");
 	printf("                Email: %s   Phone: %s\n", WISP_EMAIL, WISP_PHONE_NUMBER);
 	printf("\n");
-	printf("This program will install a %s license onto this machine.\n",product_name());
+	printf("This program will install a %s license onto this machine.\n",WLIC_product_name());
 	printf("\n");
 	printf("While this program is running you may get help on any prompt by entering\n");
 	printf("a question mark or you may exit the program by entering a period.\n");
@@ -618,6 +748,7 @@ static void catfile(const char *filename)
 **				LICENSE-TYPE	  SINGLE
 **				LICENSE-DATE	  1992/05/01
 **				EXPIRATION-DATE	  None
+**				VERSION-NUMBER	  None
 **				MACHINE-ID	  0000234500		| These are only on SINGLE machine licenses
 **				VALIDATION-CODE   ASD			|
 **
@@ -649,10 +780,12 @@ static int WLIC_write_license(char	*custname,
 		char	platform[2],
 		char	*licensekey,
 		int	lictype,
+		int4	version_number,
 		char	licdate[8],
 		char	expdate[8],
 		char	*machineid,
-		char	*valcode)
+		char	*valcode,
+		char	*appcode)
 {
 	FILE	*fp;
 	char	flickey[80];
@@ -665,20 +798,17 @@ static int WLIC_write_license(char	*custname,
 		strcpy(platname,"??");
 	}
 
-	formatkey(licensekey,flickey);					/* format the key				*/
+	WLIC_formatkey(licensekey,flickey);					/* format the key				*/
 
 	sprintf(licdatebuff,"%4.4s/%2.2s/%2.2s",&licdate[0],&licdate[4],&licdate[6]);
 
-	if (0 == memcmp(expdate,"00000000",8))
-	{
-		strcpy(expdatebuff,"None");
-	}
-	else
+	strcpy(expdatebuff,"None");
+	if (lictype == LICENSE_TIMED)
 	{
 		sprintf(expdatebuff,"%4.4s/%2.2s/%2.2s",&expdate[0],&expdate[4],&expdate[6]);
 	}
 
-	fp = fopen(license_filepath(),"w");
+	fp = fopen(WLIC_license_filepath(),"w");
 	if (!fp)
 	{
 		return(1);
@@ -688,9 +818,17 @@ static int WLIC_write_license(char	*custname,
 	fprintf(fp,		"CUSTOMER-NUMBER    %06d\n",custnum);
 	fprintf(fp,		"PLATFORM           %2.2s - %s\n",platform,platname);
 	fprintf(fp,		"LICENSE-KEY        %s\n",flickey);
-	fprintf(fp,		"LICENSE-TYPE       %s\n",lictypename(lictype));
+	fprintf(fp,		"LICENSE-TYPE       %s\n",WLIC_lictypename(lictype));
 	fprintf(fp,		"LICENSE-DATE       %s\n",licdatebuff);
 	fprintf(fp,		"EXPIRATION-DATE    %s\n",expdatebuff);
+	if (version_number != 0)
+	{
+		fprintf(fp,	"VERSION-NUMBER     %d.%d\n", version_number/10, version_number%10);
+	}
+	else
+	{
+		fprintf(fp,	"VERSION-NUMBER     None\n");
+	}
 	if (machineid && *machineid)
 	{
 		fprintf(fp,	"MACHINE-ID         %s\n",machineid);
@@ -698,6 +836,10 @@ static int WLIC_write_license(char	*custname,
 	if (valcode && *valcode)
 	{
 		fprintf(fp,	"VALIDATION-CODE    %3.3s\n",valcode);
+	}
+	if (appcode && *appcode)
+	{
+		fprintf(fp,	"APPLICATION-CODE   %s\n",appcode);
 	}
 
 	if (ferror(fp))								/* Check for an error in writing		*/
@@ -708,7 +850,7 @@ static int WLIC_write_license(char	*custname,
 
 	fclose(fp);
 
-	chmod(license_filepath(),0444);					/* Make file readable by all			*/
+	chmod(WLIC_license_filepath(),0444);					/* Make file readable by all			*/
 
 	return(0);
 }
@@ -721,18 +863,18 @@ void WL_wexit(int code)
 	finish_ok();
 	exit_wlicense();
 }
-void werrlog()
+void WL_werrlog()
 {
 }
-void werrlog_error()
-{
-}
-
-void get_wisp_option()
+void WL_werrlog_error()
 {
 }
 
-void wtrace()
+void WL_get_wisp_option()
+{
+}
+
+void WL_wtrace()
 {
 }
 
@@ -740,9 +882,12 @@ void wtrace()
 /*
 **	History:
 **	$Log: wlicense.c,v $
-**	Revision 1.22.2.7  2003/02/14 18:21:43  gsl
-**	On unix change the license file from /lib/wisp.license to
-**	$WISPCONFIG/wisp.{machineid}.license
+**	Revision 1.51  2003/06/13 17:36:12  gsl
+**	ENTERPRISE License
+**	
+**	Revision 1.50  2003/06/12 20:54:30  gsl
+**	Add support for ENTERPRISE licenses with a version number and remove
+**	support for UNLIMITED license.
 **	
 **	Revision 1.49  2003/02/14 16:12:33  gsl
 **	for unix ensure $WISPCONFIG is set

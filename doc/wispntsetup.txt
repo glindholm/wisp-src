@@ -8,7 +8,7 @@ Title:          WISP for Windows (WIN32) Quick Set-Up Steps
 Document:       wispntsetup.txt
 Last Updated:   $Date:$
 Products:       WISP/WIN32
-Versions:       4.4.07
+Versions:       5.0.00
 
 Summary:        WISP for WIN32 installation and setup steps
 
@@ -31,7 +31,7 @@ Overview
 0) Backup the WISPCONFIG directory.
 1) Install WISP/WIN32 on the server machine
 2) Share the WISP directory using a Share Name of "WISP".  
-3) Run Wconfig.exe to configure the server machine.
+3) Configure WISP on the server machine.
 4) Run Wlicense to install the WISP license.
 5) Build the Acucobol Runtime System
 6) Setup the WISPCONFIG files
@@ -53,20 +53,27 @@ The Steps
     a) Insert CD into drive D:
     b) Run D:\INSTALL\SETUP.EXE
 
-    The following instructions assume you have installed WISP in
-    directory C:\WISP44xx .  If you have installed WISP into a
-    different location the adjust the instructions accordingly.
+    The following instructions refer the the WISP installation 
+    directory as C:\WISPxxxx.  Adjust the instructions accordingly for 
+    your actual installation directory.
 
 2) Share the WISP directory using a Share Name of "WISP".  
 
-    a) In Explorer or File Manager select C:\WISP44xx
+    a) In Explorer or File Manager select C:\WISPxxxx
     b) From File menu select "Properties"
     c) From the Sharing tab, select "Share As:" Share Name: "WISP"
     d) Click OK
 
-3) Run Wconfig.exe to configure the server machine.
+3) Configure WISP on the server machine.
+    
+    To configure WISP you will need to either run WCONFIG.exe to 
+    setup the registry values or you will need to setup the equivalent
+    environment variables.  See the WISP manual for information on
+    configuring via environment variables. 
 
-    a) Run C:\WISP44xx\BIN\WCONFIG.EXE
+    To configure using WCONFIG.exe follow these instructions:
+
+    a) Run C:\WISPxxxx\BIN\WCONFIG.exe
     b) Answer the prompts.
 
        "Would you like to import configuration information from a
@@ -113,7 +120,7 @@ The Steps
        machine.  If it is shared with a Share Name of "USERS" then you
        can enter it as "\\SERVER01\users".
 
-       "TEMPDIR:"
+       "TMPDIR:"
 
        This is the directory where temporary files will be created. It
        should be located on a local drive like "C:" instead of a
@@ -125,67 +132,52 @@ The Steps
 4) Run Wlicense to install the WISP license.
 
     a) Ensure you have a WISP license key. 
-    b) Run C:\WISP44xx\BIN\WLICENSE.EXE
+    b) Run C:\WISPxxxx\BIN\WLICENSE.EXE
     c) Write down the machine id that is reported by Wlicense.
-    d) Call NeoMedia Technical support for a Validation Code.
+    d) Contact NeoMedia Technical support for a Validation Code.
        (mailto:support@neom.com)
     e) Enter the Valication Code to complete the license
        installation. 
 
 5) Build the Acucobol Runtime System
 
-    a) Ensure ACUCOBOL-GT V4.0 (or later) is installed and the
-       Acucobol BIN directory is on the PATH.
-
-          PATH %PATH%;C:\Acucorp\Acucbl520\Acugt\bin
+    a) Ensure ACUCOBOL-GT 6.0, 5.2, 5.1 or 5.0 is installed.
 
     b) Ensure MicroSoft Visual C++ 6 or later is installed.
 
-    c) Create an MSDOS/COMMAND prompt window
+    c) Follow the build instructions for your version of 
+       Acucobol.
 
-    d) In the MSDOS/COMMAND prompt window run the bat file
-       Vcvars32.bat that came with MS Visual C++. This bat
-       file enables you to compile and link C programs from
-       the command prompt. 
-       (Substitute path to Vcvars32.bat with the location used by
-       Visual C++) 
+       For Acucobol-GT 6.0 see:
+        - C:\WISPxxxx\acu\acu60\build_wisp_acu60_rts.txt
 
-       MSVC++ 6.x:
-          C:> "C:\Program Files\Microsoft Visual Studio\VC98\bin\
-	      Vcvars32.bat"
+       For Acucobol-GT 5.2 see:
+        - C:\WISPxxxx\acu\acu52\wrun32wisp_acu52.mak
 
-       NOTE: If you get an out-of-space message, click on the
-             properties button on the toolbar, go to the Memory tab,
-             set the Initial Environment size to 4096, click OK, close
-             the MSDOS/Command window, reopen and try again.
+       For Acucobol-GT 5.1 see:
+        - C:\WISPxxxx\acu\acu51\wrun32wisp_acu51.mak
 
-    e) Build the Acucobol runtime by following the instructions in
-       the makefile.
+       For Acucobol-GT 5.0 see:
+        - C:\WISPxxxx\acu\acu50\wrun32wisp_acu50.mak
 
-       If you are using ACUCOBOL-GT 5.2 then follow the
-       instructions in file C:\WISP44xx\ACU\WRUN32WISP_ACU52.MAK.
-
-       If you are using ACUCOBOL-GT 5.1 then follow the
-       instructions in file C:\WISP44xx\ACU\WRUN32WISP_ACU51.MAK.
-
-       If you are using ACUCOBOL-GT 4.2 or ealier then follow the
-       instructions in C:\WISP44xx\ACU\WWRUNCBL.MAK.
 
 6) Setup the WISPCONFIG files
 
    Follow the instructions in Appendix B of the WISP manual.
 
    Share the Acucobol installation directory. (E.g. Share
-   "C:\Acucorp\acucbl520" as "ACUCOBOL".)  
+   "C:\Acucorp\acucbl600\acugt") as "ACUDIR".  
 
    Edit the WRUN.CFG configuration file in the WISPCONFIG
    directory and change the RUNCBL= option to point to the new
    runtime system.
 
-          RUNCBL=\\SERVER01\ACUCOBOL\ACUGT\BIN\WRUN32WISP.EXE
+          RUNCBL=\\SERVER01\ACUDIR\BIN\WRUN32.EXE
+          or
+          RUNCBL=\\SERVER01\ACUDIR\BIN\WRUN32WISP.EXE
 
    Substitute the actual server and share name inplace of 
-   "\\SERVER01\ACUCOBOL" in the above example.
+   "\\SERVER01\ACUDIR" in the above example.
 
 7) Configure the client machines
 
@@ -195,7 +187,7 @@ The Steps
    The process can be simplified by "Exporting" the configuration to a
    text file then "Importing" the configuration on each machine.
 
-   a) On the server run C:\WISP44xx\BIN\WCONFIG.EXE
+   a) On the server run C:\WISPxxxx\BIN\WCONFIG.EXE
    b) Click on the "Export" button and enter a file name.
 
            \\SERVER01\WISP\wisp.reg

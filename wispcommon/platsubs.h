@@ -60,28 +60,23 @@ const char* WL_platform_name(void);
 const char* WL_platform_define(void);
 const char* WL_platform_code(void);
 
-/*
-**	Function Prototypes
-*/
-int 	valplat(char code[2]);
-int	plat_code(char code[2], char* name, int* num);
-void 	putplattab(void);
-
-/* Convert old style to new style names */
-
-#define valplat		WL_valplat
-#define plat_code	WL_plat_code
-#define putplattab	WL_putplattab
-
 
 #endif /* platsubs_H */
 
 /*
 **	History:
 **	$Log: platsubs.h,v $
-**	Revision 1.2.2.1  2003/02/07 18:40:09  gsl
-**	sync with $HEAD
+**	Revision 1.6  2003/02/07 18:29:19  gsl
+**	remove old prototype
+**	
+**	Revision 1.5  2003/02/07 17:55:21  gsl
 **	Rework the platform routines and add AIX HPUX SOLARIS 64-bit
+**	
+**	Revision 1.4  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.3  2002/07/09 04:14:04  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
 **	
 **	Revision 1.2  1996/07/24 22:57:53  gsl
 **	Move from wisp/lib to wisp/common

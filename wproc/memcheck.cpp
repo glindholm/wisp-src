@@ -11,16 +11,14 @@
 // Author : George Soules
 // Date   : 9 February 1991
 
-
-/* unused DOS routines deleted */
-
+/* DOS debug memory check routines deleted */
 
 
 //
 //	History:
 //	$Log: memcheck.cpp,v $
-//	Revision 1.9.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.10  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.9  1998/08/31 19:13:55  gsl
 //	drcs update

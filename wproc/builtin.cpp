@@ -1217,8 +1217,8 @@ void machine::exec_builtin() {
 //
 //	History:
 //	$Log: builtin.cpp,v $
-//	Revision 1.13.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.14  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.13  1998/08/31 19:13:33  gsl
 //	drcs update

@@ -1,24 +1,32 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
 */
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+
 
 /*
 **	File:		scrn.h
 **
 **	Purpose:	To hold Screen header info
 **
-**
-**	History:
-**	mm/dd/yy	Written by ...
 **
 */
 
@@ -75,6 +83,12 @@ extern item_record *find_item(char *the_name);
 /*
 **	History:
 **	$Log: scrn.h,v $
+**	Revision 1.10  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.9  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
 **	Revision 1.8  1997/09/09 21:55:04  gsl
 **	Change needed for ACN code
 **	

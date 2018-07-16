@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 #include <ctype.h>
@@ -40,11 +54,10 @@ static int4	retcode;
 
 static char sort_work[5];
 
-static char sccsid[]="@(#)rwsrt.c	1.7 11/15/93";
 
 
 static void build_sort_data(sr,idx)
-SORT *sr;
+RPT_ASORT *sr;
 int idx;
 {
 
@@ -80,7 +93,7 @@ KCSIO_BLOCK *kfb;
 }
 
 static void ext_sort_setup(sr,kfb)
-SORT *sr;
+RPT_ASORT *sr;
 KCSIO_BLOCK *kfb;
 {
 	int idx;
@@ -119,7 +132,7 @@ KCSIO_BLOCK *kfb;
 
 }
 
-void KCSI_call_ext_sort(SORT *sr,KCSIO_BLOCK *kfb)
+void KCSI_call_ext_sort(RPT_ASORT *sr,KCSIO_BLOCK *kfb)
 {
 	ext_sort_setup(sr,kfb);
 	WL_set_va_count(5);
@@ -138,8 +151,11 @@ void KCSI_ext_sort_close(KCSIO_BLOCK *kfb)
 /*
 **	History:
 **	$Log: rwsrt.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:37  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.12  2003/02/17 22:05:58  gsl
+**	Fix ambiguous SORT reference
+**	
+**	Revision 1.11  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.10  2002/10/24 15:48:31  gsl
 **	Make globals unique

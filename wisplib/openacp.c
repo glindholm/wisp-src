@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /********************************************************************************************************************************
 *																*
 *	openacp.c	Initialize logical connection between application program and telecommunications device.		*
@@ -8,120 +27,150 @@ static char rcsid[]="$Id:$";
 *			device id number.  Open the device using $ASSIGN system service.					*
 *			input:	destination	terminal name, up to 16 chars							*
 *																*
-*			output: rel_line	relative line number, (1-6), in WANG 4-byte binary format (wswap an int)	*
-*				ret_code	WANG 4-byte binary format return code (wswap an int)				*
+*			output: rel_line	relative line number, (1-6), in WANG 4-byte binary format (WL_wswap an int)	*
+*				ret_code	WANG 4-byte binary format return code (WL_wswap an int)				*
 *																*
 ********************************************************************************************************************************/
 
-#if defined(unix) || defined(VMS)					/* Defined for unix and VMS only.			*/
+#if defined(unix) 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "idsistd.h"
 #include "wispcfg.h"
 #include "paths.h"
+#include "wisplib.h"
 
 #define INIT_ACP							/* Declare global variable definitions from this module.*/
-#define __OPENACP
 #include "acp.h"
 #include "wmalloc.h"							/* Header file containing global variable definitions.	*/
 
-#ifdef VMS
-#include <descrip.h>							/* SYS$ASSIGN requires string descriptors.		*/
-#endif
 
-#ifdef unix
 #include <sys/types.h>
 #include <fcntl.h>
-struct termio otermacp,ntermacp;
-char the_ttyname[32];
-static int loadcfg();
-static char **splitstr(char *string);
-static int match();
-static void hexcnv();
-static int hexdig();
-static void chopspace();
-static int spaces();
-#endif	/* unix */
+
+struct matchstruc 
+{
+	char *string;
+	int val;
+};
+
+static char the_ttyname[32];
+
 
 static char cfgpath[100];
 
-OPENACP(destination,rel_line,ret_code)
+static char lname[17];
+static char ldevice[65];
+static char lweor[7];
+static char lreor1[7];  
+static char lreor2[7];  
+static char lreor3[7];  
+static char lbaud[6];   
+static char lparity;    
+static char lbits;      
+static char lstop;      
+static char lduplex;    
+static char lflow;     
 
-char	*destination;							/* WANG terminal name, up to 16 chars.			*/
-int4	*rel_line;							/* Index from 1 to 6 for later access to acp_term[].	*/
-int4	*ret_code;							/* WANG ACP return code.				*/
-
+static int parity,baud,stop,size,duplex,flow;
+static struct matchstruc parval[]=
 {
-	acp_term_id	*term_ptr,*getterm();				/* Pointer to the linked list.				*/
-	char 		*dest_term = 0;					/* VAX terminal line to be opened.			*/
-	char 		device_name[64];				/* VAX terminal line to be opened for descriptor.	*/
-	short		acp_channel;					/* I/O channel returned from SYS$ASSIGN.		*/
+	{ "-", 0 },
+	{ "n", 0 },
+	{ "N", 0 },
+	{ "e", PARENB },
+	{ "o", PARENB|PARODD },
+	{ "E", PARENB },
+	{ "O", PARENB|PARODD },
+	{ 0, 0 }
+};
+static struct matchstruc dupval[]=
+{
+	{ "f", ECHO },
+	{ "h", 0 },
+	{ "F", ECHO },
+	{ "H", 0 },
+        { 0, 0 }
+};        
+static struct matchstruc flowval[]=
+{
+	{ "X", 'x' },	/* Use XON/XOFF */
+	{ "x", 'x' },
+	{ "-", 'x' },
+	{ "N", 'n' },	/* Don't use XON/XOFF */
+	{ "n", 'n' },
+	{ "U", 'u' },	/* Don't change XON/XOFF */
+	{ "u", 'u' },
+        { 0, 0 }
+};        
+static struct matchstruc  baudval[]=
+{
+	{ "50",	   B50	  },
+	{ "75",	   B75	  },
+	{ "110",   B110   },
+	{ "150",   B150   },
+	{ "200",   B200   },
+	{ "300",   B300   },
+	{ "600",   B600   },
+	{ "1200",  B1200  },
+	{ "1800",  B1800  },
+	{ "2400",  B2400  },
+	{ "4800",  B4800  },
+	{ "9600",  B9600  },
+	{ "19200", B19200 },
+	{ "38400", B38400 },
+	{ 0, 0 }
+};
+static struct matchstruc  sizeval[]=
+{
+	{ "5", CS5 },
+	{ "6", CS6 },
+	{ "7", CS7 },
+	{ "8", CS8 },
+	{ 0, 0 }
+};
+static struct matchstruc  stopbval[]=
+{
+	{ "2", CSTOPB },
+	{ "1", 0 },
+	{ 0, 0 }
+};
+
+static int loadcfg(char *pname);
+static char **splitstr(char *string);
+static int match(char *str, struct matchstruc *list);
+static void hexcnv(char *dest,char *src);
+static int hexdig(char ch);
+static void chopspace(char *p);
+static int spaces(char *p);
+
+
+void OPENACP(
+	char	*destination,	/* WANG terminal name, up to 16 chars.			*/
+	int4	*rel_line,	/* Index from 1 to 6 for later access to acp_term[].	*/
+	int4	*ret_code)	/* WANG ACP return code.				*/
+{
+	acp_term_id	*term_ptr;					/* Pointer to the linked list.				*/
 	int		i,j,k;						/* Array indeces.					*/
 	int4		status;						/* Return status from SYS$ASSIGN			*/
-#ifdef unix
 	int fd,cfgstatus;
-	
-#endif	
 
-#ifdef VMS
-#include "openacp.d"
-#endif
 	*rel_line = 0;							/* Initialize the return values.			*/
 	*ret_code = 0;
 
 
-#ifdef VMS								/* acp_allocated == number of terminal lines allocated.	*/
-	if (!acp_allocated) bldacp();					/* Build the linked list from the file.			*/
 
-	if (!(term_ptr = getterm(destination)))				/* Get the term id, if NULL, destination is in error.	*/
-	{
-		*ret_code = 43;						/* 43 = Invalid or non-existent device.			*/
-		wswap(ret_code);					/* Swap words so the WANG can read it.			*/
-		return(0);						/* Return to application program.			*/
-	}
-	dest_term = term_ptr->acp_termnum;				/* Set pointer to VAX term id.				*/
-
-	/************************************************************************************************************************
-	*	Check if the requested acp term is in the array BEFORE checking max number of lines allocated, because if it	*
-	*	IS in the array even if the array is full, we want to tell them it's already opened and return successfully.	*
-	************************************************************************************************************************/
-
-	j = -1;								/* Give it an initial value.				*/
-
-	for(i=0;i<ACPMAXDEV;i++)					/* Search the whole array for matching destination line.*/
-		if (acp_term[i] != 0)
-			if ((j=strcmp(dest_term,acp_term[i])) == 0) break;
-
-	if (j == 0)							/* It is already in the array.				*/
-	{
-		*ret_code = 44;						/* 44 = Destination in use (previously opened).		*/
-		wswap(ret_code);					/* Swap words so the WANG can read it.			*/
-		*rel_line = i+1;					/* Return its relative line number too.			*/
-		wswap(rel_line);					/* Swap words so the WANG can read it.			*/
-		return(0);						/* Return to application program.			*/
-	}
-
-	if (acp_allocated == ACPMAXDEV)					/* All lines already allocated.				*/
-	{
-		*ret_code = 24;						/* 24 = Maximum number of destination lines in use.	*/
-		wswap(ret_code);					/* Swap words so the WANG can read it.			*/
-		return(0);						/* Return to application program.			*/
-	}
-
-	strcpy(device_name,dest_term);					/* Prepare the descriptor.				*/
-	status=sys$assign(&d_desc,&acp_channel,0,0);			/* Assign I/O channel.					*/
-#endif
-#ifdef unix
 	if ((cfgstatus=loadcfg(destination))<0)				/* load cfgfile and get info for list destination */
 	{
 		*ret_code = -cfgstatus;
-		wswap(ret_code);
-		return(0);
+		WL_wswap(ret_code);
+		return;
 	}
-	term_ptr=getterm();
+	term_ptr = &acp_term_struct; /* was acp_getterm() */
 	if ((fd=open(the_ttyname,O_RDWR))<0) 
 	{
 		perror("open");
@@ -137,41 +186,34 @@ int4	*ret_code;							/* WANG ACP return code.				*/
 		}
 		else
 		{
-			ioctl(fd,TCGETA,&otermacp);					/* save settings for restore at close */
-			ioctl(fd,TCGETA,&ntermacp);					/* make a copy to play with  */
+			ioctl(fd,TCGETA,&acp_oterm);					/* save settings for restore at close */
+			ioctl(fd,TCGETA,&acp_nterm);					/* make a copy to play with  */
 			switch (flowval[flow].val)
 			{
 			default:
 			case 'x':
-				ntermacp.c_iflag = IGNBRK|IXON|IXOFF;			/* Use XON/XOFF				*/
+				acp_nterm.c_iflag = IGNBRK|IXON|IXOFF;			/* Use XON/XOFF				*/
 				break;
 			case 'n':
-				ntermacp.c_iflag = IGNBRK;				/* Don't use XON/XOFF			*/
+				acp_nterm.c_iflag = IGNBRK;				/* Don't use XON/XOFF			*/
 				break;
 			case 'u':							/* Don't change config			*/
 				/* Don't change input config */
 				break;
 			}
-			ntermacp.c_oflag = 0;
-			ntermacp.c_cflag = baudval[baud].val|sizeval[size].val|stopbval[stop].val|parval[parity].val|CLOCAL|CREAD;
-			ntermacp.c_lflag = 0 /* dupval[duplex].val */ ;
-			ntermacp.c_cc[VTIME] = 0;
-			ntermacp.c_cc[VMIN] = 1;
-			ioctl(fd,TCSETA,&ntermacp);
+			acp_nterm.c_oflag = 0;
+			acp_nterm.c_cflag = baudval[baud].val|sizeval[size].val|stopbval[stop].val|parval[parity].val|CLOCAL|CREAD;
+			acp_nterm.c_lflag = 0 /* dupval[duplex].val */ ;
+			acp_nterm.c_cc[VTIME] = 0;
+			acp_nterm.c_cc[VMIN] = 1;
+			ioctl(fd,TCSETA,&acp_nterm);
 		}
 	}
 	
-#endif	
 
 	switch (status)							/* Finish processing according to possible statuses.	*/
 	{
-#ifdef VMS		
-		case SS$_NORMAL:					/* I/O channel successfully allocated.			*/
-		case SS$_REMOTE:					/* I/O channel successfully allocated on remote node.	*/
-#endif
-#ifdef unix
 	        case 0:
-#endif		
 		{
 			for (i=0;i<ACPMAXDEV;i++)			/* Point i to first available element in array.		*/
 			{
@@ -183,71 +225,47 @@ int4	*ret_code;							/* WANG ACP return code.				*/
 			for(j=0;j<3;j++)				/* Set read EOR sequences.				*/
 				for(k=0;k<4;k++)
 					 acp_reor[i][j][k] = term_ptr->acp_reorseq[j][k];
-#ifdef VMS
-			acp_ch[i] = acp_channel;			/* Add new channel to acp_ch[].				*/
-#endif
-#ifdef unix
 			acp_ch[i] = fd;					/* Add new channel to acp_ch[].				*/
 			acp_blockmode[i] = BLOCKING;
-			acp_devname[i] = wstrdup(the_ttyname);
-#endif
+			acp_devname[i] = wisp_strdup(the_ttyname);
 			for(j=0;j<4;j++) acp_iosb[i][j] = 0;		/* Clear I/O status block.				*/
 			acp_ef[i] = 0;					/* Clear event flag.					*/
 			*rel_line = i+1;				/* Set the relative line number.			*/
- wswap(rel_line);				/* Swap words so the WANG can read it.			*/
+			WL_wswap(rel_line);				/* Swap words so the WANG can read it.			*/
 			acp_allocated++;				/* Increment number of lines allocated.			*/
 			*ret_code = 0;					/* Return to application program successful completion.	*/
 			break;
 		}
-#ifdef VMS
-		case SS$_ACCVIO:
-		case SS$_DEVACTIVE:
-		case SS$_DEVNOTMBX:
-		case SS$_IVDEVNAM:
-		case SS$_IVLOGNAM:
-		case SS$_NOSUCHDEV:
-		case SS$_NOSUCHNODE:
-#endif
-#ifdef unix
 		case ENOENT:
 		case ENXIO:
 		case ENODEV:
 		case ENOTTY:
-#endif
 		{
 			*ret_code = 43;					/* 43 = Invalid or non-existent device.			*/
-			wswap(ret_code);				/* Swap words so the WANG can read it.			*/
+			WL_wswap(ret_code);				/* Swap words so the WANG can read it.			*/
 			break;
 		}
-#ifdef VMS		
-		case SS$_DEVALLOC:
-		case SS$_FILALRACC:
-#endif 
-#ifdef unix
 	        case EPERM:
 	        case EACCES:
-#endif		
 		{
 			*ret_code = 45;					/* 45 = Device in use.					*/
-			wswap(ret_code);				/* Swap words so the WANG can read it.			*/
+			WL_wswap(ret_code);				/* Swap words so the WANG can read it.			*/
 			break;
 		}
 		default:
 		{
-			*ret_code = 14+ status <<8;			/* 14 = Connection failure.				*/
-			wswap(ret_code);				/* Swap words so the WANG can read it.			*/
+			*ret_code = 14+ (status <<8);			/* 14 = Connection failure.				*/
+			WL_wswap(ret_code);				/* Swap words so the WANG can read it.			*/
 			break;
 		}
 	}
 }
 
-#ifdef unix
-static int loadcfg(pname)
-char *pname;
+static int loadcfg(char *pname)
 {
 	char *tmp,linebuf[200],**fields;
 	FILE *cfg;
-	int len,foundit=0,i;
+	int len,foundit=0;
 	char name[17];
 	
 	memcpy(name,pname,16);
@@ -256,9 +274,9 @@ char *pname;
 	if (tmp) *tmp=(char)0;
 	len=strlen(name);
 
-	strcpy(cfgpath,acpconfigdir());
+	strcpy(cfgpath,WL_acpconfigdir());
 	strcat(cfgpath,DIR_SEPARATOR_STR);
-	strcat(cfgpath,acpmapfile());
+	strcat(cfgpath,WL_acpmapfile());
 	if ((cfg=fopen(cfgpath,"r"))==NULL)
 	{
 		return -14;						/* no config file */
@@ -309,9 +327,10 @@ char *pname;
 		acp_term_struct.acp_reorseq[2][0]=(char)strlen(fields[EOR3_FIELD])/2;
 	}
 	else acp_term_struct.acp_reorseq[2][0]=0;
+
+	return 0;
 }
-static void hexcnv(dest,src)
-char *dest,*src;
+static void hexcnv(char *dest,char *src)
 {
 	while (*src)
 	{
@@ -320,8 +339,7 @@ char *dest,*src;
 		++src; ++src;
 	}
 }
-static int hexdig(ch)
-char ch;
+static int hexdig(char ch)
 {
 	if (ch>='0' && ch<='9') 
 	{
@@ -359,9 +377,7 @@ static char **splitstr(char *string)
 	
 	return ptr;
 }
-static int match(str,list)
-char *str;
-struct matchstruc *list;
+static int match(char *str, struct matchstruc *list)
 {
 	int 	i;
 	char 	tmp[20],*p;
@@ -387,9 +403,7 @@ struct matchstruc *list;
 	return 0;								/* No match.					*/
 }
 
-SETACP(info,ret)
-struct acpinfo_cbl *info;
-int *ret;
+void SETACP(struct acpinfo_cbl *info, int *ret)
 {
 	FILE *acpmap,*tmpfile;
 	char tmppath[64],*tmp,linebuf[200];
@@ -435,10 +449,10 @@ int *ret;
 	chopspace(lreor3);
 	chopspace(lbaud);
 	
-	strcpy(cfgpath,acpconfigdir());
-	sprintf(tmppath,"%s%sacp%d",cfgpath,DIR_SEPARATOR_STR,getpid());
+	strcpy(cfgpath,WL_acpconfigdir());
+	sprintf(tmppath,"%s%sacp%ld",cfgpath,DIR_SEPARATOR_STR,(long)getpid());
 	strcat(cfgpath,DIR_SEPARATOR_STR);
-	strcat(cfgpath,acpmapfile());
+	strcat(cfgpath,WL_acpmapfile());
 
 	if ((fd=open(cfgpath,O_RDONLY))<0)    /* create the ACPMAP file if it doesn't exist */
 	{
@@ -449,7 +463,7 @@ int *ret;
 			{
 				rc = 14;
 				memcpy(ret,&rc,4);					/* no config file */
-				wswap(ret);
+				WL_wswap(ret);
 				return;
 			}
 			close(fd);
@@ -463,14 +477,14 @@ int *ret;
 	{
 		rc = 14;
 		memcpy(ret,&rc,4);					/* no config file */
-		wswap(ret);
+		WL_wswap(ret);
 		return;
 	}  
 	if ((tmpfile=fopen(tmppath,"w"))==NULL)
 	{
 		rc = 1;
 		memcpy(ret,&rc,4);					/* can't create tmp file */
-		wswap(ret);
+		WL_wswap(ret);
 		return;
 	}
 	tmp=strchr(lname,' ');
@@ -503,20 +517,18 @@ int *ret;
 	fclose(acpmap);
 	fclose(tmpfile);
 	
-	unlink(cfgpath);
+	wisp_unlink(cfgpath);
 	link(tmppath,cfgpath);
-	unlink(tmppath);
+	wisp_unlink(tmppath);
 
 	rc = 0;
 	memcpy(ret,&rc,4);
-	wswap(ret);
+	WL_wswap(ret);
 	return;
 }
-GETACP(info,ret)
-struct acpinfo_cbl *info;
-int *ret;
+void GETACP(struct acpinfo_cbl *info,int *ret)
 {
-	FILE *acpmap,*debug;
+	FILE *acpmap;
 	char *tmp,**fields,name[17],linebuf[200];
 	int foundit,len;
 	int intbaud;
@@ -528,14 +540,14 @@ int *ret;
 	if (tmp) *tmp=(char)0;
 	len=strlen(name);
 
-	strcpy(cfgpath,acpconfigdir());
+	strcpy(cfgpath,WL_acpconfigdir());
 	strcat(cfgpath,DIR_SEPARATOR_STR);
-	strcat(cfgpath,acpmapfile());
+	strcat(cfgpath,WL_acpmapfile());
 	if ((acpmap=fopen(cfgpath,"r"))==NULL)
 	{
 		rc = 14;
 		memcpy(ret,&rc,4);					/* no config file */
-		wswap(ret);
+		WL_wswap(ret);
 		return;
 	}
 	foundit=0;
@@ -556,7 +568,7 @@ int *ret;
 	{
 		rc = 4;
 		memcpy(ret,&rc,4);					/* NODE not found	*/
-		wswap(ret);
+		WL_wswap(ret);
 		return;
 	}
 
@@ -585,11 +597,10 @@ int *ret;
 
 	rc = 0;
 	memcpy(ret,&rc,4);
-	wswap(ret);
+	WL_wswap(ret);
 	return;
 }
-static void chopspace(p)
-char *p;
+static void chopspace(char *p)
 {
 	char *tmp;
 	
@@ -601,8 +612,7 @@ char *p;
 	tmp=strchr(p,' ');
 	if (tmp) *tmp=(char)0;
 }	
-static int spaces(p)
-char *p;
+static int spaces(char *p)
 {
 	do
 	{
@@ -615,15 +625,47 @@ char *p;
 
 #endif	/* unix */
 
-#endif	/* unix or VMS */
 /*
 **	History:
 **	$Log: openacp.c,v $
+**	Revision 1.25  2003/02/04 16:30:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.24  2003/01/31 19:02:51  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.23  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.22  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.21  2002/12/11 17:03:07  gsl
+**	use wisp_unlink()
+**	
+**	Revision 1.20  2002/07/12 17:00:58  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.19  2002/07/11 14:41:07  gsl
+**	Fix acp getterm()
+**	
+**	Revision 1.18  2002/07/11 14:33:19  gsl
+**	Cleanup ACP globals
+**	
+**	Revision 1.17  2002/07/10 21:05:21  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.16  2002/07/02 21:15:27  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.15  2002/06/26 01:42:46  gsl
+**	Remove VMS code
+**	
 **	Revision 1.14  1996/10/10 16:07:01  gsl
 **	fix prototype errors
 **	
 **	Revision 1.13  1996-10-08 17:23:20-07  gsl
-**	replace getenv() with acpconfigdir() and acpmapfile() calls
+**	replace getenv() with WL_acpconfigdir() and WL_acpmapfile() calls
 **
 **	Revision 1.12  1996-08-19 15:32:36-07  gsl
 **	drcs update

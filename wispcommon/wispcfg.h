@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1996-1997 NeoMedia Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 /*
@@ -36,16 +56,16 @@ const char* wispenvpath(void);
 const char* wisplinkpath(void);
 const char* wispdefdrive(void);
 const char* wisptmpbasedir(char *dir);
-const char* wtmpdir(char *dir);
+const char* WL_systmpdir(char *dir);
 int wispsortmemk(void);
 const char* wispcpu(void);
 const char* wispnetid(void);
-char* weditorexe(void);
-char* wprocexe(void);
-char* wprocflags(void);
+const char* WL_weditorexe(void);
+const char* WL_wprocexe(void);
+const char* WL_wprocflags(void);
 char* wispshellexe(void);
-const char* acpconfigdir(void);
-const char* acpmapfile(void);
+const char* WL_acpconfigdir(void);
+const char* WL_acpmapfile(void);
 const char* wispscratchmode(void);
 int wispdisplay8bit(void);
 const char* wispmenudir(void);
@@ -55,9 +75,9 @@ const char* wisptermfilepath(char *the_path);
 #ifdef WIN32
 const char* wispmsgsharedir(char *the_dir);
 #endif
-const char* acu_vutil_exe(void);
+const char* WL_acu_vutil_exe(void);
 const char* wispdir(void);
-int no_windows(void);
+int WL_no_windows(void);
 int wisptelnet(void);
 const char* wisprcfilepath(void);
 
@@ -66,8 +86,27 @@ const char* wisprcfilepath(void);
 /*
 **	History:
 **	$Log: wispcfg.h,v $
-**	Revision 1.11.2.1  2003/02/14 16:55:25  gsl
-**	Add check to ensure $WISPCONFIG is set
+**	Revision 1.16  2003/02/14 16:12:07  gsl
+**	Define a value for testing is $WISPCONFIG is not set
+**	
+**	Revision 1.15  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.14  2002/12/04 20:52:18  gsl
+**	Add to OPTIONS file
+**	WPROC
+**	WPROCDEBUG
+**	ACPCONFIG
+**	ACPMAP
+**	WISP_SCRATCH_MODE/WISPSCRATCHMODE
+**	WISP_DISPLAY_8BIT/DISPLAY8BIT/WISPDISPLAY8BIT
+**	WISPSYSADMIN
+**	
+**	Revision 1.13  2002/07/10 21:06:35  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.12  2002/07/09 04:14:02  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
 **	
 **	Revision 1.11  2001/10/31 20:27:39  gsl
 **	Add wisprcfilepath()

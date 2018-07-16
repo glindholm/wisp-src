@@ -89,5 +89,9 @@ SOURCE=..\doc\portwin32.txt
 
 SOURCE=.\shipnt.mak
 # End Source File
+# Begin Source File
+
+SOURCE=.\wispship.umf
+# End Source File
 # End Target
 # End Project

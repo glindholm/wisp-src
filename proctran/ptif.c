@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #define EXT extern
 
 /* PG_IF.C	*/
@@ -50,6 +73,11 @@ void p_if_kw(int tndx,
 			else if (tndx == IFNEQ) cond = 'N';
 			else if (tndx == IFNLT) cond = 'B';
 			else if (tndx == IFNGT) cond = 'C';
+			else
+			{
+				write_log("PROCTRAN",'E','R',"INVALID","Invalid if keyword.");
+				break;
+			}
 
 			cur_if->cond[0] = cond;						/* Assign it to the structure.		*/
 			cur_if->cond[1] = '\0';						/* Null terminate the string.		*/
@@ -204,7 +232,7 @@ void save_if_var(int* num_var,
 		 int* current_row,
 		 int* num_cmds)				/* Proccess IF variable.		*/
 {
-	char *lptr, *cstr, ptyp;
+	char *lptr, *cstr, ptyp = '\0';
 	int len, pos, fndlbl, cont;
 	paragraph_item *pptr;
 	int setfl;
@@ -644,11 +672,19 @@ static void process_complex_sub(char type,
 /*
 **	History:
 **	$Log: ptif.c,v $
+**	Revision 1.11  2003/02/05 21:15:03  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.10  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.9  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
 **	Revision 1.8  1997/04/21 15:10:54  scass
 **	Corrected copyright.
 **	
 **	Revision 1.7  1996-12-12 13:37:44-05  gsl
-**	DevTech -> NeoMedia
 **
 **	Revision 1.6  1996-09-12 16:17:13-07  gsl
 **	fix prototypes

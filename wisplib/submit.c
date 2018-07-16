@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		submit.c
@@ -13,7 +34,7 @@ static char rcsid[]="$Id:$";
 **	Routines:	SUBMIT()		The SUBMIT routine
 **			SETSUBMIT()		Sets up parameters for next SUBMIT
 **			unix_submit()		The unix implementation of SUBMIT
-**			fixerr()		Fix the unix error codes to be Wang error codes
+**			fix_exec_errno()	Fix the unix error codes to be Wang error codes
 **
 */
 
@@ -26,7 +47,7 @@ static char rcsid[]="$Id:$";
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <varargs.h>
+#include <stdarg.h>
 
 #ifdef unix
 #include <sys/types.h>
@@ -39,11 +60,11 @@ static char rcsid[]="$Id:$";
 #endif
 
 #include "submit.h"
+#include "vssubs.h"
 #include "idsistd.h"
 #include "idsisubs.h"
 #include "wcommon.h"
 #include "wperson.h"
-#include "movebin.h"
 #include "werrlog.h"
 #include "wdefines.h"
 #include "wglobals.h"
@@ -72,16 +93,6 @@ static char rcsid[]="$Id:$";
 **	Structures and Defines
 */
 
-#define WPERM 28
-#define WFNOTFOUND 20
-#define WIOERR 44
-#define WNOTMTD 4
-#define WINVPROG 52
-#define WLEXCEED 24
-#define WNOMEM 60
-#define WVOLBUSY 8
-#define WDNOTFOUND 16
-
 /*
 **	Globals and Externals
 */
@@ -93,7 +104,9 @@ static char rcsid[]="$Id:$";
 /*
 **	Static Function Prototypes
 */
+#ifdef WIN32
 static int subvar(char* buff, const char* var, const char* value);
+#endif
 
 #ifdef unix
 static int unix_submit(
@@ -104,7 +117,7 @@ static int unix_submit(
 	char	jobdisp,	/* the jobclass, status, disposition    */
 	char	*p_vol,		/* PROGVOL				*/
 	char	*p_lib);	/* PROGLIB				*/
-static int fixerr();
+static int fix_exec_errno(int err);
 #endif
 
 #ifdef WIN32
@@ -118,16 +131,31 @@ static int win32_submit(
 	char	*p_lib);	/* PROGLIB				*/
 #endif
 
-/* 				SUBMIT a command procedure to the standard batch queue						*/
+/*
+	SUBMIT() - SUBMIT a command procedure to the standard batch queue
 
-void SUBMIT(va_alist)									/* Variable number of arguments.	*/
-va_dcl											/* Define the list structure.		*/
+	Arg2 thru arg11 are optional but if any are included all preceding
+	must also be included.
+
+	arg1	file		alpha	8
+	arg2	library		alpha	8
+	arg3	volume		alpha	6
+	arg4	job_name	alpha	8
+	arg5	status		alpha	1
+	arg6	disposition	alpha	1
+	arg7	job_class	alpha	1
+	arg8	abort_action	alpha	1	IGNORED	
+	arg9	cpu_time_limit	int	4	IGNORED	
+	arg10	limit_flag	alpha	1	IGNORED	
+	arg11	priority	int	4	IGNORED	
+	arg12	return_code	int	4
+*/
+
+void SUBMIT(char* l_file, ...)
 {
-#define		ROUTINE		64000
 	va_list the_args;								/* Define a pointer to the list.	*/
 	int arg_count, args_remaining;							/* Number of arguments.			*/
-	char *l_file,									/* Address of the filename.		*/
-	     l_lib[9],									/* Local library name.			*/
+	char l_lib[9],									/* Local library name.			*/
 	     l_vol[7],									/* Local volume name.			*/
 	     *l_job_name,								/* Address of the job name.		*/
 	     l_status,									/* Address of the job submit status.	*/
@@ -139,63 +167,76 @@ va_dcl											/* Define the list structure.		*/
 
 	char *end_name;
 
-	int  *l_cpu_limit,								/* Address of 4 byte int. value.	*/
+	int4 *l_cpu_limit,								/* Address of 4 byte int. value.	*/
  	     *l_return_code,								/* Address of 4 byte return code value.	*/
 	     dummy_return_code;
+	int4 *dummy_int4;
 
 	int4 rc;
-	int cpulim;
+	int4 cpulim;
 	char name[132];
 	int4 mode;
 	char jobname[9];
 	int4 wang_retcod;								/* Value expected from Wang COBOL.	*/
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
+	arg_count = WL_va_count();
+	WL_wtrace("SUBMIT","ENTRY", "File=[%8.8s] args=%d", l_file, arg_count);
 
-	va_start(the_args);								/* Set pointer to top of stack.		*/
-	arg_count = va_count(the_args);							/* Determine the number of arguments.	*/
-	args_remaining = arg_count;							/* Set a working variable.		*/
-	va_start(the_args);								/* Reset pointer to top of stack.	*/
+	/* arg1	file	alpha	8 */
+	va_start(the_args, l_file);
+	args_remaining = arg_count - 1;							/* Set a working variable.		*/
 
-	l_file = va_arg(the_args, char*);						/* Get address of the filename.		*/
-	args_remaining--;								/* One less argument.			*/
+	WL_load_options();								/* Get usage constants.			*/
+	wang_retcod = SUBMIT_RC_0_SUCCESS;
 
-	load_options();									/* Get usage constants.			*/
-	wang_retcod = 0;
+	memset( l_vol, ' ', SIZEOF_VOL );
+	memset( l_lib, ' ', SIZEOF_LIB );
 
-	memset( l_vol, ' ', 6 );
-	memset( l_lib, ' ', 8 );
-
+	/* arg2	library	alpha	8 */
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
 	{
 		ptr = va_arg(the_args, char*);						/* Get address of the library name.	*/
 		args_remaining--;							/* One less argument.			*/
 		if (ptr)
 		{
-			memcpy(l_lib,ptr,8);
+			memcpy(l_lib,ptr,SIZEOF_LIB);
+			leftjust(l_lib,SIZEOF_LIB);
 		}
 	}
 	if (l_lib[0] == ' ') 
 	{
-		get_defs(DEFAULTS_PL,l_lib);						/* Get the PROGLIB default.		*/
+		WL_get_defs(DEFAULTS_PL,l_lib);						/* Get the PROGLIB default.		*/
 	}
-	l_lib[8] = '\0';
+	l_lib[SIZEOF_LIB] = '\0';
+	if (l_lib[0] == ' ') 
+	{
+		WL_wtrace("SUBMIT","BLANKLIB", "LIBRARY is blank and PROGLIB is not set");
+		wang_retcod = SUBMIT_RC_56_INVALID_OPTIONS;
+	}
 
+	/* arg3	volume	alpha	6 */
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
 	{
 		ptr = va_arg(the_args, char*);						/* Get address of the volume name.	*/
 		args_remaining--;							/* One less argument.			*/
 		if (ptr)
 		{
-			memcpy(l_vol,ptr,6);
+			memcpy(l_vol,ptr,SIZEOF_VOL);
+			leftjust(l_vol,SIZEOF_VOL);
 		}
 	}
 	if (l_vol[0] == ' ') 
 	{
-		get_defs(DEFAULTS_PV,l_vol);						/* Get the PROGVOL default.		*/
+		WL_get_defs(DEFAULTS_PV,l_vol);						/* Get the PROGVOL default.		*/
 	}
-	l_vol[6] = '\0';
+	l_vol[SIZEOF_VOL] = '\0';
+	if (l_vol[0] == ' ') 
+	{
+		WL_wtrace("SUBMIT","BLANKVOL", "VOLUME is blank and PROGVOL is not set");
+		wang_retcod = SUBMIT_RC_56_INVALID_OPTIONS;
+	}
 
+	/* arg4	job_name alpha	8 */
 	memcpy(jobname, l_file, 8);							/* Job name defaults to file name	*/
 	jobname[8] = '\0';
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
@@ -210,26 +251,29 @@ va_dcl											/* Define the list structure.		*/
 		}
 	}
 
+	/* arg5	status	alpha	1 */
 	l_status = ' ';
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
 	{
 		l_status = *va_arg(the_args, char*);					/* Get address of the status value.	*/
 		args_remaining--;							/* One less argument.			*/
-		if (!strchr("RH ",l_status)) wang_retcod = SUBMIT_ERR_STATUS;		/* If invalid status.			*/
+		if (!strchr("RH ",l_status)) wang_retcod = SUBMIT_RC_900_INVALID_STATUS;/* If invalid status.			*/
 	}
 	if (l_status == ' ')
 	{
-		get_defs(DEFAULTS_JS,&l_status);
+		WL_get_defs(DEFAULTS_JS,&l_status);
 	}
 
+	/* arg6	disposition	alpha	1 */
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
 	{
 		l_disposition = *va_arg(the_args, char*);				/* Get the address of the disp. value.	*/
 		args_remaining--;							/* One less argument.			*/
-		if (!strchr("DRPO",l_disposition)) wang_retcod = SUBMIT_ERR_DISP;	/* If invalid disposition.		*/
+		if (!strchr("DRPO",l_disposition)) wang_retcod = SUBMIT_RC_901_INVALID_DISP;	/* If invalid disposition.		*/
 	}
 	else	l_disposition = 'D';
 
+	/* arg7	job_class	alpha	1 */
 	l_job_class = ' ';
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
 	{
@@ -237,77 +281,41 @@ va_dcl											/* Define the list structure.		*/
 		args_remaining--;							/* One less argument.			*/
 		if (!strchr("ABCDEFGHIJKLMNOPQRSTUVWXYZ ",l_job_class)) 
 		{
-			wang_retcod = SUBMIT_ERR_CLASS; 				/* If invalid job class.		*/
+			wang_retcod = SUBMIT_RC_902_INVALID_JOBCLASS; 			/* If invalid job class.		*/
 		}
 		
 	}
 	if (l_job_class == ' ')
 	{
-		get_defs(DEFAULTS_JC,&l_job_class);
+		WL_get_defs(DEFAULTS_JC,&l_job_class);
 	}
 
+	/* arg8	abort_action	alpha	1 */
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
 	{
+		/* IGNORED */
 		l_abort_action = *va_arg(the_args, char*);				/* Get address of abort action value.	*/
 		args_remaining--;							/* One less argument.			*/
-		if (!strchr("DNR",l_abort_action)) wang_retcod = SUBMIT_ERR_ABORT;	/* If invalid abort action.		*/
+		if (!strchr("DNR",l_abort_action)) wang_retcod = SUBMIT_RC_903_INVALID_ABORTACT; /* If invalid abort action.		*/
 	}
 	else	l_abort_action = 'R';
 
+	/* arg9	cpu_time_limit	int	4 */
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
 	{
-		l_cpu_limit = va_arg(the_args, int*);					/* Get address of the cpu time limit.	*/
+		/* IGNORED */
+		l_cpu_limit = va_arg(the_args, int4*);					/* Get address of the cpu time limit.	*/
 		args_remaining--;							/* One less argument.			*/
-		if ((*l_cpu_limit < 0 && *l_cpu_limit != -1) || *l_cpu_limit > 99 )	/* If invalid CPU time limit.		*/
-		{
-			wang_retcod = SUBMIT_ERR_TIME;
-		}
 	}
 	else	l_cpu_limit = 0;
 
-	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
-	{
-		l_cpu_limit_action = *va_arg(the_args, char*);				/* Get address of the cpu limit action.	*/
-		args_remaining--;							/* One less argument.			*/
-		if (!strchr("CPW",l_cpu_limit_action)) wang_retcod = SUBMIT_ERR_LIMIT;	/* If invalid limit flag.		*/
-	}
-	else	l_cpu_limit_action = 'W';
-         
-	/*
-	**	The RETURN-CODE is NOT an optional argument.  However there is an error in the Wang VSSUB manual which
-	**	says it is an optional argument. (The examples show otherwise.)
-	*/
-	if (args_remaining >= 1)							/* Are we at the last arg ?		*/
-	{
-		l_return_code = va_arg(the_args, int*);					/* Get the address of the return code.	*/
-	}
-	else
-	{
-		l_return_code = &dummy_return_code;
-	}
-
-	wtrace("SUBMIT","ARGS","File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] JN=[%8.8s] Status=%c Disp=%c Class=%c",
-	       l_file, l_lib, l_vol, jobname, l_status, l_disposition, l_job_class);
-
-	if (wang_retcod)								/* If the return code has been set	*/
-	{
-		wswap( &wang_retcod );							/* Set up so is returned correctly.	*/
-		PUTBIN(l_return_code,&wang_retcod,sizeof(int4));
-		return;
-	}
-
-	mode = IS_SUBMIT;
-	end_name = wfname(&mode,l_vol,l_lib,l_file,name);				/* now make a name for ourselves...	*/
-	*end_name = '\0';								/* Null terminate properly.		*/
-
 	if (l_cpu_limit)
 	{
-		cpulim = *l_cpu_limit;
-		wswap(&cpulim);								/* Get requested cpu limit. (1/100 sec)	*/
+		cpulim = WL_get_swap(l_cpu_limit);					/* Get requested cpu limit. (1/100 sec)	*/
 		if (cpulim == -1)							/* Use usage constants.			*/
 		{
 			char	def_proc_cpu[6];
-			get_defs(DEFAULTS_JL,def_proc_cpu);
+			WL_get_defs(DEFAULTS_JL,def_proc_cpu);
 
 			cpulim  = (def_proc_cpu[0] - '0') * 36000;			/* Do tens of hours.			*/
 			cpulim += (def_proc_cpu[1] - '0') * 3600;			/* Do hours.				*/
@@ -317,25 +325,75 @@ va_dcl											/* Define the list structure.		*/
 			cpulim += (def_proc_cpu[5] - '0');				/* Seconds.				*/
 			cpulim *= 100;							/* Time is in hundredths.		*/
 		}
+		else if (cpulim < 0 )	/* If invalid CPU time limit.		*/
+		{
+			wang_retcod = SUBMIT_RC_904_INVALID_TIME;
+		}
 	}
 	else
 	{
 		cpulim = 0;
 	}
 
+	/* arg10	limit_flag	alpha	1 */
+	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
+	{
+		/* IGNORED */
+		l_cpu_limit_action = *va_arg(the_args, char*);				/* Get address of the cpu limit action.	*/
+		args_remaining--;							/* One less argument.			*/
+		if (!strchr("CPW",l_cpu_limit_action)) wang_retcod = SUBMIT_RC_905_INVALID_LIMIT;	/* If invalid limit flag.		*/
+	}
+	else	l_cpu_limit_action = 'W';
+         
+	/* arg11	priority	int	4 */
+	if (args_remaining > 1)
+	{
+		/* IGNORED */
+		dummy_int4 = va_arg(the_args, int4*);
+		args_remaining--;
+	}
+
+	/* arg12	return_code	int	4 */
+	/*
+	**	The RETURN-CODE is NOT an optional argument.  However there is an error in the Wang VSSUB manual which
+	**	says it is an optional argument. (The examples show otherwise.)
+	*/
+	if (args_remaining >= 1)							/* Are we at the last arg ?		*/
+	{
+		l_return_code = va_arg(the_args, int4*);				/* Get the address of the return code.	*/
+	}
+	else
+	{
+		l_return_code = &dummy_return_code;
+	}
+	va_end(the_args);
+
+	WL_wtrace("SUBMIT","ARGS","File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] JN=[%8.8s] Status=%c Disp=%c Class=%c",
+	       l_file, l_lib, l_vol, jobname, l_status, l_disposition, l_job_class);
+
+	if (wang_retcod)								/* If the return code has been set	*/
+	{
+		WL_wtrace("SUBMIT","RETURN","Return code = %d", wang_retcod);
+		WL_put_swap(l_return_code, wang_retcod);
+		return;
+	}
+
+	mode = 0;
+	end_name = WL_wfname(&mode,l_vol,l_lib,l_file,name);				/* now make a name for ourselves...	*/
+	*end_name = '\0';								/* Null terminate properly.		*/
+
 #ifdef unix
-	wtrace("SUBMIT","UNIX","Filespec=[%s] PV=[%6.6s] PL=[%8.8s]", name, l_vol, l_lib);
+	WL_wtrace("SUBMIT","UNIX","Filespec=[%s] PV=[%6.6s] PL=[%8.8s]", name, l_vol, l_lib);
 	rc = unix_submit(name,jobname,l_job_class,l_status,l_disposition,l_vol,l_lib);
 #endif
 #ifdef WIN32
-	wtrace("SUBMIT","WIN32","Filespec=[%s] PV=[%6.6s] PL=[%8.8s]", name, l_vol, l_lib);
+	WL_wtrace("SUBMIT","WIN32","Filespec=[%s] PV=[%6.6s] PL=[%8.8s]", name, l_vol, l_lib);
 	rc = win32_submit(name,jobname,l_job_class,l_status,l_disposition,l_vol,l_lib);
 #endif
 
-	wtrace("SUBMIT","RETURN","Return code = %d", rc);
+	WL_wtrace("SUBMIT","RETURN","Return code = %d", rc);
 
-	wswap(&rc);
-	PUTBIN(l_return_code,&rc,sizeof(int4));
+	WL_put_swap(l_return_code, rc);
 }
 
 /* These are referenced by que_job, and must be declared the same.								*/
@@ -343,53 +401,53 @@ va_dcl											/* Define the list structure.		*/
 #define MAX_SUBMIT_PARMS	8
 #define MAX_SUBPARM_LEN		256
 
-short subp_len[MAX_SUBMIT_PARMS];							/* The length of each parm.		*/
-char  subp_text[MAX_SUBMIT_PARMS][MAX_SUBPARM_LEN];					/* The parm data.			*/
-int   subp_num = 0;									/* The number of parms.			*/
+static short subp_len[MAX_SUBMIT_PARMS];			/* The length of each parm.		*/
+static char  subp_text[MAX_SUBMIT_PARMS][MAX_SUBPARM_LEN];	/* The parm data.			*/
+static int   subp_num = 0;					/* The number of parms.			*/
 
 /* Subroutine SETSUBMIT, used to set the values of the parms to be passed to a procedure when SUBMIT is used.			*/
 /* CALL "SETSUBMIT" USING NUM-PARMS, PARM-1-LEN, PARM-1, PARM-2-LEN, PARM-2 ...							*/
 /* NUM-PARMS is the number of parms to be passed, it is a 2 byte field. PARM-1-LEN thru PARM-N-LEN are also 2-bytes and describe*/
 /* the length of each parm.													*/
 
-void SETSUBMIT(va_alist)								/* Variable number of arguments.	*/
-va_dcl											/* Define the list structure.		*/
+void SETSUBMIT(short *arg_count_ptr, ...)
 {
 	va_list the_args;								/* Define a pointer to the list.	*/
 	short arg_count;
 	char *ptr;
-	char	errbuff[256];
 	
-	va_start(the_args);								/* Set pointer to top of stack.		*/
+	va_start(the_args, arg_count_ptr);
 
-	arg_count = *va_arg(the_args, short *);						/* Get argument count.			*/
+	arg_count = *arg_count_ptr;
 
 	subp_num = 0;
 
 	if (arg_count < 0 || arg_count > MAX_SUBMIT_PARMS)
 	{
-		sprintf(errbuff,"%%SETSUBMIT-F-MAXPARMS Invalid number of parameters Count=%d",arg_count);
-		werrlog(104,errbuff,0,0,0,0,0,0,0);
-		return;
+		WL_werrlog_error(WERRCODE(64000),"SETSUBMIT", "MAXPARMS", 
+			"Invalid number of parameters Count=%d",arg_count);
 	}
-
-	while (arg_count)								/* First copy all the new args.		*/
+	else
 	{
-		subp_len[subp_num] = *va_arg(the_args,short *);				/* Get the length.			*/
-
-		if (subp_len[subp_num] < 1 || subp_len[subp_num] >= MAX_SUBPARM_LEN)
+		while (arg_count)								/* First copy all the new args.		*/
 		{
-			sprintf(errbuff,"%%SETSUBMIT-F-PARMLEN Invalid parameter Lenght=%d",subp_len[subp_num]);
-			werrlog(104,errbuff,0,0,0,0,0,0,0);
-			return;
-		}
+			subp_len[subp_num] = *va_arg(the_args,short *);				/* Get the length.			*/
 
-		ptr = va_arg(the_args, char *);						/* and the text.			*/
-		memcpy(subp_text[subp_num],ptr,(int4) subp_len[subp_num]);		/* Copy to local area.			*/
-		subp_text[subp_num][subp_len[subp_num]] = '\0';				/* Null terminate the parameters	*/
-		subp_num++;
-		arg_count--;
+			if (subp_len[subp_num] < 1 || subp_len[subp_num] >= MAX_SUBPARM_LEN)
+			{
+				WL_werrlog_error(WERRCODE(64000),"SETSUBMIT", "PARMLEN", 
+					"Invalid parameter Lenght=%d",subp_len[subp_num]);
+				break;
+			}
+
+			ptr = va_arg(the_args, char *);						/* and the text.			*/
+			memcpy(subp_text[subp_num],ptr,(int4) subp_len[subp_num]);		/* Copy to local area.			*/
+			subp_text[subp_num][subp_len[subp_num]] = '\0';				/* Null terminate the parameters	*/
+			subp_num++;
+			arg_count--;
+		}
 	}
+	va_end(the_args);
 }
 
 
@@ -404,28 +462,27 @@ static int unix_submit(
 	char	*p_lib)		/* PROGLIB				*/
 {
 	int 	pid,ftyp;
-	char 	*p;									/* scratch pointer			*/
-	int 	retcode, i, ii;
+	int 	retcode, ii;
 	char	*sh_parm[64];
 	char    jclass[4],jmode[20];
 	char    *jclassp, *jmodep;
 	int     hasmode,hasclass;
 	struct wruncfg cfg;
 	char	options[sizeof(cfg.wrun_options)];
-	char	*eptr, *optr;
+	char	*optr;
 	int	arg;
 
 
-	retcode = 0;
+	retcode = SUBMIT_RC_0_SUCCESS;
 
 	if (!fexists(filespec))
 	{
-		retcode = 20;								/* 20 = file not found.			*/
+		retcode = SUBMIT_RC_20_FILE_NOT_FOUND;					/* 20 = file not found.			*/
 	}
 
-	if ( retcode == 0 )
+	if ( retcode == SUBMIT_RC_0_SUCCESS )
 	{
-		ftyp = runtype(filespec);						/* Get the run type			*/
+		ftyp = WL_runtype(filespec);						/* Get the run type			*/
 
 		switch(ftyp)
 		{
@@ -433,7 +490,7 @@ static int unix_submit(
 		case RUN_NOT:
 		case RUN_ACCESS:
 		case RUN_UNKNOWN:
-			retcode = 24;
+			retcode = SUBMIT_RC_24_IMPROPER_FILETYPE;
 			break;
 
 		case RUN_EXEC:
@@ -448,85 +505,81 @@ static int unix_submit(
 	}
 
 
-	if ( retcode == 0 )
+	if ( retcode == SUBMIT_RC_0_SUCCESS )
 	{
 		switch (pid = fork())
 		{
 			case 0:								/* is child process 			*/
 			{
-				int	handle;
 				char    envstring[80];
-				char	buff[80];
 				char	tty[20];
-				char	*env_ptr;
-				int	msize;
 				int	pid;
 				int	nice_value;
 
 				signal( SIGHUP,  SIG_IGN );				/* Ignore HangUps & term signals.	*/
 				signal( SIGTERM, SIG_IGN );
 
-				zerolevel();						/* set link-level to zero		*/
+				WL_zerolevel();						/* set link-level to zero		*/
 
-				if (0 == getscmapnice(jobclass,&nice_value))
+				if (0 == WL_getscmapnice(jobclass,&nice_value))
 				{
-					wtrace("SUBMIT","UNIX","Nice value = %d",nice_value);
+					WL_wtrace("SUBMIT","UNIX","Nice value = %d",nice_value);
 					nice(nice_value);
 				}
 
-				setprogdefs(p_vol,p_lib);				/* Set up PROGLIB and PROGVOL		*/
-				clearprogsymb();					/* Clear PROGLIB/VOL from symbol	*/
+				WL_set_progdefs_env(p_vol,p_lib);			/* Set up PROGLIB and PROGVOL		*/
+				WL_clear_progdefs();					/* Clear PROGLIB/VOL from symbol	*/
 
 				pid = getpid();
 				sprintf(envstring,"%s=%06d",WISP_PID_ENV,pid);		/* Save the PID in the environment.	*/
-				if (setenvstr(envstring))
+				if (WL_setenvstr(envstring))
 				{
-					werrlog(ERRORCODE(4),envstring,0,0,0,0,0,0,0);
-					wexit(ERRORCODE(4));
+					werrlog(WERRCODE(64004),envstring,0,0,0,0,0,0,0);
+					wexit(WERRCODE(64004));
 				}
 
 				sprintf(envstring, "WISPJOBNAME=%s", jobname);
-				if (setenvstr(envstring))
+				if (WL_setenvstr(envstring))
 				{
-					werrlog(ERRORCODE(4),envstring,0,0,0,0,0,0,0);
-					wexit(ERRORCODE(4));
+					werrlog(WERRCODE(64004),envstring,0,0,0,0,0,0,0);
+					wexit(WERRCODE(64004));
 				}
 
 				if (getenv(WISP_CANCELEXIT_ENV))			/* If CANCEL EXIT set then		*/
 				{
 					sprintf(envstring,"%s=0",WISP_CANCELEXIT_ENV);	/* Turn off CANCEL EXIT			*/
-					if (setenvstr(envstring))
+					if (WL_setenvstr(envstring))
 					{
-						werrlog(ERRORCODE(4),envstring,0,0,0,0,0,0,0);
-						wexit(ERRORCODE(4));
+						werrlog(WERRCODE(64004),envstring,0,0,0,0,0,0,0);
+						wexit(WERRCODE(64004));
 					}
 				}
 
 				if ( ! wbackground() )					/* If not already in background		*/
 				{
-					ttyid5(tty);
+					WL_ttyid5(tty);
 					sprintf(envstring,"%s=%s",WISP_TTY_ENV,tty);	/* Save the TTY in the environment.	*/
-					if (setenvstr(envstring))
+					if (WL_setenvstr(envstring))
 					{
-						werrlog(ERRORCODE(4),envstring,0,0,0,0,0,0,0);
-						wexit(ERRORCODE(4));
+						werrlog(WERRCODE(64004),envstring,0,0,0,0,0,0,0);
+						wexit(WERRCODE(64004));
 					}
 
 					sprintf(envstring,"%s=true",WISP_BACKGROUND_ENV); /* Set BACKGROUND flag in environment.*/
-					if (setenvstr(envstring))
+					if (WL_setenvstr(envstring))
 					{
-						werrlog(ERRORCODE(4),envstring,0,0,0,0,0,0,0);
-						wexit(ERRORCODE(4));
+						werrlog(WERRCODE(64004),envstring,0,0,0,0,0,0,0);
+						wexit(WERRCODE(64004));
 					}
 				}
 
 				if (getenv(WISP_GID_ENV))				/* If GID was set then reset it.	*/
 				{
 					sprintf(envstring,"%s=%d",WISP_GID_ENV,pid);
-					if (setenvstr(envstring))
+					if (WL_setenvstr(envstring))
 					{
-						werrlog(ERRORCODE(4),envstring,0,0,0,0,0,0,0);
-						wexit(ERRORCODE(4));
+						werrlog(WERRCODE(64004),envstring,0,0,0,0,0,0,0);
+						wexit(WERRCODE(64004));
 					}
 				}
 #if defined(BSD) || defined(_BSD) || defined(OSF1_ALPHA)
@@ -563,7 +616,7 @@ static int unix_submit(
 				case RUN_ACUCOBOL:
 				case RUN_MF:
 					{
-						wrunconfig(&cfg);
+						WL_wrunconfig(&cfg);
 						strcpy(options,cfg.wrun_options);
 
 						arg=0;
@@ -590,7 +643,7 @@ static int unix_submit(
 				case RUN_PROC:
 				case RUN_PROCOBJ:
 					{
-						sh_parm[0] = wprocexe();		/* argv[0] is the "wproc" program	*/
+						sh_parm[0] = (char*)WL_wprocexe();	/* argv[0] is the "wproc" program	*/
 						sh_parm[1] = filespec;			/* argv[1] in the filespec	 	*/
 						for (ii=0; ii < subp_num; ii++)		/* load SETSUBMIT parameters		*/
 						{
@@ -600,7 +653,7 @@ static int unix_submit(
 
 					}
 				}
-				if (opt_batchqueue)
+				if (*(WL_batchqueue_name()) != '\0')
 				{
 					int	shell_cmd_len;
 					char	*shell_cmd;
@@ -614,7 +667,7 @@ static int unix_submit(
 						if ( strchr(sh_parm[ii], ' ') )		/* Is there any embedded blank?		*/
 							shell_cmd_len += 2;		/* Account for double quote wrapping	*/
 					}
-					shell_cmd = malloc(shell_cmd_len);
+					shell_cmd = wisp_malloc(shell_cmd_len);
 					
 					/*
 					**	Assemble the shell command
@@ -668,20 +721,20 @@ static int unix_submit(
 						jclassp=NULL;
 					}
 
-					wtrace("SUBMIT","EXECLP","%s -c %s -T %s %s",
-					       batchqueue_name, shell_cmd, jobname, 
+					WL_wtrace("SUBMIT","EXECLP","%s -c %s -T %s %s",
+					       WL_batchqueue_name(), shell_cmd, jobname, 
 					       (jclassp?jclassp:"(NULL)"), 
 					       (jmodep?jmodep:"(NULL)"));
 					
-					execlp( batchqueue_name, batchqueue_name, 
+					execlp( WL_batchqueue_name(), WL_batchqueue_name(), 
 						"-c", shell_cmd, "-T", jobname, jclassp, jmodep, NULL);
-					retcode=fixerr(errno);
-					werrlog(ERRORCODE(6),batchqueue_name,errno,retcode,0,0,0,0,0);
+					retcode=fix_exec_errno(errno);
+					werrlog(WERRCODE(64006),WL_batchqueue_name(),errno,retcode,0,0,0,0,0);
 					exit(retcode);
 				}
 				else
 				{
-					if (wtracing())
+					if (WL_wtracing())
 					{
 						char	tbuff[1024], pbuff[256];
 						int i;
@@ -693,54 +746,53 @@ static int unix_submit(
 							sprintf(pbuff,"P%d[%s] ",i,sh_parm[i]);
 							strcat(tbuff,pbuff);
 						}
-						wtrace("SUBMIT","EXECVP","%s",tbuff);
+						WL_wtrace("SUBMIT","EXECVP","%s",tbuff);
 					}
 					
 					execvp( sh_parm[0], sh_parm );
-					retcode=fixerr(errno);
-					werrlog(ERRORCODE(6),sh_parm[0],errno,retcode,0,0,0,0,0);
+					retcode=fix_exec_errno(errno);
+					werrlog(WERRCODE(64006),sh_parm[0],errno,retcode,0,0,0,0,0);
 					exit(retcode);
 				}
 
 			}
 			case -1:							/* Fork failed				*/
 			{
-				werrlog(ERRORCODE(8),errno,0,0,0,0,0,0,0);
+				werrlog(WERRCODE(64008),errno,0,0,0,0,0,0,0);
 
-				retcode = 12;						/* 12 = all buffer full.		*/
+				retcode = SUBMIT_RC_99_FORK_FAILED;
 				break;
 			}
 			default:							/* is parent process	 		*/
 			{
-				retcode = 0;
+				retcode = SUBMIT_RC_0_SUCCESS;
 				break;
 			}
 		}
 	}
 
-	werrlog(ERRORCODE(3),filespec,retcode,0,0,0,0,0,0);
+	WL_wtrace("SUBMIT","COMPLETED","Submitted [%s] with RC=[%d]",
+		filespec, retcode);
 
 	subp_num = 0;									/* Clear any SETSUBMIT parameters	*/
 
 	return retcode;
 }
 
-static int fixerr(code)
-int code;
+static int fix_exec_errno(int code)
 {
 	switch (code)
 	{
-		case EPERM: case EACCES:	
-				return WPERM;
-		case ENOENT: 	return WFNOTFOUND;
-		case EIO:	return WIOERR;
-		case ENXIO:	return WNOTMTD;
-		case ENOEXEC:	return WINVPROG;
-		case EAGAIN:	return WLEXCEED;
-		case ENOMEM:	return WNOMEM;
-		case EBUSY:	return WVOLBUSY;
-		case ENOTDIR:	return WDNOTFOUND;
-		default:	return code;
+	case 0:		return SUBMIT_RC_0_SUCCESS;
+	case E2BIG:	return SUBMIT_RC_56_INVALID_OPTIONS;
+	case EACCES:	return SUBMIT_RC_28_ACCESS_DENIED;
+	case EAGAIN:	return SUBMIT_RC_52_SYSTEM_ERROR;
+	case ENOENT: 	return SUBMIT_RC_20_FILE_NOT_FOUND;
+	case ENOTDIR:	return SUBMIT_RC_16_LIBRARY_NOT_FOUND;
+	case ENOEXEC:	return SUBMIT_RC_24_IMPROPER_FILETYPE;
+	case ENOMEM:	return SUBMIT_RC_52_SYSTEM_ERROR;
+	case EIO:	return SUBMIT_RC_52_SYSTEM_ERROR;
+	default:	return 10000+code;
 	}
 }
 #endif	/* #ifdef unix */
@@ -767,16 +819,16 @@ static int win32_submit(
 	int	arg;
 		
 
-	retcode = 0;
+	retcode = SUBMIT_RC_0_SUCCESS;
 
 	if (!fexists(filespec))
 	{
-		retcode = 20;								/* 20 = file not found.			*/
+		retcode = SUBMIT_RC_20_FILE_NOT_FOUND;					/* 20 = file not found.			*/
 	}
 
-	if ( retcode == 0 )
+	if ( retcode == SUBMIT_RC_0_SUCCESS )
 	{
-		ftyp = runtype(filespec);						/* Get the run type			*/
+		ftyp = WL_runtype(filespec);						/* Get the run type			*/
 
 		switch(ftyp)
 		{
@@ -784,7 +836,7 @@ static int win32_submit(
 		case RUN_NOT:
 		case RUN_ACCESS:
 		case RUN_UNKNOWN:
-			retcode = 24;
+			retcode = SUBMIT_RC_24_IMPROPER_FILETYPE;
 			break;
 
 		case RUN_EXEC:
@@ -799,44 +851,44 @@ static int win32_submit(
 	}
 
 
-	if ( retcode == 0 )
+	if ( retcode == SUBMIT_RC_0_SUCCESS )
 	{
 		char    envstring[80];
 		int	pid;
 		
 		sprintf(envstring,"%s=0", WISP_LINKLEVEL_ENV);		/* set link-level to zero		*/
-		win32SetNewEnv(envstring);
+		WL_win32SetNewEnv(envstring);
 		
 		sprintf(envstring,"%s=%s", WISP_PROGVOL_ENV, p_vol);
-		win32SetNewEnv(envstring);
+		WL_win32SetNewEnv(envstring);
 		sprintf(envstring,"%s=%s", WISP_PROGLIB_ENV, p_lib);
-		win32SetNewEnv(envstring);
+		WL_win32SetNewEnv(envstring);
 
 		pid = getpid();
 		sprintf(envstring,"%s=%06d",WISP_PID_ENV,pid);		/* Save the PID in the environment.	*/
-		win32SetNewEnv(envstring);
+		WL_win32SetNewEnv(envstring);
 
 		if (getenv(WISP_CANCELEXIT_ENV))			/* If CANCEL EXIT set then		*/
 		{
 			sprintf(envstring,"%s=0",WISP_CANCELEXIT_ENV);	/* Turn off CANCEL EXIT			*/
-			win32SetNewEnv(envstring);
+			WL_win32SetNewEnv(envstring);
 		}
 		
 		if ( ! wbackground() )					/* If not already in background		*/
 		{
 			sprintf(envstring,"%s=true",WISP_BACKGROUND_ENV); /* Set BACKGROUND flag in environment.*/
-			win32SetNewEnv(envstring);
+			WL_win32SetNewEnv(envstring);
 
-			ttyid5(tty);
+			WL_ttyid5(tty);
 			sprintf(envstring,"%s=%s",WISP_TTY_ENV,tty);	/* Save the TTY in the environment.	*/
-			win32SetNewEnv(envstring);
+			WL_win32SetNewEnv(envstring);
 		}
 
 		sprintf(envstring, "WISPJOBNAME=%s", jobname);
-		win32SetNewEnv(envstring);
+		WL_win32SetNewEnv(envstring);
 		
 		sprintf(envstring,"%s=-1",WISP_GID_ENV);		/* Reset the GID			*/
-		win32SetNewEnv(envstring);
+		WL_win32SetNewEnv(envstring);
 
 		switch(ftyp)
 		{
@@ -861,7 +913,7 @@ static int win32_submit(
 		case RUN_ACUCOBOL:
 		case RUN_MF:
 			{
-				wrunconfig(&cfg);
+				WL_wrunconfig(&cfg);
 				strcpy(options,cfg.wrun_options);
 		
 				arg=0;
@@ -891,7 +943,7 @@ static int win32_submit(
 				int wproc_index;
 				
 				wproc_index = 0;
-				sh_parm[wproc_index] = wprocexe();			/* argv[0] is the "wproc" program	*/
+				sh_parm[wproc_index] = (char*)WL_wprocexe();		/* argv[0] is the "wproc" program	*/
 				sh_parm[wproc_index+1] = filespec;			/* argv[1] in the filespec	 	*/
 				for (ii=0; ii < subp_num; ii++)				/* load SETSUBMIT parameters		*/
 				{
@@ -918,7 +970,7 @@ static int win32_submit(
 		**	The batch commands can contains a number of macros which we replace
 		**	to form the final command be for the command is issued.
 		*/
-		if (opt_batchqueue)
+		if (*(WL_batchqueue_name()) != '\0')
 		{
 			int arg_len;
 			char s_vol[6+1], s_lib[8+1];
@@ -938,16 +990,17 @@ static int win32_submit(
 			/*
 			**	Create a batchlog filepath
 			*/
-			loadpad(s_vol, batchlogvol(), 6);
-			loadpad(s_lib, batchloglib(), 8);
+			WL_loadpad(s_vol, WL_batchlogvol(), 6);
+			WL_loadpad(s_lib, WL_batchloglib(), 8);
 			
-			log_file_mode = IS_NOEXTENSION;
-			end_name=wfname(&log_file_mode, s_vol, s_lib, jobname, log_path);
+			log_file_mode = 0;
+			WSETFILEXT("log");
+			end_name=WL_wfname(&log_file_mode, s_vol, s_lib, jobname, log_path);
 			*end_name='\0';
 			
 			if (0!=makepath(log_path))
 			{
-				retcode=56;
+				retcode=SUBMIT_RC_56_INVALID_OPTIONS;
 				goto win32_submit_return;
 				
 			}
@@ -969,7 +1022,7 @@ static int win32_submit(
 					subparams_len += 2;				/* Account for double quote wrapping	*/
 
 			}
-			subparams = wmalloc(subparams_len);
+			subparams = wisp_malloc(subparams_len);
 			
 			/*
 			**	String the parameters together separated by spaces
@@ -987,17 +1040,17 @@ static int win32_submit(
 			cqmap[0] = '\0';
 			if (jobclass)
 			{
-				getcqmap(jobclass, cqmap);
+				WL_getcqmap(jobclass, cqmap);
 				ASSERT(strlen(cqmap) < sizeof(cqmap));
 			}
 
 			/*
 			**	Load the username and password into local variables (null terminated)
 			*/
-			strcpy(l_username, batchuser());
-			if (batchpass())
+			strcpy(l_username, WL_batchuser());
+			if (WL_batchpass())
 			{
-				strcpy(l_password, batchpass());
+				strcpy(l_password, WL_batchpass());
 			}
 			else
 			{
@@ -1016,18 +1069,18 @@ static int win32_submit(
 				/*
 				**	Load user and pass into blank padded fields for the getparm
 				*/
-				loadpad(username, l_username, sizeof(username));
-				loadpad(password, l_password, sizeof(password));
+				WL_loadpad(username, l_username, sizeof(username));
+				WL_loadpad(password, l_password, sizeof(password));
 
 				memcpy(save, "NO ", 3);
 			
-				if ( 0 != password_getparm(initial_gp, 
+				if ( 0 != WL_password_getparm(initial_gp, 
 							   username, sizeof(username)-1, 
 							   password, sizeof(password)-1, 
 							   save, "Username and Password required by SUBMIT"))
 				{
 					/* Getparm was aborted */
-					retcode = SUBMIT_ERR_ABORTED;
+					retcode = SUBMIT_RC_1000_ABORTED;
 					goto win32_submit_return;
 				}
 				
@@ -1038,8 +1091,8 @@ static int win32_submit(
 
 				if (0 == memcmp(save,"YES",3))
 				{
-					setbatchuser(l_username);
-					setbatchpass(l_password);
+					WL_setbatchuser(l_username);
+					WL_setbatchpass(l_password);
 				}
 				initial_gp = 0;
 			}
@@ -1048,9 +1101,9 @@ static int win32_submit(
 			**	If %BATCHCMD% has not been set from the OPTIONS file then
 			**	set it here with the default value.
 			*/
-			if (!batchcmd() || strlen(batchcmd()) == 0)
+			if (!WL_batchcmd() || strlen(WL_batchcmd()) == 0)
 			{
-				setbatchcmd("QSUBMIT %SUBFILE% %CQMAP% /NAME=%SUBNAME%"
+				WL_setbatchcmd("QSUBMIT %SUBFILE% %CQMAP% /NAME=%SUBNAME%"
 					    " /NONOTIFY /PARAMS=\"%SUBPARAMS%\" /LOG_FILE=%BATCHLOG%"
 					    " %SUBSTAT% /USER=%BATCHUSER% /PASSWORD=%BATCHPASS%");
 			}
@@ -1059,23 +1112,23 @@ static int win32_submit(
 			**	If the Windows 95 batch command has not been set from OPTIONS file
 			**	then set it here with the default value.
 			*/
-			if (!batchcmd95() || strlen(batchcmd95()) == 0)
+			if (!WL_batchcmd95() || strlen(WL_batchcmd95()) == 0)
 			{
-				setbatchcmd95("REXEC.EXE %SERVER% -l %BATCHUSER% -p %BATCHPASS% %BATCHCMD%");
+				WL_setbatchcmd95("REXEC.EXE %SERVER% -l %BATCHUSER% -p %BATCHPASS% %BATCHCMD%");
 			}
 			
 			/*
 			**	Check if NT or 95 and use the corresponding batch command.
 			**	If not Windows NT then assume 95.
 			*/
-			if (!win32_nt())
+			if (!WL_win32_nt())
 			{
-				strcpy(cmd_string, batchcmd95());
-				subvar(cmd_string, "%BATCHCMD%", batchcmd());
+				strcpy(cmd_string, WL_batchcmd95());
+				subvar(cmd_string, "%BATCHCMD%", WL_batchcmd());
 			}
 			else
 			{
-				strcpy(cmd_string, batchcmd());
+				strcpy(cmd_string, WL_batchcmd());
 			}
 			
 			/*
@@ -1089,19 +1142,19 @@ static int win32_submit(
 			subvar(cmd_string, "%BATCHLOG%",  log_path);
 			if (jobstat=='H')
 			{
-				if (!batchhold()) setbatchhold("/AFTER=+365");
+				if (!WL_batchhold()) WL_setbatchhold("/AFTER=+365");
 				
-				subvar(cmd_string, "%SUBSTAT%", batchhold());
+				subvar(cmd_string, "%SUBSTAT%", WL_batchhold());
 			}
 			else
 			{
-				if (!batchrun()) setbatchrun("");
+				if (!WL_batchrun()) WL_setbatchrun("");
 				
-				subvar(cmd_string, "%SUBSTAT%", batchrun());
+				subvar(cmd_string, "%SUBSTAT%", WL_batchrun());
 			}
 			subvar(cmd_string, "%BATCHUSER%", l_username);
 			subvar(cmd_string, "%BATCHPASS%", l_password);
-			subvar(cmd_string, "%SERVER%", batchserver());
+			subvar(cmd_string, "%SERVER%", WL_batchserver());
 
 			ASSERT(strlen(cmd_string) < sizeof(cmd_string));
 
@@ -1110,7 +1163,7 @@ static int win32_submit(
 			**	This will but the job into the queue and return so we
 			**	will wait for it to complete and hide the child window.
 			*/ 
-			system_ret = win32spawnlp( NULL , cmd_string, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_CAPTURE_OUTPUT);
+			system_ret = WL_win32spawnlp( NULL , cmd_string, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_CAPTURE_OUTPUT);
 
 
 			/*
@@ -1120,7 +1173,7 @@ static int win32_submit(
 			switch(system_ret)
 			{
 			case 0:		
-				retcode = 0;
+				retcode = SUBMIT_RC_0_SUCCESS;
 				break;
 				
 			default:	
@@ -1141,7 +1194,7 @@ static int win32_submit(
 				if ( strchr(sh_parm[ii], ' ')  )			/* Is there any embedded blank		*/
 					shell_cmd_len += 2;				/* Account for double quote wrapping	*/
 			}
-			shell_cmd = malloc(shell_cmd_len);
+			shell_cmd = wisp_malloc(shell_cmd_len);
 			
 			/*
 			**	Assemble the shell command
@@ -1156,19 +1209,20 @@ static int win32_submit(
 			/*
 			**  CHILD will be DETACHED
 			*/
-			system_ret = win32spawnlp( NULL , shell_cmd , SPN_SUBMIT_CHILD );
+			system_ret = WL_win32spawnlp( NULL , shell_cmd , SPN_SUBMIT_CHILD );
 
 			free(shell_cmd);
 
 			if (system_ret == 1)
 			{
-				retcode = SUBMIT_ERR_OPTIONS;
+				retcode = SUBMIT_RC_56_INVALID_OPTIONS;
 			}
 		}
 	}
 	
 	
-	werrlog(ERRORCODE(3),filespec,retcode,0,0,0,0,0,0);
+	WL_wtrace("SUBMIT","COMPLETED","Submitted [%s] with RC=[%d]",
+		filespec, retcode);
 
 	subp_num = 0;									/* Clear any SETSUBMIT parameters	*/
 
@@ -1178,7 +1232,7 @@ win32_submit_return:
 }
 #endif
 
-
+#ifdef WIN32
 /*
 **	ROUTINE:	subvar()
 **
@@ -1205,7 +1259,7 @@ static int subvar(char* buff, const char* var, const char* value)
 	char	temp[1024];
 	char	*ptr;
 
-	wtrace("SUBMIT","SUBVAR","In var=[%s] value=[%s] buff=[%s]", var, value, buff);
+	WL_wtrace("SUBMIT","SUBVAR","In var=[%s] value=[%s] buff=[%s]", var, value, buff);
 	ptr = buff;
 	for(subcnt=0; (pos = strpos(buff,var)) != -1; subcnt++)
 	{
@@ -1215,12 +1269,13 @@ static int subvar(char* buff, const char* var, const char* value)
 		strcat(ptr,temp);						/* put end line back into source	*/
 	}
 		
-	wtrace("SUBMIT","SUBVAR","Out buff=[%s]", buff);
+	WL_wtrace("SUBMIT","SUBVAR","Out buff=[%s]", buff);
 	return subcnt;
 }
+#endif
 
 /*
-**	ROUTINE:	submit_err()
+**	ROUTINE:	WL_submit_err()
 **
 **	FUNCTION:	Translate SUBMIT return code into an error message
 **
@@ -1236,31 +1291,31 @@ static int subvar(char* buff, const char* var, const char* value)
 **	WARNINGS:	None
 **
 */
-const char* submit_err(int error)
+const char* WL_submit_err(int error)
 {
-	char* errptr;
+	const char* errptr;
 	
 	switch(error)
 	{
-	case SUBMIT_ERR_SUCCESS:	errptr = "Success";			break;
-	case SUBMIT_ERR_NOVOL:		errptr = "Volume not found";		break;
-	case SUBMIT_ERR_VOLLOCK:	errptr = "Volume locked";		break;
-	case SUBMIT_ERR_FILELOCK:	errptr = "File locked";			break;
-	case SUBMIT_ERR_NOLIB:		errptr = "Library not found";		break;
-	case SUBMIT_ERR_NOFILE:		errptr = "File not found";		break;
-	case SUBMIT_ERR_NOACCESS:	errptr = "Access denied";		break;
-	case SUBMIT_ERR_INVALID:	errptr = "Invalid file lib vol";	break;
-	case SUBMIT_ERR_SERVICE:	errptr = "Service closed";		break;
-	case SUBMIT_ERR_ACCESS:		errptr = "Access violation";		break;
-	case SUBMIT_ERR_OPTIONS:	errptr = "Invalid options";		break;
-	case SUBMIT_ERR_STATUS:		errptr = "Invalid Status";		break;
-	case SUBMIT_ERR_DISP:		errptr = "Invalid Disposition";		break;
-	case SUBMIT_ERR_CLASS:		errptr = "Invalid Class";		break;
-	case SUBMIT_ERR_ABORT:		errptr = "Invalid Abort action";	break;
-	case SUBMIT_ERR_TIME:		errptr = "Invalid Time limit";		break;
-	case SUBMIT_ERR_LIMIT:		errptr = "Invalid Limit flag";		break;
-	case SUBMIT_ERR_ABORTED:	errptr = "Aborted by user";		break;
-	default:			errptr = "Unknown return code";		break;
+	case SUBMIT_RC_0_SUCCESS:		errptr = "Success";			break;
+	case SUBMIT_RC_4_VOLUME_NOT_FOUND:	errptr = "Volume not found";		break;
+	case SUBMIT_RC_8_VOLUME_BUSY:		errptr = "Volume locked";		break;
+	case SUBMIT_RC_16_LIBRARY_NOT_FOUND:	errptr = "Library not found";		break;
+	case SUBMIT_RC_20_FILE_NOT_FOUND:	errptr = "File not found";		break;
+	case SUBMIT_RC_24_IMPROPER_FILETYPE:	errptr = "Improper file type";		break;
+	case SUBMIT_RC_28_ACCESS_DENIED:	errptr = "Access denied";		break;
+	case SUBMIT_RC_40_INVALID_FILE_SPEC:	errptr = "Invalid file lib vol";	break;
+	case SUBMIT_RC_52_SYSTEM_ERROR:		errptr = "System Error";		break;
+	case SUBMIT_RC_56_INVALID_OPTIONS:	errptr = "Invalid options";		break;
+	case SUBMIT_RC_99_FORK_FAILED:		errptr = "Fork Failed";			break;
+	case SUBMIT_RC_900_INVALID_STATUS:	errptr = "Invalid Status";		break;
+	case SUBMIT_RC_901_INVALID_DISP:	errptr = "Invalid Disposition";		break;
+	case SUBMIT_RC_902_INVALID_JOBCLASS:	errptr = "Invalid Job Class";		break;
+	case SUBMIT_RC_903_INVALID_ABORTACT:	errptr = "Invalid Abort action";	break;
+	case SUBMIT_RC_904_INVALID_TIME:	errptr = "Invalid Time limit";		break;
+	case SUBMIT_RC_905_INVALID_LIMIT:	errptr = "Invalid Limit flag";		break;
+	case SUBMIT_RC_1000_ABORTED:		errptr = "Aborted by user";		break;
+	default:				errptr = "Unknown return code";		break;
 	}
 	
 	return errptr;
@@ -1270,20 +1325,103 @@ const char* submit_err(int error)
 /*
 **	History:
 **	$Log: submit.c,v $
-**	Revision 1.34.2.2  2002/08/20 18:20:37  gsl
+**	Revision 1.62  2003/03/19 20:32:11  gsl
+**	error checking for blank vol/lib and blank defaults
+**	
+**	Revision 1.61  2003/03/19 20:30:09  gsl
+**	error checking for blank vol/lib and blank defaults
+**	
+**	Revision 1.60  2003/03/19 20:03:17  gsl
+**	Standardize SUBMIT return code defines
+**	
+**	Revision 1.59  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.58  2003/02/04 17:05:01  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.57  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.56  2003/01/21 16:59:40  gsl
+**	fix SETSUBMIT va_start() call
+**	
+**	Revision 1.55  2003/01/20 17:01:56  gsl
+**	Change to use stdarg.h
+**	plus document args
+**	
+**	Revision 1.54  2002/12/10 17:09:16  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.53  2002/12/09 21:09:32  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.52  2002/12/09 19:15:34  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.51  2002/12/04 21:01:52  gsl
+**	FIx const char * warnings
+**	
+**	Revision 1.50  2002/12/04 20:52:17  gsl
+**	Add to OPTIONS file
+**	WPROC
+**	WPROCDEBUG
+**	ACPCONFIG
+**	ACPMAP
+**	WISP_SCRATCH_MODE/WISPSCRATCHMODE
+**	WISP_DISPLAY_8BIT/DISPLAY8BIT/WISPDISPLAY8BIT
+**	WISPSYSADMIN
+**	
+**	Revision 1.49  2002/08/20 16:09:49  gsl
 **	Add support for Micro Focus Shared Object files .so/.sl
-**	V4_4_04
 **	
-**	Revision 1.34.2.1.2.1  2002/08/20 17:56:39  gsl
-**	Add support for Micro Focus Shared Object files .so/.sl
-**	V4_4_04
+**	Revision 1.48  2002/07/29 15:46:49  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
 **	
-**	Revision 1.34.2.1  2002/08/16 21:46:43  gsl
-**	Alpha Port 4402f
+**	Revision 1.47  2002/07/16 16:24:51  gsl
+**	Globals
 **	
-**	Revision 1.34  2001-11-27 15:43:41-05  gsl
+**	Revision 1.46  2002/07/12 20:40:38  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.45  2002/07/12 19:10:17  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.44  2002/07/12 17:01:01  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.43  2002/07/11 20:29:14  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.42  2002/07/11 14:52:51  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.41  2002/07/10 21:05:26  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.40  2002/07/09 04:13:57  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.39  2002/07/08 21:10:11  gsl
+**	Alpha now uses setpgrp(pid,pid) format
+**	
+**	Revision 1.38  2002/07/02 21:15:29  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.37  2002/06/25 15:21:53  gsl
+**	Change to use wmalloc()
+**	
+**	Revision 1.36  2002/06/21 20:49:29  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.35  2002/06/21 03:10:41  gsl
 **	Remove VMS & MSDOS
-**
+**	
+**	Revision 1.34  2001/11/27 20:43:41  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.33  1999-09-27 09:09:51-04  gsl
 **	FIx call to setpgrp() for OSF1 (Digital UNIX)
 **
@@ -1353,7 +1491,7 @@ const char* submit_err(int error)
 **
 **	Revision 1.13  1996-10-08 17:26:30-07  gsl
 **	replaced shell_var() with wispshellexe()
-**	replaced getenv() with wprocexe()
+**	replaced getenv() with WL_wprocexe()
 **
 **	Revision 1.12  1996-09-03 14:42:56-07  gsl
 **	For NT add error message "NOT YET IMPLEMENTED"

@@ -1,0 +1,331 @@
+      **   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+      **   $Id:$
+      **
+      **   File:       WC0004.wcb
+      **
+      **   Project:    WISP/TEST - WANG COBOL Functionality
+      **
+      **   Purpose:    ##TEMP FILE NAMES 
+      **
+      **
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. WC0004.
+
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS CRT-RELKEY
+               PFKEY           IS CRT-PFKEY
+               CURSOR POSITION IS CRT-CURSOR-POS
+               FILE STATUS     IS CRT-FILE-STATUS.
+
+           SELECT PRINTER-FILE-UFB
+               ASSIGN TO "PRTFILE", "PRINTER",  NODISPLAY.
+
+           SELECT BASE-FILE-UFB
+               ASSIGN TO "BASEFILE", "DISK",  NODISPLAY
+               ORGANIZATION    IS INDEXED
+	       RECORD KEY IS BASE-FIL-KEY.
+
+       DATA DIVISION.
+       FILE SECTION.
+
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRT-RECORD                         PIC X(1924).
+
+       FD  PRINTER-FILE-UFB
+           VALUE OF FILENAME IS BASE-FIL,
+                    LIBRARY  IS BASE-LIB,
+                    VOLUME   IS BASE-VOL.
+
+       01  PRINTER-FILE-RECORD.
+	   05 PRINTER-FIL-DATA    PIC X(80).
+
+       FD  BASE-FILE-UFB
+           VALUE OF FILENAME IS BASE-FIL,
+                    LIBRARY  IS BASE-LIB,
+                    VOLUME   IS BASE-VOL.
+
+       01  BASE-FIL-RECORD.
+	   05 BASE-FIL-KEY     PIC X(10).
+	   05 BASE-FIL-DATA    PIC X(70).
+
+       WORKING-STORAGE SECTION.
+
+      *==============================================================
+       01  QAPROG		PIC X(8)  VALUE "WC0004".
+       01  QANAME		PIC X(20) VALUE "##TEMP NAMES".
+       01  TOTAL-CNT		PIC 99 VALUE 0.
+       01  PASSED-CNT		PIC 99 VALUE 0.
+       01  FAILED-CNT		PIC 99 VALUE 0.
+       01  TEST-NAME		PIC X(8).
+      *==============================================================
+       
+       01  IL	   PIC X(2) VALUE "IL".
+       01  IV	   PIC X(2) VALUE "IV".
+       01  WL	   PIC X(2) VALUE "WL".
+       01  WV	   PIC X(2) VALUE "WV".
+       01  INLIB    PIC X(8).
+       01  INVOL    PIC X(6).
+       01  WRKLIB   PIC X(8).
+       01  WRKVOL   PIC X(6).
+
+       01  BASE-FIL		PIC X(8).
+       01  BASE-LIB		PIC X(8).
+       01  BASE-VOL		PIC X(6).
+
+      *==============================================================
+       01  TST-FIL		PIC X(8).
+       01  TST-LIB		PIC X(8).
+       01  TST-VOL		PIC X(6).
+
+       01  RC-INT4.
+           03 RC-HIGH     BINARY  VALUE 0.
+           03 RC-BIN      BINARY  VALUE 0.
+       01  RC-NUM	   PIC 999.
+
+       01  READFDR4-MODE.
+	   03 FILLER BINARY VALUE 0.
+	   03 FILLER BINARY VALUE 0.
+
+       01  CD-keyword PIC XX VALUE "CD".
+       01  CREATE-DATE PIC 9(8).
+       01  SCRATCH-L-TYPE PIC X VALUE "L".
+       01  SCRATCH-F-TYPE PIC X VALUE "F".
+
+
+      *==============================================================
+       01  EXPECTED-FIL		PIC X(8).
+       01  EXPECTED-LIB		PIC X(8).
+       01  EXPECTED-VOL		PIC X(6).
+      *==============================================================
+
+      *
+      *   CRT FILE VARIABLES
+      *
+       77  CRT-RELKEY  PIC 9(02) VALUE 1.
+       77  CRT-PFKEY   PIC X(02) VALUE ZERO.
+       01  CRT-CURSOR-POS.
+           03  CRT-CURSOR-POS-COL  BINARY.
+           03  CRT-CURSOR-POS-ROW  BINARY.
+       01  CRT-FILE-STATUS.
+           03  CRT-FILE-STATUS-ERR        PIC X(01).
+           03  CRT-FILE-STATUS-AID        PIC X(01).
+
+
+      *==============================================================
+
+       01  LINK-PROGNAME		PIC X(8).
+       01  LINK-CC.
+           05 LINK-CC-HIGH	BINARY.
+	   05 LINK-CC-BIN	BINARY.
+       01  LINK-RC.
+           05 LINK-RC-HIGH	BINARY.
+	   05 LINK-RC-BIN	BINARY.
+
+      *==============================================================
+       01  SET-PM	PIC XX VALUE "PM".
+       01  SET-PM-K	PIC X  VALUE "K".
+       01  EXTRACT-PM	PIC XX.
+
+      *==============================================================
+       PROCEDURE DIVISION.
+       0000-MAIN SECTION.
+	   MOVE 0 TO FAILED-CNT.
+	   MOVE 0 TO PASSED-CNT.
+	   MOVE 0 TO TOTAL-CNT.
+
+	   CALL "EXTRACT" USING
+	       IL, INLIB,
+	       IV, INVOL,
+	       WL, WRKLIB,
+	       WV, WRKVOL.
+
+      * Ensure Usage constants are set.	       
+	   if INLIB = " " or INVOL = " " then
+	       DISPLAY "INLIB and INVOL must be set to run test"
+	       go to 9999-exit.
+
+      * Remove the lib from previous runs.
+	   perform cleanup-files.
+
+
+      *==============================================================
+      * PRINTER FILES
+       TEST001.
+	   MOVE "TEST001" TO TEST-NAME.
+
+      * Extract print mode
+           CALL "EXTRACT" USING SET-PM, EXTRACT-PM.
+      * Turn off printing
+           CALL "SET" USING SET-PM, SET-PM-K.
+
+	   MOVE "##TX01"	TO BASE-FIL.
+	   MOVE QAPROG		TO BASE-LIB.
+	   MOVE INVOL		TO BASE-VOL.
+
+	   MOVE "TX010000"	TO EXPECTED-FIL.
+	   MOVE BASE-LIB	TO EXPECTED-LIB.
+	   MOVE BASE-VOL	TO EXPECTED-VOL.
+
+	   PERFORM CREATE-PRINTER-FILE.
+	   PERFORM CHECK-RESULTS.
+
+       TEST002.
+	   MOVE "TEST002" TO TEST-NAME.
+
+	   MOVE "##TX01"	TO BASE-FIL.
+	   MOVE "TX010001"	TO EXPECTED-FIL.
+
+	   PERFORM CREATE-PRINTER-FILE.
+	   PERFORM CHECK-RESULTS.
+
+       TEST003.
+	   MOVE "TEST003" TO TEST-NAME.
+
+	   MOVE "##TX01"	TO BASE-FIL.
+	   MOVE "TX010002"	TO EXPECTED-FIL.
+
+	   PERFORM CREATE-PRINTER-FILE.
+	   PERFORM CHECK-RESULTS.
+
+      * Restore print mode
+           CALL "SET" USING SET-PM, EXTRACT-PM.
+
+
+      * WORK FILES
+       TEST004.
+	   MOVE "TEST004" TO TEST-NAME.
+
+	   MOVE "##WC04"	TO BASE-FIL.
+	   MOVE SPACES		TO BASE-LIB.
+	   MOVE SPACES		TO BASE-VOL.
+
+	   MOVE "WC040000"	TO EXPECTED-FIL.
+	   MOVE WRKLIB		TO EXPECTED-LIB.
+	   MOVE WRKVOL		TO EXPECTED-VOL.
+
+	   PERFORM CREATE-BASE-FILE.
+	   PERFORM CHECK-RESULTS.
+
+       TEST005.
+	   MOVE "TEST005" TO TEST-NAME.
+
+	   MOVE "##WC04"	TO BASE-FIL.
+	   MOVE SPACES		TO BASE-LIB.
+	   MOVE SPACES		TO BASE-VOL.
+
+	   MOVE "WC040001"	TO EXPECTED-FIL.
+	   MOVE WRKLIB		TO EXPECTED-LIB.
+	   MOVE WRKVOL		TO EXPECTED-VOL.
+
+	   PERFORM CREATE-BASE-FILE.
+	   PERFORM CHECK-RESULTS.
+
+ 
+      *============================================================	  
+       9999-done.
+           IF FAILED-CNT = 0   THEN
+                DISPLAY QANAME " Tests completed successful."
+           ELSE 
+                DISPLAY QANAME " Tests failed "
+	   END-IF.
+
+      *============================================================	  
+       9999-END SECTION.
+       9999-EXIT.
+           EXIT PROGRAM.
+       9999-STOP.
+           STOP RUN.
+
+      *============================================================
+	       
+      *============================================================
+       CREATE-PRINTER-FILE.
+
+	   OPEN OUTPUT PRINTER-FILE-UFB.
+	   CLOSE PRINTER-FILE-UFB.
+
+      * Ensure file exists.
+	   MOVE BASE-FIL TO TST-FIL.
+	   MOVE BASE-LIB TO TST-LIB.
+	   MOVE BASE-VOL TO TST-VOL.
+	   PERFORM TEST-FILE-EXISTS.
+	   IF RC-BIN NOT = 0 THEN GO TO 9999-EXIT.
+	       
+      *============================================================
+       CREATE-BASE-FILE.
+	   OPEN OUTPUT BASE-FILE-UFB.
+	   WRITE BASE-FIL-RECORD.
+	   CLOSE BASE-FILE-UFB.
+
+      * Ensure file exists.
+	   MOVE BASE-FIL TO TST-FIL.
+	   MOVE BASE-LIB TO TST-LIB.
+	   MOVE BASE-VOL TO TST-VOL.
+	   PERFORM TEST-FILE-EXISTS.
+	   IF RC-BIN NOT = 0 THEN GO TO 9999-EXIT.
+
+      *============================================================
+       CHECK-RESULTS.
+	   if	(BASE-FIL NOT = EXPECTED-FIL)  OR
+		(BASE-LIB NOT = EXPECTED-LIB)  OR
+		(BASE-VOL NOT = EXPECTED-VOL)  
+	   THEN
+	       add 1 to failed-cnt
+	       display QAPROG " FAILED ", TEST-NAME, 
+			" EXPECTED=", EXPECTED-FIL,
+			" GOT=", BASE-FIL
+	   END-IF.
+
+      *============================================================
+       CLEANUP-FILES.
+	   MOVE QAPROG     TO BASE-LIB.
+	   MOVE INVOL      TO BASE-VOL.
+	   PERFORM SCRATCH-BASE-LIB.
+
+	   MOVE WRKLIB     TO BASE-LIB.
+	   MOVE WRKVOL     TO BASE-VOL.
+	   PERFORM SCRATCH-BASE-LIB.
+
+       
+      *============================================================
+       SCRATCH-BASE-FILE.
+	   CALL "SCRATCH" USING 
+	       SCRATCH-F-TYPE, BASE-FIL, BASE-LIB, BASE-VOL, 
+	       RC-int4.
+
+      *============================================================
+       SCRATCH-BASE-LIB.
+	   move spaces	   TO base-fil.
+	   CALL "SCRATCH" USING 
+	       SCRATCH-L-TYPE, BASE-FIL, BASE-LIB, BASE-VOL, 
+	       RC-int4.
+	       
+      *============================================================	  
+       TEST-FILE-EXISTS.
+	   CALL "READFDR4" USING
+	       tst-fil, tst-lib, tst-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 0  then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-EXISTS FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", tst-fil,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+
+      **
+      **   End of WC0004.wcb
+      **

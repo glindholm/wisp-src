@@ -193,8 +193,8 @@ void tracer::trace_interactive()
 	interactive_trace = 1;
 }
 
-extern "C" char *wfname(int_32 *mode, const char *vol, const char *lib, const char *file, char *native);
-extern "C" int makepath(const char *filepath);
+extern "C" char *WL_wfname(int_32 *mode, char *vol, char *lib, char *file, char *native);
+extern "C" int WL_makepath(const char *filepath);
 
 int tracer::trace_into(const char *coded_into_file, 
 			int resources, int scratch, int statements, int variables)
@@ -210,14 +210,17 @@ int tracer::trace_into(const char *coded_into_file,
 		wang_filename name(coded_into_file);
 		int_32	mode = 3;
 
-		ptr = wfname(&mode, name.volname, name.libname, name.filename, into_file);
+		ptr = WL_wfname(&mode, name.volname, name.libname, name.filename, into_file);
 		*ptr = (char) 0;
 	}
 	else if (!log_file)
 	{
 		int_32	mode = 3;
+		char vol[6], lib[8];
+		memset(vol,' ',sizeof(vol));
+		memset(lib,' ',sizeof(lib));
 
-		ptr = wfname(&mode, "      ", "        ", the_process->the_top_filename, into_file);
+		ptr = WL_wfname(&mode, vol, lib, the_process->the_top_filename, into_file);
 		*ptr = (char) 0;
 	}
 
@@ -250,7 +253,7 @@ int tracer::trace_into(const char *coded_into_file,
 
 	if (!log_file)
 	{
-		makepath(into_file);
+		WL_makepath(into_file);
 
 		if (scratch_into_file)
 		{
@@ -760,6 +763,12 @@ char *tracer::symbol_data(symbol &a_symbol, int array_index) {
 /*
 **	History:
 **	$Log: tracer.cpp,v $
+**	Revision 1.12  2002/07/12 19:10:25  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.11  2002/07/10 04:27:40  gsl
+**	Rename global routines with WL_ to make unique
+**	
 **	Revision 1.10  1998/08/31 19:50:38  gsl
 **	drcs update
 **	
@@ -786,6 +795,12 @@ char *tracer::symbol_data(symbol &a_symbol, int array_index) {
 //
 //	History:
 //	$Log: tracer.cpp,v $
+//	Revision 1.12  2002/07/12 19:10:25  gsl
+//	Global unique WL_ changes
+//	
+//	Revision 1.11  2002/07/10 04:27:40  gsl
+//	Rename global routines with WL_ to make unique
+//	
 //	Revision 1.10  1998/08/31 19:50:38  gsl
 //	drcs update
 //	

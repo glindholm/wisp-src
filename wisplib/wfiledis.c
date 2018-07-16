@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /* WFILE_DISP.C ... 	This is the front end of the Wang style DISPLAY routine.  It directs the user to enter a Wang VS style	*/
 /*	      		file, library, and volume specification.  The target system filename is then constructed and the	*/
@@ -36,39 +49,41 @@ static char rcsid[]="$Id:$";
 #include "wispcfg.h"
 
 #include "idsisubs.h"
-
+#include "filgparm.h"
 
 #ifdef WIN32
 #include "win32spn.h"
 #endif
 
 #include "werrlog.h"
-#define		ROUTINE		77100
+#include "vssubs.h"
 
 
 /* OLD frontend for internal display */
-void wfile_disp(void)
+void WL_wfile_disp(void)
 {
 	char	filename[COB_FILEPATH_LEN + 1];
+	int	recsize = 0;
 
 	/*
 	**	Issues the getparms and if a file was supplied then display it.
 	*/
-	if (display_util_getparms(filename))
+	if (WL_display_util_getparms(filename, &recsize))
 	{
 		/*
 		**	Do the DISPLAY
 		*/
-		wpushscr();
+		vwang_wpushscr();
 
-		internal_display(filename);
+		WL_internal_display(filename, recsize);
 
-		wpopscr();
+		vwang_wpopscr();
 	}
 }
 
+
 /*
-**	ROUTINE:	display_util_getparms()
+**	ROUTINE:	WL_display_util_getparms()
 **
 **	FUNCTION:	Issue the DISPLAY getparms and return the filename.
 **
@@ -87,7 +102,7 @@ void wfile_disp(void)
 **			because GETPARM is dependent on the link-level.
 **
 */
-int display_util_getparms(char *filename)
+int WL_display_util_getparms(char *filename, int* recsize)
 {
 	char file[SIZEOF_FILE];
 	char library[SIZEOF_LIB];
@@ -100,14 +115,14 @@ int display_util_getparms(char *filename)
 	char getparm_type[3];
 	char pf_key;
 
-	wpload();									/* Load personality stuff.		*/
+	WL_wpload();									/* Load personality stuff.		*/
 	native_mode = 0L;                                           			/* Start off in WANG_VS mode.		*/
 
 	memset(file, ' ', SIZEOF_FILE);						/* Initialize variables goin' to	*/
 	memset(orig_file, ' ', SIZEOF_FILE);					/* file_getparm().			*/
 	memset(tempname, ' ', COB_FILEPATH_LEN);
-	get_defs(DEFAULTS_IV,volume);
-	get_defs(DEFAULTS_IL,library);
+	WL_get_defs(DEFAULTS_IV,volume);
+	WL_get_defs(DEFAULTS_IL,library);
 
 	strcpy(entry_message,"To display a file, enter the name and location of the file. ");
 	getparm_type[0] = 'I';							/* Start off as an initial getparm.	*/
@@ -117,9 +132,10 @@ int display_util_getparms(char *filename)
         
 	for(;;)
 	{
-		file_getparm2(mode,file,library,volume,"INPUT   ","DISP  ",		/* Allow the user to enter the name.	*/
+		WL_file_getparm3(file,library,volume,"INPUT   ","DISP  ",		/* Allow the user to enter the name.	*/
 			&native_mode,getparm_type,tempname,
-			entry_message,NULL,&pf_key,'E',orig_file,NULL,NULL,NULL);
+			entry_message,NULL,&pf_key,'E',orig_file,NULL,NULL,NULL,
+			0,0,0,0);
 											/* If they pressed PF16 to get out of	*/
 											/* get_name, these variables will all	*/
 											/* be equal to spaces.			*/
@@ -139,12 +155,12 @@ int display_util_getparms(char *filename)
 			if (0 != memcmp(file,"        ",8))
 			{
 				char saveExt[39];
-				mode = IS_PRINTFILE|IS_BACKFILL;			/* Tell wfname what type of file.	*/
+				mode = IS_PRINTFILE;					/* Tell wfname what type of file.	*/
 				WGETFILEXT(saveExt);					/* Save the file extension.		*/
-				end_name = wfname(&mode, volume, library, file, filename);	/* Construct native filename.	*/
+				end_name = WL_wfname_backfill(&mode, volume, library, file, filename);
 				*end_name = '\0';					/* Null terminate.			*/
 				memcpy(tempname,filename,strlen(filename));
-				WSETFILEXT(saveExt);					/* Restore the extension.		*/
+				WSETFILEXT(saveExt);				/* Restore the extension.		*/
 			}
 			else
 			{
@@ -161,16 +177,20 @@ int display_util_getparms(char *filename)
 			*/
 			if ( !native_mode && 'R' == getparm_type[0] )
 			{
-				use_last_prb();
+				WL_use_last_prb();
 				getparm_type[0] = 'R';
 				getparm_type[1] = 'D';
-				file_getparm2(mode,file,library,volume,"INPUT   ","DISP  ",
+				WL_file_getparm3(file,library,volume,"INPUT   ","DISP  ",
 					&native_mode,getparm_type,tempname,
-					entry_message,NULL,&pf_key,'E',orig_file,NULL,NULL,NULL);
+					entry_message,NULL,&pf_key,'E',orig_file,NULL,NULL,NULL,
+					0,0,0,0);
 			}
 
 			wtrace("DISPLAY","GETPARM","Selected file [%s] to display",filename);
 			
+
+			WL_display_util_options_getparm(recsize);
+
 			return 1;
 		}
 										/* Nope.  Give a new entry message.	*/
@@ -181,7 +201,7 @@ int display_util_getparms(char *filename)
 }
 
 /*
-**	ROUTINE:	utils_in_windows()
+**	ROUTINE:	WL_utils_in_windows()
 **
 **	FUNCTION:	Flag if utilities are to be run in separate windows (UTILSWINDOWS option)
 **
@@ -199,7 +219,7 @@ int display_util_getparms(char *filename)
 **	WARNINGS:	None
 **
 */
-int utils_in_windows(void)
+int WL_utils_in_windows(void)
 {
 	static int rc = -1;
 	
@@ -208,11 +228,11 @@ int utils_in_windows(void)
 		rc = 0;
 		
 #ifdef WIN32
-		if (no_windows())
+		if (WL_no_windows())
 		{
 			rc = 0;
 		}
-		else if (get_wisp_option("UTILSWINDOWS"))
+		else if (WL_get_wisp_option("UTILSWINDOWS"))
 		{
 			rc = 1;
 			wtrace("OPTIONS","UTILSWINDOWS","Using Utilities in Windows option");
@@ -223,7 +243,7 @@ int utils_in_windows(void)
 }
 
 /*
-**	ROUTINE:	use_internal_display()
+**	ROUTINE:	WL_use_internal_display()
 **
 **	FUNCTION:	Test if using an internal (soft-link) to DISPLAY utility
 **
@@ -242,25 +262,25 @@ int utils_in_windows(void)
 **	WARNINGS:	none
 **
 */
-int use_internal_display(void)
+int WL_use_internal_display(void)
 {
 	static int rc = -1;
 	
 	if (-1 == rc)
 	{
-		if (nativescreens())
+		if (wisp_nativescreens())
 		{
 			rc = 0;
 		}
-		else if (custom_display_utility())
+		else if (WL_custom_display_utility())
 		{
 			rc = 0;
 		}
-		else if (get_wisp_option("EXTDISPLAY"))
+		else if (WL_get_wisp_option("EXTDISPLAY"))
 		{
 			rc = 0;
 		}
-		else if (utils_in_windows())
+		else if (WL_utils_in_windows())
 		{
 			rc = 0;
 		}
@@ -276,7 +296,7 @@ int use_internal_display(void)
 }
 
 /*
-**	ROUTINE:	link_display()
+**	ROUTINE:	WL_link_display()
 **
 **	FUNCTION:	Display a file (either internal or external display)
 **
@@ -297,34 +317,34 @@ int use_internal_display(void)
 */
 int WL_link_display(const char* filepath)
 {
-	if (use_internal_display())
+	if (WL_use_internal_display())
 	{
 		int rc;
 		
-		wpushscr();					/* This forces vwang/video initialization */
-		rc = internal_display(filepath);
-		wpopscr();
+		vwang_wpushscr();				/* This forces vwang/video initialization */
+		rc = WL_internal_display(filepath, 0);
+		vwang_wpopscr();
 
 		return rc;
 	}
 	else
 	{
-		int4	argcnt, onecnt, compcode, retcode;
+		int4	onecnt, compcode, retcode;
 		char	the_file[WISP_FILEPATH_LEN];
 
 		if (strlen(filepath) >= sizeof(the_file))
 		{
-			werrlog(104,"%%DISPLAY-F-NAME Name of file to display is too big",0,0,0,0,0,0,0);
+			WL_werrlog_error(WERRCODE(104),"DISPLAY", "NAME", 
+				"Name of file to display is too long.");
 			return 0;
 		}
 		
 		memset(the_file,'\0',sizeof(the_file));
 		strcpy(the_file,filepath);
 		
-		put_swap(&onecnt, 1);
+		WL_put_swap(&onecnt, 1);
 
-		argcnt = 8;
-		wvaset(&argcnt);
+		WL_set_va_count(8);
 		LINK2("DISPLAY ", 	(int4)SIZEOF_FILE,
 		      "S",		(int4)1,
 		      "@SYSTEM@",	(int4)SIZEOF_LIB,
@@ -334,12 +354,13 @@ int WL_link_display(const char* filepath)
 		      &compcode,	(int4)sizeof(int4),
 		      &retcode,		(int4)sizeof(int4));
 
-		wswap(&compcode);
-		wswap(&retcode);
+		WL_wswap(&compcode);
+		WL_wswap(&retcode);
 
 		if (8 == compcode)
 		{
-			werrlog(104,"%%DISPLAY-F-LINK Link to DISPLAY failed",0,0,0,0,0,0,0);
+			WL_werrlog_error(WERRCODE(104),"DISPLAY", "LINK", 
+				"Link to DISPLAY failed");
 			return 0;
 		}
 		else
@@ -351,7 +372,7 @@ int WL_link_display(const char* filepath)
 
 
 /*
-**	ROUTINE:	internal_display()
+**	ROUTINE:	WL_internal_display()
 **
 **	FUNCTION:	Display the file using vdisplay()
 **
@@ -359,6 +380,7 @@ int WL_link_display(const char* filepath)
 **
 **	ARGUMENTS:	
 **	filepath	The file to be displayed.
+**	reclen		The record length (0 = variable)
 **
 **	GLOBALS:	None
 **
@@ -369,34 +391,13 @@ int WL_link_display(const char* filepath)
 **	WARNINGS:	None
 **
 */
-int internal_display(const char* filepath)
+int WL_internal_display(const char* filepath, int reclen)
 {
-	int reclen;
-	
-	reclen = greclen(filepath);
-
-	if (reclen >= 0) 
-	{
-		return vdisplay(filepath,reclen);
-	}
-	
-	if (reclen == -2) 
-	{
-		werrlog(ERRORCODE(2),filepath,0,0,0,0,0,0,0);	/* Protection violation.		*/
-		return 0;
-	}
-	
-	if (reclen == -1) 
-	{
-		werrlog(ERRORCODE(4),filepath,0,0,0,0,0,0,0);	/* Error on OPEN.			*/
-		return 0;
-	}
-	
-	return vdisplay(filepath,255);  					/* Display the file using max buffsize.	*/
+	return WL_vdisplay(filepath, reclen);
 }
 
 /*
-**	ROUTINE:	custom_display_utility()
+**	ROUTINE:	WL_custom_display_utility()
 **
 **	FUNCTION:	Return the name of the custom DISPLAY utility (DISPLAYUTIL)
 **
@@ -414,7 +415,7 @@ int internal_display(const char* filepath)
 **	WARNINGS:	None
 **
 */
-const char* custom_display_utility(void)
+const char* WL_custom_display_utility(void)
 {
 	static int first = 1;
 	static char *exe = NULL;
@@ -426,7 +427,7 @@ const char* custom_display_utility(void)
 		first = 0;
 
 #ifdef WIN32
-		if (no_windows())
+		if (WL_no_windows())
 		{
 			/*
 			**	On Windows the DISPLAYUTIL option is disabled if
@@ -436,12 +437,12 @@ const char* custom_display_utility(void)
 		}
 #endif
 		
-		if ((ptr = get_wisp_option("DISPLAYUTIL")) && *ptr)
+		if ((ptr = WL_get_wisp_option("DISPLAYUTIL")) && *ptr)
 		{
 			char buff[256];
 			if (1 == sscanf(ptr,"%s",buff))
 			{
-				exe = wstrdup(buff);
+				exe = wisp_strdup(buff);
 				wtrace("OPTIONS","DISPLAYUTIL", "Using display utility [%s]",exe);
 			}
 		}
@@ -454,14 +455,61 @@ const char* custom_display_utility(void)
 /*
 **	History:
 **	$Log: wfiledis.c,v $
-**	Revision 1.17.2.3  2002/11/14 21:12:27  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.35  2003/02/20 23:14:34  gsl
+**	Add OPTIONS get to DISPLAY utility that gets the record size RECSIZE
 **	
-**	Revision 1.17.2.2  2002/11/12 16:00:23  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.34  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
 **	
-**	Revision 1.17.2.1  2002/10/09 21:03:04  gsl
-**	Huge file support
+**	Revision 1.33  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.32  2002/12/09 21:45:44  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.31  2002/12/09 19:15:36  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.30  2002/10/07 20:54:25  gsl
+**	Change to us WL_fcanread() instead of fopen() the file
+**	
+**	Revision 1.29  2002/07/29 15:46:49  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
+**	
+**	Revision 1.28  2002/07/12 19:10:19  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.27  2002/07/12 17:01:03  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.26  2002/07/11 20:29:17  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.25  2002/07/10 21:05:31  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.24  2002/07/09 04:13:54  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.23  2002/07/02 21:15:32  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.22  2002/06/28 04:02:58  gsl
+**	Work on native version of wfopen and wfname
+**	
+**	Revision 1.21  2002/06/27 04:12:41  gsl
+**	Clean up status/mode bits
+**	
+**	Revision 1.20  2002/06/26 04:25:04  gsl
+**	Cleanup mode/status bit fields
+**	
+**	Revision 1.19  2002/06/26 01:42:46  gsl
+**	Remove VMS code
+**	
+**	Revision 1.18  2002/06/25 17:46:05  gsl
+**	Remove WISPFILEXT as a global, now must go thru set/get routines
 **	
 **	Revision 1.17  1999/02/23 21:58:53  gsl
 **	moved the no_windows() routine to wispcfg.c
@@ -473,7 +521,7 @@ const char* custom_display_utility(void)
 **	the no_windows() tells us were in telnet.
 **
 **	Revision 1.15  1999-01-21 16:30:31-05  gsl
-**	Surround call to internal_display() with wpushscr() and wpopscr() just like it
+**	Surround call to internal_display() with vwang_wpushscr() and vwang_wpopscr() just like it
 **	is done in LINK.  This is needed to fix TRK#918, CRID REPORT utility
 **	when printing a report to the screen DEVICE=DISPLAY uses link_display()
 **	this garbles the screen because vwang is not initialized because

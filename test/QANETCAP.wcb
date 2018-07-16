@@ -380,8 +380,8 @@
            03  FILLER PIC X(30) ROW 15 COL 30
                SOURCE WSFNS-STATUS.
 
-           03  FILLER PIC X(35) ROW 24 COL 20 VALUE 
-               "PRESS RETURN TO CONTINUE, PF16 EXIT".
+           03  FILLER PIC X(40) ROW 24 COL 20 VALUE 
+               "PRESS (ENTER) TO CONTINUE, (16) EXIT".
 
        01  Z1-FN              PIC XX VALUE SPACES.
        01  Z1-LINE            BINARY VALUE ZERO.
@@ -453,8 +453,8 @@
            03  FILLER PIC X(30) ROW 17 COL 30
                SOURCE WSFNM-STATUS.
 
-           03  FILLER PIC X(35) ROW 24 COL 28 VALUE 
-               "PRESS RETURN TO CONTINUE, PF16 EXIT".
+           03  FILLER PIC X(40) ROW 24 COL 20 VALUE 
+               "PRESS (ENTER) TO CONTINUE, (16) EXIT".
 
        01  Z2-FN              PIC XX VALUE SPACES.
        01  Z2-LINE            BINARY VALUE ZERO.
@@ -478,19 +478,19 @@
            03  FILLER  PIC X(21) ROW 1 COL 57 VALUE
                "NetronCAP-SUBS-SCREEN".
            03  FILLER  PIC X(25) ROW 3 COL 20 VALUE
-               " 1) Generate a WSFNS call".
+               "(1) Generate a WSFNS call".
            03  FILLER  PIC X(25) ROW 5 COL 20 VALUE
-               " 2) Generate a WSFNM call".
+               "(2) Generate a WSFNM call".
            03  FILLER  PIC X(34) ROW 7 COL 20 VALUE
-               " 3) WSFNS (NISSI NetronCap screen)".
+               "(3) WSFNS (NISSI NetronCap screen)".
            03  FILLER  PIC X(34) ROW 9 COL 20 VALUE
-               " 4) WSFNM (NISSI NetronCap screen)".
+               "(4) WSFNM (NISSI NetronCap screen)".
            03  FILLER  PIC X(34) ROW 11 COL 20 VALUE
-               " 5) Test NetronCap with monkeybar".
-           03  FILLER  PIC X(08) ROW 13 COL 20 VALUE
-               "16) EXIT".
-           03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
-               "PRESS PF KEY 16 TO EXIT".
+               "(5) Test NetronCap with monkeybar".
+           03  FILLER  PIC X(35) ROW 13 COL 20 VALUE
+               "(16) EXIT".
+           03  FILLER  PIC X(35) ROW 24 COL 10 VALUE
+               "PRESS PF KEY (16) TO EXIT".
 
       /*****************************************************************
       *                                                                *

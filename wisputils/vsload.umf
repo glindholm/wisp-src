@@ -1,4 +1,0 @@
-
-vsload: vsload.c vsload.h /usr/lib/libwisp.a /usr/lib/libvideo.a
-	cc -o vsload vsload.c -lwisp -lvideo
-

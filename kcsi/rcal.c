@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 This is the report writer portion of REPORT.
 On entry it is passed the information entered from the OPTIONS selection
@@ -26,7 +40,6 @@ This module initializes internal structures from the passed COBOL information.
 #include "cobioblk.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)rcal.c	1.13 8/14/93";
 
 #ifdef PROFILE
 extern etext;
@@ -902,8 +915,8 @@ static void debug_report_def(void)
 /*
 **	History:
 **	$Log: rcal.c,v $
-**	Revision 1.4.2.1  2002/11/12 15:56:31  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.10  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.9  2002/10/24 14:20:35  gsl
 **	Make globals unique

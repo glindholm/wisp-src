@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wdisplay.c
 **
@@ -22,6 +43,7 @@ static char rcsid[]="$Id:$";
 #include "idsistd.h"
 #include "vwang.h"
 #include "wisplib.h"
+#include "vssubs.h"
 #include "werrlog.h"
 
 /*
@@ -64,7 +86,6 @@ static char rcsid[]="$Id:$";
 */
 void WDISPLAY(char screen[1924])
 {
-	int4	argcnt;
 	char	aid[1];
 	int4	message_text_cnt=1;
 	char	message_text[ 18*(80-1) ];			/* 18 lines of 79 characters can be displayed. */
@@ -76,11 +97,10 @@ void WDISPLAY(char screen[1924])
 	memcpy(&message_text[0],   "PRESS (ENTER) TO CONTINUE PROGRAM", 33);
 	memcpy(&message_text[3*(80-1)], &screen[4], 15*(80-1));  /* Copy starting past the order-area */
 
-	wswap(&message_text_cnt);
-	wswap(&message_text_len);
+	WL_wswap(&message_text_cnt);
+	WL_wswap(&message_text_len);
 	
-	argcnt = 8;
-	wvaset(&argcnt);
+	WL_set_va_count(8);
 	
 	GETPARM("I ", "R", "DISPLAY ", aid, "DISP", "COBOL ", 
 		message_text, &message_text_len);
@@ -109,7 +129,6 @@ void WDISPLAY(char screen[1924])
 */
 void WSTOP(char buff[1920])
 {
-	int4	argcnt;
 	char	aid[1];
 	int4	message_text_cnt=1;
 	char	message_text[ 18*(80-1) ];			/* 18 lines of 79 characters can be displayed. */
@@ -121,38 +140,35 @@ void WSTOP(char buff[1920])
 	memcpy(&message_text[0],   "PRESS (ENTER) TO CONTINUE PROGRAM", 33);
 	memcpy(&message_text[3*(80-1)], buff, 15*(80-1));
 
-	wswap(&message_text_cnt);
-	wswap(&message_text_len);
+	WL_wswap(&message_text_cnt);
+	WL_wswap(&message_text_len);
 	
-	argcnt = 8;
-	wvaset(&argcnt);
-	
+	WL_set_va_count(8);
 	GETPARM("I ", "R", "STOP    ", aid, "STOP", "COBOL ", 
 		message_text, &message_text_len);
 	
 
 }
 
-#ifdef OLD
-WDISPLAY(screen)
-unsigned char *screen;
-{
-	char vw_function[1], vw_no_mod[2], vw_lines[1];					/* vwang parameters.			*/
-	unsigned char dummy[40];							/* Dummy storage.			*/
-
-	vw_function[0] = DISPLAY_AND_READ;
-	vw_lines[0] = 24;								/* Determine the number of lines.	*/
-	wpushscr();
-	vwang(vw_function,screen,vw_lines,"A",dummy,vw_no_mod);				/* Go do the I/O action.		*/
-	wpopscr();
-
-	return(1);									/* Return a success code.		*/
-}
-#endif
 
 /*
 **	History:
 **	$Log: wdisplay.c,v $
+**	Revision 1.18  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.17  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.16  2002/08/01 14:09:10  gsl
+**	type warnings
+**	
+**	Revision 1.15  2002/07/12 17:01:02  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.14  2002/07/09 04:13:54  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
 **	Revision 1.13  1997/05/08 20:17:16  gsl
 **	Add WSTOP and traceing
 **	

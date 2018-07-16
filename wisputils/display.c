@@ -1,11 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990			*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 
 /*						Include standard header files.							*/
@@ -17,45 +34,29 @@ static char rcsid[]="$Id:$";
 #include "wfiledis.h"
 #include "wdefines.h"
 
-#define EXT_FILEXT
 #include "filext.h"
 
 /*						Entry point.									*/
 
 int main(int argc, char *argv[])
 {
-#define		ROUTINE		14000
-
-#ifdef VMS
-	/*
-	**	Patch for VMS/Alpha.
-	**	If program run with no arguments then argc is being set to 2 instead of 1,
-	**	and the argv[1] is null.
-	**	Check if argc is 2 and argv[1] in null then change argc to 1.
-	*/
-	if (2==argc && !argv[1])
-	{
-		argc = 1;
-	}
-#endif
-
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);							/* Say where we are.		*/
-	initglbs("DISPLAY ");
+	WL_initglbs("DISPLAY ");
 	vwang_title("WISP DISPLAY");
 
-	init_screen();										/* Initialize for Wang screen.	*/
+	vwang_init_screen();										/* Initialize for Wang screen.	*/
 
 	if (argc > 1)										/* Did user give a filename?	*/
 	{
-		internal_display(argv[1]);
+		WL_internal_display(argv[1], 0);
 	}
 	else
 	{
 		char	filename[COB_FILEPATH_LEN + 1];
+		int recsize = 0;
 
-		if (display_util_getparms(filename))
+		if (WL_display_util_getparms(filename,&recsize))
 		{
-			internal_display(filename);
+			WL_internal_display(filename, recsize);
 		}
 	}
 	
@@ -65,6 +66,27 @@ int main(int argc, char *argv[])
 /*
 **	History:
 **	$Log: display.c,v $
+**	Revision 1.20  2003/02/20 23:14:35  gsl
+**	Add OPTIONS get to DISPLAY utility that gets the record size RECSIZE
+**	
+**	Revision 1.19  2003/02/04 18:50:26  gsl
+**	fix copyright header
+**	
+**	Revision 1.18  2002/12/10 17:09:11  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.17  2002/07/10 21:06:29  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.16  2002/07/09 04:13:51  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.15  2002/06/26 01:42:47  gsl
+**	Remove VMS code
+**	
+**	Revision 1.14  2002/06/25 18:18:34  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
 **	Revision 1.13  1998/08/03 21:26:07  jlima
 **	Support Logical Volume Translation to long file names containing embedded blanks.
 **	

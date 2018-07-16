@@ -1,15 +1,26 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
 */
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+
 
 /*
 **	File:		cobfiles.h
@@ -40,6 +51,7 @@
 #define SEQ_SEQ			0x0800							/* The file was SEQUENTIAL/SEQUENTIAL.	*/
 #define DBFILE_FILE		0x1000							/* The file is a DATABASE file		*/
 #define OPENIOX_FILE		0x2000							/* OPEN I-O exclusive			*/
+#define RELATIVE_FILE		0x4000							/* The file is RELATIVE.		*/
 #define FILE_MASK		~(DISK_FILE + PRINTER_FILE + SORT_FILE + TAPE_FILE)	/* The mask used to remove file bits.	*/
 
 #define FSET(F,V) 		(F = (F & FILE_MASK) | V)				/* Macro to set a file value.		*/
@@ -64,6 +76,12 @@ EXT int  prog_dscnt INIT_FALSE;								/* How many need their SELECT deleted.	*/
 /*
 **	History:
 **	$Log: cobfiles.h,v $
+**	Revision 1.8  2003/03/06 21:30:44  gsl
+**	Add RELATIVE file flag
+**	
+**	Revision 1.7  2003/02/04 17:33:20  gsl
+**	fix copyright header
+**	
 **	Revision 1.6  1996/08/31 01:56:01  gsl
 **	drcs update
 **	

@@ -1,18 +1,33 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #include <string.h>
 #include "idsistd.h"
+#include "wmalloc.h"
+
 /*
-**	Routine:	untabify()
+**	Routine:	WL_untabify()
 **
 **	Function:	To change tabs into spaces.
 **
@@ -30,12 +45,12 @@ static char rcsid[]="$Id:$";
 **	Warnings:	If the expanded string is greater then size then in will be truncated to size.
 **
 */
-int untabify(char* str, int size)
+int WL_untabify(char* str, int size)
 {
 	char 	*tmpbuf;
 	int 	iidx,oidx;
 	
-	tmpbuf = (char *)malloc(size);
+	tmpbuf = (char *)wisp_malloc(size);
 
 	for (iidx=oidx=0; iidx < size && oidx < size && str[iidx]; )
 	{
@@ -61,6 +76,18 @@ int untabify(char* str, int size)
 /*
 **	History:
 **	$Log: untabify.c,v $
+**	Revision 1.10  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.9  2002/07/12 20:40:39  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.8  2002/07/02 21:15:30  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.7  2002/06/25 15:21:54  gsl
+**	Change to use wmalloc()
+**	
 **	Revision 1.6  1996/08/19 22:33:01  gsl
 **	drcs update
 **	

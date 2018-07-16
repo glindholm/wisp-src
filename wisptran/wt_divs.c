@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	wisp_divs.c
@@ -20,11 +33,7 @@ static char rcsid[]="$Id:$";
 #include "directiv.h"
 
 
-extern	int	symbzero;
 extern	char	decimal_is;
-
-static int decl_pnum = 0;
-static int call_initwisp();
 
 
 int check_decl(void)									/* Examine the tables of PERFORMs in	*/
@@ -59,7 +68,7 @@ int check_decl(void)									/* Examine the tables of PERFORMs in	*/
 }
 
 
-new_para()										/* Generate a new .PAR file with a list	*/
+int new_para()										/* Generate a new .PAR file with a list	*/
 {											/* of screens and paragraph names which	*/
 	int i;										/* are referenced by the declaratives,	*/
 	FILE *the_file;									/* but in the procedure division.	*/
@@ -95,10 +104,10 @@ new_para()										/* Generate a new .PAR file with a list	*/
 /*
 **	ROUTINE:	g_wfilechk()
 **
-**	FUNCTION:	Generate the call to "wfilechk2" as part of declaritives handling.
+**	FUNCTION:	Generate the call to "WFILECHK2" as part of declaritives handling.
 **
 **	DESCRIPTION:	Generate the code to get the extended file status then
-**			generate the call to "wfilechk2" to check the file status
+**			generate the call to "WFILECHK2" to check the file status
 **			code.
 **
 **	ARGUMENTS:	
@@ -113,55 +122,100 @@ new_para()										/* Generate a new .PAR file with a list	*/
 */
 int g_wfilechk(int i)
 {
-	tput_line_at(12, "MOVE \"%s\" TO",prog_files[i]);
-	tput_clause (16, "WISP-CURRENT-FILE-ID");
+	if (!opt_native)
+	{
+		tput_line_at(12,     "MOVE \"%s\" TO WISP-CURRENT-FILE-ID.",prog_files[i]);
+		tput_line_at(12,     "MOVE \"%s\" TO WISP-HAS-DECLARATIVES.", (prog_ftypes[i] & HAS_DECLARATIVES)?"Y":"N");
+	}
 
 	/*
 	**	Get the extended file status code
 	*/
-	if (vax_cobol)
+	if (acu_cobol)
 	{
-		tput_line_at(12, "MOVE RMS-STS OF %s",prog_files[i]);
-		tput_clause (16, "TO WISP-EXTENDED-FILE-STATUS-1");
-		tput_line_at(12, "MOVE RMS-STV OF %s",prog_files[i]);
-		tput_clause (16, "TO WISP-EXTENDED-FILE-STATUS-2");
-	}
-	else if (acu_cobol)
-	{
-		tput_line_at(12, "CALL \"C$RERR\" USING WISP-EXTENDED-FILE-STATUS-1");
+		tput_line_at(12, "CALL \"C$RERR\" USING WISP-EXTENDED-FILE-STATUS.");
+		if (!opt_nogetlastfileop)
+		{
+			tput_line_at(12, "CALL \"C$GETLASTFILEOP\" USING WISP-LASTFILEOP, NULL, NULL.");
+		}
 	}
 
-	if (prog_ftypes[i] & HAS_DECLARATIVES)						/* If it has a DECLARATIVE, set bit.	*/
+	if (opt_native) 
 	{
-		tput_line_at(12, "MOVE WISP-DECL TO WISP-LONGWORD");
-		tput_line_at(12, "CALL \"lbit_on\" USING WISP-LONGWORD,");
-		tput_clause (16, "%s,", get_prog_status(i));
+		/*
+		**	CALL "W@FILESTATUSCHECK" USING
+		**	     LastFileOp,
+		**	     FileStatus,
+		**	     ExtendedFileStatus
+		**	     FileAttributes,
+		**	     Vol,Lib,File,
+		**	     NativePath,
+		**	     CobolFileName,
+		**	     CobolAppname,
+		**	     WISP-SKIP-DECLARATIVES,
+		**	     DeclarativesFlag.
+		*/
+
+		tput_line_at(12,	"CALL \"W@FILESTATUSCHECK\" USING");
+		tput_clause(16,		    "WISP-LASTFILEOP,");
+		tput_clause(16,		    "%s,",prog_fstats[i]);
+		tput_clause(16,		    "WISP-EXTENDED-FILE-STATUS,");
+		tput_clause(16,        	    "%s,", get_prog_status(i));
+		tput_clause(16,		    "%s,", get_prog_vname(i));
+		tput_clause(16,		    "%s,", get_prog_lname(i));
+		tput_clause(16,		    "%s,", get_prog_fname(i));
+		tput_clause(16,		    "%s,", get_prog_nname(i));
+		tput_clause(16,             "\"%s\",", prog_files[i]);
+		tput_clause(16,             "WISP-APPLICATION-NAME,");
+		tput_clause(16,             "WISP-SKIP-DECLARATIVES,");
+		tput_clause(16,             "\"%s\".", (prog_ftypes[i] & HAS_DECLARATIVES)?"Y":"N");
 	}
+	else
+	{
+		/*
+		**	IF (	WISP-LASTFILEOP = "ReadLock" OR
+		**		WISP-LASTFILEOP = "ReadNextLock") AND
+		**		{file-status} = "{record-locked}"
+		**	THEN
+		**	    MOVE "Y" TO WISP-SKIP-DECLARATIVES
+		**	ELSE
+		**	    CALL "WFILECHK3" USING
+		**		WISP-LASTFILEOP
+		**		{file-status}
+		**		WISP-EXTENDED-FILE-STATUS
+		**		{FileAttributes}
+		**		{file-vol}
+		**		{file-lib}
+		**		{file-file}
+		**		{file-path}
+		**		WISP-CURRENT-FILE-ID
+		**		WISP-APPLICATION-NAME
+		**		WISP-SKIP-DECLARATIVES
+		**		WISP-HAS-DECLARATIVES
+		**	END-IF.
+		*/
+		tput_line_at(12, "IF ((WISP-LASTFILEOP = \"ReadLock\" OR");
+		tput_line_at(12, "     WISP-LASTFILEOP = \"ReadNextLock\") AND");
+		tput_line_at(12, "     %s = \"%s\")", prog_fstats[i], hard_lock);
+		tput_line_at(12, "THEN");
+		tput_line_at(16,     "MOVE \"Y\" TO WISP-SKIP-DECLARATIVES");
+		tput_line_at(12, "ELSE");
+		tput_line_at(16,     "CALL \"WFILECHK3\" USING");
+		tput_clause(20,		    "WISP-LASTFILEOP,");
+		tput_clause(20,		    "%s,",prog_fstats[i]);
+		tput_clause(20,		    "WISP-EXTENDED-FILE-STATUS,");
+		tput_clause(20,        	    "%s,", get_prog_status(i));
+		tput_clause(20,		    "%s,", get_prog_vname(i));
+		tput_clause(20,		    "%s,", get_prog_lname(i));
+		tput_clause(20,		    "%s,", get_prog_fname(i));
+		tput_clause(20,		    "%s,", get_prog_nname(i));
+		tput_clause(20,             "WISP-CURRENT-FILE-ID,");
+		tput_clause(20,             "WISP-APPLICATION-NAME,");
+		tput_clause(20,             "WISP-SKIP-DECLARATIVES,");
+		tput_clause(20,             "WISP-HAS-DECLARATIVES");
+		tput_line_at(12, "END-IF.");
 
-	/*
-	**	CALL "wfilechk2" using  WISP-DECLARATIVES-STATUS,
-	**				file-status,
-	**				WISP-EXTENDED-FILE-STATUS-1,
-	**				WISP-EXTENDED-FILE-STATUS-2,
-	**				S-filename,
-	**				vol-name, lib-name, file-name
-	**				N-filename,
-	**				WISP-CURRENT-FILE-ID,
-	**				WISP-APPLICATION-NAME.
-	*/
-
-	tput_line_at(12,	"CALL \"wfilechk2\" USING");
-	tput_clause(16,		    "WISP-DECLARATIVES-STATUS,");
-	tput_clause(16,		    "%s,",prog_fstats[i]);
-	tput_clause(16,		    "WISP-EXTENDED-FILE-STATUS-1,");
-	tput_clause(16,		    "WISP-EXTENDED-FILE-STATUS-2,");
-	tput_clause(16,        	    "%s,", get_prog_status(i));				/* Generate the S- field.		*/
-	tput_clause(16,		    "%s,", get_prog_vname(i));				/* Generate the VOLUME field.		*/
-	tput_clause(16,		    "%s,", get_prog_lname(i));
-	tput_clause(16,		    "%s,", get_prog_fname(i));
-	tput_clause(16,		    "%s,", get_prog_nname(i));
-	tput_clause(16,             "WISP-CURRENT-FILE-ID,");
-	tput_clause(16,             "WISP-APPLICATION-NAME.");
+	}
 	return 0;
 }
 
@@ -233,9 +287,67 @@ int fd_check(void)									/* Check for SELECT's with no FD's.	*/
 /*
 **	History:
 **	$Log: wt_divs.c,v $
-**	Revision 1.15  1998/03/27 18:37:57  gsl
-**	fix warning
+**	Revision 1.33  2003/03/17 17:22:43  gsl
+**	Change to use  WFILECHK3
 **	
+**	Revision 1.32  2003/03/11 19:23:55  gsl
+**	#NATIVE changes
+**	
+**	Revision 1.31  2003/03/10 17:44:28  gsl
+**	Add Cobol logic to handler ReadLock with Record Locked without
+**	calling  WFILECHK3
+**	
+**	Revision 1.30  2003/03/07 20:06:05  gsl
+**	Fix call to WFILECHK3
+**	
+**	Revision 1.29  2003/03/07 17:00:07  gsl
+**	For ACU default to using "C$GETLASTFILEOP" to retrieve the last file op.
+**	Add option #NOGETLASTFILEOP to use if not C$GETLASTFILEOP is
+**	not available.
+**	
+**	Revision 1.28  2003/03/06 21:52:02  gsl
+**	WISP-DECLARATIVES-STATUS to WISP-LASTFILEOP
+**	WFILECHK2 -> WFILECHK3
+**	
+**	Revision 1.27  2003/03/03 22:08:40  gsl
+**	rework the options and OPTION file handling
+**	
+**	Revision 1.26  2003/02/04 18:02:20  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.25  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.24  2002/07/31 21:00:27  gsl
+**	globals
+**	
+**	Revision 1.23  2002/07/31 20:24:26  gsl
+**	globals
+**	
+**	Revision 1.22  2002/07/30 22:00:49  gsl
+**	globals
+**	
+**	Revision 1.21  2002/07/26 19:20:43  gsl
+**	
+**	Revision 1.20  2002/07/02 04:09:49  gsl
+**	Add WISP-SKIP-DECLARATIVES
+**	
+**	Revision 1.19  2002/06/21 20:49:32  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.18  2002/06/20 22:56:29  gsl
+**	comments
+**	
+**	Revision 1.17  2002/06/20 02:38:48  gsl
+**	native changes
+**	W@FILESTATUSCHECK
+**	
+**	Revision 1.16  2002/05/16 21:48:48  gsl
+**	getlastfileop logic
+**	
+**	Revision 1.15  1998-03-27 13:37:57-05  gsl
+**	fix warning
+**
 **	Revision 1.14  1998-03-19 14:23:28-05  gsl
 **	Change to use get_prog_status().
 **	Move OLD to old.c
@@ -247,7 +359,7 @@ int fd_check(void)									/* Check for SELECT's with no FD's.	*/
 **	Cange scrn_para() to gen_screen_paras() as part of ACN code
 **
 **	Revision 1.11  1997-04-29 12:54:53-04  gsl
-**	Change to all wfilechk2() which uses the longer extended file status
+**	Change to all WFILECHK2() which uses the longer extended file status
 **	codes needed for acu4gl
 **
 **	Revision 1.10  1996-08-30 21:56:17-04  gsl

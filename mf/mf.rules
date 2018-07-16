@@ -27,13 +27,13 @@
 #			three programs into int files.
 #
 #				include mf.rules
-#				all:	main.int prog0001.int prog0002.int
+#				all:	MAIN.int PROG0001.int PROG0002.int
 #
 #			To change the WISP flags or COBOL flags used you
 #			can assign WISPFLAGS or COBFLAGS new values following
 #			the include statement.
 #
-#				include acu.rules
+#				include mf.rules
 #				WISPFLAGS= -I../copy -e
 #				COBFLAGS=
 #
@@ -55,7 +55,8 @@ COBOL=cob
 COBFLAGS=
 # LN=ln
 LN=cp
-WISPLANG=MF
+#WISPLANG=MF
+WISPLANG=MFSE
 INT=-i
 GNT=-u
 OBJ=-xc
@@ -109,4 +110,5 @@ LIB=-lwisp -lvideo
 
 .int:
 	$(COBOL) $(EXE) $(COBFLAGS) $*.int $(LDFILES) $(LIB)
+
 

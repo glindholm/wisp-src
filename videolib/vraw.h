@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1997 NeoMedia Technologies, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 
 /*
 **	File:		vraw.h
@@ -44,7 +63,7 @@ extern void vrawmove(int row, int col);
 extern void vrawattribute(int atr);
 extern void vrawsetattributes(int attrs[]);
 extern int  vrawntcn_get_mouse_position( int *row, int *col );
-extern void vshut(void);
+extern void VL_vshut(void);
 extern int  vrawexit(void);
 extern int  vrawputc(char ch);
 extern int  vrawprint(char *buf);
@@ -71,6 +90,12 @@ extern void* vrawttyalloc(void);
 /*
 **	History:
 **	$Log: vraw.h,v $
+**	Revision 1.4  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.3  2002/07/15 20:16:12  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.2  1997/07/16 02:00:53  gsl
 **	Added vrawDebugBreak() for WIN32
 **	

@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1996 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 
 /*
 **	File:		vutil.h
@@ -23,25 +42,22 @@
 /*
 **	Structures and Defines
 */
-
+#define vre	VL_vre
 /*
 **	Function Prototypes
 */
-void vre_set_logfile(const char* filepath);
-void vre_write_logfile(const char* buff);
+void VL_vre_set_logfile(const char* filepath);
+void VL_vre_write_logfile(const char* buff);
 
-int vre(char *text, ...);
-int vre_window(char *text, ...);
-int vml(int y);										/* Calculate the virtual map line no.	*/
-int vmlx(int top, int y);								/* Calculate the virtual map line no.	*/
-int vha(void);										/* Move to vcur_lin and vcur_col.	*/
-int visible(char c, int a);								/* Check char c with attributes a.	*/
-int vmaskc(int cset);									/* Mask all but character set bits.	*/
-int vmaskm(int mode);									/* Mask all but rendition bits.		*/
-unsigned char *vsss(int row, int col, int rows, int cols);				/* Save a screen segment.		*/
-int vrss(unsigned char *loc);								/* Restore a screen segment.		*/
-void varb(int row, int col, int rows, int cols);					/* Invalidate map section.		*/
-void vtitle(const char *titlestr);
+int VL_vre(char *text, ...);
+int VL_vre_window(char *text, ...);
+int VL_vml(int y);									/* Calculate the virtual map line no.	*/
+int VL_vmlx(int top, int y);								/* Calculate the virtual map line no.	*/
+int VL_vha(void);									/* Move to vcur_lin and vcur_col.	*/
+int VL_vmaskc(int cset);								/* Mask all but character set bits.	*/
+int VL_vmaskm(int mode);								/* Mask all but rendition bits.		*/
+void VL_varb(int row, int col, int rows, int cols);					/* Invalidate map section.		*/
+void VL_vtitle(const char *titlestr);
 
 
 #endif /* vutil_H */
@@ -49,6 +65,12 @@ void vtitle(const char *titlestr);
 /*
 **	History:
 **	$Log: vutil.h,v $
+**	Revision 1.6  2003/01/31 19:25:55  gsl
+**	Fix copyright header
+**	
+**	Revision 1.5  2002/07/15 20:16:16  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.4  2001/10/15 13:12:55  gsl
 **	Add proto's
 **	

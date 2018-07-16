@@ -60,7 +60,6 @@ CFG=acu - Win32 Release
 # PROP Intermediate_Dir ".\Debug"
 # PROP Cmd_Line "NMAKE /f wacu.mak WISPDIR=.. acu"
 # PROP Rebuild_Opt "/a"
-# PROP Target_File "acu\wwruncbl.exe"
 # PROP Bsc_Name "acu\acu.bsc"
 # PROP Target_Dir "."
 
@@ -82,6 +81,34 @@ CFG=acu - Win32 Release
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
 # Begin Source File
 
+SOURCE=.\sub85_acu50.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\sub85_acu51.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\sub85_acu52.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\sub85_acu60.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp_sub85_inc.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\acu60\wrundll.rc
+# End Source File
+# End Group
+# Begin Group "Cobol"
+
+# PROP Default_Filter "cob wcb"
+# Begin Source File
+
 SOURCE=.\aculink.wcb
 # End Source File
 # Begin Source File
@@ -90,7 +117,27 @@ SOURCE=.\acuusing.cob
 # End Source File
 # Begin Source File
 
-SOURCE=.\sub85.c
+SOURCE=".\W@FILESTATUSCHECK.cob"
+# End Source File
+# Begin Source File
+
+SOURCE=".\W@OPENFILE.cob"
+# End Source File
+# End Group
+# Begin Group "Make Files"
+
+# PROP Default_Filter "mak;umf"
+# Begin Source File
+
+SOURCE=.\acu.rules
+# End Source File
+# Begin Source File
+
+SOURCE=.\acucobol.include
+# End Source File
+# Begin Source File
+
+SOURCE=.\run32wisp_acu52.mak
 # End Source File
 # Begin Source File
 
@@ -102,6 +149,10 @@ SOURCE=.\wacu.umf
 # End Source File
 # Begin Source File
 
+SOURCE=.\wrun32wisp_acu50.mak
+# End Source File
+# Begin Source File
+
 SOURCE=.\wrun32wisp_acu51.mak
 # End Source File
 # Begin Source File
@@ -110,11 +161,7 @@ SOURCE=.\wrun32wisp_acu52.mak
 # End Source File
 # Begin Source File
 
-SOURCE=.\wrun32wisp_crid_acu51.mak
-# End Source File
-# Begin Source File
-
-SOURCE=.\wrun32wisp_crid_acu52.mak
+SOURCE=.\wrun32wisp_ede_acu50.mak
 # End Source File
 # Begin Source File
 
@@ -126,16 +173,32 @@ SOURCE=.\wrun32wisp_ede_acu52.mak
 # End Source File
 # Begin Source File
 
+SOURCE=.\wrun32wisp_kcsi_acu50.mak
+# End Source File
+# Begin Source File
+
+SOURCE=.\wrun32wisp_kcsi_acu51.mak
+# End Source File
+# Begin Source File
+
 SOURCE=.\wrun32wisp_kcsi_acu52.mak
 # End Source File
 # Begin Source File
 
-SOURCE=.\wwruncbl.mak
+SOURCE=.\wruncbl.umf
+# End Source File
+# Begin Source File
+
+SOURCE=.\acu60\wrundll_kcsi_acu60.mak
+# End Source File
+# Begin Source File
+
+SOURCE=.\acu60\wrundll_wisp_acu60.mak
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=.\acucobol.include
+SOURCE=.\Acucobol6_notes.txt
 # End Source File
 # Begin Source File
 
@@ -143,7 +206,19 @@ SOURCE=.\AcucobolLicenses.txt
 # End Source File
 # Begin Source File
 
-SOURCE=.\wruncbl.umf
+SOURCE=.\acu60\build_ede_acu60_rts.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\acu60\build_kcsi_acu60_rts.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\acu60\build_wisp_acu60_rts.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\acu60\build_wisp_acu60atm_rts.txt
 # End Source File
 # End Target
 # End Project

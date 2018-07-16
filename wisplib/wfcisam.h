@@ -27,10 +27,10 @@
 /*
 **	Function Prototypes
 */
-int4 cisaminfo( const char* path, const char* code, void* field );
+int4 WL_cisaminfo( const char* path, const char* code, void* field );
 
-int unloadcisam(const char *inname, const char *outname, int4 recsize);
-int unloadfhisam(const char *inname, const char *outname, int4 recsize);
+int WL_unloadcisam(const char *inname, const char *outname, int4 recsize);
+int WL_unloadfhisam(const char *inname, const char *outname, int4 recsize);
 
 
 #endif /* wfcisam_H */
@@ -38,6 +38,9 @@ int unloadfhisam(const char *inname, const char *outname, int4 recsize);
 /*
 **	History:
 **	$Log: wfcisam.h,v $
+**	Revision 1.3  2002/07/12 19:10:19  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.2  2001/10/26 19:44:09  gsl
 **	Move the unloadcisam() and unloadfhisam() from wispsort.c
 **	

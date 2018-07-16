@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		extract.c
@@ -28,15 +47,16 @@ static char rcsid[]="$Id:$";
 #include <stdarg.h>
 #include <time.h>
 #include <string.h>
+#include <sys/types.h>
 
 #ifdef unix
 #include <unistd.h>
 #include <sys/times.h>
 #include <dirent.h>
 #include <termio.h>
+#include <signal.h>
 #endif	/* unix */
 
-#include <sys/types.h>
 #include <sys/stat.h>
 
 #ifdef WIN32
@@ -47,7 +67,6 @@ static char rcsid[]="$Id:$";
 #include "idsistd.h"
 #include "wdefines.h"
 #include "wperson.h"
-#include "movebin.h"
 #include "werrlog.h"
 #include "wglobals.h"
 #include "wanguid.h"
@@ -57,36 +76,36 @@ static char rcsid[]="$Id:$";
 #include "wispcfg.h"
 #include "machid.h"
 #include "setprgid.h"
+#include "vssubs.h"
 
 static char prid[8];
 
 static char *configfile();
-static void do_extract(const char* keywrd, char* recvr, int4 rlen);
+static void do_extract(const char* routine, const char* keywrd, char* recvr, int4 rlen);
 static int gettype();
 static int findtty();
 static void dev_list(char* where, int4 rlen);					/* generate a list of devs			*/
 static int dev_info();
 
-int osd_term(int4* tnum, int *tflags);
+static int osd_term(int4* tnum, int *tflags);
 static void osd_mode(char *mode);
 static void osd_jname(char* name);
 
-#define NOT_SUPP 	{if ( full_err_mess ) werrlog(ERRORCODE(2),prid,keywrd,0,0,0,0,0,0);}
-#define NOT_YET		{if ( full_err_mess ) werrlog(ERRORCODE(4),prid,keywrd,0,0,0,0,0,0);}
+#define NOT_SUPP 	{if ( full_err_mess ) WL_werrlog(WERRCODE(17002),prid,keywrd,0,0,0,0,0,0);}
+#define NOT_YET		{if ( full_err_mess ) WL_werrlog(WERRCODE(17004),prid,keywrd,0,0,0,0,0,0);}
 
 /*
-**	Call "EXTRACT" using Keyword, Reciever [,length] ...
+**	Call routine using Keyword, Reciever [,length] ...
 **
 **	Old translation of EXTRACT call put the PROGID as the 3rd parameter and
-**	split multiple keywords into multiple calls.  It 3 args and 3rd arg is 
-**	character data then assume old style translation.  This is save because
+**	split multiple keywords into multiple calls.  If 3 args and 3rd arg is 
+**	character data then assume old style translation.  This is safe because
 **	with new translation a 3 arg call would have the length as the 3rd arg
 **	and this would not be character data.
 */
 
 void EXTRACT(const char* first, ...)
 {
-#define		ROUTINE		17000
 	va_list	the_args;
 	int	arg_count, ac;								/* Number of arguments.			*/
 	const	char *next_arg;
@@ -95,9 +114,9 @@ void EXTRACT(const char* first, ...)
 	int	gotk, poldw;								/* Flag to indicate key has been rec'd. */
 	int4	rlen;
 
-	memcpy(prid, getprogid(),8);							/* Copy prog id from global to local.	*/
+	memcpy(prid, WL_getprogid(),8);							/* Copy prog id from global to local.	*/
 	va_start(the_args, first);							/* Set pointer to top of stack.		*/
-	arg_count = va_count(the_args);							/* Determine the number of arguments.	*/
+	arg_count = WL_va_count();							/* Determine the number of arguments.	*/
 	ac = arg_count;									/* Set a var to manipulate.		*/
 
 	if (ac == 3) poldw = 1;								/* Test if possibly generated call from */
@@ -127,7 +146,7 @@ void EXTRACT(const char* first, ...)
 		}
 		else									/* Error: need receiver field.		*/
 		{
-			werrlog(ERRORCODE(8),prid,next_arg,0,0,0,0,0,0);
+			werrlog(WERRCODE(17008),prid,next_arg,0,0,0,0,0,0);
 			va_end(the_args);
 			return;								/* Return back to caller.		*/
 		}
@@ -137,7 +156,7 @@ void EXTRACT(const char* first, ...)
 		{
 			next_arg = va_arg(the_args, char*);				/* Get the next parameter.		*/
 			ac--;								/* Decrement the argument count.	*/
-			if ( isprint(next_arg[0]) && isprint(next_arg[1]) )		/* if 1st 2 chars are printable, 	*/
+			if ( isprint((int)next_arg[0]) && isprint((int)next_arg[1]) )		/* if 1st 2 chars are printable, 	*/
 			   								/*  is next  keyword or the prog id.	*/
 			{
 				if (poldw)						/* Is the old wisp call so is the ID.	*/
@@ -151,21 +170,26 @@ void EXTRACT(const char* first, ...)
 				const int4 *plong;
 				gotk = 0;
 				plong = (const int4 *)next_arg;					/* Set to point to a int4eger.	*/
-				rlen = get_swap(plong);
+				rlen = WL_get_swap(plong);
 			}
 		}
-		do_extract(ckw,recvr,rlen);						/* Call extract for each set of params.	*/
+
+		do_extract("EXTRACT", ckw,recvr,rlen);
 	}
 
 	va_end(the_args);
 }
 
-static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the actual extract.		*/
+void EXTRACT2(const char* keywrd, void* recvr)
+{
+	do_extract("EXTRACT2", keywrd, (char*)recvr, 0);
+}
+
+static void do_extract(const char* routine, const char* keywrd, char* recvr, int4 rlen)
 {
 	char	tstr[80];								/* a temp string			*/
 	int4	tlong;
 	int	full_err_mess=0;							/* Report errors ?			*/
-
 
 	full_err_mess = 1;
 
@@ -183,14 +207,14 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			{
 				case 'F':						/* CF request, current program file	*/
 				{
-					memcpy(recvr,WISPRUNNAME,8);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
+					memcpy(recvr,wisp_get_runname(),WISP_RUNNAME_SIZE);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;
 				}
 				case 'L':						/* default proglib			*/
 				{
-					get_defs(DEFAULTS_RL,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_RL,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;
 				}
 				case 'S':
@@ -199,8 +223,8 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 
 				case 'V':						/* default progvol			*/
 				{
-					get_defs(DEFAULTS_RV,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_RV,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
 					break;
 				}
 				case '#':
@@ -210,7 +234,7 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 					{
 						memcpy(recvr,wispcpu(),4);
 					}
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%4.4s]", keywrd, recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%4.4s]", keywrd, recvr);
 					break;
 				}
 				default:
@@ -234,11 +258,11 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 					break;
 
 				case 'L':
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s", keywrd);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s", keywrd);
 					dev_list(recvr,rlen);
 					break;
 				case ' ':
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s", keywrd);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s", keywrd);
 					dev_info(recvr);
 					break;
 
@@ -259,13 +283,13 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 					time_t nowtime;
 
 					time(&nowtime);
-					numsecs = nowtime - WSTARTTIME;
+					numsecs = nowtime - wisp_get_WSTARTTIME();
 					numsecs100 = numsecs * 100;
 
-					put_swap((int4*)recvr, numsecs100);
+					WL_put_swap((int4*)recvr, numsecs100);
 
 					tlong=numsecs100;
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
 					break;
 				}
 				case '?':						/* E? request				*/
@@ -284,9 +308,9 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			{
 				case 'N':						/* FN request				*/
 				{
-					get_defs(DEFAULTS_FN, &tlong);
-					put_swap((int4*)recvr,tlong);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
+					WL_get_defs(DEFAULTS_FN, &tlong);
+					WL_put_swap((int4*)recvr,tlong);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
 					break;
 				}
 				default:
@@ -300,9 +324,9 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			switch (keywrd[1])
 			{
 				case '#':
-					tlong = wgetpgrp();
-					put_swap((int4*)recvr, tlong);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
+					tlong = WL_wgetpgrp();
+					WL_put_swap((int4*)recvr, tlong);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
 					break;
 				default:
 					NOT_SUPP
@@ -316,45 +340,45 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			{
 				case 'D':						/* ID request				*/
 				{
-					if ( opt_idnumeric )				/* Numeric ID wanted (set in OPTIONS).	*/
+					if ( OPTION_IDNUMERIC )				/* Numeric ID wanted (set in OPTIONS).	*/
 					{
-						memcpy(recvr, numuid3(), 3 );		/* Get 3 character numeric ID.		*/
+						memcpy(recvr, WL_numuid3(), 3 );	/* Get 3 character numeric ID.		*/
 					}
 					else						/* Alpha ID wanted (default).		*/
 					{
-						memcpy(recvr, wanguid3(), 3 );		/* Get 3 character alpha ID.		*/
+						memcpy(recvr, WL_wanguid3(), 3 );	/* Get 3 character alpha ID.		*/
 					}
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%3.3s]", keywrd, recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%3.3s]", keywrd, recvr);
 					break;						/* end of case 'D'			*/
 				}
 				case '8':						/* I8 8 Char Userid request		*/
 				{
-					const char *uidptr = longuid();
+					const char *uidptr = WL_longuid();
 					int	ii;
 
 					memset(recvr, ' ', 8 );
 					ii=strlen(uidptr);
 					memcpy(recvr, uidptr, ((ii < 8) ? ii : 8) );
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;
 				}
 				case 'X':						/* IX  Extended Userid (32 char)	*/
 				{
 					memset(recvr, ' ', 32 );
-					memcpy(recvr, longuid(), strlen(longuid()) );
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%32.32s]", keywrd, recvr);
+					memcpy(recvr, WL_longuid(), strlen(WL_longuid()) );
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%32.32s]", keywrd, recvr);
 					break;
 				}
 				case 'L':						/* default INLIB			*/
 				{
-					get_defs(DEFAULTS_IL,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_IL,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;
 				}
 				case 'V':						/* default INVOL			*/
 				{
-					get_defs(DEFAULTS_IV,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_IV,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
 					break;
 				}
 				default:
@@ -369,34 +393,34 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			{
 				case 'C':						/* Default job class.			*/
 				{
-					get_defs(DEFAULTS_JC,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%1.1s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_JC,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%1.1s]", keywrd, recvr);
 					break;
 				}
 				case 'L':						/* Time limit				*/
 				{
-					get_defs(DEFAULTS_JL,tstr);
+					WL_get_defs(DEFAULTS_JL,tstr);
 					tlong  = (tstr[0] - '0') * 36000L;		/* Do tens of hours.			*/
 					tlong += (tstr[1] - '0') * 3600L;		/* Do hours.				*/
 					tlong += (tstr[2] - '0') * 600L;		/* Tens of minutes.			*/
 					tlong += (tstr[3] - '0') * 60L;			/* Minutes.				*/
 					tlong += (tstr[4] - '0') * 10L;			/* Tens of seconds.			*/
 					tlong += (tstr[5] - '0');			/* Seconds.				*/
-					put_swap((int4*)recvr,tlong);
+					WL_put_swap((int4*)recvr,tlong);
 
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
 					break;
 				}
 				case 'S':						/* Default job submittal status.	*/
 				{
-					get_defs(DEFAULTS_JS,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%1.1s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_JS,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%1.1s]", keywrd, recvr);
 					break;
 				}
 				case 'N':						/* Batch job name.			*/
 				{
 					osd_jname(recvr);				/* Ask the system.			*/
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;
 				}
 				default:
@@ -411,15 +435,15 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			{
 				case 'I':						/* LI request				*/
 				{
-					get_defs(DEFAULTS_LI,&tlong);
-					put_swap((int4*)recvr, tlong);
+					WL_get_defs(DEFAULTS_LI,&tlong);
+					WL_put_swap((int4*)recvr, tlong);
 
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
 					break;
 				}
 				case 'U':						/* LU LONG USERID request		*/
-					strcpy(recvr, longuid() );
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%s]", keywrd, recvr);
+					strcpy(recvr, WL_longuid() );
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%s]", keywrd, recvr);
 					break;
 				default:
 					NOT_SUPP
@@ -432,7 +456,7 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			switch (keywrd[1])
 			{
 				case 'A':						/* NA request				*/
-					passwdname(tstr);
+					WL_passwdname(tstr);
 
 					memset(recvr, ' ', 24 );			/* Receiver expects 24 characters.	*/
 					if (strlen(tstr) < 24)
@@ -440,7 +464,7 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 						memcpy(recvr,tstr,strlen(tstr));
 					}
 					else	memcpy(recvr,tstr,24);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%24.24s]", keywrd, recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%24.24s]", keywrd, recvr);
 					break;
 				case 'C':						/* NC request				*/
 				case 'S':						/* NS request				*/
@@ -458,14 +482,14 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			{
 				case 'L':						/* default OUTLIB			*/
 				{
-					get_defs(DEFAULTS_OL,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_OL,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;
 				}
 				case 'V':						/* default OUTVOL			*/
 				{
-					get_defs(DEFAULTS_OV,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_OV,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
 					break;
 				}
 				default:
@@ -480,33 +504,33 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			{
 				case 'C':						/* default Print class			*/
 				{
-					get_defs(DEFAULTS_PC,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%1.1s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_PC,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%1.1s]", keywrd, recvr);
 					break;
 				}
 				case 'L':						/* default RUNLIB			*/
 				{
-					get_defs(DEFAULTS_PL,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_PL,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;
 				}
 				case 'M':						/* default print mode			*/
 				{
-					get_defs(DEFAULTS_PM,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%1.1s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_PM,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%1.1s]", keywrd, recvr);
 					break;
 				}
 				case 'V':						/* default RUNVOL			*/
 				{
-					get_defs(DEFAULTS_PV,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_PV,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
 					break;
 				}
 				case '#':						/* 'P#' and 'PR' both return prt_num	*/
 				case 'R':
-					get_defs(DEFAULTS_PR,&tlong);
-					put_swap((int4*)recvr, tlong);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
+					WL_get_defs(DEFAULTS_PR,&tlong);
+					WL_put_swap((int4*)recvr, tlong);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
 					break;
 				case ':':						/* P: request				*/
 				{
@@ -525,10 +549,10 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 					numsecs100 = (numtics * 100)/CLOCKS_PER_SEC;
 #endif	/* WIN32 */
 
-					put_swap((int4*)recvr, numsecs100);
+					WL_put_swap((int4*)recvr, numsecs100);
 
 					tlong = numsecs100;
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
 					break;
 				}
 				case 'F':
@@ -548,14 +572,14 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			{
 				case 'L':						/* default RUNLIB			*/
 				{
-					get_defs(DEFAULTS_RL,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_RL,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;
 				}
 				case 'V':						/* default RUNVOL			*/
 				{
-					get_defs(DEFAULTS_RV,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_RV,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
 					break;
 				}
 				default:
@@ -570,20 +594,20 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			{
 				case 'L':						/* Spool Library request.		*/
 				{
-					get_defs(DEFAULTS_SL,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_SL,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;
 				}
 				case 'V':						/* Spool volume request.		*/
 				{
-					get_defs(DEFAULTS_SV,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_SV,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
 					break;
 				}
 				case '$':
 				{
-					loadpad(recvr,computername(NULL),16);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%16.16s]", keywrd, recvr);
+					WL_loadpad(recvr,WL_computername(NULL),16);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%16.16s]", keywrd, recvr);
 					break;
 				}
 				default:
@@ -599,17 +623,17 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 				case 'T':						/* TT request				*/
 				{
 					osd_mode(recvr);				/* ask for the mode			*/
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%1.1s]", keywrd, recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%1.1s]", keywrd, recvr);
 					break;
 				}
 				case '#':
 					tlong = (int4) getpid();
-					put_swap((int4*)recvr,tlong);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
+					WL_put_swap((int4*)recvr,tlong);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
 					break;
 #ifdef unix
 				case 'E':
-					tlong = get_swap((int4*)recvr);
+					tlong = WL_get_swap((int4*)recvr);
 					if (kill(tlong,0) == 0)
 					{
 						/* Process is running */
@@ -620,7 +644,7 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 						/* Process NOT running */
 						recvr[4] = 'N';
 					}
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%ld-%c]", 
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%ld-%c]", 
 					       keywrd, (long)tlong, recvr[4]);
 					break;					
 #endif /* unix */
@@ -641,21 +665,21 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			{
 				case 'L':						/* WORK LIBRARY request			*/
 				{
-					get_defs(DEFAULTS_WL,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_WL,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;						/* end of case 'L'			*/
 				}
 				case 'V':						/* WORK volume request			*/
 				{
-					get_defs(DEFAULTS_WV,recvr);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
+					WL_get_defs(DEFAULTS_WV,recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
 					break;						/* end of case 'V'			*/
 				}
 				case '#':						/* terminal id				*/
 				{
-					tlong = workstation();
-					put_swap((int4*)recvr,tlong);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
+					tlong = WL_workstation();
+					WL_put_swap((int4*)recvr,tlong);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%ld]", keywrd, (long)tlong);
 					break;
 				}
 				case '$':
@@ -671,7 +695,7 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 						if (len > 8) len = 8;
 						memcpy(recvr,wangnet,len);
 					}
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;
 				}
 				default:
@@ -687,7 +711,7 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 				case 'V':						/* Ipl volume.				*/
 				{
 					memcpy(recvr,"IPLVOL",(int)6);
-					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
+					WL_wtrace(routine, "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keywrd, recvr);
 					break;
 				}
 				default:
@@ -725,7 +749,7 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 **	WARNINGS:	none
 **
 */
-int4 workstation(void)
+int4 WL_workstation(void)
 {
 	static int4 the_num = -2;
 
@@ -763,7 +787,7 @@ static void dev_list(char* where, int4 rlen)					/* generate a list of devs			*/
 	strcpy(cnfname,configfile());
 	if ((cnf=fopen(cnfname,"r"))==NULL)
 	{
-		werrlog(ERRORCODE(10),cnfname,errno,0,0,0,0,0,0);
+		werrlog(WERRCODE(17010),cnfname,errno,0,0,0,0,0,0);
 		*where = (char)0;
 		*(where+1) = (char)0;
 		return;
@@ -779,7 +803,7 @@ static void dev_list(char* where, int4 rlen)					/* generate a list of devs			*/
 		char	dev_type[20];
 		char	dev_name[80];
 
-		if (!isdigit(inbuf[0])) continue;				/* skip dev type lines */
+		if (!isdigit((int)inbuf[0])) continue;				/* skip dev type lines */
 		rc = sscanf(inbuf,"%d %2s %20s %80s",&dev_num, dev_class, dev_type, dev_name);
 		if (rc < 4) dev_name[0] = (char)0;
 		if (rc < 3) dev_type[0] = (char)0;
@@ -816,7 +840,7 @@ static void dev_list(char* where, int4 rlen)					/* generate a list of devs			*/
 	fclose(cnf);
 }
 
-static dev_info(where)								/* get info for a device number			*/
+static int dev_info(where)							/* get info for a device number			*/
 char *where;									/* return area					*/
 {
 	int devnum; 								/* device number var				*/
@@ -831,7 +855,7 @@ char *where;									/* return area					*/
 	strcpy(cnfname,configfile());
 	if ((cnf=fopen(cnfname,"r"))==NULL)
 	{
-		werrlog(ERRORCODE(10),cnfname,errno,0,0,0,0,0,0);
+		werrlog(WERRCODE(17010),cnfname,errno,0,0,0,0,0,0);
 		return(1);
 	}
 
@@ -843,7 +867,7 @@ char *where;									/* return area					*/
 		char	dev_type[20];
 		char	dev_name[80];
 
-		if (!isdigit(inbuf[0])) continue;				/* Not a device line.				*/
+		if (!isdigit((int)inbuf[0])) continue;				/* Not a device line.				*/
 
 		rc = sscanf(inbuf,"%d %2s %20s %80s",&dev_num, dev_class, dev_type, dev_name);
 		if (rc < 4) dev_name[0] = (char)0;
@@ -895,7 +919,7 @@ char *name;									/* device type name				*/
 		/*
 		**	This should never happen as we just managed to open the file.
 		*/
-		werrlog(ERRORCODE(6),0,0,0,0,0,0,0,0);				/* Error accessing device types.		*/
+		werrlog(WERRCODE(17006),0,0,0,0,0,0,0,0);			/* Error accessing device types.		*/
 		return(255);
 	}
 	while (fgets(inbuf,sizeof(inbuf),types))				/* read the records in. record format is:	*/
@@ -931,9 +955,6 @@ static char *configfile()
 
 static void osd_mode(char *mode)
 {
-#undef          ROUTINE
-#define		ROUTINE		65600
-
 	if ( wbackground() )
 	{
 		*mode = 'B';								/* No terminal attached. 		*/
@@ -948,9 +969,6 @@ static void osd_mode(char *mode)
 static void osd_jname(char* name)
 {
 	const char *ptr;
-	
-#undef          ROUTINE
-#define		ROUTINE		65700
 
 	memset(name, ' ', 8);
 
@@ -960,16 +978,16 @@ static void osd_jname(char* name)
 	}
 		
 #ifdef WIN32
-	if (ptr = getenv(AQM_JOB_NAME))
+	if ((ptr = getenv(AQM_JOB_NAME)))
 	{
-		loadpad(name,ptr,8);
+		WL_loadpad(name,ptr,8);
 		return;
 	}
 #endif
 
-	if (ptr = getenv("WISPJOBNAME"))
+	if ((ptr = getenv("WISPJOBNAME")))
 	{
-		loadpad(name,ptr,8);
+		WL_loadpad(name,ptr,8);
 	}
 }
 
@@ -978,10 +996,8 @@ static void osd_jname(char* name)
 	osd_term	This routine returns the Wang style workstation device number or -1 if in background.
 			On any error 255 is returned as the device number.
 */
-int osd_term(int4* tnum, int *tflags)
+static int osd_term(int4* tnum, int *tflags)
 {
-#undef          ROUTINE
-#define		ROUTINE		65500
 static	int	first=1;
 static	int4	device_num;
 
@@ -999,7 +1015,7 @@ static	int4	device_num;
 			if (device_num == -1 )
 			{
 				device_num = 255;					/* Correct a bad return from findtty 	*/
-				werrlog(ERRORCODE(3),0,0,0,0,0,0,0,0);			/* Give a warning			*/
+				WL_wtrace("OSD_TERM","TTY", "Invalid device number changed to 255");
 			}
 		}
 	}
@@ -1017,9 +1033,6 @@ static	int4	device_num;
 */
 static int findtty(int4 *where)
 {
-#undef          ROUTINE
-#define		ROUTINE		65100
-
 static	int 	first=1;
 static	int4	device_num;
 
@@ -1050,7 +1063,7 @@ static	int4	device_num;
 						device_num = num;
 						if (device_num < 0 || device_num > 254)
 						{
-							werrlog(ERRORCODE(12),device_num,tty,0,0,0,0,0,0);
+							werrlog(WERRCODE(65112),device_num,tty,0,0,0,0,0,0);
 							device_num = -1;
 						}
 						break;
@@ -1069,6 +1082,57 @@ static	int4	device_num;
 /*
 **	History:
 **	$Log: extract.c,v $
+**	Revision 1.48  2003/03/28 20:15:57  gsl
+**	Add EXTRACT2
+**	
+**	Revision 1.47  2003/02/17 22:07:18  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.46  2003/02/04 18:29:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.45  2003/01/31 21:24:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.44  2003/01/31 17:23:48  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.43  2003/01/29 20:45:36  gsl
+**	comments
+**	
+**	Revision 1.42  2003/01/29 19:42:50  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.41  2002/12/10 20:54:15  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.40  2002/12/10 17:09:20  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.39  2002/07/16 16:24:57  gsl
+**	Globals
+**	
+**	Revision 1.38  2002/07/12 17:00:55  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.37  2002/07/11 20:29:07  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.36  2002/07/11 14:52:50  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.35  2002/07/10 21:05:15  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.34  2002/07/10 04:27:39  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.33  2002/07/09 04:14:02  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.32  2002/07/01 04:02:37  gsl
+**	Replaced globals with accessors & mutators
+**	
 **	Revision 1.31  2001/11/27 21:18:30  gsl
 **	Remove VMS & MSDOS
 **	
@@ -1083,7 +1147,7 @@ static	int4	device_num;
 **
 **	Revision 1.27  1997-10-21 10:06:12-04  gsl
 **	Change WISPPROGID to getprogid()
-**	Change GETBIN/PUTBIN to get_swap() put_swap()
+**	Change GETBIN/PUTBIN to WL_get_swap() WL_put_swap()
 **
 **	Revision 1.26  1997-08-23 16:12:17-04  gsl
 **	Add support for EXTRACT of "S$" (SYSTEM NAME)
@@ -1092,19 +1156,19 @@ static	int4	device_num;
 **	Add support for EXTRACT of "JN" - JOBNAME for unix and WIN32
 **
 **	Revision 1.24  1997-04-16 09:30:35-04  gsl
-**	Change wtrace() to display the values
+**	Change WL_wtrace() to display the values
 **
 **	Revision 1.23  1997-04-15 22:44:02-04  gsl
-**	Change to use wtrace()
+**	Change to use WL_wtrace()
 **
 **	Revision 1.22  1997-04-15 16:14:50-04  gsl
-**	Change to use wtrace()
+**	Change to use WL_wtrace()
 **
 **	Revision 1.21  1997-04-03 20:00:34-05  gsl
 **	Change the trace so that it shows the keyword
 **
 **	Revision 1.20  1996-10-25 17:05:16-04  gsl
-**	Fix call to longuid() which now returns a constant
+**	Fix call to WL_longuid() which now returns a constant
 **
 **	Revision 1.19  1996-10-08 17:20:13-07  gsl
 **	replace getenv() calls with wispcpu() and wispnetid() calls

@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		win32err.c
 **
@@ -36,7 +57,7 @@ extern HWND vraw_get_console_hWnd(void);
 /*
 **	Static Function Prototypes
 */
-char *GetWin32Error(char *szText)
+char *WL_GetWin32Error(char *szText)
 {
 	DWORD dwError, nBytes;
 	static char *savebuff = NULL;
@@ -62,11 +83,11 @@ char *GetWin32Error(char *szText)
 
 
 /*
-**	Routine:	win32_message_box()
+**	Routine:	WL_win32_message_box()
 **
 **	Function:	Display a message in a message box .
 **
-**	Description:	This is a WIN32 replacement for werr_message_box().
+**	Description:	This is a WIN32 replacement for WL_werr_message_box().
 **
 **	Arguments:
 **	instr		The message string to display.
@@ -80,7 +101,7 @@ char *GetWin32Error(char *szText)
 **	Warnings:	None
 **
 */
-int win32_message_box(char *instr)
+int WL_win32_message_box(const char *instr)
 {
 	int	rc;
 	rc = MessageBox(vraw_get_console_hWnd(), instr, "WISP Runtime Error", 
@@ -94,8 +115,17 @@ int win32_message_box(char *instr)
 /*
 **	History:
 **	$Log: win32err.c,v $
+**	Revision 1.7  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.6  2002/12/06 22:53:13  gsl
+**	WL_win32_message_box(const char *instr);
+**	
+**	Revision 1.5  2002/07/10 21:05:32  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.4  1997/07/14 12:31:27  gsl
-**	Move win32_message_box() from werrvre.c
+**	Move WL_win32_message_box() from werrvre.c
 **	
 **	Revision 1.3  1997-05-16 16:12:38-04  gsl
 **	Fix formating of message

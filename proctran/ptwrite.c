@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #define EXT extern
 
@@ -17,14 +40,11 @@ static char fldliteral[10];
 static int max_cobline = 55;
 
 static void wrt_run(void);
-static void write_equatn(int numeric, int gfl);
-static void build_compute(char* clp);							/* Build the compute statement.		*/
 static void wrt_key_params(void);							/* Write out the PUTPARM variable	*/
 static void wrt_call_link(void);							/* Write out the Call to LINK.		*/
 static void gen_compute(int gfl, int tfl, char htyp);		    			/* Generate the COMPUTE statement.	*/
 static void concat_gfl_prefix(int fl);							/* Concatenate the global var's prefix.	*/
 static void wrt_backref(int type);							/* Write out the backwards reference	*/
-static void wrt_buffer(void);								/* Write out the MOVE to BUFFER stmnt.	*/
 static void complete_assign(int ctyp, int num, char htyp,int gfl);			/* Next item is a string so generate	*/
 static void wrt_print_kw(void);								/* Write the PRINT keyword stmnts.	*/
 static void wrt_submit_kw(void);								/* Write the SUBMIT keyword stmnts.	*/
@@ -32,12 +52,12 @@ static void process_br_parms(void);							/* Check if any backwards ref.parms.	*
 
 void wrt_init_assign(void)
 {
-	int ostrt, istrt, olen, gfl;
+	int ostrt = 0, istrt, olen=0, gfl;
 	char *tempfld, tstr[5];
 	char ostpos[FLDLEN], olength[FLDLEN];
-	char ospt[3], olt[3], htyp;
+	char ospt[3], olt[3], htyp = 0;
 	char in_fld[FLDLEN], in_type[3], in_strt[5], in_len[5];
-	int str_fl;
+	int str_fl = 0;
       
 	write_log(util,'I','W',"WRITE","Writing the ASSIGN items.");
 
@@ -429,13 +449,13 @@ void wrt_if(void)									/* Writes syntax for if statements.	*/
 {
 	char cobol_line[STRBUFF];
 	int i, nfl, pf_fl;
-	if_item *hld_if;
+	if_item *hld_if = NULL;
 
 	write_log("PROCTRAN",'I','W',"WRITE","Writing the IF items.");
 
 	if (*cur_if->cond == '1')
 	{
-		char *cstrp, ctype;
+		char *cstrp = NULL, ctype = '\0';
 		int br;
 
 		if (cur_if->sub_flag) wrt_subscript(1,6);				/* If substr, gen CALL STRING first.	*/
@@ -586,7 +606,7 @@ void wrt_if(void)									/* Writes syntax for if statements.	*/
 				{
 
 					*cur_if->type ='S';				/* Make sure pfkey test is to a string.*/
-					sprintf(cur_if->var,"%02s",cur_if->var);	/* Load the string variable.		*/
+					sprintf(cur_if->var,"%2s",cur_if->var);		/* Load the string variable.		*/
 				}
 
 				if (0==*cur_if->var || *cur_if->type == 'S') nfl = 0; 	/* No value or was typed as a string.	*/
@@ -676,8 +696,8 @@ void wrt_program(void)									/* Writes out syntax for the run,	*/
 	{
 		for (i = 0; i < 3; i++)
 		{
-			char *cstrp, ctype;
-			int cbr;
+			char *cstrp = NULL, ctype = '\0';
+			int cbr =0;
 
 			indent_line();							/* Add the correct indentation.		*/
 			strcat(cobline,"MOVE ");
@@ -740,7 +760,7 @@ static void wrt_run(void)								/* Writes out syntax for the run command.*/
 											/*  and process getparm in needed.	*/
 	for (i = 0; i < 3; i++)
 	{
-		char *cstrp, ctype;
+		char *cstrp = NULL, ctype = 0;
 
 		indent_line();								/* Add the correct indentation.		*/
 		br = 0;
@@ -874,7 +894,7 @@ void wrt_return(void)									/* Handles syntax for the RETURN verb.	*/
 		strcpy(cobline,"      *$UNIX_CODE  PROCESS");
 		end_prt_line(0);							/* Add end of line stuff and write line.*/
 
-		strcpy(cobline,"      *         CALL \"setretcode\" USING RETURN-CODE");
+		strcpy(cobline,"      *         CALL \"SETRETCODE\" USING RETURN-CODE");
 		if (in_if) end_prt_line(0);						/* Add end of line stuff and write line.*/
 		else end_prt_line(1);
 
@@ -899,7 +919,7 @@ void wrt_rs(void)									/* Write out renames and scratchs.	*/
 
 	for (i = 0; i < 5; i++)
 	{
-		char *cstrp, ctype;
+		char *cstrp = NULL, ctype='\0';
 
 		if (i > 2 && cur_ren_sctch->func == 'S') break;				/* If in scratch don't use 3 and 4.	*/
 
@@ -1030,7 +1050,7 @@ void wrt_set_extract(void)								/* Write out set and extract syntax.	*/
 	char cobol_line[STRBUFF];
 	char hld_var[FLDLEN];
 	char keywrd[3];
-	int i, tndx, hndx, hld_type;
+	int i, tndx, hndx, hld_type=0;
 
 	write_log("PROCTRAN",'I','W',"WRITE","Writing the SET/EXTRACT items.");
 
@@ -1175,6 +1195,9 @@ void wrt_readfdr(void)									/* Write out readfdr syntax.		*/
 		indent_line();								/* Add the correct indentation.		*/
 		strcat(cobline,"MOVE ");
 
+		cstr = NULL;
+		ctype = '\0';
+
 		if (i == 0)
 		{
 			cstr = cur_rfdr->file;
@@ -1196,7 +1219,10 @@ void wrt_readfdr(void)									/* Write out readfdr syntax.		*/
 			concat_var_prefix(ctype);					/* Concatenate the var prefix.		*/
 			strcat(cobline,cstr+1);
 		}
-		else if (*cstr == '\0') strcat(cobline,"SPACES");
+		else if (*cstr == '\0') 
+		{
+			strcat(cobline,"SPACES");
+		}
 		else 									/* Is an alpha numeric string.		*/ 
 		{
 			strcat(cobline,"\"");						/* Load the quote symbol.		*/
@@ -1237,6 +1263,7 @@ void wrt_readfdr(void)									/* Write out readfdr syntax.		*/
 	end_prt_line(1);								/* Add end of line stuff and write line.*/
 }
 
+#ifdef NOT_USED
 static void write_equatn(int numeric, int gfl)
 {
 	if (!numeric)
@@ -1283,6 +1310,7 @@ static void build_compute(char* clp)							/* Build the compute statement.		*/
 	}
 	return;
 }
+#endif /* NOT_USED */
 
 void wrt_keyword_vars(void)								/* Write the working storage variables	*/
 {											/* needed for all the PUTPARM calls.	*/
@@ -1752,8 +1780,8 @@ static void wrt_backref(int type)							/* Write out the backwards reference	*/
 	struct pp_keywords *cur_kwl;
 	char label[FLDLEN], *lptr, scnt[5];
 	char fldn[FLDLEN], len[FLDLEN];
-	char *cstrp, keyw[FLDLEN], *cstr;
-	int cnt, i, j, br;
+	char *cstrp=NULL, keyw[FLDLEN], *cstr;
+	int cnt, i, j, br=0;
 
 	if (type == 8 && cur_set_extr->br_flag == 2) return;				/* Don't need because already have.	*/
 
@@ -1883,6 +1911,12 @@ static void wrt_backref(int type)							/* Write out the backwards reference	*/
 		*lptr = '\0';								/* Null terminate.			*/
 		cstrp++;								/* Step over the seperator.		*/
 		strcpy(keyw,cstrp);							/* Copy the keyword.			*/
+	}
+	else /* invalid type */
+	{
+		write_log("PROCTRAN",'E','W',"BACKWARDS",
+			"Invalid TYPE");
+		return;
 	}
 
 	indent_line();									/* Add the correct indentation.		*/
@@ -2254,6 +2288,7 @@ static void wrt_backref(int type)							/* Write out the backwards reference	*/
 	}
 }
 
+#ifdef NOT_USED
 static void wrt_buffer(void)								/* Write out the MOVE to BUFFER stmnt.	*/
 {
 	register int i;
@@ -2348,6 +2383,7 @@ static void wrt_buffer(void)								/* Write out the MOVE to BUFFER stmnt.	*/
 	if (in_if) end_prt_line(0);							/* Add end of line stuff and write line.*/
 	else end_prt_line(1);
 }
+#endif /* NOT_USED */
 
 static void complete_assign(int ctyp, int num, char htyp,int gfl)			/* Next item is a string so generate	*/
 											/* a call to STRING.			*/
@@ -2482,9 +2518,9 @@ static void complete_assign(int ctyp, int num, char htyp,int gfl)			/* Next item
 void wrt_subscript(int nfl,int caller)							/* Process the subscript.		*/
 											/* Generate a CALL STRING		*/
 {
-	char invar[FLDLEN], ityp, *cptr, *tptr;
-	int istrt, times, varcnt;
-	char tstr[5], *hstpos;
+	char invar[FLDLEN], ityp = '\0', *cptr = NULL, *tptr;
+	int istrt, times, varcnt = 0;
+	char tstr[5], *hstpos=NULL;
 	char istpos[FLDLEN], ilength[FLDLEN];
 	char temp[FLDLEN], tmpsub[FLDLEN], ttyp[3];
 	int num_var, num_val, gfl;							/* Set so get_type_len() doesn't fail.	*/
@@ -2583,6 +2619,12 @@ void wrt_subscript(int nfl,int caller)							/* Process the subscript.		*/
 			strcat(temp,"-");
 			strcat(temp,cur_scn_fld->length);
 			cptr = temp;
+		}
+		else /* UNKNOW CALLER */
+		{
+			write_log("PROCTRAN",'E','W',"WRITE",
+				"Invalid caller Writing the SUBSTRING CALL STRING items");
+			return;
 		}
 	
 		while (*cptr != '-') cptr++;						/* Step to start pos.			*/
@@ -2837,7 +2879,7 @@ static void wrt_submit_kw(void)								/* Write the SUBMIT keyword stmnts.	*/
 static void process_br_parms(void)							/* Check if any backwards ref.parms.	*/
 {											/*  and process getparm in needed.	*/
 	int num;
-	using_item *hld_use;
+	using_item *hld_use = NULL;
 
 
 	num = 0;									/* Assume no backref. variables.	*/
@@ -2867,11 +2909,28 @@ static void process_br_parms(void)							/* Check if any backwards ref.parms.	*/
 /*
 **	History:
 **	$Log: ptwrite.c,v $
+**	Revision 1.15  2003/02/20 19:29:55  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.14  2003/02/05 21:15:03  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.13  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.12  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.11  2002/07/30 19:12:42  gsl
+**	SETRETCODE
+**	
+**	Revision 1.10  2002/07/29 21:13:28  gsl
+**	setretcode -> SETRETCODE
+**	
 **	Revision 1.9  1997/04/21 15:25:54  scass
 **	Corrected copyright.
 **	
 **	Revision 1.8  1996-12-12 13:32:48-05  gsl
-**	DevTech -> NeoMedia
 **
 **	Revision 1.7  1996-09-13 08:57:34-07  gsl
 **	In gen_compute() fixed call to concat_var_prefix(' ') was passing fldname1.

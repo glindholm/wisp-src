@@ -1,7 +1,27 @@
-static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
-static char rcs_revision[]="$Revision:$";
-static char rcs_state[]="$State: Exp $";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
 
 static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.01.00";
 
@@ -28,7 +48,6 @@ static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.01.00";
 
 #include "idsistd.h"
 
-#define EXT_FILEXT
 #include "filext.h"
 #include "wcommon.h"
 #include "wperson.h"
@@ -39,10 +58,10 @@ static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.01.00";
 #include "level.h"
 #include "wfname.h"
 #include "idsisubs.h"
-#include "sysdev.h"
 #include "wispvers.h"
 #include "wisplib.h"
 #include "vwang.h"
+#include "vssubs.h"
 
 /*
 **	Structures and Defines
@@ -51,7 +70,7 @@ static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.01.00";
 #define OSD_BLOCK_SIZE 512
 #endif
 
-#define GP	gp_args.ptrs[gp_cnt++] = (char *)
+#define GP	gp_args[gp_cnt++] = (char *)
 #define	GPNUM(num)			GP &N[num]
 #define	GPLEN(len)			GPNUM(len)
 #define	GPAT(row,col)			GP "A";GPNUM(row);GP "A";GPNUM(col)
@@ -82,9 +101,8 @@ static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.01.00";
 */
 
 static	int4	N[255];
-static	int4 	two=2;
 
-static struct { char *ptrs[512]; } gp_args;
+static char* gp_args[GETPARM_MAX_ARGS];
 static int gp_cnt;
 
 static char *legal_relations[]=
@@ -105,9 +123,6 @@ static char terminate_key_pressed;
 static int wsort(void);
 static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			int *select_flag, int *morefile_flag, int4 more_input, char *filetype, int4 *recsize);
-static void record_lock(int fh);
-static void free_locks(void);
-static int get_lock(void);
 static int get_options(int *stable_flag, int *lowspace_flag);
 static int get_output(char *ofile, char *olib, char *ovol, char *outfilename, 
 			int allow_replace, int *replace_flag, char *fileorg, int4 *maxrec, 
@@ -115,6 +130,7 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 static int get_select(struct select_criteria selinfo[], int *selcnt);
 static int get_keys(struct key_info keyinfo[], int *keycnt);
 static int matchrel(char *p);
+
 
 /*
 **	Routine:	main()
@@ -137,7 +153,7 @@ static int matchrel(char *p);
 **	11/09/93 	borrowed from wcopy.c JEC
 **
 */
-main(argc,argv)
+int main(argc,argv)
 int	argc;
 char	*argv[];
 {
@@ -150,10 +166,10 @@ char	*argv[];
 	}
 
 	vwang_title("WISP SORT");
-	initglbs("WSORT   ");
+	WL_initglbs("WSORT   ");
 	wisp_signal_handler();
 	
-	if (pfkeys12())
+	if (WL_pfkeys12())
 	{
 		terminate_text = "Press (12) to terminate WSORT.";
 		terminate_key_enabled = PFKEY_12_ENABLED;
@@ -166,7 +182,7 @@ char	*argv[];
 		terminate_key_pressed = PFKEY_16_PRESSED;
 	}
 	
-	wexit(wsort());
+	WL_wexit(wsort());
 
 	return 0;
 }
@@ -182,7 +198,7 @@ char	*argv[];
 **	Arguments:	None
 **
 **	Globals:
-**	N		The wswap'ed numbers array.
+**	N		The WL_wswap'ed numbers array.
 **
 **	Return:
 **	0		success
@@ -233,7 +249,7 @@ static int wsort(void)
 	for (i=0; i<(sizeof(N)/sizeof(N[0])); ++i) 				/* Initialize a swapped numbers array		*/
 	{
 		N[i]=i; 
-		wswap(&N[i]);
+		WL_wswap(&N[i]);
 	}
 
 	memset(infile_list,0,sizeof(infile_list));
@@ -262,8 +278,8 @@ static int wsort(void)
 		morefile_flag = FALSE;
 		more_input = FALSE;
 
-		get_defs(DEFAULTS_IL,ilib);
-		get_defs(DEFAULTS_IV,ivol);
+		WL_get_defs(DEFAULTS_IL,ilib);
+		WL_get_defs(DEFAULTS_IV,ivol);
 
 		for(;;)
 		{
@@ -294,7 +310,7 @@ static int wsort(void)
 
 			if (lowspace_flag)
 			{
-				int4	fdr_mode, fdr_rc, fdr_argcnt;
+				int4	fdr_mode, fdr_rc;
 				char	fdr_bs[19];
 
 				/*
@@ -302,10 +318,9 @@ static int wsort(void)
 				*/
 				fdr_mode = 0;
 				fdr_rc = 0;
-				fdr_argcnt = 7;
-				wvaset(&fdr_argcnt);
+				WL_set_va_count(7);
 				READFDR4(ifile, ilib, ivol, &fdr_mode, "BS", fdr_bs, &fdr_rc);
-				wswap(&fdr_rc);
+				WL_wswap(&fdr_rc);
 				if (0 == fdr_rc)
 				{
 					int4	bs_tmp;
@@ -405,7 +420,7 @@ static int wsort(void)
 
 		retcode = 0;
 
-		vssort(infile_list, inlib_list, invol_list, infilename_list, intype_list, inlen_list, infile_count,
+		WL_vssort(infile_list, inlib_list, invol_list, infilename_list, intype_list, inlen_list, infile_count,
 			ofile, olib, ovol, outfilename, 
 			ofileorg[0], outmaxrec, outrectype[0], replace_flag,
 			selinfo, selcnt, keyinfo, keycnt, stable_flag,
@@ -434,7 +449,7 @@ static int wsort(void)
 				infile_list[0], inlib_list[0], invol_list[0]);
 			sprintf(buff2,"OUTPUT FILE     = %8.8s in LIBRARY  = %8.8s on VOLUME   = %6.6s",
 				ofile, olib, ovol);
-			err_getparm("ERROR   ", "0000", "WSORT ", errmess1, errmess2, " ",
+			WL_err_getparm("ERROR   ", "0000", "WSORT ", errmess1, errmess2, " ",
 				buff1, infilename_list[0], " ", buff2, outfilename);
 			return retcode;
 		}
@@ -501,7 +516,7 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 	}
 
 	pfkey_mask = PFKEY_16_ENABLED | terminate_key_enabled;
-	wswap(&pfkey_mask);
+	WL_wswap(&pfkey_mask);
 	gptype = "I ";
 	messid = "0000";
 
@@ -564,8 +579,7 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 		GPENTER();
 		GPPFS(&pfkey_mask);
 
-		wvaset(&two);
-		GETPARM(&gp_args,&gp_cnt);
+		GETPARM2(gp_args,gp_cnt);
 
 
 		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
@@ -614,11 +628,11 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 		**	Check if voloume and library exists
 		*/
 		{
-			int4	vacnt, start, count;
+			int4	start, count;
 			char	recvr[22];
 			char	buff[80];
 
-			if (0==wlgtrans(ivol,buff))
+			if (0==WL_wlgtrans(ivol,buff))
 			{
 				messid = "ER28";
 				mess1="\224SORRY\204- The input VOLUME specified was not found, please respecify.";
@@ -627,15 +641,14 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			}
 
 			start = 1;
-			wswap(&start);
+			WL_wswap(&start);
 			count = 1;
-			wswap(&count);
+			WL_wswap(&count);
 
-			vacnt = 6;
-			wvaset(&vacnt);
+			WL_set_va_count(6);
 			FIND("        ", ilib, ivol, &start, &count, recvr);
 
-			wswap(&count);
+			WL_wswap(&count);
 			if (count == 0)
 			{
 				messid = "R014";
@@ -645,7 +658,7 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			}
 		}
 
-		if (!wfexists(ifile,ilib,ivol)) 
+		if (!WL_wfexists(ifile,ilib,ivol)) 
 		{
 			messid = "R014";
 			mess1 = "\224SORRY\204- The input FILE was not found, please respecify.";
@@ -661,7 +674,7 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			char	*ptr;
 
 			mode = 0;
-			ptr = wfname(&mode, ivol, ilib, ifile, infilename);
+			ptr = WL_wfname(&mode, ivol, ilib, ifile, infilename);
 			*ptr = (char)0;
 		}
 
@@ -749,17 +762,16 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 		}
 		else
 		{
-			int4	fdr_mode, fdr_retcode, fdr_argcnt;
+			int4	fdr_mode, fdr_retcode;
 			char	fdr_filetype;
 
 			fdr_mode = 0;
-			wswap(&fdr_mode);
+			WL_wswap(&fdr_mode);
 			fdr_retcode = 0;
-			fdr_argcnt = 7;
-			wvaset(&fdr_argcnt);			
+			WL_set_va_count(7);			
 			READFDR4(ifile,ilib,ivol,&fdr_mode,"FT",&fdr_filetype,&fdr_retcode);
 
-			wswap(&fdr_retcode);
+			WL_wswap(&fdr_retcode);
 			if (READFDR_RC_24_NO_FILE_HEADER == fdr_retcode)
 			{
 				fdr_filetype = 'C'; /* No file header so it's consecutive */
@@ -816,19 +828,18 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 		*/
 		if ('I' == *filetype)
 		{
-			int4	fdr_mode, fdr_retcode, fdr_argcnt;
+			int4	fdr_mode, fdr_retcode;
 			int4	fdr_recsize;
 
 			fdr_mode = 0;
-			wswap(&fdr_mode);
+			WL_wswap(&fdr_mode);
 			fdr_retcode = 0;
 			fdr_recsize = 0;
-			wswap(&fdr_recsize);
-			fdr_argcnt = 7;
-			wvaset(&fdr_argcnt);			
+			WL_wswap(&fdr_recsize);
+			WL_set_va_count(7);			
 			READFDR4(ifile,ilib,ivol,&fdr_mode,"RS",&fdr_recsize,&fdr_retcode);
 
-			wswap(&fdr_retcode);
+			WL_wswap(&fdr_retcode);
 			if (0 != fdr_retcode)
 			{
 				messid = "R014";
@@ -837,7 +848,7 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 				continue;
 			}
 
-			wswap(&fdr_recsize);
+			WL_wswap(&fdr_recsize);
 			*recsize = fdr_recsize;
 		}
 
@@ -893,7 +904,7 @@ static int get_options(int *stable_flag, int *lowspace_flag)
 	char	lowspace_field[3];
 
 	pfkey_mask = PFKEY_16_ENABLED | terminate_key_enabled;
-	wswap(&pfkey_mask);
+	WL_wswap(&pfkey_mask);
 	gptype = "I ";
 	blank=" ";
 	mess1=mess2=blank;
@@ -966,8 +977,7 @@ static int get_options(int *stable_flag, int *lowspace_flag)
 		GPENTER();
 		GPPFS(&pfkey_mask);
 
-		wvaset(&two);
-		GETPARM(&gp_args,&gp_cnt);
+		GETPARM2(gp_args,gp_cnt);
 
 
 		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
@@ -1136,7 +1146,7 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 		fileorg_field[0]= *fileorg;
 		rectype_field[0]= *outrectype;
 		termmsg1="Press (1)  to terminate without error status";
-		if (pfkeys12())
+		if (WL_pfkeys12())
 		{
 			termmsg2="Press (12) to terminate with error status";
 		}
@@ -1152,8 +1162,8 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 		gptype = "I ";
 		mess3="Please specify the output file below:";
 		memset(ofile,' ',8);
-		get_defs(DEFAULTS_OL,olib);
-		get_defs(DEFAULTS_OV,ovol);
+		WL_get_defs(DEFAULTS_OL,olib);
+		WL_get_defs(DEFAULTS_OV,ovol);
 		messid = "0000";
 		*replace_flag = 0;
 		fileorg_field[0]='C';
@@ -1162,7 +1172,7 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 		termmsg2=terminate_text;
 		pfkey_mask = PFKEY_3_ENABLED | PFKEY_16_ENABLED | terminate_key_enabled;
 	}
-	wswap(&pfkey_mask);
+	WL_wswap(&pfkey_mask);
 
 	if (*replace_flag)
 	{
@@ -1222,8 +1232,7 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 		GPENTER();
 		GPPFS(&pfkey_mask);
 
-		wvaset(&two);
-		GETPARM(&gp_args,&gp_cnt);
+		GETPARM2(gp_args,gp_cnt);
 
 		if (update_putparm) return 0;
 		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
@@ -1264,7 +1273,7 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 		/*
 		**	Check if volume exists
 		*/
-		if (0==wlgtrans(ovol,buff))
+		if (0==WL_wlgtrans(ovol,buff))
 		{
 			messid = "R042";
 			mess1="\224SORRY\204- The output VOLUME specified was not found, please respecify.";
@@ -1333,7 +1342,7 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 		**	If the output file exists then prompt to scratch.
 		**	(If overwriting then don't scratch because we need the file to do the sort.)
 		*/
-		if (!*replace_flag && wfexists(ofile,olib,ovol))
+		if (!*replace_flag && WL_wfexists(ofile,olib,ovol))
 		{
 			/*
 			**	If PF3 was pressed (second time thru)
@@ -1341,12 +1350,9 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 			*/
 			if (pfkey_recv[0] == PFKEY_3_PRESSED)
 			{
-				int4	vacnt;
-
-				vacnt = 5;
-				wvaset(&vacnt);
+				WL_set_va_count(5);
 				SCRATCH("F",ofile,olib,ovol,&retcode);	/* Scratch the target file			*/
-				wswap(&retcode);
+				WL_wswap(&retcode);
 				if (retcode != 0)
 				{
 					messid = "F002";
@@ -1369,12 +1375,30 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 		/*
 		**	Generate the native filename and update the PUTPARM.
 		*/
-		mode = IS_OUTPUT | IS_BACKFILL;
-		ptr = wfname(&mode,ovol,olib,ofile,outfilename);
+		mode = IS_OUTPUT;
+		ptr = WL_wfname_backfill(&mode,ovol,olib,ofile,outfilename);
 		*ptr = (char)0;
-		makepath(outfilename);
+		WL_makepath(outfilename);
 
-		use_last_prb();
+		/*
+		**	Update the PUTPARM with updated file info.
+		**	The WL_use_last_prb() is an internal "hint" to GETPARM
+		**	to use the last PRB.  This will prevent GETPARM from
+		**	possibly updating the wrong "OUTPUT" putparm if
+		**	there are multiple.
+		**
+		**	GETPARM does not fully correctly handle link-levels
+		**	and PUTPARM chaining so this scenerio can happen:
+		**	If the original "OUTPUT" putparm is not labeled then
+		**	it will be deleted once used (instead of just being
+		**	marked as used).  If there is another OUTPUT putparm
+		**	even at a lower link-level it will be found by the
+		**	RD GETPARM and incorrectly updated.  The call to 
+		**	WL_use_last_prb() tell GETPARM to just update the last
+		**	PUTPARM if it still exists instead of going looking
+		**	for a matching PUTPARM.
+		*/	
+		WL_use_last_prb();
 		gptype = "RD";
 		update_putparm = 1;
 	}
@@ -1438,7 +1462,7 @@ static int get_select(struct select_criteria selinfo[], int *selcnt)
 	x_fldpos[3] = x_length[3] = x_fldtyp[3] = x_tstrel[3] = x_value[3] = x_conect[3] = "K";
 
 	pfkey_mask = PFKEY_16_ENABLED | terminate_key_enabled;
-	wswap(&pfkey_mask);
+	WL_wswap(&pfkey_mask);
 
 	mess1=blank;
 	mess2="Enter record selection criteria below, supplying field position, length and";
@@ -1539,8 +1563,7 @@ static int get_select(struct select_criteria selinfo[], int *selcnt)
 		GPENTER();
 		GPPFS(&pfkey_mask);
 
-		wvaset(&two);
-		GETPARM(&gp_args,&gp_cnt);
+		GETPARM2(gp_args,gp_cnt);
 
 		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
 		    pfkey_recv[0] == terminate_key_pressed) 
@@ -1772,7 +1795,7 @@ static int get_keys(struct key_info keyinfo[], int *keycnt)
 	}
 
 	pfkey_mask = PFKEY_16_ENABLED | terminate_key_enabled;
-	wswap(&pfkey_mask);
+	WL_wswap(&pfkey_mask);
 	gptype = "I ";
 
 	mess1="Please specify Sort/Merge keys:";
@@ -1847,8 +1870,7 @@ static int get_keys(struct key_info keyinfo[], int *keycnt)
 		GPENTER();
 		GPPFS(&pfkey_mask);
 
-		wvaset(&two);
-		GETPARM(&gp_args,&gp_cnt);
+		GETPARM2(gp_args,gp_cnt);
 
 		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
 		    pfkey_recv[0] == terminate_key_pressed) 
@@ -1945,15 +1967,7 @@ static int matchrel(char *p)
 	return -1;
 }
 
-static int fh_list[MAXSORTINFILES];
-static int fh_list_cnt = 0;
-
-static void record_lock(int fh)
-{
-	fh_list[fh_list_cnt] = fh;
-	fh_list_cnt++;
-}
-
+#ifdef NOT_USED
 static int get_lock(void)
 {
 	int4	pfkey_mask;
@@ -1967,7 +1981,7 @@ static int get_lock(void)
 	mess1 = blank;
 
 	pfkey_mask = PFKEY_16_ENABLED | terminate_key_enabled;
-	wswap(&pfkey_mask);
+	WL_wswap(&pfkey_mask);
 	gptype = "I ";
 	messid = "0000";
 
@@ -2011,8 +2025,7 @@ static int get_lock(void)
 		GPENTER();
 		GPPFS(&pfkey_mask);
 
-		wvaset(&two);
-		GETPARM(&gp_args,&gp_cnt);
+		GETPARM2(gp_args,gp_cnt);
 
 
 		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
@@ -2062,13 +2075,63 @@ static int get_lock(void)
 		return 0;
 	}
 }
-
+#endif /* NOT_USED */
 
 /*
 **	History:
 **	$Log: wsort.c,v $
-**	Revision 1.24.2.1  2002/10/08 17:42:33  gsl
-**	Fix READFDR4 call to account for READFDRV1 behaviour differences
+**	Revision 1.41  2003/04/24 13:43:32  gsl
+**	Comments on WL_use_last_prb()
+**	
+**	Revision 1.40  2003/02/20 16:49:23  gsl
+**	use GETPARM2() the 2 arg interface to GETPARM()
+**	
+**	Revision 1.39  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.38  2003/02/04 21:05:36  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.37  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.36  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.35  2003/01/29 21:50:08  gsl
+**	Switch to use vssubs.h
+**	
+**	Revision 1.34  2002/07/12 19:10:23  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.33  2002/07/12 17:17:04  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.32  2002/07/10 21:06:32  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.31  2002/07/10 04:27:31  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.30  2002/07/09 04:13:48  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.29  2002/06/28 04:02:57  gsl
+**	Work on native version of wfopen and wfname
+**	
+**	Revision 1.28  2002/06/27 04:12:39  gsl
+**	Clean up status/mode bits
+**	
+**	Revision 1.27  2002/06/26 01:42:48  gsl
+**	Remove VMS code
+**	
+**	Revision 1.26  2002/06/25 18:18:37  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 1.25  2002/06/24 17:13:39  gsl
+**	WSORT was failing on Consecutive files.
+**	New READFDR returns 24 "No Header" when checking filetype and errors out.
+**	Change to use READFDR4 and check for return code 24
 **	
 **	Revision 1.24  2001/10/26 19:41:07  gsl
 **	READFDR FT now returns A for alt-indexed so accept 'A' as being Indexed.
@@ -2113,7 +2176,7 @@ static int get_lock(void)
  * change to use wisp_version()
  *
  * Revision 1.11  1995/05/31  11:54:12  gsl
- * Remove Duplicate ppunlink() which was causes labeled putparms 2 levels
+ * Remove Duplicate WL_ppunlink() which was causes labeled putparms 2 levels
  * up to be deleted. (TRY THAT AGAIN)
  * The linklevel was being decremented twice then an unlink was done.
  * this was causing labeled putparms one level up to be deleted

@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*---
 kcsio.c
 Imitates the KCSIO program as a shell into c-isam (d-isam) calls.
@@ -16,7 +30,6 @@ COBOL version.
 #include "intdef.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)kcsio.c	1.15 11/15/93";
 
 
 /*
@@ -221,7 +234,7 @@ in by COBOL.
 
 static void init_for_open(char *kio,KCSIO_BLOCK *kfb)
 {
-	extern int x4dbfile(char *select_name, int4 l1, int4 *select_status, int4 l2);
+	extern int X4DBFILE(char *select_name, int4 l1, int4 *select_status, int4 l2);
 	int4 mode;
 
 	memset(kfb,0,sizeof(KCSIO_BLOCK));
@@ -254,7 +267,7 @@ static void init_for_open(char *kio,KCSIO_BLOCK *kfb)
  	 Determine if is a Database file
 	 Set the mode bit if it is.
 */
-	x4dbfile(kfb->_name,8,&mode,sizeof(mode));
+	X4DBFILE(kfb->_name,8,&mode,sizeof(mode));
 	
 	kcsio_wfopen(mode,kfb);
 
@@ -563,8 +576,8 @@ static void ltoalen(char *dest,long value,int len)
 /*
 **	History:
 **	$Log: kcsio.c,v $
-**	Revision 1.13.2.1  2002/11/12 15:56:27  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.20  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.19  2002/10/24 14:20:38  gsl
 **	Make globals unique

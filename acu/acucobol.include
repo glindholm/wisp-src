@@ -1,6 +1,6 @@
 #============================================================================
 #
-#	Copyright (c) 1988-2002 NeoMedia Technologies, Inc. All rights reserved.
+#	Copyright (c) 1988-2003 NeoMedia Technologies, Inc. All rights reserved.
 #	$Id:$
 #
 #
@@ -8,7 +8,7 @@
 #
 #	Function:	Standard make include file when using ACUCOBOL.
 #
-#	Description:	This file is included into all ACUCOBOL makefiles.
+#	Description:	This file is included into ACUCOBOL makefiles.
 #			It defines all version specific options.
 #			Uncomment the version defines for this system.
 #
@@ -33,11 +33,10 @@
 # Different versions of ACUCOBOL use different sets of
 # libraries and subroutines.
 #
-# 5	ACUCOBOL Version 3.1 - 3.2.1 + 3.2.2 (except SCO UNIX) 
-# 6	ACUCOBOL Version 3.2.2 for SCO UNIX
-# 7	ACUCOBOL Version 4.0.0 - 4.3
-# 8	ACUCOBOL Version 5.0, 5.1
-# 9	ACUCOBOL Version 5.2
+# 50	ACUCOBOL Version 5.0
+# 51	ACUCOBOL Version 5.1
+# 52	ACUCOBOL Version 5.2
+# 60	ACUCOBOL Version 6.0
 #
 #============================================================================
 #
@@ -45,16 +44,18 @@
 #
 # The following makefile macros are defined based on the version of Acucobol.
 #
-# ACULIBS 	the list of ACUCOBOL libraries
+# ACULIBS 	the list of Acucobol libraries
 # ACUMAIN	the Acucobol amain.o file
-# ACUSUBS 	the list of ACUCOBOL subroutines
-# ACUTEST 	a test file used to determine version of ACUCOBOL
+# ACUSUBS 	the list of Acucobol subroutines
+# ACUTEST 	a test file used to determine version of Acucobol
 # ACUSRCDIR 	the directory of the Acucobol source files
 # COBOL 	the path to the Acucobol compiler (ccbl)
 # CBLUTIL 	the path to the Acucobol object utility (cblutil)
 # ACUOTHER 	the list of unix libraries required for resolution
-#	   	of ACUCOBOL undefines depending on version and platform
-# ACUCCFLAGS	the CC flags ACUCOBOL needs
+#	   	of Acucobol undefines depending on version and platform
+# ACUCCFLAGS	the CC flags Acucobol needs
+# SYSCCFLAGS	System specific CC flags
+# SUB85ACU      the modified sub85.c file for this version of Acucobol
 #
 #
 #============================================================================
@@ -68,26 +69,32 @@
 ACUOTHER=
 
 #
-#	ACUCOBOL Version 4.1.0.1 (and greater) on HP-UX 11
+#	ACUCOBOL on HP-UX 11 (32-bit)
 #
 #ACUOTHER= -lnsl
+#SYSCCFLAGS = -Ae +DAportable -D_LARGEFILE64_SOURCE
 #
-#
-#	ACUCOBOL Version 5.2 on Solaris
+#	ACUCOBOL 5.2, 6.0 on Solaris 8 (32-bit)
 #
 #ACUOTHER= -lnsl -lsocket -ldl
 #
-#	ACUCOBOL Version 5.2 on LINUX
-#
-#ACUOTHER= -ldl
-#
-#	ACUCOBOL Version 3.1.1 - 5.1 on Solaris
+#	ACUCOBOL 5.0, 5.1 on Solaris 8 (32-bit)
 #
 #ACUOTHER= -lnsl -lsocket
 #
-#	ACUCOBOL Version 3.1.1 (and greater) on SCO Unix
+#	ACUCOBOL on LINUX
+#
+#ACUOTHER= -ldl
+#SYSCCFLAGS = -D_LARGEFILE64_SOURCE
+#
+#	ACUCOBOL on SCO Unix
 #
 #ACUOTHER= -lsocket
+#SYSCCFLAGS = -b elf
+#
+#	ACUCOBOL on AIX (32-bit)
+#
+#SYSCCFLAGS = -qarch=com -qmaxmem=16384
 #
 #============================================================================
 #
@@ -95,34 +102,7 @@ ACUOTHER=
 #
 #	DEFINE MACROS FOR EACH VERSION OF ACUCOBOL
 #
-ACULIBS5=$(ACU_LIBDIR)/libruncbl.a \
-	$(ACU_LIBDIR)/libfsi.a \
-	$(ACU_LIBDIR)/libacuterm.a \
-	$(ACU_LIBDIR)/libvision.a \
-	$(ACU_LIBDIR)/libclient.a \
-	$(ACU_LIBDIR)/libmessage.a \
-	$(ACU_LIBDIR)/libmemory.a \
-	$(ACU_LIBDIR)/libstdlib.a
-ACULIBS6=$(ACU_LIBDIR)/libruncbl.a \
-	$(ACU_LIBDIR)/libfsi.a \
-	$(ACU_LIBDIR)/libacuterm.a \
-	$(ACU_LIBDIR)/libvision.a \
-	$(ACU_LIBDIR)/libclient.a \
-	$(ACU_LIBDIR)/libmessage.a \
-	$(ACU_LIBDIR)/libmemory.a \
-	$(ACU_LIBDIR)/libstdlib.a \
-	$(ACU_LIBDIR)/libconnectc.a
-ACULIBS7=$(ACU_LIBDIR)/libruncbl.a \
-	$(ACU_LIBDIR)/libconnectc.a \
-	$(ACU_LIBDIR)/libclnt.a \
-	$(ACU_LIBDIR)/libfsi.a \
-	$(ACU_LIBDIR)/libacuterm.a \
-	$(ACU_LIBDIR)/libvision.a \
-	$(ACU_LIBDIR)/liblib.a \
-	$(ACU_LIBDIR)/libmessage.a \
-	$(ACU_LIBDIR)/libmemory.a \
-	$(ACU_LIBDIR)/libstdlib.a 
-ACULIBS8=$(ACU_LIBDIR)/libruncbl.a \
+ACULIBS50=$(ACU_LIBDIR)/libruncbl.a \
 	$(ACU_LIBDIR)/libconnectc.a \
 	$(ACU_LIBDIR)/libclnt.a \
 	$(ACU_LIBDIR)/libfsi.a \
@@ -134,7 +114,10 @@ ACULIBS8=$(ACU_LIBDIR)/libruncbl.a \
 	$(ACU_LIBDIR)/libmessage.a \
 	$(ACU_LIBDIR)/libmemory.a \
 	$(ACU_LIBDIR)/libstdlib.a 
-ACULIBS9=$(ACU_LIBDIR)/libruncbl.a \
+
+ACULIBS51=$(ACULIBS50)
+
+ACULIBS52=$(ACU_LIBDIR)/libruncbl.a \
 	$(ACU_LIBDIR)/libconnectc.a \
 	$(ACU_LIBDIR)/libclnt.a \
 	$(ACU_LIBDIR)/libacvt.a \
@@ -148,40 +131,50 @@ ACULIBS9=$(ACU_LIBDIR)/libruncbl.a \
 	$(ACU_LIBDIR)/libmemory.a \
 	$(ACU_LIBDIR)/libstdlib.a 
 
-ACUSUBS5=sub.o filetbl.o 
-ACUSUBS6=sub.o filetbl.o 
-ACUSUBS7=sub.o filetbl.o 
-ACUSUBS8=sub.o filetbl.o 
-ACUSUBS9=sub.o filetbl.o
+ACULIBS60=$(ACU_LIBDIR)/axml.o \
+	$(ACU_LIBDIR)/libruncbl.a \
+	$(ACU_LIBDIR)/libclnt.a \
+	$(ACU_LIBDIR)/libacvt.a \
+	$(ACU_LIBDIR)/libfsi.a \
+	$(ACU_LIBDIR)/libacuterm.a \
+	$(ACU_LIBDIR)/libvision.a \
+	$(ACU_LIBDIR)/libexpat.a \
+	$(ACU_LIBDIR)/libsocks.a \
+	$(ACU_LIBDIR)/libmessage.a \
+	$(ACU_LIBDIR)/libcfg.a \
+	$(ACU_LIBDIR)/liblib.a \
+	$(ACU_LIBDIR)/libstdlib.a \
+	$(ACU_LIBDIR)/libmemory.a \
+	$(ACU_LIBDIR)/libz.a
 
-ACUMAIN5=
-ACUMAIN6=
-ACUMAIN7=
-ACUMAIN8=
-ACUMAIN9=$(ACU_LIBDIR)/amain.o
+ACUMAIN50=
+ACUMAIN51=
+ACUMAIN52=$(ACU_LIBDIR)/amain.o
+ACUMAIN60=$(ACU_LIBDIR)/amain.o
 
-ACUTEST5=$(ACU_LIBDIR)/libstdlib.a
-ACUTEST6=$(ACU_LIBDIR)/libconnectc.a
-ACUTEST7=$(ACU_LIBDIR)/liblib.a
-ACUTEST8=$(ACU_LIBDIR)/libcfg.a
-ACUTEST9=$(ACU_LIBDIR)/libacvt.a
+ACUTEST50=$(ACU_LIBDIR)/libcfg.a
+ACUTEST51=$(ACU_LIBDIR)/libcfg.a
+ACUTEST52=$(ACU_LIBDIR)/libacvt.a
+ACUTEST60=$(ACU_LIBDIR)/libexpat.a
 
-COBOL5=$(ACUDIR)/bin/ccbl
-COBOL6=$(ACUDIR)/bin/ccbl
-COBOL7=$(ACUDIR)/bin/ccbl
-COBOL8=$(ACUDIR)/bin/ccbl
-COBOL9=$(ACUDIR)/bin/ccbl
+ACUCCFLAGS50= -DNO_ACUSQL=1
+ACUCCFLAGS51= -DNO_ACUSQL=1
+ACUCCFLAGS52= -DNO_ACUSQL=1
+ACUCCFLAGS60= -DNO_ACUSQL=1 -DUSE_XML=1 
 
-CBLUTIL5=$(ACUDIR)/bin/cblutil
-CBLUTIL6=$(ACUDIR)/bin/cblutil
-CBLUTIL7=$(ACUDIR)/bin/cblutil
-CBLUTIL8=$(ACUDIR)/bin/cblutil
-CBLUTIL9=$(ACUDIR)/bin/cblutil
+SUB85ACU50=sub85_acu50.c
+SUB85ACU51=sub85_acu51.c
+SUB85ACU52=sub85_acu52.c
+SUB85ACU60=sub85_acu60.c
 
-ACUCCFLAGS6=
-ACUCCFLAGS7=
-ACUCCFLAGS8= -DNO_ACUSQL=1
-ACUCCFLAGS9= -DNO_ACUSQL=1
+#
+#	DEFINE COMMON MACROS FOR ALL VERSIONS OF ACUCOBOL
+#
+ACUSUBS=sub.o filetbl.o 
+COBOL=$(ACUDIR)/bin/ccbl
+CBLUTIL=$(ACUDIR)/bin/cblutil
+ACUSRCDIR=$(ACU_LIBDIR)
+
 
 #============================================================================
 #
@@ -192,57 +185,37 @@ ACUCCFLAGS9= -DNO_ACUSQL=1
 # version of ACUCOBOL you are using.
 #
 #
-# 5	ACUCOBOL Version 3.1 - 3.2.1 + 3.2.2 (except SCO UNIX) 
+# 50	ACUCOBOL Version 5.0
 #
-#ACULIBS=$(ACULIBS5) $(ACUOTHER)
-#ACUMAIN=$(ACUMAIN5)
-#ACUSUBS=$(ACUSUBS5)
-#ACUTEST=$(ACUTEST5)
-#ACUSRCDIR=$(ACU_LIBDIR)
-#COBOL=$(COBOL5)
-#CBLUTIL=$(CBLUTIL5)
+#ACULIBS=$(ACULIBS50) $(ACUOTHER)
+#ACUMAIN=$(ACUMAIN50)
+#ACUTEST=$(ACUTEST50)
+#ACUCCFLAGS=$(ACUCCFLAGS50) $(SYSCCFLAGS)
+#SUB85ACU=$(SUB85ACU50)
 #
-# 6	ACUCOBOL Version 3.2.2 for SCO UNIX
+# 51	ACUCOBOL Version 5.1
 #
-#ACULIBS=$(ACULIBS6) $(ACUOTHER)
-#ACUMAIN=$(ACUMAIN6)
-#ACUSUBS=$(ACUSUBS6)
-#ACUTEST=$(ACUTEST6)
-#ACUSRCDIR=$(ACU_LIBDIR)
-#COBOL=$(COBOL6)
-#CBLUTIL=$(CBLUTIL6)
+#ACULIBS=$(ACULIBS51) $(ACUOTHER)
+#ACUMAIN=$(ACUMAIN51)
+#ACUTEST=$(ACUTEST51)
+#ACUCCFLAGS=$(ACUCCFLAGS51) $(SYSCCFLAGS)
+#SUB85ACU=$(SUB85ACU51)
 #
-# 7	ACUCOBOL Version 4.0.0 - 4.3
+# 52	ACUCOBOL Version 5.2
 #
-#ACULIBS=$(ACULIBS7) $(ACUOTHER)
-#ACUMAIN=$(ACUMAIN7)
-#ACUSUBS=$(ACUSUBS7)
-#ACUTEST=$(ACUTEST7)
-#ACUSRCDIR=$(ACU_LIBDIR)
-#COBOL=$(COBOL7)
-#CBLUTIL=$(CBLUTIL7)
+#ACULIBS=$(ACULIBS52) $(ACUOTHER)
+#ACUMAIN=$(ACUMAIN52)
+#ACUTEST=$(ACUTEST52)
+#ACUCCFLAGS=$(ACUCCFLAGS52) $(SYSCCFLAGS)
+#SUB85ACU=$(SUB85ACU52)
 #
-# 8	ACUCOBOL Version 5.0, 5.1
+# 60	ACUCOBOL Version 6.0
 #
-#ACULIBS=$(ACULIBS8) $(ACUOTHER)
-#ACUMAIN=$(ACUMAIN8)
-#ACUSUBS=$(ACUSUBS8)
-#ACUTEST=$(ACUTEST8)
-#ACUSRCDIR=$(ACU_LIBDIR)
-#COBOL=$(COBOL8)
-#CBLUTIL=$(CBLUTIL8)
-#ACUCCFLAGS=$(ACUCCFLAGS8)
-#
-# 9	ACUCOBOL Version 5.2
-#
-ACULIBS=$(ACULIBS9) $(ACUOTHER)
-ACUMAIN=$(ACUMAIN9)
-ACUSUBS=$(ACUSUBS9)
-ACUTEST=$(ACUTEST9)
-ACUSRCDIR=$(ACU_LIBDIR)
-COBOL=$(COBOL9)
-CBLUTIL=$(CBLUTIL9)
-ACUCCFLAGS=$(ACUCCFLAGS9)
+ACULIBS=$(ACULIBS60) $(ACUOTHER)
+ACUMAIN=$(ACUMAIN60)
+ACUTEST=$(ACUTEST60)
+ACUCCFLAGS=$(ACUCCFLAGS60) $(SYSCCFLAGS)
+SUB85ACU=$(SUB85ACU60)
 
 #
 #============================================================================

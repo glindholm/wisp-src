@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #include <ctype.h>
 
@@ -46,6 +59,7 @@ NODE parse_rewrite_crt(int crt_num, NODE the_statement, NODE the_sentence)
 	NODE	trailing_fluff_node = NULL;
 	int	col;
 	int	wcc_byte = 0;
+	int	vwang_lines = 24;
 
 	verb_node = first_token_node(the_statement);
 
@@ -196,7 +210,7 @@ NODE parse_rewrite_crt(int crt_num, NODE the_statement, NODE the_sentence)
 	
 	if (crt_relative[cur_crt][0])
 	{
-		tput_line_at(col, "CALL \"xx2byte\" USING %s,",crt_relative[cur_crt]);
+		tput_line_at(col, "CALL \"W99TOX\" USING %s,",crt_relative[cur_crt]);
 		tput_clause (col+4, "%s",crt_record[crt_num]);
 	}
 
@@ -211,31 +225,56 @@ NODE parse_rewrite_crt(int crt_num, NODE the_statement, NODE the_sentence)
 		tput_line_at(col, "MOVE");
 		tput_statement(col+4, row_node);
 		tput_clause(col+4, "TO WISP-DFIELD-0");
-		tput_line_at(col, "CALL \"xx2byte\" USING WISP-DFIELD-0, WISP-CRT-ORDER-AREA-4");
+		tput_line_at(col, "CALL \"W99TOX\" USING WISP-DFIELD-0, WISP-CRT-ORDER-AREA-4");
 	}
 	if (column_node)
 	{
 		tput_line_at(col, "MOVE");
 		tput_statement(col+4, column_node);
 		tput_clause(col+4, "TO WISP-DFIELD-0");
-		tput_line_at(col, "CALL \"xx2byte\" USING WISP-DFIELD-0, WISP-CRT-ORDER-AREA-3");
+		tput_line_at(col, "CALL \"W99TOX\" USING WISP-DFIELD-0, WISP-CRT-ORDER-AREA-3");
 	}
 
 	if (wcc_byte || row_node || column_node)
 	{
-		tput_line_at	(col, "MOVE 4 TO WISP-LONGWORD");
-		tput_line_at	(col, "CALL \"WMEMCPY\" USING %s,",crt_record[crt_num]);
-		tput_clause	(col+4, "WISP-CRT-O-A, WISP-LONGWORD");
+		/*
+		**  In WISP 4.4.02 and earlier "wmemcpy" -- conflicts with wide-characters on AIX
+		**
+		**  MOVE 4 TO WISP-LONGWORD
+		**  CALL "WMEMCPY" USING {crt-record}, WISP-CRT-O-A, WISP-LONGWORD 
+		**
+		**  New:
+		**  MOVE WISP-CRT-O-A TO {crt-record}(1:4)
+		**
+		*/
+/*
+**		tput_line_at	(col, "MOVE 4 TO WISP-LONGWORD");
+**		tput_line_at	(col, "CALL \"WMEMCPY\" USING %s,",crt_record[crt_num]);
+**		tput_clause	(col+4, "WISP-CRT-O-A, WISP-LONGWORD");
+*/
+
+		tput_line_at	(col, "MOVE WISP-CRT-O-A TO ");
+		tput_clause	(col+4, "%s(1:4)", crt_record[crt_num]);
 	}
 
-	tput_line_at(col, "MOVE WISP-SYMB-%d TO VWANG-LINES,\n",(crt_record_size[crt_num]-4)/80);
-	tput_line_at(col, "MOVE SPACES TO %s,\n",crt_status[cur_crt]);
-	tput_line_at(col, "MOVE \"X\" TO WISP-ALLOWABLE-PF-KEYS,\n");
-	tput_line_at(col, "CALL \"vwang\" USING VWANG-WRITE-ALL,");
+	/*
+	**	CALL "WS_REWRITE" USING WISP-CRT-RECORD, lines, status END-CALL
+	*/
+	vwang_lines = (crt_record_size[crt_num]-4)/80;
+	if (vwang_lines != 24)
+	{
+		tput_line_at(col, "MOVE WISP-SYMB-%d TO VWANG-LINES,\n", vwang_lines);
+	}
+	tput_line_at(col, "CALL \"WS_REWRITE\" USING ");
 	tput_clause (col+4, "WISP-CRT-RECORD,");
-	tput_clause (col+4, "VWANG-LINES,");				/* Write full screen for now	*/
-	tput_clause (col+4, "WISP-ALLOWABLE-PF-KEYS,");
-	tput_clause (col+4, "%s,",crt_pfkey[cur_crt]);
+	if (vwang_lines != 24)
+	{
+		tput_clause (col+4, "VWANG-LINES,");
+	}
+	else
+	{
+		tput_clause (col+4, "VWANG-FULL-SCREEN,");
+	}
 	tput_clause (col+4, "%s",crt_status[cur_crt]);
 	tput_clause (col, "END-CALL");
 
@@ -267,8 +306,19 @@ NODE parse_rewrite_crt(int crt_num, NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_crtrw.c,v $
-**	Revision 1.18.2.1  2002/10/03 13:49:49  gsl
-**	Change wmemcpy to WMEMCPY
+**	Revision 1.23  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.22  2002/08/01 02:46:28  gsl
+**	Replace vwang calls with WS_CLOSE WS_READ WS_READ_ALT WS_REWRITE
+**	
+**	Revision 1.21  2002/07/30 22:00:49  gsl
+**	globals
+**	
+**	Revision 1.20  2002/07/26 19:20:43  gsl
+**	
+**	Revision 1.19  2002/07/10 01:35:59  gsl
+**	fix wmemcpy to WMEMCPY
 **	
 **	Revision 1.18  1998/03/26 19:24:21  gsl
 **	Change to use WISP-SYMB-xx

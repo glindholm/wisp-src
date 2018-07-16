@@ -1,4 +1,4 @@
-        Copyright (c) 1995-2001 by NeoMedia Technologies Inc. 
+        Copyright (c) 1995-2003 by NeoMedia Technologies Inc. 
         All Rights Reserved.
         
         ====================================================================
@@ -8,7 +8,7 @@
         Document:       wproc.txt
         Last Updated:   $Date:$
         Products:       WPROC
-        Versions:       2.0.00
+        Versions:       5.0.00
         
         Summary:        Usage notes for wproc.
                         Known limitations.
@@ -211,6 +211,21 @@
                 library and volume names.
         Fix:    None - use only Wang style names.
 
+
+
+        Release 5.0.00
+        --------------
+
+        The following items where fixed or added for release 5.0.00
+
+	Key:    RETURN CODE 
+	Desc:	Fixed so the RETURN CODE from a proc is passed back to 
+		the COBOL program that CALL "LINK"ed to the proc. 
+
+	Key:    PROGLIB/PROGVOL being set to blank
+	Desc:	There was situations where a RUN statement was causing
+	        PROGLIB and PROGVOL to be set to blank which in turn was
+		causeing the RUN to fail.  This has been corrected.
 
 
         Release 2.0.00

@@ -1,0 +1,406 @@
+000100**   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       WL0035.wcb
+000500**
+000600**   Project:    WISP/TEST
+000700**
+000800**   Purpose:    Test READVTOC routine 
+000900**
+001000**   Example:    
+001050**   CALL "READVTOC" using FUNC, LIB, VOL, START, COUNT, REC, RC, TOTAL. 
+001100**
+006500**
+001100 Identification Division.
+001200 Program-Id.     WL0035.
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT CRT
+               ASSIGN TO "CRT",  "DISPLAY".
+
+           SELECT BASE-FILE-UFB
+               ASSIGN TO "BASEFILE", "DISK",  NODISPLAY
+               ORGANIZATION    IS INDEXED
+	       RECORD KEY IS BASE-FIL-KEY.
+
+           SELECT SEQ-FILE-UFB
+               ASSIGN TO "SEQFILE", "DISK",  NODISPLAY.
+
+001300 Data Division.
+       FILE SECTION.
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC.
+           03  CRTREC-OA.
+               05  CRTREC-OA-1             PIC X.
+               05  CRTREC-OA-2             PIC X.
+               05  CRTREC-OA-3             PIC X.
+               05  CRTREC-OA-4             PIC X.
+           03  CRTREC-MAPPING-AREA.
+               05  CRTREC-ROW  OCCURS 24 TIMES.
+                   10 CRTREC-X OCCURS 80 TIMES PIC X.
+
+       FD  BASE-FILE-UFB
+           VALUE OF FILENAME IS BASE-FIL,
+                    LIBRARY  IS BASE-LIB,
+                    VOLUME   IS BASE-VOL.
+
+       01  BASE-FIL-RECORD.
+	   05 BASE-FIL-KEY     PIC X(10).
+	   05 BASE-FIL-DATA    PIC X(70).
+
+       FD  SEQ-FILE-UFB
+           VALUE OF FILENAME IS BASE-FIL,
+                    LIBRARY  IS BASE-LIB,
+                    VOLUME   IS BASE-VOL.
+
+       01  SEQ-FIL-RECORD.
+	   05 SEQ-FIL-DATA    PIC X(80).
+       
+
+
+      *============================================================	  
+001400 Working-Storage Section.
+001500
+       01  QASUB	   PIC X(8) VALUE "READVTOC".
+       01  QAPROG	   PIC X(8) VALUE "WL0035".
+       
+       01  failed-cnt	   pic 99 value 0.
+
+       01  base-fil	   PIC X(8) VALUE "WL0035".
+       01  base-lib	   pic x(8) VALUE "WL0035".
+       01  base-vol	   pic x(6).
+
+       01  SEQ-FILE-EXTENSION PIC X(39) VALUE "seq".
+
+      *============================================================	  
+      * CALL "READVTOC" using FUNC, LIB, VOL, START, COUNT, REC, RC, TOTAL. 
+       01  READVTOC-FUNC		PIC X VALUE "F".
+       01  READVTOC-LIB			PIC X(8) VALUE SPACES.
+       01  READVTOC-VOL			PIC X(6) VALUE SPACES.
+       01  READVTOC-START.
+           05 READVTOC-START-HIGH	BINARY.
+           05 READVTOC-START-BIN	BINARY.
+       01  READVTOC-START-NUM		PIC 9999.
+       01  READVTOC-COUNT.
+           05 READVTOC-COUNT-HIGH	BINARY.
+           05 READVTOC-COUNT-BIN	BINARY.
+       01  READVTOC-COUNT-NUM		PIC 9999.
+       01  READVTOC-REC.
+           05  READVTOC-REC-ITEM OCCURS 100.
+	       10  READVTOC-REC-FILE	PIC X(8).
+       01  READVTOC-RC.
+           05 READVTOC-RC-HIGH		BINARY.
+           05 READVTOC-RC-BIN		BINARY.
+       01  READVTOC-RC-NUM		PIC 9999.
+       01  READVTOC-TOTAL.
+           05 READVTOC-TOTAL-HIGH	BINARY.
+           05 READVTOC-TOTAL-BIN	BINARY.
+       01  READVTOC-TOTAL-NUM		PIC 9999.
+
+       01  EXPECTED-RC-NUM		PIC 9999.
+       01  EXPECTED-COUNT-NUM		PIC 9999.
+       01  EXPECTED-TOTAL-NUM		PIC 9999.
+       01  EXPECTED-REC.
+	   05  EXPECTED-FILE		PIC X(8).
+
+       01  TST-FIL	   PIC X(8).
+       01  TST-LIB	   PIC X(8).
+       01  TST-VOL	   PIC X(6).
+
+       01  RC-INT4.
+           03 RC-HIGH     BINARY  VALUE 0.
+           03 RC-BIN      BINARY  VALUE 0.
+       01  RC-NUM	   PIC 999.
+       
+       01  IL	   PIC X(2) VALUE "IL".
+       01  IV	   PIC X(2) VALUE "IV".
+       01  INLIB   PIC X(8).
+       01  INVOL   PIC X(6).
+       
+       01  TEST-NAME PIC X(8).
+
+       01  READFDR4-MODE.
+	   03 FILLER BINARY VALUE 0.
+	   03 FILLER BINARY VALUE 0.
+
+       01  CD-keyword PIC XX VALUE "CD".
+       01  CREATE-DATE PIC 9(8).
+       01  L-TYPE PIC X VALUE "L".
+       01  F-TYPE PIC X VALUE "F".
+
+       01  SPACES-FIL   PIC X(8) VALUES SPACES.
+       01  FIND-START-CNT-INT4.
+	   05  FIND-START-CNT-HIGH BINARY VALUE 0.
+	   05  FIND-START-CNT-BIN  BINARY VALUE 0.
+       01  FIND-CNT-INT4.
+	   05  FIND-CNT-HIGH BINARY VALUE 0.
+	   05  FIND-CNT-BIN  BINARY VALUE 0.
+       01  FIND-RECEIVER   PIC X(22).	   
+	   
+  
+001600 Procedure Division.
+       
+      *============================================================	  
+       0000-init.
+	   move 0 to failed-cnt.
+
+	   CALL "EXTRACT" USING
+	       IL, INLIB,
+	       IV, INVOL.
+
+      * Ensure Usage constants are set.	       
+	   if INLIB = " " or INVOL = " " then
+	       DISPLAY "INLIB and INVOL must be set to run test"
+	       go to 9999-exit.
+
+
+      * Remove the lib from previous runs.
+	   perform cleanup-files.
+
+      *============================================================	  
+      * CALL "READVTOC" using FUNC, LIB, VOL, START, COUNT, REC, RC, TOTAL. 
+      *============================================================	  
+      * TEST: No FILES (missing lib)
+       TEST001.
+	   MOVE "TEST001" TO TEST-NAME.
+	   
+	   MOVE "F"		TO READVTOC-FUNC
+	   MOVE QAPROG		TO READVTOC-LIB.
+	   MOVE INVOL		TO READVTOC-VOL.
+	   MOVE 1		TO READVTOC-START-NUM
+	   MOVE 10		TO READVTOC-COUNT-NUM
+
+	   MOVE 24		TO EXPECTED-RC-NUM
+	   MOVE 0		TO EXPECTED-COUNT-NUM
+	   MOVE 0		TO EXPECTED-TOTAL-NUM
+	   
+	   PERFORM CALL-READVTOC-8ARGS.
+	   PERFORM CHECK-READVTOC-SUCCESS.
+
+      * TEST: Find one file 
+       test002.
+	   MOVE "TEST002" TO TEST-NAME.
+	   
+	   MOVE TEST-NAME	TO BASE-FIL.
+	   MOVE QAPROG		TO BASE-LIB.
+	   MOVE INVOL		TO BASE-VOL.
+	   PERFORM CREATE-BASE-FILE.
+
+	   MOVE "F"		TO READVTOC-FUNC
+	   MOVE QAPROG		TO READVTOC-LIB.
+	   MOVE INVOL		TO READVTOC-VOL.
+	   MOVE 1		TO READVTOC-START-NUM
+	   MOVE 10		TO READVTOC-COUNT-NUM
+
+	   MOVE 0		TO EXPECTED-RC-NUM
+	   MOVE 1		TO EXPECTED-COUNT-NUM
+	   MOVE 1		TO EXPECTED-TOTAL-NUM
+	   MOVE BASE-FIL	TO EXPECTED-FILE.
+	   
+	   PERFORM CALL-READVTOC-8ARGS.
+	   PERFORM CHECK-READVTOC-SUCCESS.
+
+
+      * TEST: Find 2 files with file wildcard '?'
+       test003.
+	   MOVE "TEST003" TO TEST-NAME.
+	   
+	   MOVE TEST-NAME	TO BASE-FIL.
+	   MOVE QAPROG		TO BASE-LIB.
+	   MOVE INVOL		TO BASE-VOL.
+	   PERFORM CREATE-BASE-FILE.
+
+	   MOVE "F"		TO READVTOC-FUNC
+	   move QAPROG		to READVTOC-LIB.
+	   move INVOL		to READVTOC-VOL.
+	   move 1		to READVTOC-START-NUM
+	   move 10		to READVTOC-COUNT-NUM
+
+	   move 2		to EXPECTED-COUNT-NUM
+	   move 2		to EXPECTED-TOTAL-NUM
+	   
+	   PERFORM CALL-READVTOC-8ARGS.
+	   PERFORM CHECK-READVTOC-SUCCESS.
+	   
+      
+      *============================================================	  
+       9999-done.
+           IF failed-cnt = 0   THEN
+                DISPLAY QASUB " completion successful."
+           ELSE 
+                DISPLAY QASUB " failed "
+	   END-IF.
+	   
+       9999-exit.
+            EXIT PROGRAM.
+       9999-stop.
+            STOP RUN.
+
+      *============================================================
+       CLEANUP-FILES.
+	   MOVE INVOL    TO BASE-VOL.
+	   MOVE QAPROG     TO BASE-LIB.
+	   PERFORM SCRATCH-BASE-LIB.
+       
+      *============================================================
+       SCRATCH-BASE-LIB.
+	   MOVE SPACES	   TO BASE-FIL.
+	   CALL "SCRATCH" USING 
+	       L-TYPE, BASE-FIL, BASE-LIB, BASE-VOL, RC-int4.
+	       
+      *============================================================
+       CHECK-READVTOC-SUCCESS.
+	   if  (READVTOC-RC-NUM NOT    = EXPECTED-RC-NUM) OR
+	       (READVTOC-COUNT-NUM NOT = EXPECTED-COUNT-NUM) OR
+	       (READVTOC-TOTAL-NUM NOT = EXPECTED-TOTAL-NUM) THEN
+	       add 1 to failed-cnt
+	       display QASUB " FAILED ", TEST-NAME, " WRONG-CNTS"
+	   ELSE
+	       IF EXPECTED-COUNT-NUM = 1 THEN
+	           PERFORM CHECK-READVTOC-REC
+	       END-IF
+	   END-IF.
+       
+      *============================================================
+       CHECK-READVTOC-REC.
+	   if READVTOC-REC-ITEM(1) NOT = EXPECTED-REC THEN
+	       add 1 to failed-cnt
+	       display QASUB " FAILED ", TEST-NAME,
+	          " [", READVTOC-REC-ITEM(1), "] NOT = [",
+		  EXPECTED-REC, "]"
+           END-IF.
+
+	       
+		   
+      *============================================================
+
+      * CALL "READVTOC" using FUNC, LIB, VOL, START, COUNT, REC, RC, TOTAL. 
+
+      *============================================================
+       CALL-READVTOC-PRECALL.
+	   MOVE 0			TO READVTOC-START-HIGH.
+	   MOVE READVTOC-START-NUM	TO READVTOC-START-BIN.
+
+	   MOVE 0			TO READVTOC-COUNT-HIGH.
+	   MOVE READVTOC-COUNT-NUM	TO READVTOC-COUNT-BIN.
+
+           MOVE SPACES			TO READVTOC-REC.
+
+	   MOVE 0			TO READVTOC-TOTAL-HIGH.
+	   MOVE 0			TO READVTOC-TOTAL-BIN.
+
+	   MOVE 0			TO READVTOC-RC-HIGH.
+	   MOVE 0			TO READVTOC-RC-BIN.
+
+       CALL-READVTOC-POSTCALL.
+	   MOVE READVTOC-START-BIN	TO READVTOC-START-NUM.
+	   MOVE READVTOC-COUNT-BIN	TO READVTOC-COUNT-NUM.
+	   MOVE READVTOC-TOTAL-BIN	TO READVTOC-TOTAL-NUM.
+	   MOVE READVTOC-RC-BIN		TO READVTOC-RC-NUM.
+
+       CALL-READVTOC-8ARGS.
+	   PERFORM CALL-READVTOC-PRECALL.
+           CALL "READVTOC" USING READVTOC-FUNC, 
+			READVTOC-LIB, READVTOC-VOL,
+       			READVTOC-START, READVTOC-COUNT, READVTOC-REC
+       			READVTOC-RC, READVTOC-TOTAL.
+
+	   PERFORM CALL-READVTOC-POSTCALL.
+
+      *============================================================
+      *============================================================	  
+       TEST-FILE-EXISTS.
+	   CALL "READFDR4" USING
+	       tst-fil, tst-lib, tst-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 0  then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-EXISTS FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", tst-fil,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+       TEST-FILE-MISSING.
+	   CALL "READFDR4" USING
+	       tst-fil, tst-lib, tst-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 20  AND rc-bin NOT = 16 then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-MISSING FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", tst-fil,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+       TEST-LIB-MISSING.
+	   MOVE SPACES TO SPACES-FIL.
+	   MOVE 0 TO FIND-START-CNT-HIGH.
+	   MOVE 1 TO FIND-START-CNT-BIN.
+	   MOVE 0 TO FIND-CNT-HIGH.
+	   MOVE 1 TO FIND-CNT-BIN.
+	   CALL "FIND" USING
+	       SPACES-FIL, TST-LIB, TST-VOL,
+	       FIND-START-CNT-INT4, FIND-CNT-INT4,
+	       FIND-RECEIVER.
+	   IF FIND-CNT-BIN NOT = 0  THEN
+	       ADD 1 TO FAILED-CNT
+	       DISPLAY "TEST-LIB-MISSING FAILED ",
+		   TEST-NAME,
+		   " LIB=", TST-LIB,
+		   " VOL=", TST-VOL.
+       
+      *============================================================	  
+       TEST-LIB-EXISTS.
+	   MOVE SPACES TO SPACES-FIL.
+	   MOVE 0 TO FIND-START-CNT-HIGH.
+	   MOVE 1 TO FIND-START-CNT-BIN.
+	   MOVE 0 TO FIND-CNT-HIGH.
+	   MOVE 1 TO FIND-CNT-BIN.
+	   CALL "FIND" USING
+	       SPACES-FIL, TST-LIB, TST-VOL,
+	       FIND-START-CNT-INT4, FIND-CNT-INT4,
+	       FIND-RECEIVER.
+	   IF FIND-CNT-BIN NOT = 1  THEN
+	       ADD 1 TO FAILED-CNT
+	       DISPLAY "TEST-LIB-EXISTS FAILED ",
+		   TEST-NAME,
+		   " LIB=", TST-LIB,
+		   " VOL=", TST-VOL.
+	       
+      *============================================================
+       CREATE-BASE-FILE.
+      * Create a file to copy.
+	   OPEN OUTPUT BASE-FILE-UFB.
+	   WRITE BASE-FIL-RECORD.
+	   CLOSE BASE-FILE-UFB.
+
+      * Ensure file exists.
+	   move base-fil to tst-fil.
+	   move base-lib to tst-lib.
+	   move base-vol to tst-vol.
+	   perform TEST-FILE-EXISTS.
+	   if rc-bin NOT = 0 THEN GO TO 9999-exit.
+
+	       
+      *============================================================
+       CREATE-SEQ-FILE.
+      * Create a file to copy.
+           CALL "WSETFILEXT" USING SEQ-FILE-EXTENSION.
+	   OPEN OUTPUT SEQ-FILE-UFB.
+	   WRITE SEQ-FIL-RECORD.
+	   CLOSE SEQ-FILE-UFB.
+
+  
+006600**   End of WL0035.wcb 

@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 	wisp_pic.c
@@ -28,7 +41,7 @@ static char rcsid[]="$Id:$";
 #define NUM_FAC		0x82
 #define PROT_FAC	0x8C
 
-int pic_size(const char *the_pic)							/* Take a picture clause and determine	*/
+int WL_pic_size(const char *the_pic)							/* Take a picture clause and determine	*/
                 									/* It's size.				*/
 {
 	int psize;									/* the size of it			*/
@@ -63,7 +76,7 @@ int pic_size(const char *the_pic)							/* Take a picture clause and determine	*
 	return(psize);
 }
 
-int pic_dp(const char* the_pic)								/* Take a picture clause and determine	*/
+int WL_pic_dp(const char* the_pic)								/* Take a picture clause and determine	*/
               										/* It's dp position.			*/
 {
 	int dp;										/* the decimal point location		*/
@@ -129,7 +142,7 @@ int pic_dp(const char* the_pic)								/* Take a picture clause and determine	*/
 }
 
 
-int pic_fac(const char* the_pic)							/* Take a picture clause for a mod	*/
+int WL_pic_fac(const char* the_pic)							/* Take a picture clause for a mod	*/
               										/* Field and determine An appropriate 	*/
 {											/* FAC for it.				*/
 	if (*the_pic == 0) return(PROT_FAC);						/* no pic, return protect dim		*/
@@ -142,12 +155,12 @@ This is not correct. The Wang always uses a '81' fac even for a "PIC 99999".
 #endif
 }
 
-uint4 pic_edit(const char* the_pic)							/* Generate a 32 bit field edit mask.	*/
+uint4 WL_pic_edit(const char* the_pic)							/* Generate a 32 bit field edit mask.	*/
 {
 	uint4 the_mask,the_bit;
 	int i;
 
-	if (!*the_pic || pic_fac(the_pic) != NUM_FAC) return(0);			/* Blank or non numeric.		*/
+	if (!*the_pic || WL_pic_fac(the_pic) != NUM_FAC) return(0);			/* Blank or non numeric.		*/
 
 	the_mask = 0;
 	the_bit  = 0x80000000;
@@ -178,7 +191,7 @@ uint4 pic_edit(const char* the_pic)							/* Generate a 32 bit field edit mask.	
 	return(the_mask);
 }
 
-uint4 pic_zmask(const char* the_pic)							/* Generate a 32 bit field Z edit mask.	*/
+uint4 WL_pic_zmask(const char* the_pic)							/* Generate a 32 bit field Z edit mask.	*/
 {
 	uint4 the_mask,the_bit;
 	int i,zflag;
@@ -227,6 +240,12 @@ uint4 pic_zmask(const char* the_pic)							/* Generate a 32 bit field Z edit mas
 /*
 **	History:
 **	$Log: wisp_pic.c,v $
+**	Revision 1.13  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.12  2002/07/10 21:06:35  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.11  1999/09/07 14:30:06  gsl
 **	Fix pic_edit() if statement that preserved comments to us '||' where it
 **	was incorrectly using '|'.

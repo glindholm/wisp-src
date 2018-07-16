@@ -1,7 +1,28 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 
 /*
 **	File:		menu.h
@@ -47,19 +68,25 @@ struct menu	{						/* The structure of a complete menu			*/
 #define LOGOFF				10				/* Log off the system					*/
 
 
-int menu_go(char* menuname, char* menuvalue);
-int menu_get_key(int key_num);
-int menu_set_key(int key_num, int value);
-struct menu *menu_read(char* pmenufile);
-int menu_scan(struct menu *themenu);
-void menu(char *name,	/* The name of the menu file			*/
-	  char *rval);	/* The return value				*/
+struct menu *WL_menu_read(char* pmenufile);
+int  WL_menu_go(char* menuname, char* menuvalue);
+int  WL_menu_get_key(int key_num);
+int  WL_menu_set_key(int key_num, int value);
+int  WL_menu_scan(struct menu *themenu);
+void WL_menu(char *name,	/* The name of the menu file			*/
+	     char *rval);	/* The return value				*/
 
 #endif /* menu_H */
 
 /*
 **	History:
 **	$Log: menu.h,v $
+**	Revision 1.11  2003/01/31 19:18:00  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.10  2002/07/10 21:05:19  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.9  1996/07/17 16:19:50  gsl
 **	Fix missing newline
 **	

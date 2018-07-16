@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1998 NeoMedia Technologies, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 /*
@@ -27,21 +47,27 @@
 /*
 **	Function Prototypes
 */
-void wfile_disp(void);
-int display_util_getparms(char *filename);
-int utils_in_windows(void);
-int use_internal_display(void);
-int WL_link_display(const char* filepath);
-int internal_display(const char* filepath);
-const char* custom_display_utility(void);
+void WL_wfile_disp(void);
+int  WL_display_util_getparms(char *filename, int* recsize);
+int  WL_utils_in_windows(void);
+int  WL_use_internal_display(void);
+int  WL_link_display(const char* filepath);
+int  WL_internal_display(const char* filepath, int reclen);
+const char* WL_custom_display_utility(void);
 
 #endif /* wfiledis_H */
 
 /*
 **	History:
 **	$Log: wfiledis.h,v $
-**	Revision 1.4.2.1  2002/11/12 16:00:18  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.7  2003/02/20 23:14:34  gsl
+**	Add OPTIONS get to DISPLAY utility that gets the record size RECSIZE
+**	
+**	Revision 1.6  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.5  2002/07/10 21:06:34  gsl
+**	Fix globals WL_ to make unique
 **	
 **	Revision 1.4  1999/02/23 21:57:26  gsl
 **	Move no_windows() to wispcfg.h

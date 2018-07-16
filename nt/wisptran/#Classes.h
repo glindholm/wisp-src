@@ -1,3 +1,26 @@
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 //////////////////////////////////////////////////////////////////////////
 //
 //	This file contains all of the class declarations
@@ -82,7 +105,7 @@ class cWindows {
 						l_FromDir,
 						_DirPath,
 						_1,
-						_C,
+						_F,
 						_x,
 						_q,
 						_S,
@@ -102,7 +125,7 @@ class cWindows {
 						_l,
 						_O,
 						l_O, _OBrs,
-						_R,
+						_G4,
 						_T,
 						_e,
 						_W, l_W, _WBrs,
@@ -163,7 +186,7 @@ class cApplication {
 					BOOL
 						_1,
 						_4,
-						_C,
+						_F,
 						_D,
 						_e,
 						_f,
@@ -172,7 +195,7 @@ class cApplication {
 						_m,
 						_M,
 						_q,
-						_R,
+						_G4,
 						_S,
 						_T,
 						_w,
@@ -244,3 +267,15 @@ class cApplication {
 
 
 #endif
+
+/*
+**	History:
+**	$Log: #Classes.h,v $
+**	Revision 1.10  2003/06/18 16:55:56  gsl
+**	Add /F remove /C (replace)
+**	
+**	Revision 1.9  2003/06/18 16:43:06  gsl
+**	Add CVS header and history
+**	
+**
+*/

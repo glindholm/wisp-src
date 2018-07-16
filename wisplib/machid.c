@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1995-2003 NeoMedia Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		machid.c
@@ -7,9 +26,7 @@ static char rcsid[]="$Id:$";
 **	Purpose:	To get machine id.
 **
 **	Routines:	
-**	getmachineid()	Get machine id.
-**	low_disk_id()	Get machine id based on disk serial number
-**	hide_file()	Make file "hidden"
+**	WL_getmachineid()	Get machine id.
 **
 **
 */
@@ -29,17 +46,16 @@ static char rcsid[]="$Id:$";
 #include "platsubs.h"
 
 /*
-**	Routine:	getmachineid()
+**	Routine:	WL_getmachineid()
 **
 **	Function:	To get the MACHINE ID. (UNIX)
 **
-**	Description:	This routine will return the MACHINE ID if one is available.  If there is no MACHINE ID it will
-**			"fake it" by returning the inode number of the license file.
+**	Description:	This routine will return the MACHINE ID if one is available.  
 **
 **	Input:		None
 **			
 **
-**	Output:		machineid	The MACHINE ID (or inode number)
+**	Output:		machineid	The MACHINE ID 
 **			
 **
 **	Return:		0 = success
@@ -47,8 +63,6 @@ static char rcsid[]="$Id:$";
 **
 **	Warnings:	Ensure that the license file in created first before calling this routine.
 **			Machineid must be large enough to hold the result.
-**
-**	History:	05/26/92	Written by GSL
 **
 */
 
@@ -59,7 +73,7 @@ static char rcsid[]="$Id:$";
 #include <unistd.h>
 
 #ifdef AIX
-int getmachineid(char* machineid)
+int WL_getmachineid(char* machineid)
 {
 	struct utsname 	uname_s;
 	*machineid = '\0';
@@ -71,13 +85,13 @@ int getmachineid(char* machineid)
 
 	strcpy(machineid,uname_s.machine);
 
-	upper_string(machineid);
+	WL_upper_string(machineid);
 	return(0);
 }
 #endif /* AIX */
 
 #ifdef HPUX
-int getmachineid(char* machineid)
+int WL_getmachineid(char* machineid)
 {
 	struct utsname 	uname_s;
 	*machineid = '\0';
@@ -89,13 +103,13 @@ int getmachineid(char* machineid)
 
 	strcpy(machineid,uname_s.__idnumber);
 
-	upper_string(machineid);
+	WL_upper_string(machineid);
 	return(0);
 }
 #endif /* HPUX */
 
 #ifdef SCO
-int getmachineid(char* machineid)
+int WL_getmachineid(char* machineid)
 {
 	struct scoutsname sco_buff;
 	*machineid = '\0';
@@ -107,19 +121,19 @@ int getmachineid(char* machineid)
 	memcpy(machineid, sco_buff.sysserial, sizeof(sco_buff.sysserial));
 	machineid[sizeof(sco_buff.sysserial)] = '\0';
 
-	upper_string(machineid);
+	WL_upper_string(machineid);
 	return(0);
 }
 #endif /* SCO */
 
 #if defined(LINUX) || defined(OSF1_ALPHA)
-int getmachineid(char* machineid)
+int WL_getmachineid(char* machineid)
 {
 	char name[80];
 	char* ptr;
 	*machineid = '\0';
 
-	computername(name);
+	WL_computername(name);
 	if (strlen(name) < 10)
 	{
 		strcat(name,"0102010301");
@@ -139,7 +153,7 @@ int getmachineid(char* machineid)
 		}
 	}
 
-	upper_string(machineid);
+	WL_upper_string(machineid);
 	return(0);
 }
 #endif /* LINUX || OSF1_ALPHA */
@@ -147,7 +161,7 @@ int getmachineid(char* machineid)
 #if defined(SOLARIS) || defined(UNIXWARE)
 #include <sys/systeminfo.h>
 
-int getmachineid(char* machineid)
+int WL_getmachineid(char* machineid)
 {
 	*machineid = '\0';
 	if ( -1 == sysinfo(SI_HW_SERIAL, machineid, MAX_MACHINEID_LENGTH))
@@ -155,7 +169,7 @@ int getmachineid(char* machineid)
 		return(1);
 	}
 
-	upper_string(machineid);
+	WL_upper_string(machineid);
 	return(0);
 }
 #endif
@@ -173,7 +187,7 @@ int getmachineid(char* machineid)
 ** Also the machine id could not be determined unless the
 ** license file exists.
 ** 
-** int getmachineid(char* machineid)  OLD INODE STYLE
+** int WL_getmachineid(char* machineid)  OLD INODE STYLE
 ** {
 ** 	long	inode = WL_inode(WLIC_license_filepath());
 ** 	*machineid = '\0';
@@ -185,15 +199,14 @@ int getmachineid(char* machineid)
 ** 
 ** 	sprintf(machineid,"I%ld", inode);
 ** 
-** 	upper_string(machineid);
+** 	WL_upper_string(machineid);
 ** 	return(0);
 ** }
 */
 #endif
 
-
 /*
-**	ROUTINE:	computername()
+**	ROUTINE:	WL_computername()
 **
 **	FUNCTION:	Return the computer name.
 **
@@ -210,11 +223,11 @@ int getmachineid(char* machineid)
 **	WARNINGS:	None
 **
 */
-char *computername(char *cname)
+char *WL_computername(char *cname)
 {
 	static char* the_computername = NULL;
 
-	if (!the_computername)
+	if (NULL == the_computername)
 	{
 		struct utsname unix_name;
 		char	*tmp_name = NULL;
@@ -242,7 +255,7 @@ char *computername(char *cname)
 			tmp_name = "(UNKNOWN)";
 		}
 
-		the_computername = wstrdup(tmp_name);
+		the_computername = wisp_strdup(tmp_name);
 	}
 
 	if (NULL == cname)
@@ -261,284 +274,11 @@ char *computername(char *cname)
 #endif /* unix */
 
 
-#if defined (_INTELC32_) || defined (WATCOM)
-
-#include <stdio.h>
-#if defined (WATCOM)
-#include <i86.h>
-#endif
-#include <dos.h>
-#include <ctype.h>
-
-/*
-**	Routine:	getmachineid()
-**
-**	Function:	To return a machine id. (Code Builder)
-**
-**	Description:	This routine creates a "unique" machine id string.
-**			It first tries to get the volume serial number from
-**			the hard drive.  It starts looking at the lowest
-**			drive "C:" then "D:" and up until it finds one.  
-**			If no volume serial number if found it creates a
-**			timestamp ID in "C:\WISP.LID".  If all else fails
-**			it returns a dummy ID.
-**
-**			If a disk id is found then the drive letter will prefix the 8 hex characters.
-**			If a timestamp is found the a "T" will prefix 8 hex chars.
-**			The Dummy id is "I28460100" (our address).
-**
-**			Examples:
-**				C18C466D1	Drive C serial number id
-**				F082714ED	Drive F serial number id
-**				T2C3A1127	Timestamp id
-**				I28460100	Dummy id
-**
-**	Arguments:
-**	id		The machine id to return.  It is 9 bytes long but pass a 20 byte buffer for future.
-**
-**	Globals:	None
-**
-**	Return:
-**	0		Success   (Always returns success)
-**	1		Failed
-**
-**	Warnings:	None
-**
-**	History:	
-**	07/06/93	Written by GSL
-**
-*/
-int getmachineid(char* id)
-{
-#define	LICENSE_ID_FILE	"C:\\WISP.LID"
-#define ID_SIZE		9
-
-	FILE	*fh;
-	char	*ptr;
-
-	/*
-	**	First try to get a disk id.
-	*/
-	if (0==low_disk_id(id)) return(0);					/* Found a disk id.				*/
-
-
-	/*
-	**	See if timestamp id already exists.
-	*/
-	if (fh = fopen(LICENSE_ID_FILE,"r"))
-	{
-		ptr = fgets(id, ID_SIZE+1, fh);
-		fclose(fh);
-		if (ptr) return(0);						/* Found a timestamp id.			*/
-	}
-
-	/*
-	**	Create a timestamp id.
-	*/
-	if (fh = fopen(LICENSE_ID_FILE,"w"))
-	{
-		fprintf(fh,"T%08X\n",time(NULL));
-		fclose(fh);
-		hide_file(LICENSE_ID_FILE);
-	}
-
-	/*
-	**	Try to read the newly created timestamp id.
-	*/
-	if (fh = fopen(LICENSE_ID_FILE,"r"))
-	{
-		ptr = fgets(id, ID_SIZE+1, fh);
-		fclose(fh);
-		if (ptr) return(0);						/* Got new timestamp id.			*/
-	}
-
-	/*
-	**	Use the dummy id.
-	*/
-	strcpy(id,"I28460100");
-
-	return(0);
-}
-
-/*
-**	Routine:	low_disk_id()
-**
-**	Function:	To return machine id based on the lowest disk with a serial number.
-**
-**	Description:	This looks at the drives starting a "C:" for a serial number and
-**			when it find one it creates a machine id prefixed with the drive letter.
-**			If no drive is found with a serial number then it returns failure and id
-**			is not set.
-**
-**	Arguments:
-**	id		The machine id to return. Currently 9 bytes but pass in 20 for furture growth.
-**
-**	Globals:	None
-**
-**	Return:
-**	0		Success 
-**	1		Failed
-**
-**	Warnings:	None
-**
-**	History:	
-**	07/06/93	Written by GSL
-**
-*/
-static int low_disk_id(id)
-char	*id;
-{
-	union	REGS	r;
-	unsigned	drive;
-	int		not_found;
-
-	struct media_struct
-	{
-		short	info_level;
-		short	serial1;
-		short	serial2;
-		char	vol_id[11];
-		char	file_sys[8];
-	};
-	struct media_struct *media_ptr;
-
-	not_found = 1;
-
-	/*
-	**	Alloc some low memory
-	*/
-	if ( _dos_allocmem(sizeof(struct media_struct), (unsigned *)&media_ptr) )
-	{
-		return(not_found);
-	}
-
-	/*
-	**	Get the volume serial number
-	**	C: = 3, D: = 4, E: = 5,...
-	*/
-	for(drive=3; drive<8; drive++)
-	{
-		media_ptr->info_level = 0;
-
-		r.h.ah = 0x44;
-		r.h.al = 0x0d;
-
-		r.h.bh = 0;
-		r.h.bl = drive;
-
-		r.h.ch = 0x08;
-		r.h.cl = 0x66;
-
-		#ifdef _INTELC32_
-		r.w.edx = (unsigned) media_ptr;
-		int86(0x21, &r, &r);
-		#endif
-		#ifdef WATCOM
-		r.x.edx = (unsigned) media_ptr;
-		int386(0x21, &r, &r);
-		#endif
-
-		if (! r.x.cflag)
-		{
-			/*
-			**	Found a drive with a serial number.
-			*/
-			not_found = 0;
-			sprintf(id, "%c%04X%04X", (int)(drive + '@'), (int)media_ptr->serial2, (int)media_ptr->serial1);
-			break;
-		}
-	}
-
-	/*
-	**	Free the low memory
-	*/
-	_dos_freemem((unsigned)media_ptr);
-
-	return(not_found);
-}
-
-/*
-**	Routine:	hide_file()
-**
-**	Function:	To make the file into a "hidden" file.
-**
-**	Description:	This routine sets the "hidden" attribute on in a file.
-**
-**	Arguments:
-**	filename	The path to the file to hide.
-**
-**	Globals:	None
-**
-**	Return:
-**	0		Success
-**	non-zero	Error code
-**
-**	Warnings:	None
-**
-**	History:	
-**	07/06/93	Written by GSL
-**
-*/
-int hide_file(filename)
-char	*filename;
-{
-	union	REGS	r;
-
-	/*
-	**	Get the currect file attributes
-	*/
-	r.h.ah = 0x43;
-	r.h.al = 0x00;
-
-	#ifdef _INTELC32_
-	r.w.edx = (unsigned) filename;
- 		int86(0x21, &r, &r);
-	#endif
-	#ifdef WATCOM
-	r.x.edx = (unsigned) filename;
-	int386(0x21, &r, &r);
-	#endif
-
-	if (r.x.cflag)
-	{
-		return((int)r.x.cflag);
-	}
-
-	/*
-	**	Turn the hidden bit (0x02) on and set the file attribute
-	*/
-#ifdef _INTELC32_
-	r.x.cx |= 0x02;
-#else
-	r.w.cx |= 0x02;
-#endif
-
-	r.h.ah = 0x43;
-	r.h.al = 0x01;
-
-	#ifdef _INTELC32_
-	r.w.edx = (unsigned) filename;
-	int86(0x21, &r, &r);
-	#endif
-	#ifdef WATCOM
-	r.x.edx = (unsigned) filename;
-	int386(0x21, &r, &r);
-	#endif
-
-	if (r.x.cflag)
-	{
-		return((int)r.x.cflag);
-	}
-
-	return(0);
-}
-
-#endif /* _INTELC32_ */
 
 #ifdef WIN32
 
 /*
-**	Routine:	getmachineid()
+**	Routine:	WL_getmachineid()
 **
 **	Function:	To get the MACHINE ID. (WIN32)
 **
@@ -559,12 +299,12 @@ char	*filename;
 **	Warnings:	Machineid must be large enough to hold the result.
 **
 */
-int getmachineid(char* machineid)
+int WL_getmachineid(char* machineid)
 {
 	char	compname[256];
 	int	len;
 	
-	computername(compname);
+	WL_computername(compname);
 	len = strlen(compname);
 	
 	ASSERT(len < sizeof(compname));
@@ -578,13 +318,13 @@ int getmachineid(char* machineid)
 		return 1;
 	}
 
-	encodemachid(compname, machineid);
+	WL_encodemachid(compname, machineid);
 	
 	return 0;
 }
 
 /*
-**	ROUTINE:	encodemachid()
+**	ROUTINE:	WL_encodemachid()
 **
 **	FUNCTION:	Convert a machine name into an encoded character string
 **
@@ -604,7 +344,7 @@ int getmachineid(char* machineid)
 **	WARNINGS:	Target must be as long as source.
 **
 */
-void encodemachid(const char *source, char *target)
+void WL_encodemachid(const char *source, char *target)
 {
 	const char* src = source;
 	char	*trg, *mask;
@@ -645,7 +385,7 @@ main()
 {
 	char	id[80], idx[80];
 
-	if ( getmachineid(id) )
+	if ( WL_getmachineid(id) )
 	{
 		printf("No machine_id\n");
 	}
@@ -654,7 +394,7 @@ main()
 		printf("machine_id = %s\n", id);
 	}
 
-	encodemachid(id, idx);
+	WL_encodemachid(id, idx);
 	printf("Encoded machine id = %s\n", idx);
 	
 	exit(0);
@@ -665,29 +405,47 @@ main()
 /*
 **	History:
 **	$Log: machid.c,v $
-**	Revision 1.15.2.7  2003/02/14 18:17:01  gsl
-**	sync with $HEAD
+**	Revision 1.28  2003/02/13 21:29:25  gsl
+**	fix isalnum() test
+**	
+**	Revision 1.27  2003/02/13 20:43:47  gsl
 **	Remove old INODE based machine id logic.
 **	Change OSF1_ALPHA machine id logic to be the same as LINUX which
 **	is based on machine name instead of inode.
 **	
-**	Revision 1.15.2.6  2002/11/14 19:04:42  gsl
+**	Revision 1.26  2003/02/11 16:10:54  gsl
+**	Remove OLD code
+**	Rearrange WL_getmachineid() so each #define has its own routine
+**	
+**	Revision 1.25  2003/01/31 21:40:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.24  2003/01/31 18:25:18  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.23  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.22  2002/11/14 19:04:30  gsl
 **	LINUX base machineid on the computer name
 **	
-**	Revision 1.15.2.5  2002/11/14 17:46:30  gsl
-**	LINUX getmachineid() based on computername
+**	Revision 1.21  2002/11/14 18:11:01  gsl
+**	LINUX base machineid on the computer name
 **	
-**	Revision 1.15.2.4  2002/11/14 17:42:57  gsl
-**	LINUX getmachineid() based on computername
+**	Revision 1.20  2002/10/04 21:00:55  gsl
+**	Change to use WL_stat_xxx() routines
 **	
-**	Revision 1.15.2.3  2002/11/14 16:56:49  gsl
-**	LINUX getmachineid() based on computername
+**	Revision 1.19  2002/07/11 14:33:57  gsl
+**	Fix WL_ unique globals
 **	
-**	Revision 1.15.2.2  2002/10/10 13:12:53  gsl
-**	Huge file support
+**	Revision 1.18  2002/07/10 21:05:19  gsl
+**	Fix globals WL_ to make unique
 **	
-**	Revision 1.15.2.1  2002/10/09 21:43:01  gsl
-**	Huge file support
+**	Revision 1.17  2002/07/09 04:13:59  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.16  2002/07/02 21:15:26  gsl
+**	Rename wstrdup
 **	
 **	Revision 1.15  2001/09/27 14:13:06  gsl
 **	Add hardware machine id support for SOLARIS, SCO, and UNIXWARE
@@ -700,7 +458,7 @@ main()
 **
 **	Revision 1.12  1997-10-17 13:43:30-04  gsl
 **	Fix bug on NT when server name was less then 6 characters.
-**	The name now gets expanded in encodemachid() instead of getmachineid()
+**	The name now gets expanded in WL_encodemachid() instead of WL_getmachineid()
 **	so that its the same everywhere.
 **
 **	Revision 1.11  1997-03-06 16:36:09-05  gsl

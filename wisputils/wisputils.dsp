@@ -77,5 +77,9 @@ CFG=wisputils - Win32 Release
 
 !ENDIF 
 
+# Begin Source File
+
+SOURCE=.\utils.umf
+# End Source File
 # End Target
 # End Project

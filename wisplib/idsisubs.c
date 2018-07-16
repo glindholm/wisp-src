@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	General C subroutines used at IDSI
 **	==================================
@@ -21,7 +40,7 @@ static char rcsid[]="$Id:$";
 #define TRUE !FALSE
 #endif
 
-char *upper_string(char *str)								/* Convert a string to uppercase.	*/
+char *WL_upper_string(char *str)	/* Convert a string to uppercase.	*/
 {
 	for (; *str; str++)
 	{
@@ -30,7 +49,7 @@ char *upper_string(char *str)								/* Convert a string to uppercase.	*/
 	return( str );
 }
 
-char *upper_mem(char *str, int cnt)							/* Convert a string to uppercase.	*/
+char *WL_upper_mem(char *str, int cnt)	/* Convert a string to uppercase.	*/
 {
 	for (; cnt; str++, cnt--)
 	{
@@ -39,7 +58,7 @@ char *upper_mem(char *str, int cnt)							/* Convert a string to uppercase.	*/
 	return( str );
 }
 
-char *lower_string(char *str)								/* Convert a string to lowercase.	*/
+char *WL_lower_string(char *str)	/* Convert a string to lowercase.	*/
 {
 	for (; *str; str++)
 	{
@@ -48,7 +67,7 @@ char *lower_string(char *str)								/* Convert a string to lowercase.	*/
 	return( str );
 }
 
-char *lower_mem(char *str, int cnt)							/* Convert a string to lowercase.	*/
+char *WL_lower_mem(char *str, int cnt)	/* Convert a string to lowercase.	*/
 {
 	for (; cnt; str++, cnt--)
 	{
@@ -57,7 +76,7 @@ char *lower_mem(char *str, int cnt)							/* Convert a string to lowercase.	*/
 	return( str );
 }
 
-char *compressit(char *str)							/* Compress out spaces.				*/
+char *WL_compressit(char *str)		/* Compress out spaces.				*/
 										/* " AB  C   D  " -> "ABCD"			*/
 {
 	char *tmp, *p;
@@ -74,7 +93,7 @@ char *compressit(char *str)							/* Compress out spaces.				*/
 	return(str);
 }
 
-int upcase(char *ptr, int cnt)							/* Change cnt bytes of mem to uppercase.	*/
+int WL_upcase(char *ptr, int cnt)	/* Change cnt bytes of mem to uppercase.	*/
 {
 	register int ch;
 
@@ -87,7 +106,7 @@ int upcase(char *ptr, int cnt)							/* Change cnt bytes of mem to uppercase.	*/
 	return 0;
 }
 
-int unnull(char *ptr, int cnt)							/* Change nulls to spaces in cnt bytes of mem	*/
+int WL_unnull(char *ptr, int cnt)	/* Change nulls to spaces in cnt bytes of mem	*/
 {
 	register int ch;
 
@@ -100,7 +119,7 @@ int unnull(char *ptr, int cnt)							/* Change nulls to spaces in cnt bytes of m
 	return 0;
 }
 
-int dispchars(char *ptr, int cnt)			/* Change non-display characters to spaces in cnt bytes of mem	*/
+int WL_dispchars(char *ptr, int cnt)	/* Change non-display characters to spaces in cnt bytes of mem	*/
 {
 	while (cnt) 
 	{
@@ -110,7 +129,7 @@ int dispchars(char *ptr, int cnt)			/* Change non-display characters to spaces i
 	return 0;
 }
 
-int isspaces(char *p)								/* Is this string all spaces.			*/
+int WL_isspaces(char *p)		/* Is this string all spaces.			*/
 {
 	if (*p == (char)0) return TRUE;
 	while (*p) 
@@ -120,7 +139,7 @@ int isspaces(char *p)								/* Is this string all spaces.			*/
 	return TRUE;
 }
 
-int memccpyx(char *dest, const char *src, char ch, int cnt)			/* Copies cnt bytes or up to ch character	*/
+int WL_memccpyx(char *dest, const char *src, char ch, int cnt)			/* Copies cnt bytes or up to ch character	*/
 {
 	int i;									/* Return number of char copied.		*/
 
@@ -135,7 +154,7 @@ int memccpyx(char *dest, const char *src, char ch, int cnt)			/* Copies cnt byte
 }
 
 
-void leftjust(char *ptr, int cnt)							/* Left justify char strings. 	*/
+void WL_leftjust(char *ptr, int cnt)	/* Left justify char strings. 	*/
 {
 	int	i,j;
 
@@ -151,7 +170,7 @@ void leftjust(char *ptr, int cnt)							/* Left justify char strings. 	*/
 }
 
 
-void safemove(char *dest, const char *src, int len)				/* safemove (memcpy) handles overlapping move	*/
+void WL_safemove(char *dest, const char *src, int len)				/* safemove (memcpy) handles overlapping move	*/
 {
 	if (dest > src)								/* will overlap so copy backwards from end      */
 	{
@@ -171,10 +190,10 @@ void safemove(char *dest, const char *src, int len)				/* safemove (memcpy) hand
 
 
 /*
-	loadpad		Load dest with src and pad with spaces up to size.
+	WL_loadpad	Load dest with src and pad with spaces up to size.
 			Src can be null terminated or space padded.
 */
-void loadpad(char *dest, const char *src, int size)
+void WL_loadpad(char *dest, const char *src, int size)
 {
 	for(;size>0 && *src && *src != ' ';size-- ) *dest++ = *src++;
 
@@ -182,10 +201,10 @@ void loadpad(char *dest, const char *src, int size)
 }
 
 /*
-	unloadpad	Load dest with src and null terminate.
+	WL_unloadpad	Load dest with src and null terminate.
 			Src is at most size bytes int4, it can be null terminated or space padded.
 */
-void unloadpad(char *dest, const char *src, int size)
+void WL_unloadpad(char *dest, const char *src, int size)
 {
 	for(;size>0 && *src && *src != ' ';size-- ) *dest++ = *src++;
 	*dest = '\0';
@@ -193,7 +212,7 @@ void unloadpad(char *dest, const char *src, int size)
 
 
 /*
-**	ROUTINE:	cobx2cstr(char *dest, const char *src, int size)
+**	ROUTINE:	WL_cobx2cstr(char *dest, const char *src, int size)
 **
 **	FUNCTION:	Copy and reformat a COBOL PIC X(nn) field into a C char string. (Honor embedded blanks)
 **
@@ -217,7 +236,7 @@ void unloadpad(char *dest, const char *src, int size)
 **			2) src and dest should not overlap.
 **
 */
-void cobx2cstr(char *dest, const char *src, int size)
+void WL_cobx2cstr(char *dest, const char *src, int size)
 {
 	int work_size;
 	/*
@@ -238,7 +257,7 @@ void cobx2cstr(char *dest, const char *src, int size)
 }
 
 /*
-**	ROUTINE:	cstr2cobx(char *dest, const char *src, int size)
+**	ROUTINE:	WL_cstr2cobx(char *dest, const char *src, int size)
 **
 **	FUNCTION:	Copy and reformat a C char string into COBOL PIC X(nn) field. (Honor embedded blanks)
 **
@@ -261,7 +280,7 @@ void cobx2cstr(char *dest, const char *src, int size)
 **			2) src and dest should not overlap.
 **
 */
-void cstr2cobx(char *dest, const char *src, int size)
+void WL_cstr2cobx(char *dest, const char *src, int size)
 {
 	
 	ASSERT(NULL != dest);
@@ -281,7 +300,7 @@ void cstr2cobx(char *dest, const char *src, int size)
 }
 
 
-int strpos(const char *src, const char *srch)				/* search a string for the occurence of another string	*/
+int WL_strpos(const char *src, const char *srch)			/* search a string for the occurence of another string	*/
 									/* src is the string to search, srch is the match	*/
 {
 	int i;
@@ -307,28 +326,8 @@ int strpos(const char *src, const char *srch)				/* search a string for the occu
 }
 	
 
-int stredt(char *src, const char *srch, const char *repl)				/* Edit a source line, find the search	*/
-											/* string and replace it with *repl	*/
-{
-	int i;
-	char tstring[512];
-	char *sptr;
-
-	if ( (i = strpos(src,srch)) != -1)						/* It's ok to go ahead			*/
-	{
-		src += i;								/* point to location of search string	*/
-		i = strlen(srch);
-		sptr = src + i;								/* Skip over the search string . . .	*/
-		strcpy(tstring,sptr);							/* copy end of line into temp string	*/
-		strcpy(src,repl);							/* put replacement string in place	*/
-		strcat(src,tstring);							/* put end line back into source	*/
-		i = 0;									/* edit was ok				*/
-	}
-	return(i);									/* return the value 0 or -1		*/
-}
-
 /*
-**	Routine:	splitpath()
+**	Routine:	WL_splitpath()
 **
 **	Function:	To separate the file path from the file spec.
 **
@@ -348,14 +347,13 @@ int stredt(char *src, const char *srch, const char *repl)				/* Edit a source li
 **
 */
 
-char *splitpath(const char *filepath)
+char *WL_splitpath(const char *filepath)
 {
 static	char	buff[256];
 	char	*ptr;
 
 	strcpy(buff,filepath);
 
-#if defined(unix) || defined(MSFS)
 	ptr = strrchr(buff, DIR_SEPARATOR);
 	if (ptr)
 	{
@@ -365,32 +363,12 @@ static	char	buff[256];
 	{
 		buff[0] = '\0';
 	}
-#endif
-#ifdef VMS
-	ptr = strrchr(buff,']');
-	if (ptr)
-	{
-		ptr[1] = '\0';								/* NULL after the ']'			*/
-	}
-	else
-	{
-		ptr = strrchr(buff,':');
-		if (ptr)
-		{
-			ptr[1] = '\0';							/* NULL after the ':'			*/
-		}
-		else
-		{
-			buff[0] = '\0';
-		}
-	}
-#endif
 
 	return(buff);
 }
 
 /*
-**	Routine:	splitname()
+**	Routine:	WL_splitname()
 **
 **	Function:	To separate the file name from the file spec.
 **
@@ -410,12 +388,11 @@ static	char	buff[256];
 **
 */
 
-char *splitname(char *filepath)
+char *WL_splitname(char *filepath)
 {
 static	char	buff[256];
 	char	*ptr;
 
-#if defined(unix) || defined(MSFS)
 	ptr = strrchr(filepath, DIR_SEPARATOR);
 	if (ptr)
 	{
@@ -425,22 +402,6 @@ static	char	buff[256];
 	{
 		ptr = filepath;
 	}
-#endif
-#ifdef VMS
-	ptr = strrchr(filepath,']');
-	if (ptr)
-	{
-		ptr++;
-	}
-	else
-	{
-		ptr = strrchr(filepath,':');
-		if (!ptr)
-		{
-			ptr = filepath;
-		}
-	}
-#endif
 
 	strcpy(buff,ptr);								/* Load buff starting at filename	*/
 
@@ -454,7 +415,7 @@ static	char	buff[256];
 }
 
 /*
-**	Routine:	splitext()
+**	Routine:	WL_splitext()
 **
 **	Function:	To separate the file extension from the file spec.
 **
@@ -474,13 +435,12 @@ static	char	buff[256];
 **
 */
 
-char *splitext(char *filepath)
+char *WL_splitext(char *filepath)
 {
 static	char	buff[64];
 	char	*ptr;
 
 	ptr = strrchr(filepath,'.');
-#if defined(unix) || defined(MSFS)
 	if (ptr)
 	{
 		if (strchr(ptr,DIR_SEPARATOR)) ptr = "";
@@ -489,25 +449,13 @@ static	char	buff[64];
 	{
 		ptr = "";
 	}
-#endif
-#ifdef VMS
-	if (ptr)
-	{
-		if (strchr(ptr,']')) ptr = "";
-		if (strchr(ptr,':')) ptr = "";
-	}
-	else
-	{
-		ptr = "";
-	}
-#endif
 
 	strcpy(buff,ptr);
 	return(buff);
 }
 
 /*
-**	Routine:	hasext()
+**	Routine:	WL_hasext()
 **
 **	Function:	Returns if the file spec has an extension.
 **
@@ -524,27 +472,21 @@ static	char	buff[64];
 **
 */
 
-int hasext(char *filepath)
+int WL_hasext(char *filepath)
 {
 	char	*ptr;
 
 	ptr = strrchr(filepath,'.');
 	if (!ptr) return(0);
 
-#if defined(unix) || defined(MSFS)
 	if (0==strchr(ptr,DIR_SEPARATOR)) return(1);
-#endif
-#ifdef VMS
-	if (0==strchr(ptr,']')) return(1);
-	if (0==strchr(ptr,':')) return(1);
-#endif
 
 	return(0);
 }
 
 
 /*
-**	Routine:	buildfilepath()
+**	Routine:	WL_buildfilepath()
 **
 **	Function:	To build a filepath from a file and path.
 **
@@ -567,7 +509,7 @@ int hasext(char *filepath)
 **	12/28/92	Written by GSL
 **
 */
-char *buildfilepath(char *dest, const char *path, const char *file)
+char *WL_buildfilepath(char *dest, const char *path, const char *file)
 {
 	/*
 	**	If dest and path are the same then we are concatinating to path so don't copy.
@@ -592,9 +534,7 @@ char *buildfilepath(char *dest, const char *path, const char *file)
 	*/
 	if (dest[0])
 	{
-#if defined(unix) || defined(MSFS)
 		strcat(dest,DIR_SEPARATOR_STR);
-#endif
 	}
 
 	strcat(dest,file);
@@ -603,7 +543,7 @@ char *buildfilepath(char *dest, const char *path, const char *file)
 }
 
 /*
-**	Routine:	numeric2int4()
+**	Routine:	WL_numeric2int4()
 **
 **	Function:	Convert a numeric (PIC 9) to int4.
 **
@@ -627,7 +567,7 @@ char *buildfilepath(char *dest, const char *path, const char *file)
 **	09/16/94	Written by GSL
 **
 */
-int numeric2int4(int4 *result, char *source, int sourcelen)
+int WL_numeric2int4(int4 *result, char *source, int sourcelen)
 {
 	int	idx;
 	int4	value;
@@ -648,7 +588,7 @@ int numeric2int4(int4 *result, char *source, int sourcelen)
 }
 
 /*
-**	Routine:	field2int4()
+**	Routine:	WL_field2int4()
 **
 **	Function:	Convert a user entered number into an int4.
 **
@@ -672,7 +612,7 @@ int numeric2int4(int4 *result, char *source, int sourcelen)
 **	09/19/94	Written by GSL
 **
 */
-int field2int4(char *str, int len, int4 *num)
+int WL_field2int4(const char *str, int len, int4 *num)
 {
 	int	idx;
 
@@ -719,7 +659,7 @@ int field2int4(char *str, int len, int4 *num)
 
 
 /*
-**	Routine:	dqw_strcpy( )
+**	Routine:	WL_dqw_strcpy( )
 **
 **	Function:	strcpy src into dest, but wrap dest in double quotes if src contain any space. (embedded or not)
 **
@@ -746,7 +686,7 @@ int field2int4(char *str, int len, int4 *num)
 **			NOT be wrapped in quotes
 **
 */
-void dqw_strcpy(char *dest, const char *src)
+void WL_dqw_strcpy(char *dest, const char *src)
 {
 	/*
 	**	ASSERT for null
@@ -772,7 +712,7 @@ void dqw_strcpy(char *dest, const char *src)
 }
 
 /*
-**	Routine:	dqw_strcat( )
+**	Routine:	WL_dqw_strcat( )
 **
 **	Function:	strcat src into dest, but wrap dest in double quotes if src contain any space. (embedded or not)
 **
@@ -799,7 +739,7 @@ void dqw_strcpy(char *dest, const char *src)
 **			NOT be wrapped in quotes
 **
 */
-void dqw_strcat(char *dest, const char *src)
+void WL_dqw_strcat(char *dest, const char *src)
 {
 	/*
 	**	ASSERT for null
@@ -826,6 +766,21 @@ void dqw_strcat(char *dest, const char *src)
 /*
 **	History:
 **	$Log: idsisubs.c,v $
+**	Revision 1.20  2003/04/21 14:40:28  gsl
+**	WL_field2int4() takes a const char*
+**	
+**	Revision 1.19  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.18  2002/07/09 04:14:01  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.17  2002/07/02 21:15:25  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.16  2002/06/21 03:10:36  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.15  1998/11/02 20:51:09  gsl
 **	Fix assert test so OK by boundschecker
 **	

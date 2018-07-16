@@ -1,0 +1,36 @@
+#
+#	$Id:$
+#
+#	File:		sswsort.umf
+#
+#	Function:	Makefile for sswsort for HP-UX
+#
+#	If using with WISP 4.4.xx you need to use -DWISP4400 flag
+#
+
+# Uncomment if not set in the environment
+#WISPDIR=/usr/local/wisp
+
+WISP_FLAGS=
+#
+# Uncomment for WISP 4.4.xx
+#WISP_FLAGS=-DWISP4400
+
+CC	= cc
+CFLAGS  = +z +DAportable $(WISP_FLAGS)
+
+WISP_LIBS_PATHS = $(WISPDIR)/lib/libwisp.a $(WISPDIR)/lib/libvideo.a
+UTILS_LIBS_LINK = $(WISP_LIBS_PATHS) -lm -lcurses
+
+
+ALL= 	wsort
+
+all:	$(ALL)
+
+
+clean:
+	rm -f $(ALL) *.o core *~ 
+
+wsort: sswsort.c $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ sswsort.c $(UTILS_LIBS_LINK)
+

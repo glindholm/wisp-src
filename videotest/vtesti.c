@@ -12,11 +12,11 @@
 #include <video.h>
 #include <vmodules.h>
 
-static testi1();
-static testi2();
-static testi3();
+static int testi1();
+static int testi2();
+static int testi3();
 
-testi()
+int testi()
 {
 	extern int line();
 	verase(FULL_SCREEN);
@@ -31,7 +31,7 @@ testi()
 	return(SUCCESS);
 }
 
-static testi1()
+static int testi1()
 {
 	char c;
 
@@ -43,7 +43,7 @@ static testi1()
 	return(SUCCESS);
 }
 
-static testi2()
+static int testi2()
 {
 	char c;
 
@@ -60,11 +60,11 @@ static testi2()
 	return(SUCCESS);
 }
 
-statictesti3()
+static int testi3()
 {
 	char c;
 	char x;
-	register int i,j;
+	register int i = 0,j = 0;
 
 	vprint("\nTest I3 - character push back.\n");
 
@@ -73,10 +73,10 @@ statictesti3()
 	vprint("\n");
 	vprint("The character was %c.\n",c);
 
-	while (x = vcheck() != 0) vprint("Purging typeahead.\n");
+	while ((x = vcheck()) != 0) vprint("Purging typeahead.\n");
 
 	vprint("Pushing back the character\n");
-	i = vpushc(c);
+	i = VL_vpushc(c);
 	vprint("Return value indicates push back was ");
 	if (i == FAILURE) {vprint("a failure\n"); return(FAILURE);}
 	if (i == SUCCESS) vprint("a success.\n");
@@ -109,7 +109,7 @@ statictesti3()
 		return(FAILURE);
 	}
 	vprint("Now checking error report of double push back.\n");
-	if (i = vpushc('X') == SUCCESS)
+	if ((i = VL_vpushc('X')) == SUCCESS)
 	{
 		vprint("First push back gave success, which is correct\n");
 	}
@@ -119,7 +119,7 @@ statictesti3()
 		return(FAILURE);
 	}
 
-	if (i = vpushc('X') == FAILURE)
+	if ((i = VL_vpushc('X')) == FAILURE)
 	{
 		vprint("Second push back gave failure, which is correct.\n");
 	}

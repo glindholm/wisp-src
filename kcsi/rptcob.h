@@ -1,5 +1,19 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 The block passed in RPT-OPTIONS (WSRPTOPT)
 ------*/
@@ -182,6 +196,9 @@ Sorts
 /*
 **	History:
 **	$Log: rptcob.h,v $
+**	Revision 1.4  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
+**	
 **	Revision 1.3  1996/09/17 23:34:17  gsl
 **	drcs update
 **	

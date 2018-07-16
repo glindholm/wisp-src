@@ -1,7 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
-#ifdef VMS
 /********************************************************************************************************************************
 *																*
 *	checkacp.c	This program always returns 0 for success.  Checking the status of operations pending on a		*
@@ -16,74 +33,25 @@ static char rcsid[]="$Id:$";
 *			output:	ret_code	WANG 4-byte binary format return code (wswap an int) -- always 0 here.		*
 *																*
 ********************************************************************************************************************************/
-#include <varargs.h>							/* Allow variable number of arguments.			*/
-#include "idsistd.h"
 #include "werrlog.h"
 
-checkacp(va_alist)
-
-va_dcl
-
-{
-
-#define		ROUTINE		8000
-
-	va_list	arg_stack;						/* Pointer to traverse stack of input arguments.	*/
-	int	arg_count;						/* Argument counter.					*/
-
-	int	*rel_line;						/* Index from 1 to 6 for later access to acp_term[].	*/
-	int	*length;						/* Length of inarea.					*/
-	char	*inarea;						/* Input buffer for read request.			*/
-	int	*acp_wait;						/* Amount of time to wait before returning to user.	*/
-	char	*ws_interrupt;						/* Y or N for detection of workstation interrupts	*/
-	int	*ret_code;						/* WANG ACP return code.				*/
-
-
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
-
-	/********************************************************
-	*	Receive variable number of arguments		*
-	********************************************************/
-	va_start(arg_stack);						/* Set pointer to top of stack.				*/
-	arg_count = va_count(arg_stack);				/* How many args are there ?				*/
-
-	va_start(arg_stack);						/* Go back to the top of the stack.			*/
-
-	rel_line = va_arg(arg_stack, int*);				/* Get relative line from arg stack.			*/
-	arg_count--;							/* One less argument.					*/
-
-	length = va_arg(arg_stack, int*);				/* Get buffer length from arg stack.			*/
-	arg_count--;							/* One less argument.					*/
-
-	inarea = va_arg(arg_stack, char*);				/* Get pointer to buffer from arg stack.		*/
-	arg_count--;							/* One less argument.					*/
-
-	if (arg_count > 1)						/* If more than one argument left, then get acp_wait.	*/
-	{
-		acp_wait = va_arg(arg_stack, int*);			/* Get wait time from arg stack.			*/
-		arg_count--;						/* One less argument.					*/
-	}
-
-	if (arg_count > 1)						/* If more than one argument left, get ws_interrupt.	*/
-	{
-		ws_interrupt = va_arg(arg_stack, char*);		/* Get ws_interrupt from arg stack.			*/
-		arg_count--;						/* One less argument.					*/
-	}
-
-	ret_code = va_arg(arg_stack, int*);				/* Get pointer to return code from arg stack.		*/
-	arg_count--;							/* One less argument.					*/
-
-	*ret_code = 0;							/* Initialize the return value.				*/
-}
-#else
 void CHECKACP()
 {
+	WL_wtrace("CHECKACP","ENTRY","Entry into CHECKACP");
 	return;
 }
-#endif
 /*
 **	History:
 **	$Log: checkacp.c,v $
+**	Revision 1.13  2003/01/31 17:23:48  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.12  2002/12/09 21:09:26  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.11  2002/06/26 01:42:45  gsl
+**	Remove VMS code
+**	
 **	Revision 1.10  1996/08/19 22:32:12  gsl
 **	drcs update
 **	

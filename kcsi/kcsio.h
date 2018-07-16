@@ -1,5 +1,19 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #ifndef	_KCSIO_H
 #define	_KCSIO_H
@@ -119,8 +133,8 @@ typedef struct _kcsio_block{
 /*
 **	History:
 **	$Log: kcsio.h,v $
-**	Revision 1.9.2.1  2002/11/12 15:56:28  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.11  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
 **	
 **	Revision 1.10  2002/10/17 21:22:42  gsl
 **	cleanup

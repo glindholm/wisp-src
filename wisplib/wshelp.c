@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wshelp.c
 **
@@ -10,15 +31,15 @@ static char rcsid[]="$Id:$";
 **	Purpose:	WISP command processor
 **
 **	Routines:	
-**	wsh_help()
-**	get_psb_char()
+**	WL_wsh_help()
+**	WL_get_psb_char()
 **	wsh_progprnt()
-**	wsc_init()
-**	wput()
-**	wpcen()
-**	wget()
-**	ishelpactive()
-**	sethelpactive()
+**	WL_wsc_init()
+**	WL_put_screen_text()
+**	WL_put_screen_text_centered()
+**	WL_get_screen_text()
+**	WL_ishelpactive()
+**	WL_sethelpactive()
 */
 
 /*
@@ -35,7 +56,6 @@ static char rcsid[]="$Id:$";
 #include <signal.h>
 #include <unistd.h>
 #include <sys/wait.h>
-static int wsh_prtque();
 #endif
 
 #ifdef WIN32
@@ -79,12 +99,12 @@ static int wsh_prtque();
 #include "screen.h"
 #include "cobscrn.h"
 #include "wfiledis.h"
+#include "wmalloc.h"
+#include "vssubs.h"
 
 /*
 **	Structures and Defines
 */
-
-#define ROUTINE		86000
 
 #ifndef WEXITSTATUS
 #define WIFEXITED(x)    ( !((x) & 0xff) )
@@ -96,10 +116,8 @@ static int wsh_prtque();
 /*
 **	Globals and Externals
 */
-extern int  vmap_top;
-extern struct save_screen *vscrn_stack;						/* Reference to external video struct.	*/
+extern struct save_screen *VL_vscrn_stack;						/* Reference to external video struct.	*/
 
-int noprogscrn = 0;									/* No program screen flag.		*/
 
 /*
 **	Static data
@@ -113,7 +131,8 @@ static char	run_complete_message[80];
 /*
 **	Function Prototypes
 */
-extern int wsystem_interactive(const char *cmd);
+extern int WL_wsystem_interactive(const char *cmd);
+static int wsh_progprnt(int scrn_seq_no);						/* The screen seq. no.  Starts at 1.	*/
 
 static void wsh_terminal(void); 							/* Get a terminal menu selection.	*/
 static void wsh_setpsb(void);								/* Change pseudo blank characteristics.	*/
@@ -152,26 +171,55 @@ static void wsh_queue_print(void) 	{ wsh_uqueue(1); }
 static void wsh_queue_batch(void) 	{ wsh_uqueue(0); }
 #endif
 
-static void wsh_display_errlog(void) 	{ WL_link_display(werrpath()); }
+static void wsh_display_errlog(void) 	{ WL_link_display(WL_werrpath()); }
 
 static void wsh_print_prog_screen(void) { wsh_progprnt(1); }
-static void wsh_print_cmd_screen(void)  { /* wsh_progprnt(0); */ screen_print(); }
+static void wsh_print_cmd_screen(void)  { /* wsh_progprnt(0); */ WL_screen_print(); }
 static void wsh_run_prog_prompt(void)	{ wsh_run_program("        "); }	    
-			    
-#ifdef unix
-static void wsh_shell(void);
-#endif
 
 static void wsh_command(void)
 {
 #ifdef unix
-	wsh_shell();
+	static int first = 1;
+	
+	if (first)
+	{
+		/*
+		**	If the WISPPS1 option is used then set the environment
+		**	variable PS1=$(WISPPS1) before shelling-out.
+		**
+		**	Note: Only have to do this once as we keep PS1 set.
+		**	This is the only place we "shell-out". 
+		**	Upon return from this process PS1 will revert.
+		*/
+		const char *ptr = WL_get_wisp_option("WISPPS1");
+		first = 0;
+		
+		if (ptr != NULL)
+		{
+			char buff[200];
+
+			if (sizeof(buff) > (strlen(ptr) + 5))
+			{
+				sprintf(buff,"PS1=%s", ptr);
+				WL_setenvstr(buff);
+			}
+			else
+			{
+				WL_wtrace("WSHELP","PS1","WISPPS1 option is too long to use.");
+			}
+		}
+	}
+	
+	WL_wsystem_interactive(wispshellexe());
+
+	WL_setlevel(g_savelevel);							/* Restore the link-level		*/
 #endif
 }
 
 static void wsh_manage_files(void)	
 { 	
-	mngfile(); 
+	WL_mngfile(); 
 }
 
 /*
@@ -179,13 +227,13 @@ static void wsh_manage_files(void)
 */
 void WISPHELP(void)
 {
-	wisp_progname[0] = '\0';
-	wisp_screen[0] = '\0';
+	wisp_set_progname("");
+	wisp_set_screenname("");
 	
-	wsh_help(1);
+	WL_wsh_help(1);
 }
 
-int wsh_help(int prog_running)								/* Put up the shell screen.		*/
+int WL_wsh_help(int prog_running)							/* Put up the shell screen.		*/
 {
 	HWSB	hWsb;
 	int	pfval, currow, curcol;
@@ -202,10 +250,10 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 #define HELP_UTILS	(HELP_EDIT|HELP_DISPRINT|HELP_CRID)
 
 	
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
+	WL_wtrace_entry("WISPHELP");
 
-	wpload();									/* Load the personality information.	*/
-	get_defs(DEFAULTS_FLAGS,&dflags);						/* Get the defaults flags		*/
+	WL_wpload();									/* Load the personality information.	*/
+	WL_get_defs(DEFAULTS_FLAGS,&dflags);						/* Get the defaults flags		*/
 
 	if ( !(dflags & HELP_ENABLED))							/* Help is disabled.			*/
 	{
@@ -217,19 +265,19 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 	**	Print screen and setting terminal attributes is not supported
 	**	with native screens.
 	*/
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		dflags &= ~(HELP_PRINT_SCREEN | HELP_TERMINAL);
 	}
 
 	/*
 	**	The linklevel is incremented to prevent
-	**	sideeffects of ppunlink() that can occur 
+	**	sideeffects of WL_ppunlink() that can occur 
 	**	when another process is spawned from help.
 	*/
-	g_savelevel = linklevel();
+	g_savelevel = WL_linklevel();
 
-	if (opt_helpstyle == 2)
+	if (WL_opt_helpstyle == 2)
 	{
 		wang_style = 0;
 	}
@@ -241,10 +289,10 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 	g_prog_running = prog_running;
 
 	strcpy(allowed_pfkeys,"00");							/* Always allow return.			*/
-	sethelpactive(TRUE);								/* Help is now active.			*/
+	WL_sethelpactive(TRUE);								/* Help is now active.			*/
 
-	strcpy(id,longuid());								/* Get the user id.			*/
-	sprintf(tty_str,"%4ld",workstation());						/* Convert value to a string.		*/
+	strcpy(id,WL_longuid());								/* Get the user id.			*/
+	sprintf(tty_str,"%4d",WL_workstation());						/* Convert value to a string.		*/
 	strcpy(run_complete_message,"  ");						/* Blank the run complete message	*/
 
 
@@ -278,13 +326,13 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 		}
 #endif
 #ifdef WIN32
-		if (0==strcmp(computername(NULL),DEF_COMPUTERNAME))
+		if (0==strcmp(WL_computername(NULL),DEF_COMPUTERNAME))
 		{
 			strcpy(temp, "Welcome to Windows");
 		}
 		else
 		{
-			sprintf(temp, "Welcome to Windows - %s", computername(NULL));
+			sprintf(temp, "Welcome to Windows - %s", WL_computername(NULL));
 		}
 #endif
 		if (!temp[0])
@@ -296,22 +344,24 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 
 		if (prog_running)							/* Is a program running?		*/
 		{
-			if (wisp_progname[0] && wisp_progname[0] != ' ')		/* We know the program name		*/
+			if (*(wisp_get_progname()))					/* We know the program name		*/
 			{
-				if (wisp_screen[0] && wisp_screen[0] != ' ')		/* We also know the screen name		*/
+				if (*(wisp_get_screenname()))				/* We also know the screen name		*/
 				{
-					sprintf(temp, "[Active program: %s    Screen: %s]", wisp_progname, wisp_screen);
+					sprintf(temp, "[Active program: %s    Screen: %s]", 
+						wisp_get_progname(), wisp_get_screenname());
 				}
 				else
 				{
-					sprintf(temp, "[Active program: %s]", wisp_progname);
+					sprintf(temp, "[Active program: %s]", 
+						wisp_get_progname());
 				}
 			}
 			else
 			{
-				if (WISPRUNNAME[0] != ' ')
+				if (wisp_get_runname()[0] != ' ')
 				{
-					sprintf(temp,"[Active program: %8.8s]",WISPRUNNAME);
+					sprintf(temp,"[Active program: %8.8s]",wisp_get_runname());
 				}
 				else
 				{
@@ -369,7 +419,7 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 	}
 	strcat(allowed_pfkeys,"01");
 
-	if (wang_style && pfkeys12())
+	if (wang_style && WL_pfkeys12())
 	{
 		if ((dflags & HELP_SET_FILES)   ||
 		    (dflags & HELP_SET_PRINTER) ||
@@ -388,8 +438,8 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 		}
 
 #ifdef unix
-		if ( ((dflags & HELP_PRINT_QUEUE) && opt_printqueue_manager) ||
-		     ((dflags & HELP_BATCH_QUEUE) && opt_batchman) )
+		if ( ((dflags & HELP_PRINT_QUEUE) && WL_opt_printqueue_manager) ||
+		     ((dflags & HELP_BATCH_QUEUE) && WL_opt_batchman) )
 		{
 			wsb_add_text(hWsb, row+3,  col1, "(4) Manage QUEUES");
 			strcat(allowed_pfkeys,"04");
@@ -435,7 +485,7 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 			func_vector[9] = wsh_submit;
 		}
 
-		if (prog_running && (dflags & HELP_PRINT_SCREEN) && !noprogscrn)
+		if (prog_running && (dflags & HELP_PRINT_SCREEN) && !wisp_get_noprogscrn())
 		{
 			wsb_add_text(hWsb, row+3, col2, "(10) PRINT PROGRAM screen");
 			strcat(allowed_pfkeys,"10");
@@ -461,7 +511,7 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 		}
 
 	}
-	else if (wang_style && !pfkeys12())
+	else if (wang_style && !WL_pfkeys12())
 	{
 		if (dflags & HELP_SET_FILES)
 		{
@@ -504,20 +554,20 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 		if ((dflags & HELP_PRINT_QUEUE) || 
 		    (dflags & HELP_BATCH_QUEUE) )
 		{
-			if (opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE) && 
-			    opt_batchman && (dflags & HELP_BATCH_QUEUE) )
+			if (WL_opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE) && 
+			    WL_opt_batchman && (dflags & HELP_BATCH_QUEUE) )
 			{
 				wsb_add_text(hWsb, row+6,  col1, "(7) Manage QUEUES");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queuemgmnt;
 			}
-			else if (opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE))
+			else if (WL_opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE))
 			{
 				wsb_add_text(hWsb, row+6,  col1, "(7) Manage PRINT QUEUE");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queue_print;
 			}
-			else if (opt_batchman && (dflags & HELP_BATCH_QUEUE))
+			else if (WL_opt_batchman && (dflags & HELP_BATCH_QUEUE))
 			{
 				wsb_add_text(hWsb, row+6,  col1, "(7) Manage BATCH QUEUE");
 				strcat(allowed_pfkeys,"07");
@@ -570,7 +620,7 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 			func_vector[13] = wsh_usewrite;
 		}
 
-		if (prog_running && (dflags & HELP_PRINT_SCREEN) && !noprogscrn)
+		if (prog_running && (dflags & HELP_PRINT_SCREEN) && !wisp_get_noprogscrn())
 		{
 			wsb_add_text(hWsb, row+5, col2, "(14) PRINT PROGRAM screen");
 			strcat(allowed_pfkeys,"14");
@@ -639,20 +689,20 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 		if ((dflags & HELP_PRINT_QUEUE) || 
 		    (dflags & HELP_BATCH_QUEUE) )
 		{
-			if (opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE) && 
-			    opt_batchman && (dflags & HELP_BATCH_QUEUE) )
+			if (WL_opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE) && 
+			    WL_opt_batchman && (dflags & HELP_BATCH_QUEUE) )
 			{
 				wsb_add_menu_item(hWsb, row+6, col1, 7, "Queues");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queuemgmnt;
 			}
-			else if (opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE))
+			else if (WL_opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE))
 			{
 				wsb_add_menu_item(hWsb, row+6, col1, 7, "Print Queue");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queue_print;
 			}
-			else if (opt_batchman && (dflags & HELP_BATCH_QUEUE))
+			else if (WL_opt_batchman && (dflags & HELP_BATCH_QUEUE))
 			{
 				wsb_add_menu_item(hWsb, row+6, col1, 7, "Batch Queue");
 				strcat(allowed_pfkeys,"07");
@@ -705,7 +755,7 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 			func_vector[13] = wsh_usewrite;
 		}
 
-		if (prog_running && (dflags & HELP_PRINT_SCREEN) && !noprogscrn)
+		if (prog_running && (dflags & HELP_PRINT_SCREEN) && !wisp_get_noprogscrn())
 		{
 			wsb_add_menu_item(hWsb, row+5, col2, 14, "Print program screen");
 			strcat(allowed_pfkeys,"14");
@@ -769,15 +819,15 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 				break;
 			}
 			else if ((!wang_style && 16 == pfval) ||
-				 (wang_style && 16 == pfval && !pfkeys12()) ||
-				 (wang_style && 12 == pfval &&  pfkeys12())   )
+				 (wang_style && 16 == pfval && !WL_pfkeys12()) ||
+				 (wang_style && 12 == pfval &&  WL_pfkeys12())   )
 			{
 				if (prog_running)
 				{
 					if (wsh_cancel())
 					{
-						LINKCOMPCODE = 16;
-						setretcode("016");
+						wisp_set_LINKCOMPCODE(16);
+						SETRETCODE("016");
 						wexit(16L);
 					}
 				}
@@ -805,9 +855,9 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 
 	wsb_delete(hWsb);
 	
-	if (linklevel() != g_savelevel) setlevel(g_savelevel);				/* Restore the link-level		*/
+	if (WL_linklevel() != g_savelevel) WL_setlevel(g_savelevel);			/* Restore the link-level		*/
 
-	sethelpactive(FALSE);								/* Help no longer active.		*/
+	WL_sethelpactive(FALSE);								/* Help no longer active.		*/
 	return rc;
 }
 
@@ -840,7 +890,7 @@ static void wsh_terminal(void) 								/* Get a terminal menu selection.	*/
 	}
 
 
-	get_defs(DEFAULTS_FLAGS,&dflags);						/* Get the defaults flags		*/
+	WL_get_defs(DEFAULTS_FLAGS,&dflags);						/* Get the defaults flags		*/
 
 	if (dflags & HELP_SETPSB)
 	{
@@ -908,7 +958,7 @@ static void wsh_terminal(void) 								/* Get a terminal menu selection.	*/
 }
 
 /*
-	get_psb_char:	Get pseudo blank character.
+	WL_get_psb_char:Get pseudo blank character.
 			This routine is passed a selection character (def_select) and returns the pseudo blank char (pb_char)
 			and the real selection char (pb_select).
 			It knowns how to handle converison from old PERSONALITY files that stored the pseudo blank char
@@ -919,7 +969,7 @@ static void wsh_terminal(void) 								/* Get a terminal menu selection.	*/
 	char	*pb_select;		The selection char  (returned)
 
 */
-void get_psb_char(char def_select,char *pb_char, char *pb_select)
+void WL_get_psb_char(char def_select,char *pb_char, char *pb_select)
 {
 	pb_select[0] = def_select;
 
@@ -940,7 +990,7 @@ void get_psb_char(char def_select,char *pb_char, char *pb_select)
 	case '4':
 		pb_char[0] = PBLANK4;
 		break;
-	default:									/* OLD personality stored char itself	*/
+	default:								/* OLD personality stored char itself	*/
 		pb_char[0] = def_select;
 		if      (def_select == PBLANK1) pb_select[0] = '1';		/* Character is a diamond.		*/
 		else if (def_select == PBLANK2) pb_select[0] = '2';		/* Character is a degree symbol.	*/
@@ -953,44 +1003,44 @@ void get_psb_char(char def_select,char *pb_char, char *pb_select)
 
 static void wsh_setpsb(void)								/* Change pseudo blank characteristics.	*/
 {
-	char screen[WSB_LENGTH+1];							/* Pointer to working screen routine.	*/
-	char function, lines, term[2], no_mod[2];					/* Working variables.			*/
-	char pb_char[4], pb_rend[4], pb_select[4];	
+	unsigned char screen[WSB_LENGTH+1];						/* Pointer to working screen routine.	*/
+	unsigned char function, lines, no_mod[2];					/* Working variables.			*/
+	char pb_char[4], pb_rend[4], pb_select[4], term[2];	
 	int pb_chset, pb_r;
 	int valid, i, changed;
 	char	def_psb_select;
 	int4	def_psb_charset;
 	int4	def_psb_rendition;
 
-	wsc_init(screen,0,0);								/* Initialize the screen layout.	*/
+	WL_wsc_init(screen,0,0);							/* Initialize the screen layout.	*/
 
-	wput(screen, 1,15,FAC_DEFAULT_TEXT,"*** Change the pseudo blank characteristics ***");
-	wput(screen, 5, 2,FAC_DEFAULT_TEXT,"Pseudo blank character      :");
-	wput(screen, 6, 2,FAC_DEFAULT_TEXT,"Using pseudo blank rendition:");
-	wput(screen,10,10,FAC_DEFAULT_TEXT,"Character Options");
-	wput(screen,10,40,FAC_DEFAULT_TEXT,"Rendition Options");
-	wput(screen,12,10,FAC_DEFAULT_TEXT,"B    blank ");
-	wput(screen,13,10,FAC_DEFAULT_TEXT,"1");
-	wput(screen,14,10,FAC_DEFAULT_TEXT,"2");
-	wput(screen,15,10,FAC_DEFAULT_TEXT,"3");
-	wput(screen,16,10,FAC_DEFAULT_TEXT,"4");
-	wput(screen,12,40,FAC_DEFAULT_TEXT,"N  -  NORMAL");
-	wput(screen,13,40,FAC_DEFAULT_TEXT,"U  -  UNDERSCORE");
-	wput(screen,14,40,FAC_DEFAULT_TEXT,"R  -  REVERSE");
-	wput(screen,15,40,FAC_DEFAULT_TEXT,"B  -  Both UNDERSCORE and REVERSE");
-	wput(screen,18,2,FAC_DEFAULT_TEXT,"The pseudo blank character will");
-	wput(screen,19,2,FAC_DEFAULT_TEXT,"fill the modifiable fields with");
-	wput(screen,20,2,FAC_DEFAULT_TEXT,"the indicated character.");
-	wput(screen,18,37,FAC_DEFAULT_TEXT,"The indicated rendition will be turned");
-	wput(screen,19,37,FAC_DEFAULT_TEXT,"on for modifiable fields and display");
-	wput(screen,20,37,FAC_DEFAULT_TEXT,"with the pseudo blank character.");
-	wput(screen,24,2,FAC_DEFAULT_TEXT,"Change the information as appropriate and press (ENTER), (1) to exit.");
+	WL_put_screen_text(screen, 1,15,FAC_DEFAULT_TEXT,"*** Change the pseudo blank characteristics ***");
+	WL_put_screen_text(screen, 5, 2,FAC_DEFAULT_TEXT,"Pseudo blank character      :");
+	WL_put_screen_text(screen, 6, 2,FAC_DEFAULT_TEXT,"Using pseudo blank rendition:");
+	WL_put_screen_text(screen,10,10,FAC_DEFAULT_TEXT,"Character Options");
+	WL_put_screen_text(screen,10,40,FAC_DEFAULT_TEXT,"Rendition Options");
+	WL_put_screen_text(screen,12,10,FAC_DEFAULT_TEXT,"B    blank ");
+	WL_put_screen_text(screen,13,10,FAC_DEFAULT_TEXT,"1");
+	WL_put_screen_text(screen,14,10,FAC_DEFAULT_TEXT,"2");
+	WL_put_screen_text(screen,15,10,FAC_DEFAULT_TEXT,"3");
+	WL_put_screen_text(screen,16,10,FAC_DEFAULT_TEXT,"4");
+	WL_put_screen_text(screen,12,40,FAC_DEFAULT_TEXT,"N  -  NORMAL");
+	WL_put_screen_text(screen,13,40,FAC_DEFAULT_TEXT,"U  -  UNDERSCORE");
+	WL_put_screen_text(screen,14,40,FAC_DEFAULT_TEXT,"R  -  REVERSE");
+	WL_put_screen_text(screen,15,40,FAC_DEFAULT_TEXT,"B  -  Both UNDERSCORE and REVERSE");
+	WL_put_screen_text(screen,18,2,FAC_DEFAULT_TEXT,"The pseudo blank character will");
+	WL_put_screen_text(screen,19,2,FAC_DEFAULT_TEXT,"fill the modifiable fields with");
+	WL_put_screen_text(screen,20,2,FAC_DEFAULT_TEXT,"the indicated character.");
+	WL_put_screen_text(screen,18,37,FAC_DEFAULT_TEXT,"The indicated rendition will be turned");
+	WL_put_screen_text(screen,19,37,FAC_DEFAULT_TEXT,"on for modifiable fields and display");
+	WL_put_screen_text(screen,20,37,FAC_DEFAULT_TEXT,"with the pseudo blank character.");
+	WL_put_screen_text(screen,24,2,FAC_DEFAULT_TEXT,"Change the information as appropriate and press (ENTER), (1) to exit.");
 
-	get_defs(DEFAULTS_PSB_CHAR,&def_psb_select);
-	get_defs(DEFAULTS_PSB_SET,&def_psb_charset);
-	get_defs(DEFAULTS_PSB_REN,&def_psb_rendition);
+	WL_get_defs(DEFAULTS_PSB_CHAR,&def_psb_select);
+	WL_get_defs(DEFAULTS_PSB_SET,&def_psb_charset);
+	WL_get_defs(DEFAULTS_PSB_REN,&def_psb_rendition);
 
-	get_psb_char(def_psb_select,pb_char,pb_select);
+	WL_get_psb_char(def_psb_select,pb_char,pb_select);
 	pb_select[1] = '\0';								/* Null terminate the string.		*/
 	pb_char[1] = '\0';								/* Null terminate the string.		*/
 	pb_chset = def_psb_charset;
@@ -1001,23 +1051,23 @@ static void wsh_setpsb(void)								/* Change pseudo blank characteristics.	*/
 	else pb_rend[0] = 'N';								/* Rendition is Normal.			*/
 	pb_rend[1] = '\0';								/* Null terminate the string.		*/
 
-	wput(screen,5,40,FAC_DEFAULT_FIELD,pb_select);					/* Print correct char set from choices.	*/
-	wput(screen, 6,40,FAC_DEFAULT_FIELD,pb_rend);					/* Print correct rendition from choices.*/
+	WL_put_screen_text(screen,5,40,FAC_DEFAULT_FIELD,pb_select);			/* Print correct char set from choices.	*/
+	WL_put_screen_text(screen, 6,40,FAC_DEFAULT_FIELD,pb_rend);			/* Print correct rendition from choices.*/
 
 	no_mod[0] = no_mod[1] = ' ';
 	function = WRITE_ALL;								/* Use display full screen function.	*/
 	lines = WSB_ROWS;
 	vwang(&function,screen,&lines,"0001X",term,no_mod);				/* Call Wang emulation to fill screen.	*/
-	vcharset(VCS_GRAPHICS);
+	VL_vcharset(VCS_GRAPHICS);
 
-	vmove(12,15);	vprint("%c", PBLANK1);
-	vmove(13,15);	vprint("%c", PBLANK2);
-	vmove(14,15);	vprint("%c", PBLANK3);
-	vmove(15,15);	vprint("%c", PBLANK4);
+	VL_vmove(12,15);	VL_vprint("%c", PBLANK1);
+	VL_vmove(13,15);	VL_vprint("%c", PBLANK2);
+	VL_vmove(14,15);	VL_vprint("%c", PBLANK3);
+	VL_vmove(15,15);	VL_vprint("%c", PBLANK4);
 
-	vmove(4,33);
-	vprint("%c", *pb_char);								/* Print pseudo blank character.	*/
-	vcharset(VCS_DEFAULT);
+	VL_vmove(4,33);
+	VL_vprint("%c", *pb_char);							/* Print pseudo blank character.	*/
+	VL_vcharset(VCS_DEFAULT);
 	vwang_set_synch(FALSE);								/* Vprint sets the flag to TRUE which I	*/
 											/* don't want so reset to FALSE.	*/
 	function = READ_ALTERED;							/* Use read altered function.		*/
@@ -1058,14 +1108,14 @@ static void wsh_setpsb(void)								/* Change pseudo blank characteristics.	*/
 		{
 			valid = TRUE;							/* Assume valid values			*/
 
-			wget(screen, 5,40,pb_select);					/* Input the pseudo blank option.	*/
-			wget(screen, 6,40,pb_rend);					/* Input the rendition.			*/
+			WL_get_screen_text(screen, 5,40,pb_select);			/* Input the pseudo blank option.	*/
+			WL_get_screen_text(screen, 6,40,pb_rend);			/* Input the rendition.			*/
 
 			pb_select[0] = toupper(pb_select[0]);				/* Make sure the char is uppercase.	*/
 			if ((i = strpos("B1234",pb_select)) < 0)			/* Was a valid char option given?	*/
 			{
 				valid = FALSE;						/* Oops, then not valid.		*/
-				wput(screen, 5,40,FAC_ERROR_FIELD,pb_select);		/* Make it blink.			*/
+				WL_put_screen_text(screen, 5,40,FAC_ERROR_FIELD,pb_select);		/* Make it blink.			*/
 				screen[2] = 0;						/* Reset cursor position.		*/
 				screen[3] = 0;
 			}
@@ -1088,7 +1138,7 @@ static void wsh_setpsb(void)								/* Change pseudo blank characteristics.	*/
 			if ((i = strpos("NURB",pb_rend)) < 0)				/* Was a valid rendition given?		*/
 			{
 				valid = FALSE;						/* Oops, then not valid.		*/
-				wput(screen, 6,40,FAC_ERROR_FIELD,pb_rend);		/* Make it blink.			*/
+				WL_put_screen_text(screen, 6,40,FAC_ERROR_FIELD,pb_rend);		/* Make it blink.			*/
 				screen[2] = 0;						/* Reset cursor position.		*/
 				screen[3] = 0;
 			}
@@ -1109,10 +1159,10 @@ static void wsh_setpsb(void)								/* Change pseudo blank characteristics.	*/
 		def_psb_select = pb_select[0];
 		def_psb_charset = pb_chset;
 		def_psb_rendition = pb_r;
-		set_defs(DEFAULTS_PSB_CHAR,&def_psb_select);
-		set_defs(DEFAULTS_PSB_SET,&def_psb_charset);
-		set_defs(DEFAULTS_PSB_REN,&def_psb_rendition);
-		save_defaults();							/* Write out the personality info.	*/
+		WL_set_defs(DEFAULTS_PSB_CHAR,&def_psb_select);
+		WL_set_defs(DEFAULTS_PSB_SET,&def_psb_charset);
+		WL_set_defs(DEFAULTS_PSB_REN,&def_psb_rendition);
+		WL_save_defaults();							/* Write out the personality info.	*/
 	}
 	vwang_set_synch(TRUE);								/* Synch now required.			*/
 }
@@ -1137,9 +1187,9 @@ static void wsh_setcurchar(void)							/* Change cursor characteristics.	*/
 	wsb_add_text(hWsb, 9, 5,"Menu pick cursor flag = ");
 	wsb_add_text(hWsb,24, 0,"Change the information as appropriate and press (ENTER), (1) to exit.");
 
-	get_defs(DEFAULTS_AUTOTAB,&autotab);						/* Initialize fields from personality.	*/
-	get_defs(DEFAULTS_AUTOMOVE,&automove);
-	get_defs(DEFAULTS_MP_CURSOR,&mp_cursor);
+	WL_get_defs(DEFAULTS_AUTOTAB,&autotab);						/* Initialize fields from personality.	*/
+	WL_get_defs(DEFAULTS_AUTOMOVE,&automove);
+	WL_get_defs(DEFAULTS_MP_CURSOR,&mp_cursor);
 
 	if (autotab) strcpy(atfl,"Y");							/* Init the string value.		*/
 	else	      strcpy(atfl,"N");
@@ -1245,10 +1295,10 @@ static void wsh_setcurchar(void)							/* Change cursor characteristics.	*/
 
 	if (changed && valid)								/* If values changed and are valid	*/
 	{
-		set_defs(DEFAULTS_AUTOTAB,&autotab);
-		set_defs(DEFAULTS_AUTOMOVE,&automove);
-		set_defs(DEFAULTS_MP_CURSOR,&mp_cursor);
-		save_defaults();							/* Write out the personality info.	*/
+		WL_set_defs(DEFAULTS_AUTOTAB,&autotab);
+		WL_set_defs(DEFAULTS_AUTOMOVE,&automove);
+		WL_set_defs(DEFAULTS_MP_CURSOR,&mp_cursor);
+		WL_save_defaults();							/* Write out the personality info.	*/
 	}
 }
 
@@ -1271,9 +1321,9 @@ static void wsh_setbackground(void)							/* Change cursor characteristics.	*/
 	wsb_add_text(hWsb, 9, 5,"            Exit grey =    (No means select black on exit.)");
 	wsb_add_text(hWsb,24, 0,"Change the information as appropriate and press (ENTER), (1) to exit.");
 
-	get_defs(DEFAULTS_BGCHANGE,&bgchange);						/* Initialize fields from personality.	*/
-	get_defs(DEFAULTS_BGCOLOR,&bgcolor);
-	get_defs(DEFAULTS_EXCOLOR,&excolor);
+	WL_get_defs(DEFAULTS_BGCHANGE,&bgchange);						/* Initialize fields from personality.	*/
+	WL_get_defs(DEFAULTS_BGCOLOR,&bgcolor);
+	WL_get_defs(DEFAULTS_EXCOLOR,&excolor);
 
 	if (bgchange) strcpy(bgch,"Y");							/* Init the string value.		*/
 	else	      strcpy(bgch,"N");
@@ -1365,14 +1415,14 @@ static void wsh_setbackground(void)							/* Change cursor characteristics.	*/
 
 	if (changed && valid)								/* If values changed and are valid	*/
 	{
-		set_defs(DEFAULTS_BGCHANGE,&bgchange);
-		set_defs(DEFAULTS_BGCOLOR,&bgcolor);
-		set_defs(DEFAULTS_EXCOLOR,&excolor);
-		save_defaults();							/* Write out the personality info.	*/
+		WL_set_defs(DEFAULTS_BGCHANGE,&bgchange);
+		WL_set_defs(DEFAULTS_BGCOLOR,&bgcolor);
+		WL_set_defs(DEFAULTS_EXCOLOR,&excolor);
+		WL_save_defaults();							/* Write out the personality info.	*/
 		if (bgchange)
 		{
-			if (excolor) vonexit(NORMALIZE|CLEAR_SCREEN|VSCREEN_LIGHT);
-			else         vonexit(NORMALIZE|CLEAR_SCREEN|VSCREEN_DARK);
+			if (excolor) VL_vonexit(NORMALIZE|CLEAR_SCREEN|VSCREEN_LIGHT);
+			else         VL_vonexit(NORMALIZE|CLEAR_SCREEN|VSCREEN_DARK);
 		}
 	}
 }
@@ -1416,11 +1466,11 @@ static int wsh_uc_file(void)								/* Set the usage constants.		*/
 	wsb_add_text(hWsb,15, 8,"Spooled print files:    SPOOLLIB=               SPOOLVOL =");
 	wsb_add_text(hWsb,17, 8,"Work/Temporary files:   WORKLIB =               WORKVOL  =");
 
-	get_defs(DEFAULTS_IL,def_inlib);		get_defs(DEFAULTS_IV,def_invol);
-	get_defs(DEFAULTS_OL,def_outlib);		get_defs(DEFAULTS_OV,def_outvol);
-	get_defs(DEFAULTS_RL,def_runlib);		get_defs(DEFAULTS_RV,def_runvol);
-	get_defs(DEFAULTS_SL,def_spoolib);		get_defs(DEFAULTS_SV,def_spoolvol);
-	get_defs(DEFAULTS_WL,def_worklib);		get_defs(DEFAULTS_WV,def_workvol);
+	WL_get_defs(DEFAULTS_IL,def_inlib);		WL_get_defs(DEFAULTS_IV,def_invol);
+	WL_get_defs(DEFAULTS_OL,def_outlib);		WL_get_defs(DEFAULTS_OV,def_outvol);
+	WL_get_defs(DEFAULTS_RL,def_runlib);		WL_get_defs(DEFAULTS_RV,def_runvol);
+	WL_get_defs(DEFAULTS_SL,def_spoolib);		WL_get_defs(DEFAULTS_SV,def_spoolvol);
+	WL_get_defs(DEFAULTS_WL,def_worklib);		WL_get_defs(DEFAULTS_WV,def_workvol);
 
 	def_inlib[8]    = (char)0;							/* Make sure the fields are nulled out.	*/
 	def_outlib[8]   = (char)0;
@@ -1500,13 +1550,13 @@ static int wsh_uc_file(void)								/* Set the usage constants.		*/
 
 		wsb_get_field(hWsb,17,68, def_workvol,  SIZEOF_VOL);
 
-		set_defs(DEFAULTS_IL,def_inlib);		set_defs(DEFAULTS_IV,def_invol);
-		set_defs(DEFAULTS_OL,def_outlib);		set_defs(DEFAULTS_OV,def_outvol);
-		set_defs(DEFAULTS_RL,def_runlib);		set_defs(DEFAULTS_RV,def_runvol);
-		set_defs(DEFAULTS_SL,def_spoolib);		set_defs(DEFAULTS_SV,def_spoolvol);
-								set_defs(DEFAULTS_WV,def_workvol);
+		WL_set_defs(DEFAULTS_IL,def_inlib);		WL_set_defs(DEFAULTS_IV,def_invol);
+		WL_set_defs(DEFAULTS_OL,def_outlib);		WL_set_defs(DEFAULTS_OV,def_outvol);
+		WL_set_defs(DEFAULTS_RL,def_runlib);		WL_set_defs(DEFAULTS_RV,def_runvol);
+		WL_set_defs(DEFAULTS_SL,def_spoolib);		WL_set_defs(DEFAULTS_SV,def_spoolvol);
+								WL_set_defs(DEFAULTS_WV,def_workvol);
 
-		save_defaults();							/* Write out the personality info.	*/
+		WL_save_defaults();							/* Write out the personality info.	*/
 	}
 
 	wsb_delete(hWsb);
@@ -1528,10 +1578,9 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	wsb_add_text(hWsb, 1, 0,"*** Copyright Information ***");
 	wsb_add_text(hWsb, 4, 0,"The WISP runtime library");
 	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR "  NeoMedia Technologies Incorporated");
-	wsb_add_text(hWsb, 6, 0,"2201 Second Street Suite 402, Fort Myers FL 33901 (239) 337-3434");
-	wsb_add_text(hWsb, 7, 0,"Web: www.neom.com   Email: support@neom.com");
+	wsb_add_text(hWsb, 6, 0,"2201 Second Street Suite 402, Fort Myers FL 33901");
+	wsb_add_text(hWsb, 7, 0,"Web: " WISP_WEBSITE "   Email: " WISP_EMAIL);
 
-/*	sprintf(buff,"Version=[%s] Library=[%d] Screen=[%d]",wisp_version(), LIBRARY_VERSION, SCREEN_VERSION); */
 	sprintf(buff,"Version=[%s]", wisp_version());
 	wsb_add_text(hWsb, 22, 0,buff);
 
@@ -1556,7 +1605,7 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	}
 #endif
 #ifdef WIN32
-	sprintf(temp, "Windows %s", computername(NULL));
+	sprintf(temp, "Windows %s", WL_computername(NULL));
 	wsb_add_text(hWsb, 20, 0, temp);
 #endif
 
@@ -1564,11 +1613,11 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	**	Bottom of screen
 	*/
 
-	if (!nativescreens())
+	if (!wisp_nativescreens())
 	{
 		wsb_add_text(hWsb, 24, 25,"(ENTER) Return");
 
-		if (pfkeys12())
+		if (WL_pfkeys12())
 		{
 			wsb_add_text(hWsb, 24, 41,"(11) Print");
 		}
@@ -1653,9 +1702,9 @@ static void wsh_show_charset(void)
 
 	wsb_add_text(hWsb, 24, 25,"(ENTER) Return");
 
-	if (!nativescreens())
+	if (!wisp_nativescreens())
 	{
-		if (pfkeys12())
+		if (WL_pfkeys12())
 		{
 			wsb_add_text(hWsb, 24, 41,"(11) Print");
 		}
@@ -1700,7 +1749,6 @@ static void wsh_usage_constants(void)
 	int	row, col;
 	char	lib[SIZEOF_LIB+1], vol[SIZEOF_VOL+1];
 	int4	int4defs;
-	int4	args;
 
 	currow = 0;
 	curcol = 0;
@@ -1711,51 +1759,57 @@ static void wsh_usage_constants(void)
 	row = 3;
 	col = 2;
 	
-	args=2;
-	wvaset(&args);
-	EXTRACT("IL",lib); lib[SIZEOF_LIB] = '\0';
-	EXTRACT("IV",vol); vol[SIZEOF_VOL] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("IL",lib); lib[SIZEOF_LIB] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("IV",vol); vol[SIZEOF_VOL] = '\0';
 	sprintf(buff,"IL = %8.8s  IV = %6.6s", lib, vol);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("OL",lib); lib[SIZEOF_LIB] = '\0';
-	EXTRACT("OV",vol); vol[SIZEOF_VOL] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("OL",lib); lib[SIZEOF_LIB] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("OV",vol); vol[SIZEOF_VOL] = '\0';
 	sprintf(buff,"OL = %8.8s  OV = %6.6s", lib, vol);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("RL",lib); lib[SIZEOF_LIB] = '\0';
-	EXTRACT("RV",vol); vol[SIZEOF_VOL] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("RL",lib); lib[SIZEOF_LIB] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("RV",vol); vol[SIZEOF_VOL] = '\0';
 	sprintf(buff,"RL = %8.8s  RV = %6.6s", lib, vol);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("SL",lib); lib[SIZEOF_LIB] = '\0';
-	EXTRACT("SV",vol); vol[SIZEOF_VOL] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("SL",lib); lib[SIZEOF_LIB] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("SV",vol); vol[SIZEOF_VOL] = '\0';
 	sprintf(buff,"SL = %8.8s  SV = %6.6s", lib, vol);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("WL",lib); lib[SIZEOF_LIB] = '\0';
-	EXTRACT("WV",vol); vol[SIZEOF_VOL] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("WL",lib); lib[SIZEOF_LIB] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("WV",vol); vol[SIZEOF_VOL] = '\0';
 	sprintf(buff,"WL = %8.8s  WV = %6.6s", lib, vol);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("PL",lib); lib[SIZEOF_LIB] = '\0';
-	EXTRACT("PV",vol); vol[SIZEOF_VOL] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("PL",lib); lib[SIZEOF_LIB] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("PV",vol); vol[SIZEOF_VOL] = '\0';
 	sprintf(buff,"PL = %8.8s  PV = %6.6s", lib, vol);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("CL",lib); lib[SIZEOF_LIB] = '\0';
-	EXTRACT("CV",vol); vol[SIZEOF_VOL] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("CL",lib); lib[SIZEOF_LIB] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("CV",vol); vol[SIZEOF_VOL] = '\0';
 	sprintf(buff,"CL = %8.8s  CV = %6.6s", lib, vol);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("XV",defs); defs[SIZEOF_VOL] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("XV",defs); defs[SIZEOF_VOL] = '\0';
 	sprintf(buff,"XV = %s", defs);
 	wsb_add_text(hWsb, row++, col+15,buff);
 
@@ -1763,43 +1817,43 @@ static void wsh_usage_constants(void)
 	row = 3;
 	col = 30;
 
-	wvaset(&args);
-	EXTRACT("PM",defs); defs[1] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("PM",defs); defs[1] = '\0';
 	sprintf(buff,"PM = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("PC",defs); defs[1] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("PC",defs); defs[1] = '\0';
 	sprintf(buff,"PC = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("JC",defs); defs[1] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("JC",defs); defs[1] = '\0';
 	sprintf(buff,"JC = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("JS",defs); defs[1] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("JS",defs); defs[1] = '\0';
 	sprintf(buff,"JS = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("TT",defs); defs[1] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("TT",defs); defs[1] = '\0';
 	sprintf(buff,"TT = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("CF",defs); defs[8] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("CF",defs); defs[8] = '\0';
 	sprintf(buff,"CF = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("C#",defs); defs[4] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("C#",defs); defs[4] = '\0';
 	sprintf(buff,"C# = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("W$",defs); defs[8] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("W$",defs); defs[8] = '\0';
 	sprintf(buff,"W$ = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
@@ -1810,57 +1864,57 @@ static void wsh_usage_constants(void)
 	row = 3;
 	col = 45;
 
-	wvaset(&args);
-	EXTRACT("E:",&int4defs);
-	wswap(&int4defs);
+	WL_set_va_count(2);
+	EXTRACT2("E:",&int4defs);
+	WL_wswap(&int4defs);
 	sprintf(buff,"E: = %ld", (long)int4defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("FN",&int4defs);
-	wswap(&int4defs);
+	WL_set_va_count(2);
+	EXTRACT2("FN",&int4defs);
+	WL_wswap(&int4defs);
 	sprintf(buff,"FN = %ld", (long)int4defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("G#",&int4defs);
-	wswap(&int4defs);
+	WL_set_va_count(2);
+	EXTRACT2("G#",&int4defs);
+	WL_wswap(&int4defs);
 	sprintf(buff,"G# = %ld", (long)int4defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("PR",&int4defs);
-	wswap(&int4defs);
+	WL_set_va_count(2);
+	EXTRACT2("PR",&int4defs);
+	WL_wswap(&int4defs);
 	sprintf(buff,"PR = %ld", (long)int4defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("JL",&int4defs);
-	wswap(&int4defs);
+	WL_set_va_count(2);
+	EXTRACT2("JL",&int4defs);
+	WL_wswap(&int4defs);
 	sprintf(buff,"JL = %ld", (long)int4defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("LI",&int4defs);
-	wswap(&int4defs);
+	WL_set_va_count(2);
+	EXTRACT2("LI",&int4defs);
+	WL_wswap(&int4defs);
 	sprintf(buff,"LI = %ld", (long)int4defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("P:",&int4defs);
-	wswap(&int4defs);
+	WL_set_va_count(2);
+	EXTRACT2("P:",&int4defs);
+	WL_wswap(&int4defs);
 	sprintf(buff,"P: = %ld", (long)int4defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("T#",&int4defs);
-	wswap(&int4defs);
+	WL_set_va_count(2);
+	EXTRACT2("T#",&int4defs);
+	WL_wswap(&int4defs);
 	sprintf(buff,"T# = %ld", (long)int4defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("W#",&int4defs);
-	wswap(&int4defs);
+	WL_set_va_count(2);
+	EXTRACT2("W#",&int4defs);
+	WL_wswap(&int4defs);
 	sprintf(buff,"W# = %ld", (long)int4defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
@@ -1871,33 +1925,33 @@ static void wsh_usage_constants(void)
 	row = 12;
 	col = 2;
 
-	wvaset(&args);
-	EXTRACT("ID",defs); defs[3] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("ID",defs); defs[3] = '\0';
 	sprintf(buff,"ID = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("I8",defs); defs[8] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("I8",defs); defs[8] = '\0';
 	sprintf(buff,"I8 = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("IX",defs); defs[32] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("IX",defs); defs[32] = '\0';
 	sprintf(buff,"IX = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("LU",defs); defs[32] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("LU",defs); defs[32] = '\0';
 	sprintf(buff,"LU = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("NA",defs); defs[24] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("NA",defs); defs[24] = '\0';
 	sprintf(buff,"NA = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
-	wvaset(&args);
-	EXTRACT("S$",defs); defs[15] = '\0';
+	WL_set_va_count(2);
+	EXTRACT2("S$",defs); defs[15] = '\0';
 	sprintf(buff,"S$ = %s", defs);
 	wsb_add_text(hWsb, row++, col,buff);
 
@@ -1907,9 +1961,9 @@ static void wsh_usage_constants(void)
 	*/
 	wsb_add_text(hWsb, 24, 25,"(ENTER) Return");
 
-	if (!nativescreens())
+	if (!wisp_nativescreens())
 	{
-		if (pfkeys12())
+		if (WL_pfkeys12())
 		{
 			wsb_add_text(hWsb, 24, 41,"(11) Print");
 		}
@@ -1989,7 +2043,7 @@ static void wsh_env_info(void)
 	sprintf(buff,"TEMPDEFAULTS  = %s", wisp_temp_defaults_path(NULL));
 	wsb_add_text(hWsb, row++, col,buff);
 
-	sprintf(buff,"SHAREDMEMCTL  = %s", wisp_sm_ctlfile());
+	sprintf(buff,"SHAREDMEMCTL  = %s", WL_sm_ctlfile());
 	wsb_add_text(hWsb, row++, col,buff);
 
 	row++;
@@ -2003,9 +2057,9 @@ static void wsh_env_info(void)
 
 	wsb_add_text(hWsb, 24, 25,"(ENTER) Return");
 
-	if (!nativescreens())
+	if (!wisp_nativescreens())
 	{
-		if (pfkeys12())
+		if (WL_pfkeys12())
 		{
 			wsb_add_text(hWsb, 24, 41,"(11) Print");
 		}
@@ -2070,13 +2124,13 @@ static void wsh_info(void)
 	wsb_add_text(hWsb, row++, col,buff);
 	if (ptr) free(ptr);
 
-	sprintf(buff,"licensefile = %s", license_filepath());
+	sprintf(buff,"licensefile = %s", WLIC_license_filepath());
 	wsb_add_text(hWsb, row++, col,buff);
 
-	sprintf(buff,"wisptmpbase = %s", wisptmpbasedir(NULL));
+	sprintf(buff,"WISPTMPDIR  = %s", wisptmpbasedir(NULL));
 	wsb_add_text(hWsb, row++, col,buff);
 
-	sprintf(buff,"wtmpdir     = %s", wtmpdir(NULL));
+	sprintf(buff,"systmpdir   = %s", WL_systmpdir(NULL));
 	wsb_add_text(hWsb, row++, col,buff);
 
 	sprintf(buff,"wispterm    = %s", wisptermfilepath(NULL));
@@ -2084,14 +2138,30 @@ static void wsh_info(void)
 
 	row++;
 
-	sprintf(buff,"MACHID      = %s", (0==getmachineid(value)) ? value : "(unknown)");
+	sprintf(buff,"MACHID      = %s", (0==WL_getmachineid(value)) ? value : "(unknown)");
 	wsb_add_text(hWsb, row++, col,buff);
 
-	sprintf(buff,"COMPNAME    = %s", computername(NULL));
+	sprintf(buff,"COMPNAME    = %s", WL_computername(NULL));
 	wsb_add_text(hWsb, row++, col,buff);
 
 	sprintf(buff,"SERVER      = %s", wispserver());
 	wsb_add_text(hWsb, row++, col,buff);
+
+	if (wisp_acu_cobol())
+	{
+		strcpy(value,"ACU");
+	}
+	else if (wisp_mf_cobol())
+	{
+		strcpy(value,"MF");
+	}
+	else
+	{
+		strcpy(value,"(none)");
+	}
+	sprintf(buff,"RTS         = %s", value);
+	wsb_add_text(hWsb, row++, col,buff);
+
 	
 	
 	/*
@@ -2101,7 +2171,7 @@ static void wsh_info(void)
 	col = 40;
 	row = 12;
 
-	sprintf(buff,"linklevel = %d", linklevel());
+	sprintf(buff,"linklevel = %d", WL_linklevel());
 	wsb_add_text(hWsb, row++, col,buff);
 
 	sprintf(buff,"sortmem   = %d", wispsortmemk());
@@ -2110,7 +2180,7 @@ static void wsh_info(void)
 	sprintf(buff,"ttyname   = %s", ttyname(0));
 	wsb_add_text(hWsb, row++, col,buff);
 
-	ttyid5(value);
+	WL_ttyid5(value);
 	sprintf(buff,"ttyid5    = %s", value);
 	wsb_add_text(hWsb, row++, col,buff);
 
@@ -2120,7 +2190,7 @@ static void wsh_info(void)
 	col = 2;
 	row = 16;
 	
-	wrunconfig(&cfg);
+	WL_wrunconfig(&cfg);
 
 	sprintf(buff,"wrun_cob    = %s", cfg.wrun_cobtype);
 	wsb_add_text(hWsb, row++, col,buff);
@@ -2141,9 +2211,9 @@ static void wsh_info(void)
 	*/
 	wsb_add_text(hWsb, 24, 25,"(ENTER) Return");
 
-	if (!nativescreens())
+	if (!wisp_nativescreens())
 	{
-		if (pfkeys12())
+		if (WL_pfkeys12())
 		{
 			wsb_add_text(hWsb, 24, 41,"(11) Print");
 		}
@@ -2186,7 +2256,7 @@ static void wsh_queuemgmnt(void)
 	int	col;
 	uint4   dflags;
 	
-	get_defs(DEFAULTS_FLAGS,&dflags);						/* Get the defaults flags		*/
+	WL_get_defs(DEFAULTS_FLAGS,&dflags);						/* Get the defaults flags		*/
 
 	currow = 0;
 	curcol = 0;
@@ -2210,7 +2280,7 @@ static void wsh_queuemgmnt(void)
 		wsb_add_menu_item(hWsb, 12, col, 1, "Return to MAIN HELP menu");
 	}
 
-	if (opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE) )
+	if (WL_opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE) )
 	{
 		if (wang_style)
 			wsb_add_text(hWsb,  9, col, "(2) Manage Print Queue.");
@@ -2219,7 +2289,7 @@ static void wsh_queuemgmnt(void)
 		strcat(okkeys,"02");
 	}
 	
-	if (opt_batchman && (dflags & HELP_BATCH_QUEUE))
+	if (WL_opt_batchman && (dflags & HELP_BATCH_QUEUE))
 	{
 		if (wang_style)
 			wsb_add_text(hWsb, 11, col, "(3) Manage Batch Queue.");
@@ -2249,7 +2319,7 @@ static void wsh_queuemgmnt(void)
 		{
 			wsh_queue_batch();
 		}
-		else if (pfkey == 15 || (pfkey == 11 && pfkeys12())) 
+		else if (pfkey == 15 || (pfkey == 11 && WL_pfkeys12())) 
 		{
 			wsh_print_cmd_screen();
 		}
@@ -2270,36 +2340,35 @@ static void wsh_uqueue(int type)
 	const char *qtype;
 	const char *queue_cmd;
 	char	errbuff[1024];
-	int 	st, pid;
 
 	errno = 0;
 	
 	if (type==1)
 	{
-		queue_cmd = opt_printqueue_manager;
+		queue_cmd = WL_opt_printqueue_manager;
 		qtype="Print Queue Manager";
 
 		if (NULL == queue_cmd)
 		{
-			werr_message_box("Print Queue Manager program has not been defined.");
+			WL_werr_message_box("Print Queue Manager program has not been defined.");
 			return;
 		}
 
-		rc = wsystem_interactive(queue_cmd);
+		rc = WL_wsystem_interactive(queue_cmd);
 		
 	}
 	else 
 	{
 		qtype = "Batch Queue Manager";
-		queue_cmd = batchman_name;
+		queue_cmd = WL_batchman_name;
 
 		if (NULL == queue_cmd)
 		{
-			werr_message_box("Batch Queue Manager program has not been defined.");
+			WL_werr_message_box("Batch Queue Manager program has not been defined.");
 			return;
 		}
 
-		rc = wsystem_interactive(queue_cmd);
+		rc = WL_wsystem_interactive(queue_cmd);
 
 	}
 
@@ -2310,32 +2379,24 @@ static void wsh_uqueue(int type)
 		      case 1:
 			sprintf(errbuff,"%s could not be run. [cmd=\"%s\", exit=%d, rc=%d]",qtype, queue_cmd, 
 				WEXITSTATUS(rc), rc);
-			werr_message_box(errbuff);
+			WL_werr_message_box(errbuff);
 			break;
 		      default:
 			sprintf(errbuff,"%s command \"%s\" exited with exit code=%d, rc=%d, errno=%d",
 				qtype, queue_cmd, WEXITSTATUS(rc), rc, errno);
-			werr_message_box(errbuff);
+			WL_werr_message_box(errbuff);
 			break;
 		}
 	}
 }
 #endif
-#ifdef unix
-static void wsh_shell(void)								/* Issue unix shell commands.		*/
-{
-	wsystem_interactive(wispshellexe());
-
-	setlevel(g_savelevel);								/* Restore the link-level		*/
-}
-#endif	/* unix */
 
 static int wsh_uc_print(void)								/* Set the usage constants.		*/
 {
 	HWSB	hWsb;
 	int	pfkey, currow, curcol;
 
-	char mode[2], class[2], number[4], form[4], dplines[4];				/* Working versions of field data.	*/
+	char mode[2], print_class[2], number[4], form[4], dplines[4];			/* Working versions of field data.	*/
 	int valid;									/* Validation successful flag.		*/
 	int tlines;									/* Integer test for lines per page.	*/
 	int4	def_prt_num;
@@ -2364,20 +2425,20 @@ static int wsh_uc_print(void)								/* Set the usage constants.		*/
 	wsb_add_text(hWsb,23,8,"          (3) Set File Defaults");
 	wsb_add_text(hWsb,24,8,"       (HELP) Return to the Command Processor");
 
-	get_defs(DEFAULTS_PM,mode);							/* Get the print mode data.		*/
-	get_defs(DEFAULTS_PC,class);							/* Get the print class data.		*/
-	get_defs(DEFAULTS_PR,&def_prt_num);						/* Get the printer number.		*/
-	get_defs(DEFAULTS_FN,&def_prt_form);						/* Get the printer form number.		*/
-	get_defs(DEFAULTS_LI,&def_prt_lines);						/* Get the default lines per page.	*/
+	WL_get_defs(DEFAULTS_PM,mode);							/* Get the print mode data.		*/
+	WL_get_defs(DEFAULTS_PC,print_class);						/* Get the print class data.		*/
+	WL_get_defs(DEFAULTS_PR,&def_prt_num);						/* Get the printer number.		*/
+	WL_get_defs(DEFAULTS_FN,&def_prt_form);						/* Get the printer form number.		*/
+	WL_get_defs(DEFAULTS_LI,&def_prt_lines);					/* Get the default lines per page.	*/
 
 	mode[1] = (char)0;
-	class[1] = (char)0;
+	print_class[1] = (char)0;
 	sprintf(number, "%03d",def_prt_num);
 	sprintf(form,   "%03d",def_prt_form);		
 	sprintf(dplines,"%03d",def_prt_lines);	
 
 	wsb_add_field(hWsb, 4,75,FAC_DEFAULT_FIELD,mode,1);
-	wsb_add_field(hWsb,12,75,FAC_DEFAULT_FIELD,class,1);
+	wsb_add_field(hWsb,12,75,FAC_DEFAULT_FIELD,print_class,1);
 	wsb_add_field(hWsb,14,75,FAC_NUMERIC_FIELD,form,3);
 	wsb_add_field(hWsb,16,75,FAC_NUMERIC_FIELD,number,3);
 	wsb_add_field(hWsb,18,75,FAC_NUMERIC_FIELD,dplines,3);
@@ -2404,7 +2465,7 @@ static int wsh_uc_print(void)								/* Set the usage constants.		*/
 		}		
 
 		wsb_get_field(hWsb, 4,75,mode,1);
-		wsb_get_field(hWsb,12,75,class,1);
+		wsb_get_field(hWsb,12,75,print_class,1);
 		wsb_get_field(hWsb,14,75,form,3);
 		wsb_get_field(hWsb,16,75,number,3);
 		wsb_get_field(hWsb,18,75,dplines,3);
@@ -2420,7 +2481,7 @@ static int wsh_uc_print(void)								/* Set the usage constants.		*/
 				currow = 4;
 				curcol = 75;
 			}
-			class[0] = toupper(class[0]);					/* Make print class upper case.		*/
+			print_class[0] = toupper(print_class[0]);			/* Make print class upper case.		*/
 						/***** ADD VALIDATION FOR PRINT CLASS HERE ******/
 			tlines = atoi(dplines);						/* Convert lines to integer.		*/
 			if (tlines < 0 || tlines > 255)
@@ -2444,13 +2505,13 @@ static int wsh_uc_print(void)								/* Set the usage constants.		*/
 		def_prt_form  = atoi(form);
 		def_prt_lines = atoi(dplines);
 
-		set_defs(DEFAULTS_PM,mode);
-		set_defs(DEFAULTS_PC,class);
-		set_defs(DEFAULTS_PR,&def_prt_num);
-		set_defs(DEFAULTS_FN,&def_prt_form);
-		set_defs(DEFAULTS_LI,&def_prt_lines);
+		WL_set_defs(DEFAULTS_PM,mode);
+		WL_set_defs(DEFAULTS_PC,print_class);
+		WL_set_defs(DEFAULTS_PR,&def_prt_num);
+		WL_set_defs(DEFAULTS_FN,&def_prt_form);
+		WL_set_defs(DEFAULTS_LI,&def_prt_lines);
 
-		save_defaults();							/* Write out the personality info.	*/
+		WL_save_defaults();							/* Write out the personality info.	*/
 	}
 
 	wsb_delete(hWsb);
@@ -2462,7 +2523,7 @@ static int wsh_uc_submit(void)								/* Set the usage constants.		*/
 {
 	HWSB	hWsb;
 	int	pfkey, currow, curcol;
-	char mode[2], class[2], t_hr[3], t_min[3], t_sec[3];				/* Working versions of field data.	*/
+	char mode[2], job_class[2], t_hr[3], t_min[3], t_sec[3];			/* Working versions of field data.	*/
 	int valid;									/* Validation successful flag.		*/
 	char	def_proc_cpu[7];
 	int	rc = 0;
@@ -2493,12 +2554,12 @@ static int wsh_uc_submit(void)								/* Set the usage constants.		*/
 	wsb_add_text(hWsb,23,8,"          (3) Set File Defaults");
 	wsb_add_text(hWsb,24,8,"       (HELP) Return to the Command Processor");
 
-	get_defs(DEFAULTS_JS,mode);							/* Get the proc status mode data.	*/
-	get_defs(DEFAULTS_JC,class);							/* Get the proc class data.		*/
-	get_defs(DEFAULTS_JL,def_proc_cpu);
+	WL_get_defs(DEFAULTS_JS,mode);							/* Get the proc status mode data.	*/
+	WL_get_defs(DEFAULTS_JC,job_class);						/* Get the proc class data.		*/
+	WL_get_defs(DEFAULTS_JL,def_proc_cpu);
 
 	mode[1] = 0;
-	class[1] = 0;
+	job_class[1] = 0;
 
 	t_hr[0] = def_proc_cpu[0];
 	t_hr[1] = def_proc_cpu[1];
@@ -2513,7 +2574,7 @@ static int wsh_uc_submit(void)								/* Set the usage constants.		*/
 	t_sec[2] = '\0';
 
 	wsb_add_field(hWsb,11,69,FAC_DEFAULT_FIELD,mode,1);
-	wsb_add_field(hWsb,13,69,FAC_DEFAULT_FIELD,class,1);
+	wsb_add_field(hWsb,13,69,FAC_DEFAULT_FIELD,job_class,1);
 
 	wsb_add_field(hWsb,17,69,FAC_NUMERIC_FIELD,t_hr,2);
 	wsb_add_field(hWsb,17,74,FAC_NUMERIC_FIELD,t_min,2);
@@ -2541,7 +2602,7 @@ static int wsh_uc_submit(void)								/* Set the usage constants.		*/
 		}
 
 		wsb_get_field(hWsb,11,69,mode,1);
-		wsb_get_field(hWsb,13,69,class,1);
+		wsb_get_field(hWsb,13,69,job_class,1);
 		wsb_get_field(hWsb,17,69,t_hr,2);
 		wsb_get_field(hWsb,17,74,t_min,2);
 		wsb_get_field(hWsb,17,79,t_sec,2);
@@ -2557,14 +2618,14 @@ static int wsh_uc_submit(void)								/* Set the usage constants.		*/
 				currow = 11;
 				curcol = 69;
 			}
-			class[0] = toupper(class[0]);					/* Make print class upper case.		*/
+			job_class[0] = toupper(job_class[0]);				/* Make class upper case.		*/
 
-			if (!isdigit(t_hr[0])) t_hr[0] = '0';
-			if (!isdigit(t_hr[1])) t_hr[1] = '0';
-			if (!isdigit(t_min[0])) t_min[0] = '0';
-			if (!isdigit(t_min[1])) t_min[1] = '0';
-			if (!isdigit(t_sec[0])) t_sec[0] = '0';
-			if (!isdigit(t_sec[1])) t_sec[1] = '0';
+			if (!isdigit((int)t_hr[0])) t_hr[0] = '0';
+			if (!isdigit((int)t_hr[1])) t_hr[1] = '0';
+			if (!isdigit((int)t_min[0])) t_min[0] = '0';
+			if (!isdigit((int)t_min[1])) t_min[1] = '0';
+			if (!isdigit((int)t_sec[0])) t_sec[0] = '0';
+			if (!isdigit((int)t_sec[1])) t_sec[1] = '0';
 		}
 
 		if(TRUE == valid)
@@ -2582,11 +2643,11 @@ static int wsh_uc_submit(void)								/* Set the usage constants.		*/
 		def_proc_cpu[4] = t_sec[0];
 		def_proc_cpu[5] = t_sec[1];
 
-		set_defs(DEFAULTS_JS,mode);
-		set_defs(DEFAULTS_JC,class);
-		set_defs(DEFAULTS_JL,def_proc_cpu);
+		WL_set_defs(DEFAULTS_JS,mode);
+		WL_set_defs(DEFAULTS_JC,job_class);
+		WL_set_defs(DEFAULTS_JL,def_proc_cpu);
 
-		save_defaults();							/* Write out the personality info.	*/
+		WL_save_defaults();							/* Write out the personality info.	*/
 	}
 
 	wsb_delete(hWsb);
@@ -2594,7 +2655,7 @@ static int wsh_uc_submit(void)								/* Set the usage constants.		*/
 	return rc;
 }
 
-int wsh_progprnt(int scrn_seq_no)							/* The screen seq. no.  Starts at 1.	*/
+static int wsh_progprnt(int scrn_seq_no)						/* The screen seq. no.  Starts at 1.	*/
 {                                                                                                                                 
               
 	int wcurwidth;									/* Current Wang screen width.		*/
@@ -2607,40 +2668,40 @@ int wsh_progprnt(int scrn_seq_no)							/* The screen seq. no.  Starts at 1.	*/
 	struct save_screen *vscrn_struct_ptr;						/* Local pointer to a copy of the stack	*/
 	int i,x, work_area_1_size, work_area_2_size;					/* Working variables.			*/
 
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		return 0;
 	}
 
 	wcurwidth = vwang_wcurwidth();
 	work_area_1_size = (MAX_COLUMNS_PER_LINE * MAX_LINES_PER_SCREEN);		/* Compute the size of the char map.	*/
-	work_area_1 = malloc(work_area_1_size);						/* Allocate space required.		*/
+	work_area_1 = wisp_malloc(work_area_1_size);						/* Allocate space required.		*/
 
 	if (!work_area_1)								/* Space allocated ?			*/
         {
-		werr_message_box("Error, wsh_progprnt() unable to obtain required memory.");
+		WL_werr_message_box("Error, wsh_progprnt() unable to obtain required memory.");
 		return(0);								/* Scoot along down the line.		*/
 	}
                                                             
 	work_area_2_size = (wcurwidth + BORDERED_COLUMN_TOTAL) * (MAX_LINES_PER_SCREEN + BORDERED_LINE_TOTAL);
-	work_area_2 = malloc(work_area_2_size);						/* Allocate required space.		*/
+	work_area_2 = wisp_malloc(work_area_2_size);						/* Allocate required space.		*/
 
 	if (!work_area_2)								/* Space allocated ?			*/
 	{
-		werr_message_box("Error, wsh_progprnt() unable to obtain required memory.");
+		WL_werr_message_box("Error, wsh_progprnt() unable to obtain required memory.");
 		return(0);								/* Scoot along down the line.		*/
 	}
 
 	if (scrn_seq_no == 0)								/* Get the current screen ?		*/
 	{
-		l_vchr_map = (char *)vchr_map;						/* Yup.  Point directly to it.		*/
-		l_vmap_top = vmap_top;
+		l_vchr_map = (char *)VL_vchr_map;						/* Yup.  Point directly to it.		*/
+		l_vmap_top = VL_vmap_top;
 	}
 	else
 	{			    							/* Nope.  Strip apart the stack.	*/
-		if (vscrn_stack)							/* Is there anything on the stack ?	*/
+		if (VL_vscrn_stack)							/* Is there anything on the stack ?	*/
 		{
-			vscrn_struct_ptr = vscrn_stack;					/* Point to the top of the stack.	*/
+			vscrn_struct_ptr = VL_vscrn_stack;					/* Point to the top of the stack.	*/
 			scrn_seq_no--;							/* One less screen to pop off.		*/
 			for (x = scrn_seq_no; x; x--)					/* Strip the stack.			*/
 			{
@@ -2650,7 +2711,7 @@ int wsh_progprnt(int scrn_seq_no)							/* The screen seq. no.  Starts at 1.	*/
 				}
 				else
 				{							/* Somethin's wrong.			*/
-		 			werr_message_box("Error, wsh_progprnt(). Sequence count, stack element mismatch.");
+		 			WL_werr_message_box("Error, wsh_progprnt(). Sequence count, stack element mismatch.");
 					return(0);					/* Long gone daddy.			*/
 				}
 			}
@@ -2659,7 +2720,7 @@ int wsh_progprnt(int scrn_seq_no)							/* The screen seq. no.  Starts at 1.	*/
 		}
 		else
 		{
-			werr_message_box("ERROR, wsh_progprnt(). No program screen to print.");
+			WL_werr_message_box("ERROR, wsh_progprnt(). No program screen to print.");
 			return(0);
 		}
         }
@@ -2667,25 +2728,25 @@ int wsh_progprnt(int scrn_seq_no)							/* The screen seq. no.  Starts at 1.	*/
 /*	memcpy(work_area_1, l_vchr_map, work_area_1_size);	*/			/* Make a local copy of the map.	*/
 	/*
 	**	The character map (vchr_map) may be scrolled by video so we can't just copy it to the work area.
-	**	Using the vmap_top and vmlx() we calc where each row begins and load work area one line at a time.
+	**	Using the vmap_top and VL_vmlx() we calc where each row begins and load work area one line at a time.
 	*/
 	ptr = work_area_1;
 	for(i=0; i<MAX_LINES_PER_SCREEN; i++)
 	{
-		memcpy(ptr,&l_vchr_map[vmlx(l_vmap_top,i)*MAX_COLUMNS_PER_LINE],MAX_COLUMNS_PER_LINE);
+		memcpy(ptr,&l_vchr_map[VL_vmlx(l_vmap_top,i)*MAX_COLUMNS_PER_LINE],MAX_COLUMNS_PER_LINE);
 		ptr += MAX_COLUMNS_PER_LINE;
 	}
 
-	strip_facs(work_area_1, work_area_1_size,VIDEO_TYPE);		               /* Remove non-printing characters.	*/
-	border_screen(work_area_2,  work_area_1, wcurwidth, MAX_COLUMNS_PER_LINE, MAX_LINES_PER_SCREEN);			
+	WL_strip_facs(work_area_1, work_area_1_size,VIDEO_TYPE);		               /* Remove non-printing characters.	*/
+	WL_border_screen(work_area_2,  work_area_1, wcurwidth, MAX_COLUMNS_PER_LINE, MAX_LINES_PER_SCREEN);			
 
-	sprintf(filelibvol,"##%3.3s                 ",wanguid3());
+	sprintf(filelibvol,"##%3.3s                 ",WL_wanguid3());
 
 	retcd = 0;
-	retcd = di_write_file(work_area_2, work_area_2_size, (wcurwidth + BORDERED_COLUMN_TOTAL), filelibvol, filelibvol);
+	retcd = WL_di_write_file(work_area_2, work_area_2_size, (wcurwidth + BORDERED_COLUMN_TOTAL), filelibvol, filelibvol);
 	if (retcd)									/* Some error when trying to print	*/
 	{										/* the current screen.			*/
-		werrlog(ERRORCODE(2),retcd,0,0,0,0,0,0,0);
+		WL_werrlog(WERRCODE(86002),retcd,0,0,0,0,0,0,0);
 	}
 	return(0);
 }
@@ -2724,9 +2785,9 @@ static void wsh_usewrite(void)
 			wsb_get_field(hWsb, 8, 3, dst, sizeof(dst)-1);
 			dst[sizeof(dst)-1] = '\0';
 			leftjust(dst,sizeof(dst)-1);				/* left justify & null terminate the 	*/
-			if (ptr = strchr(dst,' ')) *ptr=0;			/* personality file name.		*/
-			load_defaults();					/* Be sure they exist.			*/
-			write_defaults_to_file(dst);				/* Store the file.			*/
+			if ((ptr = strchr(dst,' '))) *ptr=0;			/* personality file name.		*/
+			WL_load_defaults();					/* Be sure they exist.			*/
+			WL_write_defaults_to_file(dst);				/* Store the file.			*/
 
 			/* Fall thru to return */
 		case 1:
@@ -2745,7 +2806,7 @@ static void wsh_usewrite(void)
 	}
 }
 
-int wsc_init(char *screen, int row, int col)						/* Initialize screen image for vwang().	*/
+int WL_wsc_init(unsigned char *screen, int row, int col)						/* Initialize screen image for vwang().	*/
 {
 	memset(screen,' ',WSB_LENGTH);							/* Blank the screen.			*/
 	screen[OA_ROW] = 1;								/* Set the order area, row # 1.		*/
@@ -2755,11 +2816,11 @@ int wsc_init(char *screen, int row, int col)						/* Initialize screen image for
 	return(SUCCESS);
 }
 
-int wput(char *screen, int row, int col, int fac, char *text)				/* Put text and fields into screen map.	*/
+int WL_put_screen_text(unsigned char *screen, int row, int col, unsigned int fac, char *text)		/* Put text and fields into screen map.	*/
 {
 	register int i,j;								/* Working storage.			*/
 
-	if ((col-2) < 0) werr_message_box("wsh_dispatch - Invalid field position, FAC off left hand side of screen.");
+	if ((col-2) < 0) WL_werr_message_box("wsh_dispatch - Invalid field position, FAC off left hand side of screen.");
 	i = ((row-1) * WSB_COLS) + (col-1) + OA_LENGTH;					/* Location in screen map.		*/
 	j = strlen(text);								/* Determine length of string.		*/
 	screen[i-1] = fac;								/* Lay in the fac.			*/
@@ -2768,7 +2829,7 @@ int wput(char *screen, int row, int col, int fac, char *text)				/* Put text and
 	return(SUCCESS);								/* And we're all done.			*/
 }                                              
 
-int wpcen(char *screen, int row, int fac, char *text)					/* Put text and fields into screen map.	*/
+int WL_put_screen_text_centered(unsigned char *screen, int row, unsigned int fac, char *text)		/* Put text and fields into screen map.	*/
 {											/* Centered.				*/
 	register int i,j;								/* Working storage.			*/
 
@@ -2780,7 +2841,7 @@ int wpcen(char *screen, int row, int fac, char *text)					/* Put text and fields
 	return(SUCCESS);								/* And we're all done.			*/
 }
 
-int wget(char *screen, int row, int col, char *text)					/* Retreive text from screen.		*/
+int WL_get_screen_text(unsigned char *screen, int row, int col, char *text)			/* Retreive text from screen.		*/
 {
 	register int i,j;								/* Working storage.			*/
 
@@ -2800,7 +2861,7 @@ static const char* sysadmin_cmd(void)
 	{
 		first = 0;
 
-		rc = getenv("WISPSYSADMIN");
+		rc = WL_get_wisp_option_env("WISPSYSADMIN");
 		if (!rc || '\0' == *rc || ' ' == *rc)
 		{
 			rc = NULL;
@@ -2821,13 +2882,13 @@ static void wsh_sysadmin(void)
 {
 	const char *cmd;
 
-	if (cmd = sysadmin_cmd())
+	if ((cmd = sysadmin_cmd()))
 	{
-		wsystem_interactive(cmd);
+		WL_wsystem_interactive(cmd);
 	}
 	else
 	{
-		werr_message_box("Sorry, this feature is not available.");
+		WL_werr_message_box("Sorry, this feature is not available.");
 	}
 }
 
@@ -2848,8 +2909,8 @@ static void wsh_run_program(char *program)						/* Run a program.			*/
 
 	if (!prog_given)
 	{
-		get_defs(DEFAULTS_PV,volname);	/* NOTE: If PV/PL is not set then RV/RL	are returned */
-		get_defs(DEFAULTS_PL,libname);
+		WL_get_defs(DEFAULTS_RV,volname);	
+		WL_get_defs(DEFAULTS_RL,libname);
 	}
 
 	currow = 0;
@@ -2905,7 +2966,7 @@ again:
 
 	if (0 == pfkey)								/* Run program or return.		*/
 	{
-		int4 templong, compcode, returncode;
+		int4 compcode, returncode;
 
 		wsb_get_field(hWsb,  8, 67, progname, SIZEOF_FILE);
 		wsb_get_field(hWsb, 14, 67, libname, SIZEOF_LIB);
@@ -2938,33 +2999,39 @@ again:
 
 		compcode = 0;								/* Initialize the comp & return codes	*/
 		returncode = 0;
-		templong = 6;
-		wvaset(&templong);							/* Set the arg count to 6		*/
 
-		if (g_prog_running) newlevel();						/* Extra link-level			*/
+		if (g_prog_running) WL_newlevel();					/* Extra link-level			*/
 
-		LINK2(progname,(int4)8,linktype,(int4)1,libname,(int4)8,volname,(int4)6,
-		      &compcode,(int4)4,&returncode,(int4)4);				/* Do the LINK				*/
+		WL_set_va_count(6);							/* Set the arg count to 6		*/
+		LINK2(	progname,(int4)8,
+			linktype,(int4)1,
+			libname,(int4)8,
+			volname,(int4)6,
+			&compcode,(int4)4,
+			&returncode,(int4)4);						/* Do the LINK				*/
 
-		wswap(&compcode);							/* Un-swap the comp & return codes	*/
-		wswap(&returncode);
+		WL_wswap(&compcode);							/* Un-swap the comp & return codes	*/
+		WL_wswap(&returncode);
 
 		if ( 8 == compcode && 20 == returncode )				/* If not found ...			*/
 		{
 			linktype[0] = 'S';						/* Try SYSTEM link			*/
 			compcode = 0;							/* Initialize the comp & return codes	*/
 			returncode = 0;
-			templong = 6;
-			wvaset(&templong);						/* Set the arg count to 6		*/
 
-			LINK2(progname,(int4)8,linktype,(int4)1,libname,(int4)8,
-			      volname,(int4)6,&compcode,(int4)4,&returncode,(int4)4);	/* Do the LINK				*/
+			WL_set_va_count(6);						/* Set the arg count to 6		*/
+			LINK2(	progname,(int4)8,
+				linktype,(int4)1,
+				libname,(int4)8,
+				volname,(int4)6,
+				&compcode,(int4)4,
+				&returncode,(int4)4);					/* Do the LINK				*/
 
-			wswap(&compcode);						/* Un-swap the comp & return codes	*/
-			wswap(&returncode);
+			WL_wswap(&compcode);						/* Un-swap the comp & return codes	*/
+			WL_wswap(&returncode);
 		}
 
-		setlevel(g_savelevel);							/* Restore the link-level		*/
+		WL_setlevel(g_savelevel);						/* Restore the link-level		*/
 
 		switch(compcode)
 		{
@@ -3025,7 +3092,7 @@ static void wsh_submit(void)
 	int	pfkey, currow, curcol;
 	char	errmess[80];
 	char	*errptr;
-	char 	mode[2], class[2];
+	char 	mode[2], job_class[2];
 	int 	looping;
 	char	l_file[9], l_lib[9], l_vol[7];
 	char	jobname[9];
@@ -3033,16 +3100,16 @@ static void wsh_submit(void)
 	strcpy(l_file,"        ");
 	strcpy(l_lib, "        ");
 	strcpy(l_vol, "      ");
-	get_defs(DEFAULTS_RL,l_lib);
-	get_defs(DEFAULTS_RV,l_vol);
+	WL_get_defs(DEFAULTS_RL,l_lib);
+	WL_get_defs(DEFAULTS_RV,l_vol);
 
 	strcpy(jobname,"        ");
-	memcpy(jobname,wanguid3(),3);
+	memcpy(jobname,WL_wanguid3(),3);
 
-	get_defs(DEFAULTS_JS,mode);							/* Get the proc status mode data.	*/
-	get_defs(DEFAULTS_JC,class);							/* Get the proc class data.		*/
+	WL_get_defs(DEFAULTS_JS,mode);							/* Get the proc status mode data.	*/
+	WL_get_defs(DEFAULTS_JC,job_class);						/* Get the proc class data.		*/
 	mode[1] = 0;
-	class[1] = 0;
+	job_class[1] = 0;
 	
 	currow = 0;
 	curcol = 0;
@@ -3063,7 +3130,7 @@ static void wsh_submit(void)
 	wsb_add_text(hWsb,12, 2,"                               STATUS   = x                  (R-Run / H-Hold)");
 
 	wsb_add_field(hWsb,10,44,FAC_DEFAULT_FIELD,jobname,8);
-	wsb_add_field(hWsb,11,44,FAC_DEFAULT_FIELD,class,1);
+	wsb_add_field(hWsb,11,44,FAC_DEFAULT_FIELD,job_class,1);
 	wsb_add_field(hWsb,12,44,FAC_DEFAULT_FIELD,mode,1);
 
 	wsb_add_text(hWsb,24,0,"Or Press (HELP) to Return to the Command Processor.");
@@ -3092,7 +3159,7 @@ static void wsh_submit(void)
 		wsb_get_field(hWsb, 7,44,l_lib,  SIZEOF_LIB);
 		wsb_get_field(hWsb, 7,68,l_vol,  SIZEOF_VOL);
 		wsb_get_field(hWsb,10,44,jobname,8);
-		wsb_get_field(hWsb,11,44,class,1);
+		wsb_get_field(hWsb,11,44,job_class,1);
 		wsb_get_field(hWsb,12,44,mode,1);
 
 		/* Blank out any previous error messages */
@@ -3110,14 +3177,11 @@ static void wsh_submit(void)
 		else
 		{
 			int4	retcode;
-			int4	argcnt;
 			
-			argcnt = 8;
-			wvaset(&argcnt);
+			WL_set_va_count(8);
+			SUBMIT(l_file, l_lib, l_vol, jobname, mode, "D", job_class, &retcode);
 
-			SUBMIT(l_file, l_lib, l_vol, jobname, mode, "D", class, &retcode);
-
-			wswap(&retcode);
+			WL_wswap(&retcode);
 
 			if (0 == retcode)
 			{
@@ -3125,7 +3189,7 @@ static void wsh_submit(void)
 			}
 			else
 			{
-				sprintf(errmess,"RC = %ld %s", (long)retcode, submit_err(retcode));
+				sprintf(errmess,"RC = %ld %s", (long)retcode, WL_submit_err(retcode));
 
 				/* If still looping then Write out error message */
 				errptr="SUBMIT FAILED -";
@@ -3150,7 +3214,7 @@ static void wsh_utils(void) 								/* Select utilities.			*/
 	char	pflist[40];
 	uint4 	dflags;
 
-	get_defs(DEFAULTS_FLAGS,&dflags);
+	WL_get_defs(DEFAULTS_FLAGS,&dflags);
 
 	currow = 0;
 	curcol = 0;
@@ -3272,13 +3336,13 @@ static void wsh_extras(void)
 	uint4 	dflags;
 	int	row,col;
 
-	get_defs(DEFAULTS_FLAGS,&dflags);
+	WL_get_defs(DEFAULTS_FLAGS,&dflags);
 
 	/*
 	**	Print screen and setting terminal attributes is not supported
 	**	with native screens.
 	*/
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		dflags &= ~(HELP_PRINT_SCREEN | HELP_TERMINAL);
 	}
@@ -3487,7 +3551,7 @@ static void wsb_build_non_wang_base(HWSB hWsb)
 	wsb_add_text(hWsb, 1, 0, "***  WISP HELP Processor  ***");
 	wsb_add_text(hWsb, 2, 0, "NeoMedia Technologies Inc.");
 
-	sprintf(temp,"Username:  %s", longuid());
+	sprintf(temp,"Username:  %s", WL_longuid());
 	wsb_add_text(hWsb, 5, 3, temp);
 
 	temp[0] = '\0';
@@ -3502,13 +3566,13 @@ static void wsb_build_non_wang_base(HWSB hWsb)
 	}
 #endif
 #ifdef WIN32
-	if (0==strcmp(computername(NULL),"Windows"))
+	if (0==strcmp(WL_computername(NULL),"Windows"))
 	{
 		strcpy(temp, "Welcome to Windows");
 	}
 	else
 	{
-		sprintf(temp, "Welcome to Windows - %s", computername(NULL));
+		sprintf(temp, "Welcome to Windows - %s", WL_computername(NULL));
 	}
 #endif
 	if (!temp[0])
@@ -3525,22 +3589,22 @@ static void wsb_build_non_wang_base(HWSB hWsb)
 
 	if (g_prog_running)							/* Is a program running?		*/
 	{
-		if (wisp_progname[0] && wisp_progname[0] != ' ')		/* We know the program name		*/
+		if (*(wisp_get_progname()))					/* We know the program name		*/
 		{
-			sprintf(temp, "Program:   %s",wisp_progname);
+			sprintf(temp, "Program:   %s",wisp_get_progname());
 			wsb_add_text(hWsb, 7, 3, temp);
 
-			if (wisp_screen[0] && wisp_screen[0] != ' ')		/* We also know the screen name		*/
+			if (*(wisp_get_screenname()))				/* We also know the screen name		*/
 			{
-				sprintf(temp, "Screen:    %s",wisp_screen);
+				sprintf(temp, "Screen:    %s",wisp_get_screenname());
 				wsb_add_text(hWsb, 8, 3, temp);
 			}
 		}
 		else
 		{
-			if (WISPRUNNAME[0] != ' ')
+			if (wisp_get_runname()[0] != ' ')
 			{
-				sprintf(temp, "Program:   %8.8s",WISPRUNNAME);
+				sprintf(temp, "Program:   %8.8s",wisp_get_runname());
 				wsb_add_text(hWsb, 7, 3, temp);
 			}
 		}
@@ -3670,18 +3734,18 @@ static char *formated_time(char *time_string)
 
 static int is_help_active = 0;
 
-int ishelpactive(void)
+int WL_ishelpactive(void)
 {
 	return is_help_active;
 }
 
-int sethelpactive(int flag)
+int WL_sethelpactive(int flag)
 {
 	return(is_help_active = flag);
 }
 
 /*
-**	ROUTINE:	wsystem_interactive()
+**	ROUTINE:	WL_wsystem_interactive()
 **
 **	FUNCTION:	Issue an interactive "system()" and handle screen setup.
 **
@@ -3698,24 +3762,24 @@ int sethelpactive(int flag)
 **	WARNINGS:	This is only meant to be called from HELP screen.
 **
 */
-int wsystem_interactive(const char *cmd)
+int WL_wsystem_interactive(const char *cmd)
 {
 	int	rc;
 	int	old_stderr = -1;
 
 #ifdef WIN32
-	if (utils_in_windows())
+	if (WL_utils_in_windows())
 	{
-		extern int wsystem_standalone(const char* cmd);
+		extern int WL_wsystem_standalone(const char* cmd);
 		
-		return wsystem_standalone(cmd);
+		return WL_wsystem_standalone(cmd);
 	}
 #endif
 
-	if (g_prog_running) newlevel();							/* Extra link-level			*/
-	newlevel();
+	if (g_prog_running) WL_newlevel();	/* Extra link-level			*/
+	WL_newlevel();
 	
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
 		HWSB hWsb;
 		int	pfkey ;
@@ -3729,11 +3793,11 @@ int wsystem_interactive(const char *cmd)
 		wsb_display_and_read(hWsb, NULL, &pfkey, &currow, &curcol);
 		wsb_delete(hWsb);
 		
-		shutdown_cobol_screen_handler();
+		WL_shutdown_cobol_screen_handler();
 	}
 	else
 	{
-		wpushscr();
+		vwang_wpushscr();
 		
 		vwang_shut();
 
@@ -3760,7 +3824,7 @@ int wsystem_interactive(const char *cmd)
 	}
 #endif
 
-	rc = wsystem(cmd);
+	rc = WL_wsystem(cmd);
 	
 #ifdef unix
 	if (-1 != old_stderr)
@@ -3769,9 +3833,9 @@ int wsystem_interactive(const char *cmd)
 	}
 #endif
 
-	if (nativescreens())
+	if (wisp_nativescreens())
 	{
-		start_cobol_screen_handler();
+		WL_start_cobol_screen_handler();
 	}
 	else
 	{
@@ -3779,12 +3843,12 @@ int wsystem_interactive(const char *cmd)
 		vwang_set_reinitialize(TRUE);
 
 		vwang_init_term();
-		wpopscr();
+		vwang_wpopscr();
 	}
 
-	oldlevel();
-	ppunlink(linklevel());
-	if (g_prog_running) oldlevel();							/* Restore the extra link-level		*/
+	WL_oldlevel();
+	WL_ppunlink(WL_linklevel());
+	if (g_prog_running) WL_oldlevel();	/* Restore the extra link-level		*/
 
 	return rc;
 }
@@ -3793,20 +3857,142 @@ int wsystem_interactive(const char *cmd)
 /*
 **	History:
 **	$Log: wshelp.c,v $
-**	Revision 1.79.2.5  2003/02/07 18:40:22  gsl
+**	Revision 1.122  2003/07/08 20:55:23  gsl
+**	WISP 5000
+**	
+**	Revision 1.121  2003/07/01 19:29:54  gsl
+**	For (1) RUN use RUNLIB/RUNVOL instead of PROGLIB/PROGVOL as PL/PV is
+**	meaningless for the command processor
+**	
+**	Revision 1.120  2003/06/20 15:48:03  gsl
+**	VL_ globals
+**	
+**	Revision 1.119  2003/06/20 15:37:45  gsl
+**	VL_ globals
+**	
+**	Revision 1.118  2003/06/13 17:35:31  gsl
+**	#define WISP_WEBSITE
+**	
+**	Revision 1.117  2003/04/02 15:01:05  gsl
+**	WISPPS1 option
+**	
+**	Revision 1.116  2003/04/01 22:17:24  gsl
+**	Add support for option WISPPS1 for setting PS1 on a shell out
+**	
+**	Revision 1.115  2003/03/28 20:15:57  gsl
+**	Add EXTRACT2
+**	
+**	Revision 1.114  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.113  2003/02/07 17:55:21  gsl
 **	Rework the platform routines and add AIX HPUX SOLARIS 64-bit
 **	
-**	Revision 1.79.2.4  2002/11/12 16:00:27  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.112  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
 **	
-**	Revision 1.79.2.3  2002/11/08 18:19:32  gsl
+**	Revision 1.111  2003/02/04 18:29:12  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.110  2003/02/04 16:30:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.109  2003/01/31 19:08:36  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.108  2003/01/20 17:01:08  gsl
+**	rename varibables "class"
+**	
+**	Revision 1.107  2002/12/10 20:54:06  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.106  2002/12/10 17:09:12  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.105  2002/12/09 21:09:34  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.104  2002/12/04 20:52:15  gsl
+**	Add to OPTIONS file
+**	WPROC
+**	WPROCDEBUG
+**	ACPCONFIG
+**	ACPMAP
+**	WISP_SCRATCH_MODE/WISPSCRATCHMODE
+**	WISP_DISPLAY_8BIT/DISPLAY8BIT/WISPDISPLAY8BIT
+**	WISPSYSADMIN
+**	
+**	Revision 1.103  2002/11/08 18:19:50  gsl
 **	Enlarge temp vars to prevent overflow
 **	
-**	Revision 1.79.2.2  2002/11/06 21:25:32  gsl
+**	Revision 1.102  2002/11/06 20:41:42  gsl
 **	Change address to Suite 402
 **	
-**	Revision 1.79.2.1  2002/09/06 16:18:33  gsl
-**	Fix phone numbers
+**	Revision 1.101  2002/10/18 17:32:54  gsl
+**	Identify if in a  COBOL runtime
+**	
+**	Revision 1.100  2002/10/16 20:34:52  gsl
+**	configure with environments variables vs registry on win32
+**	
+**	Revision 1.99  2002/08/01 14:45:09  gsl
+**	type warnings
+**	
+**	Revision 1.98  2002/07/30 19:12:39  gsl
+**	SETRETCODE
+**	
+**	Revision 1.97  2002/07/29 21:13:25  gsl
+**	setretcode -> SETRETCODE
+**	
+**	Revision 1.96  2002/07/24 18:27:47  gsl
+**	globals
+**	
+**	Revision 1.95  2002/07/16 16:24:50  gsl
+**	Globals
+**	
+**	Revision 1.94  2002/07/15 20:16:03  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.93  2002/07/15 17:52:52  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.92  2002/07/12 20:40:42  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.91  2002/07/12 19:10:21  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.90  2002/07/12 17:01:05  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.89  2002/07/11 20:29:19  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.88  2002/07/11 15:21:44  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.87  2002/07/10 21:05:37  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.86  2002/07/10 04:27:32  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.85  2002/07/09 04:13:51  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.84  2002/07/02 21:15:38  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.83  2002/07/01 04:02:44  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.82  2002/06/26 20:52:15  gsl
+**	Fix phone number
+**	
+**	Revision 1.81  2002/06/25 15:21:55  gsl
+**	Change to use wmalloc()
+**	
+**	Revision 1.80  2002/06/21 20:49:31  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
 **	
 **	Revision 1.79  2002/03/28 14:42:06  gsl
 **	Use define for cpoyright year
@@ -3840,7 +4026,7 @@ int wsystem_interactive(const char *cmd)
 **	This is needed because acucobol +e option redirects stderr to a file
 **	and when you spawn a shell the shell checks if stderr is a tty and if
 **	not it doesn't display the prompts.
-**	So, it doing an interactive wsystem() we attempt to make stderr a tty.
+**	So, it doing an interactive WL_wsystem() we attempt to make stderr a tty.
 **
 **	Revision 1.70  1998-10-22 17:16:35-04  gsl
 **	Clean up the print and batch queue manager program logic
@@ -3852,7 +4038,7 @@ int wsystem_interactive(const char *cmd)
 **	initialize the no_mod arg to vwang()
 **
 **	Revision 1.67  1998-05-05 13:20:45-04  gsl
-**	Add utils_in_windows() support for WIN32
+**	Add WL_utils_in_windows() support for WIN32
 **
 **	Revision 1.66  1998-04-22 15:51:53-04  gsl
 **	fix warndings
@@ -3909,13 +4095,13 @@ int wsystem_interactive(const char *cmd)
 **	the external DISPLAY option.
 **
 **	Revision 1.51  1997-09-30 14:09:31-04  gsl
-**	Add support for pfkeys12()
+**	Add support for WL_pfkeys12()
 **
 **	Revision 1.50  1997-08-23 12:45:13-04  gsl
 **	Add (8) Display Error Log  to the Command Processor
 **
 **	Revision 1.49  1997-08-21 15:15:02-04  gsl
-**	Changed to use submit_err() to get the error message from SUBMIT
+**	Changed to use WL_submit_err() to get the error message from SUBMIT
 **
 **	Revision 1.48  1997-08-18 16:57:49-04  gsl
 **	Add (12) SUBMIT procedure to the Command Processor
@@ -3952,7 +4138,6 @@ int wsystem_interactive(const char *cmd)
 **	Change Address
 **
 **	Revision 1.37  1996-12-12 12:47:44-05  gsl
-**	Changed Devtech to NeoMedia
 **
 **	Revision 1.36  1996-11-25 13:18:36-08  gsl
 **	Added PF15 - PRINT SCREEN to all the help screens

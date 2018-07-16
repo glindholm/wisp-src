@@ -1,4 +1,5 @@
-Copyright (c) 1999 by NeoMedia Technologies Inc. All Rights Reserved.
+Copyright (c) 1999-2003 by NeoMedia Technologies Inc. 
+All Rights Reserved.
 
 ====================================================================
 
@@ -7,7 +8,7 @@ Title:          WISP NT Telnet Support
 Document:       nttelnet.txt
 Last Updated:   $Date:$
 Products:       WISP for WIN32
-Versions:       4.3.06
+Versions:       5.0.00
 
 Summary:        Usage and configuration for running WISP migrated
 		applications on a Windows NT server within a telnet
@@ -48,7 +49,9 @@ Windows NT server does not currently come with telnet services. To
 allow your NT server to support telnet connections you must use third
 party software that provides telnet services.  We recommend you use
 the ATRLS package by Ataman Software, Inc.  This is the package we
-used for testing.
+used for testing.  (NOTE: The Windows Telnet server that comes with
+Windows 2000 is not compatible, it is not a true telnet server and
+only support windows clients running MSDOS applications.)
 
 The WISP NT telnet support was designed so that it can be used in
 conjunction with Co*STAR for WISP to add a GUI frontend to the telnet
@@ -68,7 +71,7 @@ Requirements
 The following software is required to use the WISP NT telnet support. 
 
 - WISP for WIN32 version 4.3.04 or later.
-- Acucobol-GT version 4.1 or 4.2. 
+- Acucobol-GT version 5.2.1 (Earlier supported versions: 4.1 or 4.2). 
   (Note: Acucobol-GT 4.3 is not supported as it does not support
   building a console runtime.)
 - A Microsoft Windows NT server (Intel) version 4.0 or later.
@@ -76,8 +79,7 @@ The following software is required to use the WISP NT telnet support.
 	Windows NT server it can not be a Windows 95 or 98 machine.
 - A telnet services software package for Windows NT that is compatible
   with ATRLS version 2.5 by Ataman Software, Inc. 
-- A standard telnet client program (this comes with Windows 95/98/NT
-  and UNIX).
+- A standard telnet client program.
 
 - Co*STAR for WISP is optional but recommended for GUI and mouse
   support.   Note that Co*STAR is a telnet client.
@@ -105,6 +107,9 @@ applications in a telnet session.
   must build a console version of the runtime.  Acucobol refers to
   this as the "Alternate Terminal Manager" version.  See configuration
   step 2 below for instructions.
+
+  NOTE: Not all versions of Acucobol support Alternate Terminal 
+  Manager, see the list of supported versions above.
 
 - Support for Native Acucobol Screen IO is undetermined.
 
@@ -187,19 +192,26 @@ migrated applications from within a telnet session.
 
 Step 1) Install WISP.
 
-  Perform a normal installation of WISP version 4.3.04 or later.
+  Perform a normal installation of WISP.
   Follow all the installation and configuration steps except for
   building the Acucobol runtime system as you will be building a
   console version of the runtime system in step 2.
 
 
-Step 2) Build a console version of the Acucobol runtime system.
+Step 2) Build a console (Alternate Terminal Manager) version of 
+  the Acucobol runtime system.
 
-  To build the console version of the Acucobol runtime system you use
-  the same makefile (wwruncbl.mak) with a target of "rtst".  The
-  default name of the console runtime is "run32w.exe".
+  To build the ATM version of the Acucobol runtime system for
+  Acucobol-GT 5.2.1 first install Acucobol-GT 5.2.1 Alternate 
+  Terminal Manager then follow the instructions in the makefile
+  $WISPDIR/acu/run32wisp_acu52.mak.
 
-    C:\wisp4304\acu> nmake /f wwruncbl.mak rtst
+  To build the ATM version of the Acucobol runtime system for
+  Acucobol-GT 4.1 or 4.2 use makefile wwruncbl.mak with a target 
+  of "rtst".  The default name of the console runtime 
+  is "run32w.exe".
+
+    C:\WISPxxxx\acu> nmake /f wwruncbl.mak rtst
 
   The runtime can them be moved or renamed as needed.
 
@@ -419,36 +431,9 @@ variables must not be set when running outside of telnet.
 There are other telnet services available but we recommend ATRLS and
 we will only support services that are compatible with ATRLS.
 
+NOTE: The Windows Telnet server that comes with Windows 2000 is not 
+compatible, it is not a true telnet server and only support windows 
+clients running MSDOS applications.
 
-Printing On A Mixed NT and 95/98 Network
-========================================
-
-There are certain printing considerations when you are running WISP
-migrated applications on a network that contains both Windows 95/98
-and Windows NT machines.  This does not only apply to telnet but is
-included here because with telnet you are running on NT.
-
-This discussion applies only if you are using the default WISP
-printing mechanism.  It does not apply if using the UniQue print queue
-or another third party print queue.
-
-The considerations arise because all applications share the same LPMAP
-and PRMAP configuration files but the way Windows NT and Windows 95/98
-identify printers are incompatible.  Windows NT identifies a printer
-by a network location (e.g. "\\MYSERVER\HP4SI") and Windows 95/98 uses
-a local driver name (e.g. "HP LaserJet 4Si").
-
-LPMAP Example:
-
-  A \\MYSERVER\HP4SI
-  B HP LaserJet 4Si
-
-With this example, programs running on a NT machine must use
-PRTCLASS=A and programs running on a 95/98 machine must use
-PRTCLASS=B. 
-
-You may need to change your usage constants to set the PRTCLASS or
-PRINTER number to the correct class based on what machine the
-applications are running on.
 
 ========================= END OF DOCUMENT ==========================

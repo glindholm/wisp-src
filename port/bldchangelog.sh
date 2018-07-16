@@ -1,6 +1,5 @@
 #!/bin/ksh
 #
-#	Copyright (c) 1995 DevTech Migrations, All rights reserved.
 #	$Id:$
 #
 #

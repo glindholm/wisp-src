@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1995-1996 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 /*
@@ -47,6 +67,9 @@ void wisp_assert(char *cond, char *file, int line);
 /*
 **	History:
 **	$Log: assert.h,v $
+**	Revision 1.4  2003/01/31 19:18:00  gsl
+**	Fix copyright header  and -Wall warnings
+**	
 **	Revision 1.3  1997/08/27 19:04:01  gsl
 **	If _DEBUG is defined then define DEBUG
 **	Windows uses _DEBUG instead of DEBUG

@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -23,6 +44,9 @@ static char rcsid[]="$Id:$";
 
 static int vscr_do(char *string);
 static int vscr_valid(int state);
+
+static int color_first = TRUE;	/* Force a color change on first vscreen call.	*/
+static int width_first = TRUE;	/* Force a width change on first vscreen call.	*/
 
 /*						Local definitions.								*/
 
@@ -108,7 +132,7 @@ int vscreen(int state)									/* Set screen to a given state.		*/
 		color_first = FALSE;							/* No longer the first color change.	*/
 	}
 
-	vscr_wid = (atr & VSCREEN_WIDE ? 132 : 80);					/* Select screen width flag.		*/
+	VL_vscr_wid = (atr & VSCREEN_WIDE ? 132 : 80);					/* Select screen width flag.		*/
 
 #ifdef DIRECTVID
 	if (vrawdirectio())
@@ -120,11 +144,11 @@ int vscreen(int state)									/* Set screen to a given state.		*/
 
 	if (strlen(string) > 0)
 	{
-		synch_required = TRUE;							/* Make sure screen is synchronized.	*/
-		vbuffering(VBUFF_START);						/* Group the output together.		*/
+		VL_synch_required = TRUE;							/* Make sure screen is synchronized.	*/
+		VL_vbuffering_start();						/* Group the output together.		*/
 		verase(FULL_SCREEN);							/* Erase the screen before the change.	*/
 
-		if ((!vscr_op) || (voptlevel() <= VOP_DATA_ONLY))			/* Should we optimize?			*/
+		if ((!VL_vscr_op) || (voptlevel() <= VOP_DATA_ONLY))			/* Should we optimize?			*/
 	        {
 			ret = vscr_do(string);						/* Do data string or other change.      */
 		}
@@ -142,7 +166,7 @@ int vscreen(int state)									/* Set screen to a given state.		*/
 					vdefer_save();					/* Must defer...			*/
 			}
 		}
-		vbuffering(VBUFF_END);							/* Now dump buffers as appropriate.	*/
+		VL_vbuffering_end();							/* Now dump buffers as appropriate.	*/
 	}
 
 	vscr_atr = atr;									/* Rember the current attributes.	*/
@@ -150,7 +174,7 @@ int vscreen(int state)									/* Set screen to a given state.		*/
 	return(ret);									/* And we're all done.			*/
 }
 
-int vscreen_check(int state)
+int VL_vscreen_check(int state)
 {
 	return (vscr_atr & state) ? 1 : 0;
 }
@@ -163,7 +187,7 @@ static int vscr_do(char *string)
 
 	vdefer_restore();								/* Yes, restore what we were doing.	*/
 	vcontrol(string);								/* Output the data.			*/
-	vscr_op = ON;									/* Now the one shot is on.		*/
+	VL_vscr_op = ON;									/* Now the one shot is on.		*/
 	return(SUCCESS);								/* Return successful condition.		*/
 }
 
@@ -180,6 +204,27 @@ static int vscr_valid(int state)
 /*
 **	History:
 **	$Log: vscreen.c,v $
+**	Revision 1.19  2003/06/20 15:04:28  gsl
+**	VL_ globals
+**	
+**	Revision 1.18  2003/01/31 19:25:55  gsl
+**	Fix copyright header
+**	
+**	Revision 1.17  2002/07/17 21:06:04  gsl
+**	VL_ globals
+**	
+**	Revision 1.16  2002/07/16 13:40:20  gsl
+**	VL_ globals
+**	
+**	Revision 1.15  2002/07/15 20:16:14  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.14  2002/07/15 17:10:06  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.13  2002/07/12 20:40:45  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.12  1997/07/09 16:14:49  gsl
 **	Add support for direct IO
 **	Change to use new video.h interfaces

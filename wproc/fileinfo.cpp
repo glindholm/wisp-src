@@ -1,5 +1,5 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) 1996-2003 NeoMedia Technologies Inc. All rights reserved.
 //
 //	Project:	WPROC
 //	Id:		$Id:$
@@ -331,10 +331,14 @@ char *find_valid_input_file(char *a_name) {
          // things getting run; however, it's the last place that the lib
          // and vol info is still known so...
          wang_filename name(a_name);
-         if (*(name.libname))
-            wang_os_set_alpha("PL", name.libname);
-         if (*(name.volname))
+         if (*(name.libname) != '\0' && *(name.libname) != ' ')
+	 {
+	    wang_os_set_alpha("PL", name.libname);
+	 }
+         if (*(name.volname) != '\0' && *(name.volname) != ' ')
+	 {
             wang_os_set_alpha("PV", name.volname);
+	 }
 
          // File kinds: 0 = Not found; 1 = procedure; 2 = not procedure
          if (file_kind == 1)
@@ -356,7 +360,7 @@ char *find_valid_input_file(char *a_name) {
       }
       else
          make_pathname(path, "", a_name);
-#elif MSFS
+#elif WIN32
       make_pathname(path, "", a_name);
 #else
       path = "";
@@ -423,6 +427,12 @@ char *find_valid_input_file(char *a_name) {
 //
 //	History:
 //	$Log: fileinfo.cpp,v $
+//	Revision 1.15  2003/06/11 19:08:46  gsl
+//	Fixed so only set PV/PL before a run if not blank
+//	
+//	Revision 1.14  2002/07/25 17:03:43  gsl
+//	MSFS->WIN32
+//	
 //	Revision 1.13  1998/08/31 19:50:33  gsl
 //	drcs update
 //	

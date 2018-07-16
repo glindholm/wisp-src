@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		link.c
 **
@@ -10,14 +29,12 @@ static char rcsid[]="$Id:$";
 **	Purpose:	To emulate the VSSUB routine LINK.
 **
 **	Routines:	
-**	LINK()		Generic LINK entry point
-**	LINKAIX()	AIX arg/length paired arguments
-**	LINKMF()	Micro Focus (unix) arg/length paired arguments
 **	LINK2()		Generic arg/length paired arguments
+**	LINKMF()	Micro Focus (unix) arg/length paired arguments
 **	do_link()	Actual LINK routine
 **	searchpath()	To search the path for a file to run/exec.
-**	findrun()	To find the file to run.
-**	firstproc()	To record the filepath of the first proc run.
+**	WL_findrun()	To find the file to run.
+**	WL_firstproc()	To record the filepath of the first proc run.
 **
 **	Warnings:	*** LINK must be reenterent for softlinks ***
 **			It will be called recursively so don't use any static variables.
@@ -31,12 +48,17 @@ static char rcsid[]="$Id:$";
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <varargs.h>									/* Function uses variable params.	*/
+#include <stdarg.h>									/* Function uses variable params.	*/
 #include <errno.h>
+#include <string.h>
 
 #include <ctype.h>
 #include <sys/types.h>
 #include <signal.h>
+
+#ifdef unix
+#include <unistd.h>
+#endif
 
 #ifdef WIN32
 #include <process.h>
@@ -44,9 +66,9 @@ static char rcsid[]="$Id:$";
 
 #include "idsistd.h"
 #include "link.h"
+#include "vssubs.h"
 #include "wglobals.h"
 #include "wdefines.h"
-#include "movebin.h"
 #include "wperson.h"
 #include "wfiles.h"
 #include "wcommon.h"
@@ -73,21 +95,12 @@ static char rcsid[]="$Id:$";
 #endif
 
 #include "werrlog.h"
-#define	ROUTINE		28000
 /*
-28001	%%LINK-I-ENTRY Entry into LINK
 28002	%%LINK-E-MAXDEPTH Maximum link depth reached %d
-28003	%%LINK-I-BADPARAM Progname %8.8s Invalid parameter TYPE %1.1s
 28004	%%LINK-E-EXECVE Exec to %.60s failed [errno=%d]
-28005	%%LINK-I-NOTFOUND System routine %8.8s Not Found
-28006	%%LINK-E-EXECVE Exec /bin/sh %.60s failed [errno=%d]
-28007	%%LINK-I-NOTFOUND File %.60s Not Found
 28008	%%LINK-F-MAXPARMS Maximum %d parms. Called with %d parms.
-28009	%%LINK-I-NOACCESS Access denied to %.60s
 28010	%%LINK-F-MKDIR Unable to mkdir %s [errno=%d]
-28011	%%LINK-I-NOTRUN Not a runnable file %.60s
 28012	%%LINK-F-FOPEN Unable to fopen %s [errno=%d] in %s
-28013	%%LINK-I-NOMEMORY Not enough memory to load %.60s
 28014   %%LINK-F-EXECVP Exec of %.60s failed while linking to %8.8s [errno=%d]
 28016	%%LINK-E-RECURSIVE Recursive LINK to file %.60s
 28018	%%LINK-E-FORK Fork failed [errno=%d]
@@ -113,8 +126,7 @@ static char rcsid[]="$Id:$";
 /*
 **	Globals and Externals
 */
-extern void call_acucobol(char* name, int parmcnt, char* parms[], int lens[], int* rc);
-extern void call_mfcobol(char* name, int parmcnt, char* parms[], int lens[], int* rc);
+extern void WL_call_mfcobol(char* name, int parmcnt, char* parms[], int lens[], int* rc);
 
 /*
 **	Static data
@@ -128,32 +140,38 @@ static struct
 	*/
 	char	progvol[SIZEOF_VOL];
 	char	proglib[SIZEOF_LIB];
-	fstruct	*temp_file_list;
-	pstruct	*print_file_list;
+	wisp_fstruct	*temp_file_list;
+	wisp_pstruct	*print_file_list;
 } linklevel_stack[MAX_LINKLEVELS];
 
-static void prelink_save_state(int linklevel)
+static void prelink_save_state(int link_level)
 {
+
+	if (link_level >= MAX_LINKLEVELS)
+	{
+		werrlog(WERRCODE(28002),link_level,0,0,0,0,0,0,0);
+		return;
+	}
 	/*
 	**	Save soft link level stuff
 	*/
-	get_defs(DEFAULTS_PV, linklevel_stack[linklevel].progvol);
-	get_defs(DEFAULTS_PL, linklevel_stack[linklevel].proglib);
-	linklevel_stack[linklevel].temp_file_list = g_temp_file_list;
-	linklevel_stack[linklevel].print_file_list = g_print_file_list;
-	g_temp_file_list = NULL;
-	g_print_file_list = NULL;
+	WL_get_defs(DEFAULTS_PV, linklevel_stack[link_level].progvol);
+	WL_get_defs(DEFAULTS_PL, linklevel_stack[link_level].proglib);
+	linklevel_stack[link_level].temp_file_list = WL_g_temp_file_list;
+	linklevel_stack[link_level].print_file_list = WL_g_print_file_list;
+	WL_g_temp_file_list = NULL;
+	WL_g_print_file_list = NULL;
 }
-static void postlink_restore_state(int linklevel)
+static void postlink_restore_state(int link_level)
 {
 	/*
 	**	Restore soft link level stuff
 	*/
-	g_print_file_list = linklevel_stack[linklevel].print_file_list;
-	g_temp_file_list = linklevel_stack[linklevel].temp_file_list;
-	set_defs(DEFAULTS_PV, linklevel_stack[linklevel].progvol);
-	set_defs(DEFAULTS_PL, linklevel_stack[linklevel].proglib);
-	save_defaults();
+	WL_g_print_file_list = linklevel_stack[link_level].print_file_list;
+	WL_g_temp_file_list = linklevel_stack[link_level].temp_file_list;
+	WL_set_defs(DEFAULTS_PV, linklevel_stack[link_level].progvol);
+	WL_set_defs(DEFAULTS_PL, linklevel_stack[link_level].proglib);
+	WL_save_defaults();
 }
 
 
@@ -161,105 +179,16 @@ static void postlink_restore_state(int linklevel)
 **	Function Prototypes
 */
 
-static void do_link();
+static	void do_link(
+		int varg_count,								/* Total arg count			*/
+		char	*varg_pointer[],						/* pointers to variable param list	*/
+		int4	varg_length[],							/* length of each parameter in list	*/
+		int	arg_length_known);						/* Arg lengths are known		*/
+
 static int searchnative(const char* nativename, char* filespec);
 static int searchpath(const char* wangfilename, char* filespec);
+static int link_fixerr(int code);
 
-extern void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *link_filespec);
-
-
-
-int LINK ( va_alist )									/* LINK: Load arg into table		*/
-va_dcl											/* variable argument list		*/
-{
-	va_list	link_args ;								/* descriptor arguments			*/
-	int	i ;
-	int	length_known;
-	int	varg_count;								/* Total arg count			*/
-	char	*varg_pointer[MAX_VARGS] ;						/* pointers to variable param list	*/
-	int4	varg_length[MAX_VARGS] ;						/* length of each parameter in list	*/
-
-	length_known = (acu_cobol) ? LENGTH_KNOWN : LENGTH_NOT_KNOWN;			/* If ACU the lengths are known		*/
-
-	va_start ( link_args ) ;							/* start the walk down the parameters	*/
-	varg_count = va_count ( link_args ) ;						/* Find out how many args in the stack.	*/
-	va_start ( link_args ) ;							/* restart the walk down the parameters	*/
-
-	for ( i = 0 ; i < varg_count ; ++i )
-	{
-		varg_pointer[i] = va_arg( link_args, char * );				/* Get the next argument pointer	*/
-
-		if ( length_known )							/* If lengths known			*/
-		{
-			varg_length[i] = va_arg( link_args, int4);			/* Get the argument length		*/
-		}
-		else									/* Else, this is NOT acu cobol;		*/
-		{
-			varg_length[i] = 0 ;						/* Set the argument length to zero	*/
-		}
-	}
-
-	va_end ( link_args ) ;								/* end the parameter walk		*/
-
-	do_link(varg_count, varg_pointer, varg_length, length_known);			/* Do the LINK				*/
-
-	return(0);
-}
-
-
-#ifdef unix
-int LINKAIX ( va_alist )								/* LINK for AIX VS COBOL		*/
-va_dcl											/* variable argument list		*/
-{
-	va_list	link_args ;								/* descriptor arguments			*/
-	int	i;
-	int	varg_count;								/* Total arg count			*/
-	char	*varg_pointer[MAX_VARGS] ;						/* pointers to variable param list	*/
-	int4	varg_length[MAX_VARGS] ;						/* length of each parameter in list	*/
-
-	va_start ( link_args ) ;							/* start the walk down the parameters	*/
-	varg_count = va_count ( link_args ) ;						/* Find out how many args in the stack.	*/
-	va_start ( link_args ) ;							/* restart the walk down the parameters	*/
-
-	for ( i = 0 ; i < varg_count ; ++i )
-	{
-		varg_pointer[i] = va_arg( link_args, char * );				/* Get the next argument pointer	*/
-		varg_length[i] = va_arg( link_args, int4);				/* Get the argument length		*/
-	}
-
-	va_end ( link_args ) ;								/* end the parameter walk		*/
-
-	do_link(varg_count, varg_pointer, varg_length, LENGTH_KNOWN);			/* Do the link				*/
-
-	return(0);
-}
-#endif	/* unix */
-
-int LINKMF ( va_alist )									/* LINK for Micro Focus COBOL/2		*/
-va_dcl											/* variable argument list		*/
-{
-	va_list	link_args ;								/* descriptor arguments			*/
-	int	i;
-	int	varg_count;								/* Total arg count			*/
-	char	*varg_pointer[MAX_VARGS] ;						/* pointers to variable param list	*/
-	int4	varg_length[MAX_VARGS] ;						/* length of each parameter in list	*/
-
-	va_start ( link_args ) ;							/* start the walk down the parameters	*/
-	varg_count = va_count ( link_args ) ;						/* Find out how many args in the stack.	*/
-	va_start ( link_args ) ;							/* restart the walk down the parameters	*/
-
-	for ( i = 0 ; i < varg_count ; ++i )
-	{
-		varg_pointer[i] = va_arg( link_args, char * );				/* Get the next argument pointer	*/
-		varg_length[i] = va_arg( link_args, int4);				/* Get the argument length		*/
-	}
-
-	va_end ( link_args ) ;								/* end the parameter walk		*/
-
-	do_link(varg_count, varg_pointer, varg_length, LENGTH_KNOWN);			/* Do the link				*/
-
-	return(0);
-}
 
 /*
 **	Routine:	LINK2()
@@ -269,7 +198,7 @@ va_dcl											/* variable argument list		*/
 **	Description:	This is a frontend to LINK which expects all args to be paired with
 **			there length.
 **			This routine should be the standard entry point into LINK and should
-**			eventually replace LINKMF, LINKAIX, and LINK (for acucobol).
+**			eventually replace LINKMF, and LINK (for acucobol).
 **
 **	Arguments:	Argument/length pairs:
 **			The arguments are all pointers.
@@ -280,11 +209,10 @@ va_dcl											/* variable argument list		*/
 **	Return:		None
 **
 **	Warnings:	The va_count() is fudged and is expecting 1 for each pair of args.
-**			On UNIX this is handled by sub85.c and wvaset(), on VMS need to half the value.
+**			On UNIX this is handled by sub85.c and wvaset().
 **
 */
-int LINK2 ( va_alist )									/* Generic paired arg LINK		*/
-va_dcl											/* variable argument list		*/
+void LINK2 (const char *progname, int4 progname_len, ... )
 {
 	va_list	link_args ;								/* descriptor arguments			*/
 	int	i;
@@ -292,11 +220,12 @@ va_dcl											/* variable argument list		*/
 	char	*varg_pointer[MAX_VARGS] ;						/* pointers to variable param list	*/
 	int4	varg_length[MAX_VARGS] ;						/* length of each parameter in list	*/
 
-	va_start ( link_args ) ;							/* start the walk down the parameters	*/
-	varg_count = va_count ( link_args ) ;						/* Find out how many args in the stack.	*/
-	va_start ( link_args ) ;							/* restart the walk down the parameters	*/
+	va_start ( link_args, progname_len ) ;						/* start the walk down the parameters	*/
+	varg_count = WL_va_count() ;							/* Find out how many args in the stack.	*/
 
-	for ( i = 0 ; i < varg_count ; ++i )
+	varg_pointer[0] = (char *)progname;
+	varg_length[0] = progname_len;
+	for ( i = 1 ; i < varg_count ; ++i )
 	{
 		varg_pointer[i] = va_arg( link_args, char * );				/* Get the next argument pointer	*/
 		varg_length[i]  = va_arg( link_args, int4);				/* Get the argument length		*/
@@ -305,9 +234,36 @@ va_dcl											/* variable argument list		*/
 	va_end ( link_args ) ;								/* end the parameter walk		*/
 
 	do_link(varg_count, varg_pointer, varg_length, LENGTH_KNOWN);			/* Do the link				*/
-
-	return(0);
 }
+
+
+/*
+**	LINKMF - is identical to LINK2.
+*/
+void LINKMF (const char *progname, int4 progname_len, ... )
+{
+	va_list	link_args ;								/* descriptor arguments			*/
+	int	i;
+	int	varg_count;								/* Total arg count			*/
+	char	*varg_pointer[MAX_VARGS] ;						/* pointers to variable param list	*/
+	int4	varg_length[MAX_VARGS] ;						/* length of each parameter in list	*/
+
+	va_start ( link_args, progname_len ) ;						/* start the walk down the parameters	*/
+	varg_count = WL_va_count() ;							/* Find out how many args in the stack.	*/
+
+	varg_pointer[0] = (char *)progname;
+	varg_length[0] = progname_len;
+	for ( i = 1 ; i < varg_count ; ++i )
+	{
+		varg_pointer[i] = va_arg( link_args, char * );				/* Get the next argument pointer	*/
+		varg_length[i]  = va_arg( link_args, int4);				/* Get the argument length		*/
+	}
+
+	va_end ( link_args ) ;								/* end the parameter walk		*/
+
+	do_link(varg_count, varg_pointer, varg_length, LENGTH_KNOWN);			/* Do the link				*/
+}
+
 
 /*
 **	Routine:	do_link()
@@ -396,12 +352,6 @@ static	void do_link(
 #ifdef WIN32
 	int     save_errno;
 #endif
-#ifdef unix
-	char	**tmp;
-
-	int	num;
-	char	temp_retval[4];								/* Temp string to hold return value.	*/
-#endif
 
 	char	*sh_parm[64];
 	char	linkkey[80];								/* Key to link parm area		*/
@@ -418,15 +368,9 @@ static	void do_link(
 	int	tlen;
 	int	soft_link;
 
-	wtrace("LINK","ENTRY","Progname=[%8.8s] Linktype=[%1.1s] (level=%d) Argcnt=[%d]", 
-	       varg_pointer[0], varg_pointer[1], linklevel(), varg_count);
+	WL_wtrace("LINK","ENTRY","Progname=[%8.8s](level=%d) Argcnt=[%d]", 
+	       varg_pointer[0], WL_linklevel(), varg_count);
 	tracemsg[0] = '\0';
-
-	if (lnk_depth == MAX_LINKLEVELS)
-	{
-		werrlog(ERRORCODE(2),lnk_depth,0,0,0,0,0,0,0);
-		return;
-	}
 
 	memset(&parm_list,0,sizeof(parm_list));						/* set parm_list to zeroes		*/
 
@@ -603,7 +547,7 @@ ARG7:	/* PARM COUNT	Int(4) */
 		to_do--;
 		arg_used = 0;
 	}
-	parmcnt = get_swap((int4*)dummy_char);						/* The argument count.			*/
+	parmcnt = WL_get_swap((int4*)dummy_char);						/* The argument count.			*/
 
 	if (to_do == 1)									/* Check if we made a wrong turn	*/
 	{
@@ -640,8 +584,8 @@ ARG7:	/* PARM COUNT	Int(4) */
 
 	if ( parmcnt > MAX_LINK_PARMS )
 	{
-		werrlog(ERRORCODE(8),MAX_LINK_PARMS,parmcnt,0,0,0,0,0,0);
-		wexit(ERRORCODE(8));
+		werrlog(WERRCODE(28008),MAX_LINK_PARMS,parmcnt,0,0,0,0,0,0);
+		wexit(WERRCODE(28008));
 	}
 	for (i=0; i<MAX_LINK_PARMS; i++)
 	{
@@ -703,7 +647,7 @@ ARG10:	/* MESSAGE	Alpha(var) */
 	to_do--;
 
 /* ARG11:  MESS LENGTH	Int(4) */
-	messlen = get_swap((int4*)varg_pointer[va_i++]);				/* Get the pf16 message length.		*/
+	messlen = WL_get_swap((int4*)varg_pointer[va_i++]);				/* Get the pf16 message length.		*/
 	to_do--;
 
 	tlen=MIN(messlen,20);
@@ -755,7 +699,7 @@ ARG14:	/* CANCEL RCVR	Alpha(var) */
 	to_do--;
 
 /* ARG15:  CANCEL RCVR LEN  Int(4) */
-	canlen = get_swap((int4*)varg_pointer[va_i++]);					/* Get the text receiver length.	*/
+	canlen = WL_get_swap((int4*)varg_pointer[va_i++]);					/* Get the text receiver length.	*/
 	to_do--;
 
 	tlen=MIN(canlen,20);
@@ -778,17 +722,28 @@ ARG16:	/* COMP-CODE	Int(4) */
 
 ARGEND:	/* END OF ARGUMENTS */
 
-	wtrace("LINK","ARGS","%s",tracemsg);
+	WL_wtrace("LINK","ARGS","%s",tracemsg);
 
 	if ( *ltype == ' ' )								/* Use Program vol & lib.		*/
 	{
-		get_defs(DEFAULTS_PV,l_vol);	/* NOTE: If PV/PL is not set then RV/RL	are returned */
-		get_defs(DEFAULTS_PL,l_lib);
+		WL_get_defs(DEFAULTS_PV,l_vol);	/* NOTE: If PV/PL is not set then RV/RL	are returned */
+		WL_get_defs(DEFAULTS_PL,l_lib);
 	}
 	else if ( *ltype == 'P' )							/* Use arg3 & arg4			*/
 	{
 		memcpy( l_vol, volname, SIZEOF_VOL );
 		memcpy( l_lib, libname, SIZEOF_LIB );
+		leftjust(l_vol,SIZEOF_VOL);
+		leftjust(l_lib,SIZEOF_LIB);
+
+		if ( ' ' == l_vol[0] || ' ' == l_lib[0] )
+		{
+			WL_put_swap( comcode, (int4)LINK_CC_8_FAILED ) ;						/* Unsuccessful link.			*/
+			WL_put_swap( retcod, (int4)LINK_RC_40_INVALID_INPUT_PARAM ) ;						/* Invalid Parameter.			*/
+
+			WL_wtrace("LINK","BADPARAM", "LIBRARY or VOLUME is blank");
+			return;
+		}
 	}
 	else if ( *ltype == 'S' )							/* look in system dirs			*/
 	{
@@ -797,15 +752,13 @@ ARGEND:	/* END OF ARGUMENTS */
 	}
 	else										/* Invalid link type.			*/
 	{
-		swap_put ( comcode, (int4)8 ) ;						/* Unsuccessful link.			*/
-		swap_put ( retcod, (int4)40 ) ;						/* Invalid Parameter.			*/
+		WL_put_swap( comcode, (int4)LINK_CC_8_FAILED ) ;						/* Unsuccessful link.			*/
+		WL_put_swap( retcod, (int4)LINK_RC_40_INVALID_INPUT_PARAM ) ;						/* Invalid Parameter.			*/
 
-		werrlog(ERRORCODE(3),l_file,ltype,0,0,0,0,0,0);
+		WL_wtrace("LINK","BADPARAM", "Invalid LINKTYPE=[%c]",*ltype);
 		return;
 	}
 
-	leftjust(l_vol,SIZEOF_VOL);
-	leftjust(l_lib,SIZEOF_LIB);
 	upper_mem(l_vol,SIZEOF_VOL);
 	upper_mem(l_lib,SIZEOF_LIB);
 	l_vol[SIZEOF_VOL] = '\0';
@@ -814,25 +767,25 @@ ARGEND:	/* END OF ARGUMENTS */
 	/*
 	**	Vector a "LINK" to a VSSUB into a call
 	*/
-	if (islinkvector(l_file))
+	if (WL_islinkvector(l_file))
 	{
-		wtrace("LINK", "VECTOR", "Using linkvector() for FILE=%s", l_file);
+		WL_wtrace("LINK", "VECTOR", "Using linkvector() for FILE=%s", l_file);
 		
-		if (retval = linkvector(l_file, parmcnt, &parm_list))
+		if ((retval = WL_linkvector(l_file, parmcnt, &parm_list)))
 		{
 			/*
 			**	Link failed
 			*/
-			swap_put ( comcode, (int4)8 );
-			swap_put ( retcod, retval );
+			WL_put_swap( comcode, (int4)LINK_CC_8_FAILED );
+			WL_put_swap( retcod, retval );
 		}
 		else
 		{
 			/*
 			**	All is OK
 			*/
-			swap_put ( comcode, (int4)0 );
-			swap_put ( retcod, (int4)0 );
+			WL_put_swap( comcode, (int4)LINK_CC_0_SUCCESS );
+			WL_put_swap( retcod, (int4)LINK_RC_0_SUCCESS );
 		}
 		return;
 	}
@@ -851,7 +804,7 @@ ARGEND:	/* END OF ARGUMENTS */
 	/* Because of GETPARM processing you don't want to do VSEDIT in separate window */
 	if (0==memcmp(l_file,"VSEDIT  ",SIZEOF_FILE))
 	{
-		if (utils_in_windows())
+		if (WL_utils_in_windows())
 		{
 			link_separate_window = 1;
 		}
@@ -860,7 +813,7 @@ ARGEND:	/* END OF ARGUMENTS */
 
 	if (0==memcmp(l_file,"DISPLAY ",SIZEOF_FILE))
 	{
-		if (utils_in_windows())
+		if (WL_utils_in_windows())
 		{
 			link_separate_window = 1;
 		}
@@ -868,10 +821,10 @@ ARGEND:	/* END OF ARGUMENTS */
 		/*
 		**	If using a custom display utility (DISPLAYUTIL option) then substitute the program name.
 		*/
-		if (custom_display_utility())
+		if (WL_custom_display_utility())
 		{
 			native_substitute = 1;
-			strcpy(progname_str,custom_display_utility());
+			strcpy(progname_str,WL_custom_display_utility());
 		}
 		else if (link_separate_window)
 		{
@@ -895,7 +848,7 @@ ARGEND:	/* END OF ARGUMENTS */
 		**	Likewise if using DISPLAY but running in a separate window we need to issue
 		**	the DISPLAY getparms because it will not have access to this session's PUTPARMS.
 		*/
-		if (custom_display_utility() || link_separate_window)
+		if (WL_custom_display_utility() || link_separate_window)
 		{
 			/*
 			**	If no arguments then issue the DISPLAY GETPARMS to get the filename.
@@ -903,13 +856,14 @@ ARGEND:	/* END OF ARGUMENTS */
 			if (0 == parmcnt)
 			{
 				int bGotFile;
+				int recsize = 0;
 				
-				newlevel();
+				WL_newlevel();
 
-				bGotFile = display_util_getparms(display_filename);
+				bGotFile = WL_display_util_getparms(display_filename, &recsize);
 
-				oldlevel();						/* Decrement the link-level		*/
-				ppunlink(linklevel());					/* Putparm UNLINK			*/
+				WL_oldlevel();						/* Decrement the link-level		*/
+				WL_ppunlink(WL_linklevel());				/* Putparm UNLINK			*/
 				
 				if (bGotFile)
 				{
@@ -921,62 +875,63 @@ ARGEND:	/* END OF ARGUMENTS */
 				{
 					/* No filename from getparm - PF16 pressed - bail */
 
-					swap_put( comcode, (int4)0 );
-					swap_put( retcod, (int4)16 );
+					WL_put_swap( comcode, (int4)LINK_CC_0_SUCCESS );
+					WL_put_swap( retcod, (int4)LINK_RC_16_LIBRARY_NOT_FOUND );
 
-					wtrace("LINK", "RETURN", "FILE=DISPLAY compcode=0 retcode=16 (level=%d)", linklevel());
+					WL_wtrace("LINK", "RETURN", "FILE=DISPLAY compcode=0 retcode=16 (level=%d)", WL_linklevel());
 
 					return;
 				}
 			}
 
 		}
-		else if (use_internal_display())
+		else if (WL_use_internal_display())
 		{
 			char	save_progid[9];
+			int	recsize = 0;
 
 			/*
 			**	Internal soft-link to DISPLAY utility
 			*/
 		
 #ifdef unix
-			if (vsharedscreen())						/* If screen is shared			*/
+			if (VL_vsharedscreen())						/* If screen is shared			*/
 			{
 				vwang_stty_save();					/* Save the current stty values		*/
 			}
 #endif
-			strcpy(save_progid, getprogid());
-			newlevel();							/* Increment the link-level		*/
-			setprogid("DISPLAY ");
+			strcpy(save_progid, WL_getprogid());
+			WL_newlevel();							/* Increment the link-level		*/
+			WL_setprogid("DISPLAY ");
 
 
 			/*
 			**	Issues the getparms and if a file was supplied then display it.
 			*/
-			if (display_util_getparms(display_filename))
+			if (WL_display_util_getparms(display_filename, &recsize))
 			{
 				/*
 				**	Do the DISPLAY
 				*/
-				wpushscr();
+				vwang_wpushscr();
 			
-				internal_display(display_filename);
+				WL_internal_display(display_filename, recsize);
 
-				wpopscr();
+				vwang_wpopscr();
 			}
 
-			setprogid(save_progid);
-			oldlevel();							/* Decrement the link-level		*/
-			ppunlink(linklevel());						/* Putparm UNLINK			*/
+			WL_setprogid(save_progid);
+			WL_oldlevel();							/* Decrement the link-level		*/
+			WL_ppunlink(WL_linklevel());					/* Putparm UNLINK			*/
 
 #ifdef unix
-			if (vsharedscreen())						/* If screen is shared			*/
+			if (VL_vsharedscreen())						/* If screen is shared			*/
 			{
 				vwang_stty_restore();					/* Restore the saved stty values	*/
 			}
 #endif
-			swap_put ( comcode, (int4)0 ) ;					/* swap and set the completion code.	*/
-			swap_put ( retcod, (int4)0 ) ;					/* swap and set the return code.	*/
+			WL_put_swap( comcode, (int4)LINK_CC_0_SUCCESS ) ;					/* swap and set the completion code.	*/
+			WL_put_swap( retcod, (int4)LINK_RC_0_SUCCESS ) ;					/* swap and set the return code.	*/
 			return;
 		}
 	}
@@ -1011,22 +966,22 @@ ARGEND:	/* END OF ARGUMENTS */
 #ifdef WIN32
 		if (not_found)
 		{
-			not_found = whichenvpath(progname_str,link_filespec);
+			not_found = WL_whichenvpath(progname_str,link_filespec);
 		}
 #endif
 		if (not_found)
 		{
-			swap_put( comcode, (int4)8 );
-			swap_put( retcod, (int4)20 );
-			werrlog(ERRORCODE(5),progname_str,0,0,0,0,0,0,0);
+			WL_put_swap( comcode, (int4)LINK_CC_8_FAILED );
+			WL_put_swap( retcod, (int4)LINK_RC_20_FILE_NOT_FOUND );
+			WL_wtrace("LINK","NOTFOUND","Program [%s] not found",progname_str);
 			return;
 		}
 	}
 
 	if ( not_found && (*ltype == ' ' || *ltype == 'P') )
 	{
-		mode = IS_SUBMIT;
-		p = wfname(&mode,l_vol,l_lib,l_file,link_filespec);
+		mode = 0;
+		p = WL_wfname(&mode,l_vol,l_lib,l_file,link_filespec);
 		*p = (char)0;
 
 		if ( WL_isafile(link_filespec) )
@@ -1047,10 +1002,10 @@ ARGEND:	/* END OF ARGUMENTS */
 		/*
 		**	Check current directory
 		*/
-		mode = IS_SUBMIT;
+		mode = 0;
 		memcpy(l_vol,".     ",SIZEOF_VOL);
 		memcpy(l_lib,".       ",SIZEOF_LIB);
-		p = wfname(&mode,l_vol,l_lib,l_file,link_filespec);			/* expand the name 			*/
+		p = WL_wfname(&mode,l_vol,l_lib,l_file,link_filespec);			/* expand the name 			*/
 		*p = (char)0;
 		if ( WL_isafile(link_filespec) )
 		{
@@ -1070,9 +1025,9 @@ ARGEND:	/* END OF ARGUMENTS */
 
 		if (not_found)
 		{
-			swap_put( comcode, (int4)8 );
-			swap_put( retcod, (int4)20 );
-			werrlog(ERRORCODE(5),progname_str,0,0,0,0,0,0,0);
+			WL_put_swap( comcode, (int4)LINK_CC_8_FAILED );
+			WL_put_swap( retcod, (int4)LINK_RC_20_FILE_NOT_FOUND );
+			WL_wtrace("LINK","NOTFOUND","Program [%s] not found",progname_str);
 			return;
 		}
 	}
@@ -1083,9 +1038,9 @@ ARGEND:	/* END OF ARGUMENTS */
 		   Unsuccessful link
 		   File not found.	
 		*/
-		swap_put ( comcode, (int4)8 ) ;
-		swap_put ( retcod, (int4)20 ) ;
-		werrlog(ERRORCODE(7),link_filespec,0,0,0,0,0,0,0);
+		WL_put_swap( comcode, (int4)LINK_CC_8_FAILED ) ;
+		WL_put_swap( retcod, (int4)LINK_RC_20_FILE_NOT_FOUND ) ;
+		WL_wtrace("LINK","NOTFOUND","Program [%s] not found",link_filespec);
 		return;
 	}
 
@@ -1096,22 +1051,27 @@ ARGEND:	/* END OF ARGUMENTS */
 	/*
 	**	Get the run type then check if we can handle it.
 	*/
-	ftyp = runtype(link_filespec);
+	ftyp = WL_runtype(link_filespec);
 
 	switch(ftyp)
 	{
 	default:
 	case RUN_NOT: /* NOT a runable file			*/
-		swap_put ( comcode, (int4)8 ) ;
-		swap_put ( retcod, (int4)52 ) ;
-		werrlog(ERRORCODE(11),link_filespec,0,0,0,0,0,0,0);
+		WL_put_swap( comcode, (int4)LINK_CC_8_FAILED ) ;
+		WL_put_swap( retcod, (int4)LINK_RC_52_NOT_A_PROGRAM ) ;
+		WL_wtrace("LINK","NOTRUN","Program [%s] not runnable",link_filespec);
 		return;
 
-	case RUN_ACCESS: /* Access denied.			*/
+	case RUN_ACCESS: 
+		WL_put_swap( comcode, (int4)LINK_CC_8_FAILED ) ;
+		WL_put_swap( retcod, (int4)LINK_RC_28_ACCESS_DENIED ) ;
+		WL_wtrace("LINK","NOACCESS","Unable to access program [%s]",link_filespec);
+		return;
+
 	case RUN_UNKNOWN:
-		swap_put ( comcode, (int4)8 ) ;
-		swap_put ( retcod, (int4)28 ) ;
-		werrlog(ERRORCODE(9),link_filespec,0,0,0,0,0,0,0);
+		WL_put_swap( comcode, (int4)LINK_CC_8_FAILED ) ;
+		WL_put_swap( retcod, (int4)LINK_RC_28_ACCESS_DENIED ) ;
+		WL_wtrace("LINK","UNKNOWN","Unknown runtype for program [%s]",link_filespec);
 		return;
 
 	case RUN_ACUCOBOL:
@@ -1153,9 +1113,9 @@ ARGEND:	/* END OF ARGUMENTS */
 		**	If cancel exit flag is set then increment the counter.
 		**	(There can be multiple canexits	in effect; one per link-level.)	
 		**
-		**	NOTE: This must be done before the parms file is written out. [writeunixlink()]
+		**	NOTE: This must be done before the parms file is written out. [WL_writeunixlink()]
 		*/
-		CANEXITFLAG++;
+		wisp_set_CANEXITFLAG(wisp_get_CANEXITFLAG()+1);
 	}
 
 
@@ -1172,9 +1132,9 @@ ARGEND:	/* END OF ARGUMENTS */
 	/*
 	**	Handle SOFTLINK case first.
 	*/
-	if (softlink() && 
-	    ((RUN_ACUCOBOL == ftyp && acu_cobol) ||
-	     (RUN_MF       == ftyp && mf_cobol)))
+	if (WL_softlink() && 
+	    ((RUN_ACUCOBOL == ftyp && wisp_acu_cobol()) ||
+	     (RUN_MF       == ftyp && wisp_mf_cobol() )))
 	{
 		/*
 		**	Already in a COBOL runtime so do a "soft" link.
@@ -1182,7 +1142,7 @@ ARGEND:	/* END OF ARGUMENTS */
 		**	NOTE: This code must be re-entrant.
 		*/
 		int	rc;
-		char	saverunname[8];
+		char	saverunname[WISP_RUNNAME_SIZE];
 
 		soft_link = 1;
 		
@@ -1190,32 +1150,32 @@ ARGEND:	/* END OF ARGUMENTS */
 		**	Save soft link level stuff.
 		**	Must be done before PROGLIB/PROGVOL are changed.
 		*/
-		prelink_save_state(linklevel());
+		prelink_save_state(WL_linklevel());
 
 		/*
 		**	Handle PROGLIB/PROGVOL processing
 		*/
-		setprogdefs(l_vol,l_lib);
-		clearprogsymb();
+		WL_set_progdefs_env(l_vol,l_lib);
+		WL_clear_progdefs();
 		
-		memcpy(saverunname, WISPRUNNAME, 8);
-		memcpy(WISPRUNNAME, l_file, 8);
+		memcpy(saverunname, wisp_get_runname(), WISP_RUNNAME_SIZE);
+		wisp_set_runname(l_file);
 		
-		savelevel = linklevel();
-		newlevel();
+		savelevel = WL_linklevel();
+		WL_newlevel();
 
-		if (acu_cobol)
+		if (wisp_acu_cobol())
 		{
-			wtrace("LINK","SOFTLINK", "call_acucobol() softlink to [%s] parmcnt=%d", link_filespec, parmcnt);
+			WL_wtrace("LINK","SOFTLINK", "WL_call_acucobol() softlink to [%s] parmcnt=%d", link_filespec, parmcnt);
 
-			call_acucobol( link_filespec, parmcnt, parm_list.parm, len_list.len, &rc );
-			call_acucobol_error(rc, &wang_retcode, &wang_compcode, link_filespec);
+			WL_call_acucobol( link_filespec, parmcnt, parm_list.parm, len_list.len, &rc );
+			WL_call_acucobol_error(rc, &wang_retcode, &wang_compcode, link_filespec);
 		}
 		else /* MF COBOL */
 		{
-			wtrace("LINK","SOFTLINK", "call_mfcobol() softlink to [%s] parmcnt=%d", link_filespec, parmcnt);
+			WL_wtrace("LINK","SOFTLINK", "call_mfcobol() softlink to [%s] parmcnt=%d", link_filespec, parmcnt);
 			
-			call_mfcobol( link_filespec, parmcnt, parm_list.parm, len_list.len, &rc );
+			WL_call_mfcobol( link_filespec, parmcnt, parm_list.parm, len_list.len, &rc );
 
 			/*
 			**	The RC is not reliable, it always seems to return 1
@@ -1224,9 +1184,9 @@ ARGEND:	/* END OF ARGUMENTS */
 			wang_retcode  = WL_get_internal_retcode();
 		}
 
-		setlevel(savelevel);
+		WL_setlevel(savelevel);
 
-		memcpy(WISPRUNNAME, saverunname, 8);
+		wisp_set_runname(saverunname);
 
 		/*
 		**	Bypass all the hardlink code and go to the cleanup code.
@@ -1239,7 +1199,7 @@ ARGEND:	/* END OF ARGUMENTS */
 		/*
 		**	Write out the params file
 		*/
-		writeunixlink(link_callspec, parmcnt, &parm_list, &len_list, linkkey);
+		WL_writeunixlink(link_callspec, parmcnt, &parm_list, &len_list, linkkey);
 		parm_file_written = 1;
 	}
 
@@ -1248,7 +1208,7 @@ ARGEND:	/* END OF ARGUMENTS */
 	*/
 	if (!wbackground())
 	{
-		if (ftyp == RUN_ACUCOBOL || ftyp == RUN_MF ||
+		if (ftyp == RUN_ACUCOBOL || ftyp == RUN_MF || 
 		    ftyp == RUN_PROC || ftyp == RUN_PROCOBJ )			
 		{
 			/*
@@ -1257,14 +1217,14 @@ ARGEND:	/* END OF ARGUMENTS */
 			vwang_noclear_on_shut();
 		} 
 
-		if (vsharedscreen())							/* If screen is shared			*/
+		if (VL_vsharedscreen())							/* If screen is shared			*/
 		{
 			vwang_stty_save();						/* Save the current stty values		*/
 		}
 
 		vwang_shut();								/* Reset the terminal.			*/
 
-		if (vsharedscreen())							/* If screen is shared			*/
+		if (VL_vsharedscreen())							/* If screen is shared			*/
 		{
 			/*
 			**	Force the stty into a SANE state.
@@ -1286,17 +1246,17 @@ ARGEND:	/* END OF ARGUMENTS */
 		if (parm_file_written)							/* If we wrote a parm file then...	*/
 		{
 			sprintf(buff,"%s=%s",WISP_LINK_ENV,linkkey);			/* Store the linkkey in env		*/
-			setenvstr(buff);
+			WL_setenvstr(buff);
 		}
 
 		if (*can_exit != ' ')						/* Mark the cancel-exit in a shell var so it is	*/
 		{								/* even if we go across a script etc.		*/
-			sprintf(buff,"%s=%d",WISP_CANCELEXIT_ENV,getpid());
-			setenvstr(buff);
+			sprintf(buff,"%s=%d",WISP_CANCELEXIT_ENV,(int)getpid());
+			WL_setenvstr(buff);
 		}
 
-		setprogdefs(l_vol,l_lib);						/* Set up PROGLIB and PROGVOL		*/
-		clearprogsymb();							/* Clear PROGLIB/VOL from symbol	*/
+		WL_set_progdefs_env(l_vol,l_lib);					/* Set up PROGLIB and PROGVOL		*/
+		WL_clear_progdefs();							/* Clear PROGLIB/VOL from symbol	*/
 
 		switch (ftyp)
 		{
@@ -1320,14 +1280,14 @@ ARGEND:	/* END OF ARGUMENTS */
 				strcat(buff, sh_parm[i]);
 				strcat(buff, " ");
 			}
-			wtrace("LINK", "EXEC", "%s", buff);
+			WL_wtrace("LINK", "EXEC", "%s", buff);
 
-			/* If this program wants to play the link-level game it must do the newlevel() call.			*/
+			/* If this program wants to play the link-level game it must do the WL_newlevel() call.			*/
 			execvp(sh_parm[0],sh_parm);					/* Do the exec.				*/
 
-			werrlog(ERRORCODE(4),link_filespec,errno,0,0,0,0,0,0);
+			werrlog(WERRCODE(28004),link_filespec,errno,0,0,0,0,0,0);
 			vwang_shut();							/* Reset the screen from the werrlog	*/
-			*retcod=fixerr(errno);						/* xlat unix errno to wang error# 	*/
+			*retcod=link_fixerr(errno);						/* xlat unix errno to wang error# 	*/
 			break;
 
 		case RUN_SHELL:								/* Assume a shell script		*/
@@ -1345,9 +1305,11 @@ ARGEND:	/* END OF ARGUMENTS */
 				*/
 				for (i=0; i < parmcnt; ++i)
 				{
-					sh_parm[i+2]=wmalloc(len_list.len[i] + 1);			/* Malloc space		*/
-					memcpy(sh_parm[i+2],parm_list.parm[i],len_list.len[i]);		/* Load parm		*/
-					sh_parm[i+2][len_list.len[i]] = '\0';				/* Null terminate parm	*/
+					char *tmp_ptr;
+					tmp_ptr=wisp_malloc(len_list.len[i] + 1);			/* Malloc space		*/
+					memcpy(tmp_ptr,parm_list.parm[i],len_list.len[i]);		/* Load parm		*/
+					tmp_ptr[len_list.len[i]] = '\0';				/* Null terminate parm	*/
+					sh_parm[i+2] = tmp_ptr;
 				}
 				sh_parm[i+2] = '\0';					/* null terminate it			*/
 			}
@@ -1370,25 +1332,25 @@ ARGEND:	/* END OF ARGUMENTS */
 				strcat(buff, sh_parm[i]);
 				strcat(buff, " ");
 			}
-			wtrace("LINK", "SHELL", "%s", buff);
+			WL_wtrace("LINK", "SHELL", "%s", buff);
 
-			newlevel();							/* Increment the link-level		*/
+			WL_newlevel();							/* Increment the link-level		*/
 			execvp(sh_parm[0],sh_parm);
 
-			werrlog(ERRORCODE(4),sh_parm[0],errno,0,0,0,0,0,0);
+			werrlog(WERRCODE(28004),sh_parm[0],errno,0,0,0,0,0,0);
 			vwang_shut();							/* Reset the screen from the werrlog	*/
-			*retcod=fixerr(errno);
+			*retcod=link_fixerr(errno);
 			break;
 
 		case RUN_ACUCOBOL: 							/* An acu_cobol object			*/
-		case RUN_MF:								/* Micro focus  code			*/
+		case RUN_MF:								/* Micro focus code			*/
 			{
 				struct wruncfg cfg;
 				char	options[sizeof(cfg.wrun_options)];
-				char	*eptr, *optr;
+				char	*optr;
 				int	arg;
 
-				wrunconfig(&cfg);					/* Load wrunconfig options file		*/
+				WL_wrunconfig(&cfg);					/* Load wrunconfig options file		*/
 
 				strcpy(options, cfg.wrun_options);
 
@@ -1416,7 +1378,7 @@ ARGEND:	/* END OF ARGUMENTS */
 						sh_parm[arg++] = cobol_frontend;	/* ACU Link interface program		*/
 						sh_parm[arg++] = linkkey;		/* Key to parm area			*/
 					}
-					else						/* Micro Focus GNT or INT file		*/
+					else /* ftyp == RUN_MF */
 					{
 						sh_parm[arg++] = cobol_frontend;	/* MF Link interface program		*/
 					}
@@ -1433,29 +1395,29 @@ ARGEND:	/* END OF ARGUMENTS */
 					strcat(buff, sh_parm[arg]);
 					strcat(buff, " ");
 				}
-				wtrace("LINK", "COBOL", "%s", buff);
+				WL_wtrace("LINK", "COBOL", "%s", buff);
 
-				/* The COBOL program will do a newlevel() call in initwisp()					*/
+				/* The COBOL program will do a WL_newlevel() call in initwisp2()					*/
 				execvp(sh_parm[0],sh_parm);				/* Start the new program.		*/
 
-				werrlog(ERRORCODE(14),sh_parm[0],l_file,errno,0,0,0,0,0);
+				werrlog(WERRCODE(28014),sh_parm[0],l_file,errno,0,0,0,0,0);
 				vwang_shut();						/* Reset the screen from the werrlog	*/
-				*retcod=fixerr(errno);
+				*retcod=link_fixerr(errno);
 				break;
 			}
 
 		case RUN_PROC:
 		case RUN_PROCOBJ:
 			{
-				char	*name_ptr = wprocexe();				/* Get the name of "wproc"		*/
-				char	*debug_ptr = wprocflags();
+				const char *name_ptr = WL_wprocexe();				/* Get the name of "wproc"		*/
+				const char *debug_ptr = WL_wprocflags();
 				int	arg;
 
 				arg = 0;
-				sh_parm[arg++] = name_ptr;				/* argv[0] is the "wproc" program	*/
+				sh_parm[arg++] = (char*)name_ptr;			/* argv[0] is the "wproc" program	*/
 				if ( debug_ptr && *debug_ptr )				/* Check for debug flags		*/
 				{
-					sh_parm[arg++] = debug_ptr;			/* Add the debug flags			*/
+					sh_parm[arg++] = (char*)debug_ptr;		/* Add the debug flags			*/
 				/*	freopen("wproc.trace","w",stdout); */		/* Redirect stdout			*/
 				}
 				sh_parm[arg++] = "-p";					/* Use parameter file			*/
@@ -1468,13 +1430,13 @@ ARGEND:	/* END OF ARGUMENTS */
 					strcat(buff, sh_parm[arg]);
 					strcat(buff, " ");
 				}
-				wtrace("LINK", "WPROC", "%s", buff);
+				WL_wtrace("LINK", "WPROC", "%s", buff);
 				
 				execvp(sh_parm[0],sh_parm);
 
-				werrlog(ERRORCODE(4),sh_parm[0],errno,0,0,0,0,0,0);
+				werrlog(WERRCODE(28004),sh_parm[0],errno,0,0,0,0,0,0);
 				vwang_shut();						/* Reset the screen from the werrlog	*/
-				*retcod=fixerr(errno);
+				*retcod=link_fixerr(errno);
 				break;
 			}
 		}
@@ -1482,15 +1444,15 @@ ARGEND:	/* END OF ARGUMENTS */
 		break;
 
 	case -1:									/* The link failed			*/
-		werrlog(ERRORCODE(18),errno,0,0,0,0,0,0,0);
-		wang_compcode = 8;
-		wang_retcode = 99;
+		werrlog(WERRCODE(28018),errno,0,0,0,0,0,0,0);
+		wang_compcode = LINK_CC_8_FAILED;
+		wang_retcode = LINK_RC_99_FORK_FAILED;
 		break;
 
 	default: /* PARENT PROCESS */
 
-		wwaitpid(pid,&exit_code);						/* Wait for linked process to complete	*/
-		load_defaults();							/* Reload defaults: may have changed	*/
+		WL_wwaitpid(pid,&exit_code);						/* Wait for linked process to complete	*/
+		WL_load_defaults();							/* Reload defaults: may have changed	*/
 		break;
 	}
 
@@ -1508,7 +1470,7 @@ done_soft_link:
 		vwang_synch();								/* Resynch video			*/
 		vwang_set_reinitialize(TRUE);						/* Return from link re-inits screen	*/
 
-		if (vsharedscreen())							/* If screen is shared			*/
+		if (VL_vsharedscreen())							/* If screen is shared			*/
 		{
 			vwang_stty_restore();						/* Restore the saved stty values	*/
 		}
@@ -1516,7 +1478,7 @@ done_soft_link:
 		vwang_clear_on_shut();							/* Reset onexit status to clear screen	*/
 	}
 	
-	ppunlink(linklevel());								/* Putparm UNLINK			*/
+	WL_ppunlink(WL_linklevel());								/* Putparm UNLINK			*/
 
 	if (soft_link)
 	{
@@ -1524,7 +1486,7 @@ done_soft_link:
 		**	Restore soft link level stuff.
 		**	Needs to be done before any wexit() because it restores the temp file list.
 		*/
-		postlink_restore_state(linklevel());
+		postlink_restore_state(WL_linklevel());
 	}
 
 	if ( parm_file_written )							/* If parm file written then clean up	*/
@@ -1532,7 +1494,7 @@ done_soft_link:
 		int4	the_comp_code = 0;
 		int4	the_ret_code = 0;
 
-		readunixlink(parmcnt, &parm_list, &len_list, linkkey, &the_comp_code, &the_ret_code);
+		WL_readunixlink(parmcnt, &parm_list, &len_list, linkkey, &the_comp_code, &the_ret_code);
 
 		if (the_comp_code != -1)
 		{
@@ -1546,7 +1508,7 @@ done_soft_link:
 				/*
 				**	This should only happen if the frontend routine was not found.
 				*/
-				werrlog(ERRORCODE(22),cobol_frontend,0,0,0,0,0,0,0);
+				werrlog(WERRCODE(28022),cobol_frontend,0,0,0,0,0,0,0);
 				wang_compcode = 8;
 				wang_retcode = 80;
 			}
@@ -1574,9 +1536,9 @@ done_soft_link:
 		char	*gptr;
 		int	kpid;
 
-		if ( LOGOFFFLAG )							/* A lower level called logoff		*/
+		if ( wisp_get_LOGOFFFLAG() )						/* A lower level called logoff		*/
 		{
-			wtrace("LINK", "CANEXIT", "A lower link level called LOGOFF (level=%d)", linklevel());
+			WL_wtrace("LINK", "CANEXIT", "A lower link level called LOGOFF (level=%d)", WL_linklevel());
 			
 			wexit(32);							/* Terminate this level			*/
 		}
@@ -1590,7 +1552,7 @@ done_soft_link:
 			{							/* been turned off because we crossed a SUBMIT.	*/
 				if ( kill((pid_t)kpid,0) != 0 )			/* Check if cancelexit process is alive.	*/
 				{
-					LOGOFFFLAG = 1;
+					wisp_set_LOGOFFFLAG(1);
 					wexit(32);
 				}
 			}
@@ -1598,16 +1560,16 @@ done_soft_link:
 	}
 	else
 	{
-		CANEXITFLAG--;								/* We've just come thru a Cancel-Exit	*/
-		LOGOFFFLAG = 0;								/* Cancel the logoff			*/
+		wisp_set_CANEXITFLAG(wisp_get_CANEXITFLAG()-1);				/* We've just come thru a Cancel-Exit	*/
+		wisp_set_LOGOFFFLAG(0);							/* Cancel the logoff			*/
 		sleep(1);								/* Allow the lower process to exit	*/
 	}
 
-	wtrace("LINK", "RETURN", "FILE=%s compcode=%ld retcode=%ld (level=%d)", 
-	       l_file, (long)wang_compcode, (long)wang_retcode, linklevel());
+	WL_wtrace("LINK", "RETURN", "FILE=%s compcode=%ld retcode=%ld (level=%d)", 
+	       l_file, (long)wang_compcode, (long)wang_retcode, WL_linklevel());
 	
-	swap_put ( comcode, wang_compcode ) ;						/* swap and set the completion code.	*/
-	swap_put ( retcod, wang_retcode ) ;						/* swap and set the return code.	*/
+	WL_put_swap( comcode, wang_compcode ) ;						/* swap and set the completion code.	*/
+	WL_put_swap( retcod, wang_retcode ) ;						/* swap and set the return code.	*/
 
 	return;
 
@@ -1633,43 +1595,43 @@ done_soft_link:
 	**	Save soft link level stuff.
 	**	Must be done before PROGLIB/PROGVOL are changed.
 	*/
-	prelink_save_state(linklevel());
+	prelink_save_state(WL_linklevel());
 
 	/*
 	**	Handle PROGLIB/PROGVOL processing
 	*/
-	setprogdefs(l_vol,l_lib);
-	clearprogsymb();
+	WL_set_progdefs_env(l_vol,l_lib);
+	WL_clear_progdefs();
 
-	if (RUN_ACUCOBOL == ftyp && acu_cobol && softlink())
+	if (RUN_ACUCOBOL == ftyp && wisp_acu_cobol() && WL_softlink())
 	{
 		/*
-		**	Already in an ACUCOBOL runtime so do a "soft" link using call_acucobol().
+		**	Already in an ACUCOBOL runtime so do a "soft" link using WL_call_acucobol().
 		**
 		**	NOTE: This code must be re-entrant.
 		*/
 		int	rc;
-		char	saverunname[8];
+		char	saverunname[WISP_RUNNAME_SIZE];
 
 		soft_link = 1;
 		
-		memcpy(saverunname, WISPRUNNAME, 8);
-		memcpy(WISPRUNNAME, l_file, 8);
+		memcpy(saverunname, wisp_get_runname(),WISP_RUNNAME_SIZE);
+		wisp_set_runname(l_file);
 		
-		savelevel = linklevel();
-		newlevel();
+		savelevel = WL_linklevel();
+		WL_newlevel();
 
-		wtrace("LINK","SOFTLINK", "Acucobol softlink to [%s] parmcnt=%d", link_filespec, parmcnt);
+		WL_wtrace("LINK","SOFTLINK", "Acucobol softlink to [%s] parmcnt=%d", link_filespec, parmcnt);
 
-		call_acucobol( link_filespec, parmcnt, parm_list.parm, len_list.len, &rc );
+		WL_call_acucobol( link_filespec, parmcnt, parm_list.parm, len_list.len, &rc );
 
-		setlevel(savelevel);
+		WL_setlevel(savelevel);
 
-		call_acucobol_error(rc, &wang_retcode, &wang_compcode, link_filespec);
+		WL_call_acucobol_error(rc, &wang_retcode, &wang_compcode, link_filespec);
 
-		memcpy(WISPRUNNAME, saverunname, 8);
+		wisp_set_runname(saverunname);
 	}
-	else if (RUN_MF == ftyp && mf_cobol && softlink())
+	else if (RUN_MF == ftyp && wisp_mf_cobol() && WL_softlink())
 	{
 		/*
 		**	Already in a MicroFocus runtime so do a "soft" link using call_mfcobol().
@@ -1690,13 +1652,13 @@ done_soft_link:
 			/*
 			**	Write out the params file
 			*/
-			writeunixlink(link_callspec, parmcnt, &parm_list, &len_list, linkkey);
+			WL_writeunixlink(link_callspec, parmcnt, &parm_list, &len_list, linkkey);
 
 			/*
 			**	Store the linkkey in env
 			*/
 			sprintf(buff,"%s=%s",WISP_LINK_ENV,linkkey);
-			win32SetNewEnv(buff);
+			WL_win32SetNewEnv(buff);
 
 			parm_file_written = 1;
 		}
@@ -1708,10 +1670,10 @@ done_soft_link:
 			** 	even if we go across a script etc.
 			*/
 			sprintf(buff,"%s=%d",WISP_CANCELEXIT_ENV,getpid());
-			win32SetNewEnv(buff);
+			WL_win32SetNewEnv(buff);
 		}
 
-		savelevel = linklevel();
+		savelevel = WL_linklevel();
 
 		if (!wbackground() && !link_separate_window)
 		{
@@ -1733,13 +1695,13 @@ done_soft_link:
 			char	*optr;
 			int	arg;
 
-			wrunconfig(&cfg);
+			WL_wrunconfig(&cfg);
 
 			if (RUN_ACUCOBOL==ftyp)
 			{
-				if (0!=strcmp(cfg.wrun_cobtype,"ACU"))
+				if (0!=strcmp(cfg.wrun_cobtype, WRUNCOBTYPE_ACU))
 				{
-					werrlog(ERRORCODE(20),"wrunconfig is not configured for ACUCOBOL",0,0,0,0,0,0,0);
+					werrlog(WERRCODE(28020),"wrunconfig is not configured for ACUCOBOL",0,0,0,0,0,0,0);
 					wang_retcode = 8;
 					wang_compcode = 52;
 					goto done_hard_link;
@@ -1747,9 +1709,9 @@ done_soft_link:
 			}
 			else 
 			{
-				if (0!=strcmp(cfg.wrun_cobtype,"MF"))
+				if (0!=strcmp(cfg.wrun_cobtype, WRUNCOBTYPE_MF))
 				{
-					werrlog(ERRORCODE(20),"wrunconfig is not configured for MICROFOCUS",0,0,0,0,0,0,0);
+					werrlog(WERRCODE(28020),"wrunconfig is not configured for MICROFOCUS",0,0,0,0,0,0,0);
 					wang_retcode = 8;
 					wang_compcode = 52;
 					goto done_hard_link;
@@ -1790,7 +1752,7 @@ done_soft_link:
 					sh_parm[arg++] = cobol_frontend;	/* ACU Link interface program		*/
 					sh_parm[arg++] = linkkey;		/* Key to parm area			*/
 				}
-				else						/* Micro Focus GNT or INT file		*/
+				else /* ftyp == RUN_MF */
 				{
 					sh_parm[arg++] = cobol_frontend;	/* MF Link interface program		*/
 				}
@@ -1837,7 +1799,7 @@ done_soft_link:
 				{
 					if ((cpos + len_list.len[i] + 3) >= 128)
 					{
-						werrlog(ERRORCODE(20),"Command is greater then 128 bytes",0,0,0,0,0,0,0);
+						werrlog(WERRCODE(28020),"Command is greater then 128 bytes",0,0,0,0,0,0,0);
 
 						/*
 						**	Set exit_code and errno to force...
@@ -1864,17 +1826,17 @@ done_soft_link:
 			}
 			else if (parmcnt)
 			{
-				werrlog(ERRORCODE(20),"Parmameter lengths unknown",0,0,0,0,0,0,0);
+				werrlog(WERRCODE(28020),"Parmameter lengths unknown",0,0,0,0,0,0,0);
 			}
 
-			wtrace("LINK", "WSYSTEM", "Command = [%s]", command);
+			WL_wtrace("LINK", "WSYSTEM", "Command = [%s]", command);
 			
-			savelevel = linklevel();
-			newlevel();
+			savelevel = WL_linklevel();
+			WL_newlevel();
 
-			exit_code = wsystem(command);
+			exit_code = WL_wsystem(command);
 			
-			setlevel(savelevel);
+			WL_setlevel(savelevel);
 
 			goto done_hard_link;
 		}
@@ -1883,15 +1845,15 @@ done_soft_link:
 			/*
 			**	Spawn WPROC
 			*/
-			char	*name_ptr = wprocexe();				/* Get the name of "wproc"		*/
-			char	*debug_ptr = wprocflags();
+			const char *name_ptr = WL_wprocexe();				/* Get the name of "wproc"		*/
+			const char *debug_ptr = WL_wprocflags();
 			int	arg;
 
-			sh_parm[0] = name_ptr;
+			sh_parm[0] = (char*)name_ptr;
 			arg = 1;
 			if ( debug_ptr && *debug_ptr )				/* Check for debug flags		*/
 			{
-				sh_parm[arg++] = debug_ptr;			/* Add the debug flags			*/
+				sh_parm[arg++] = (char *)debug_ptr;		/* Add the debug flags			*/
 			/*	freopen("wproc.trace","w",stdout);	*/	/* Redirect stdout			*/
 			}
 			sh_parm[arg++] = "-p";					/* Use parameter file			*/
@@ -1913,7 +1875,7 @@ done_soft_link:
 			strcat(buff, sh_parm[i]);
 			strcat(buff, " ");
 		}
-		wtrace("LINK", "HARDLINK", "%s", buff);
+		WL_wtrace("LINK", "HARDLINK", "%s", buff);
 	
 	
 		/*
@@ -1921,7 +1883,7 @@ done_soft_link:
 		*/
 		if (wbackground())
 		{
-			exit_code = win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
+			exit_code = WL_win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
 		}
 		else if (RUN_ACUCOBOL == ftyp ||
 			 RUN_MF       == ftyp   )
@@ -1933,8 +1895,8 @@ done_soft_link:
 			**	because Acucobol doesn't un-hide it's window.
 			**	Don't call nativescreens() because will be false if called from wshell.
 			**
-			**	if (get_wisp_option("NATIVESCREENS"))
-			**		exit_code = win32spawnvp(sh_parm, SPN_HIDE_PARENT|SPN_WAIT_FOR_CHILD);
+			**	if (WL_get_wisp_option("NATIVESCREENS"))
+			**		exit_code = WL_win32spawnvp(sh_parm, SPN_HIDE_PARENT|SPN_WAIT_FOR_CHILD);
 			*/
 
 			/*
@@ -1943,7 +1905,7 @@ done_soft_link:
 			** 	a new one is always created
 			** 	HIDE CHILD will start the console hidden so it can be moved.
 			**
-			** 	exit_code = win32spawnvp(sh_parm, SPN_HIDE_PARENT|SPN_HIDE_CHILD|SPN_WAIT_FOR_CHILD); 
+			** 	exit_code = WL_win32spawnvp(sh_parm, SPN_HIDE_PARENT|SPN_HIDE_CHILD|SPN_WAIT_FOR_CHILD); 
 			*/
 
 			/*
@@ -1958,13 +1920,13 @@ done_soft_link:
 			 *	If using a console version of the acucobol runtime then don't hide the parent
 			 *	because we will inherit the console.
 			 */
-			if (get_wisp_option("CONSOLEACU"))
+			if (WL_get_wisp_option("CONSOLEACU"))
 			{
-				exit_code = win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
+				exit_code = WL_win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
 			}
 			else
 			{
-				exit_code = win32spawnvp(sh_parm, SPN_HIDE_PARENT|SPN_WAIT_FOR_CHILD);
+				exit_code = WL_win32spawnvp(sh_parm, SPN_HIDE_PARENT|SPN_WAIT_FOR_CHILD);
 			}
 		}
 		else
@@ -1977,7 +1939,7 @@ done_soft_link:
 			
 			if (link_separate_window)
 			{
-				exit_code = win32spawnvp(sh_parm, SPN_STANDALONE_CHILD);
+				exit_code = WL_win32spawnvp(sh_parm, SPN_STANDALONE_CHILD);
 			}
 			else
 			{
@@ -1989,7 +1951,7 @@ done_soft_link:
 				**	In the future should test what child is and if a Windows app
 				**	then we should hide the parent or do standalone.
 				*/
-				exit_code = win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
+				exit_code = WL_win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
 			}
 		}			
 		save_errno = errno;
@@ -1998,7 +1960,7 @@ done_soft_link:
 		*/
 	done_hard_link:
 		
-		setlevel(savelevel);
+		WL_setlevel(savelevel);
 
 		if (!wbackground() && !link_separate_window)
 		{
@@ -2011,7 +1973,7 @@ done_soft_link:
 			/*
 			**	Spawn failed so set the compcode and retcode
 			*/
-			werrlog(ERRORCODE(14),sh_parm[0],l_file,errno,0,0,0,0,0);
+			werrlog(WERRCODE(28014),sh_parm[0],l_file,errno,0,0,0,0,0);
 			wang_compcode = 8;
 			switch(save_errno)
 			{
@@ -2038,7 +2000,7 @@ done_soft_link:
 	/*
 	**	Do a putparm UNLINK
 	*/
-	ppunlink(linklevel());
+	WL_ppunlink(WL_linklevel());
 
 	/*
 	**	Post-processing of parm file
@@ -2049,7 +2011,7 @@ done_soft_link:
 		int4	the_comp_code = 0;
 		int4	the_ret_code = 0;
 
-		readunixlink(parmcnt, &parm_list, &len_list, linkkey, &the_comp_code, &the_ret_code);
+		WL_readunixlink(parmcnt, &parm_list, &len_list, linkkey, &the_comp_code, &the_ret_code);
 
 		if (the_comp_code != -1)
 		{
@@ -2071,7 +2033,7 @@ done_soft_link:
 					/*
 					**	This should only happen if the frontend routine was not found.
 					*/
-					werrlog(ERRORCODE(22),cobol_frontend,0,0,0,0,0,0,0);
+					werrlog(WERRCODE(28022),cobol_frontend,0,0,0,0,0,0,0);
 					wang_compcode = 8;
 					wang_retcode = 80;
 				}
@@ -2086,13 +2048,13 @@ done_soft_link:
 	} 
 
 	/* Reload defaults: may have changed	*/
-	load_defaults(); 
+	WL_load_defaults(); 
 
 	/*
 	**	Restore soft link level stuff.
 	**	Needs to be done before any wexit() because it restores the temp file list.
 	*/
-	postlink_restore_state(linklevel());
+	postlink_restore_state(WL_linklevel());
 
 	/*
 	**	Post-prcessing for CANCEL EXIT
@@ -2103,9 +2065,9 @@ done_soft_link:
 		**	Cancel-Exit is not at this level.
 		**	If a lower level called LOGOFF() then exit
 		*/
-		if ( LOGOFFFLAG )
+		if ( wisp_get_LOGOFFFLAG() )
 		{
-			wtrace("LINK", "CANEXIT", "A lower link level called LOGOFF (level=%d)", linklevel());
+			WL_wtrace("LINK", "CANEXIT", "A lower link level called LOGOFF (level=%d)", WL_linklevel());
 			wexit(32);
 		}
 	}
@@ -2115,8 +2077,8 @@ done_soft_link:
 		**	This level has a cancel-exit so decrement the counter
 		**	and cancel any lower level LOGOFF()
 		*/
-		CANEXITFLAG--;
-		LOGOFFFLAG = 0;
+		wisp_set_CANEXITFLAG(wisp_get_CANEXITFLAG()-1);
+		wisp_set_LOGOFFFLAG(0);
 	}
 
 	/*
@@ -2128,14 +2090,14 @@ done_soft_link:
 		vwang_set_reinitialize(TRUE);
 	}
 
-	wtrace("LINK", "RETURN", "FILE=%s compcode=%ld retcode=%ld (level=%d)", 
-	       l_file, (long)wang_compcode, (long)wang_retcode, linklevel());
+	WL_wtrace("LINK", "RETURN", "FILE=%s compcode=%ld retcode=%ld (level=%d)", 
+	       l_file, (long)wang_compcode, (long)wang_retcode, WL_linklevel());
        
 	/*
 	**	Set the return and comp codes
 	*/
-	swap_put ( comcode, wang_compcode ) ;
-	swap_put ( retcod, wang_retcode );
+	WL_put_swap( comcode, wang_compcode ) ;
+	WL_put_swap( retcod, wang_retcode );
 	return;
 
 /******************************************  End of WIN32 section  *******************************************************/
@@ -2144,7 +2106,7 @@ done_soft_link:
 }
 
 
-void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *link_filespec)
+void WL_call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *link_filespec)
 {
 	char	buff[256];
 	
@@ -2158,7 +2120,7 @@ void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *
 	case 1:	/* Program file missing or inaccessible */
 		*wang_compcode = 8;
 		*wang_retcode  = 20;	/* File not found.			*/
-		werrlog(ERRORCODE(7),link_filespec,0,0,0,0,0,0,0);
+		WL_wtrace("LINK","NOTFOUND","Program [%s] not found",link_filespec);
 		break;
 
 	case 2:	/* Not a COBOL program */
@@ -2166,26 +2128,26 @@ void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *
 	case 5:	/* Unsupported object code version number */
 		*wang_compcode = 8;
 		*wang_retcode  = 52;	/* NOT a runable file			*/
-		werrlog(ERRORCODE(11),link_filespec,0,0,0,0,0,0,0);
+		WL_wtrace("LINK","NOTRUN","Program [%s] not runnable",link_filespec);
 		break;
 
 	case 4: /* Not enough memory to load file */
 		*wang_compcode = 8;
 		*wang_retcode  = 60;	/* NOT enough memory			*/
-		werrlog(ERRORCODE(13),link_filespec,0,0,0,0,0,0,0);
+		WL_wtrace("LINK","NOMEMORY","Not enough memory to load program [%s]",link_filespec);
 		break;
 	
 	case 6: /* Recursive CALL of a program */
 		*wang_compcode = 8;
 		*wang_retcode  = 50;	/* Recursive call			*/
-		werrlog(ERRORCODE(16),link_filespec,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(28016),link_filespec,0,0,0,0,0,0,0);
 		break;
 
 	default:
 		*wang_compcode = 8;
 		*wang_retcode  = 99;
-		sprintf(buff,"call_acucobol() failed on file [%s] with [%d]",link_filespec,rc);
-		werrlog(ERRORCODE(20),buff,0,0,0,0,0,0,0);
+		sprintf(buff,"WL_call_acucobol() failed on file [%s] with [%d]",link_filespec,rc);
+		werrlog(WERRCODE(28020),buff,0,0,0,0,0,0,0);
 		break;
 	}
 }
@@ -2225,13 +2187,13 @@ static int searchpath(const char* wangfilename, char* filespec)
 	
 #ifdef unix
 	strcpy(lowname,wangfilename);
-	lower_string(lowname);
+	WL_lower_string(lowname);
 #endif
 	strcpy(upname,wangfilename);
 	upper_string(upname);
 
 	not_found = 1;
-	for(pathcnt=1; not_found && link_path_seg(pathcnt); pathcnt++)
+	for(pathcnt=1; not_found && WL_link_path_seg(pathcnt); pathcnt++)
 	{
 		/*
 		**	Build test filepath (uppercase)
@@ -2240,10 +2202,10 @@ static int searchpath(const char* wangfilename, char* filespec)
 		**	NOTE:   We check all the extensions against the uppercase name before we check any against
 		**		the lowercase name.
 		*/
-		if (fexists(link_path_seg(pathcnt)))
+		if (fexists(WL_link_path_seg(pathcnt)))
 		{
-			buildfilepath( testname, link_path_seg(pathcnt), upname);
-			not_found = findexts(testname,filespec);
+			buildfilepath( testname, WL_link_path_seg(pathcnt), upname);
+			not_found = WL_findexts(testname,filespec);
 
 #ifdef unix
 			if (not_found)
@@ -2251,8 +2213,8 @@ static int searchpath(const char* wangfilename, char* filespec)
 				/*
 				**	build test filepath (lowercase)
 				*/
-				buildfilepath( testname, link_path_seg(pathcnt), lowname);
-				not_found = findexts(testname,filespec);
+				buildfilepath( testname, WL_link_path_seg(pathcnt), lowname);
+				not_found = WL_findexts(testname,filespec);
 			}
 #endif /* unix */
 		}
@@ -2260,11 +2222,11 @@ static int searchpath(const char* wangfilename, char* filespec)
 
 	if (not_found)
 	{
-		wtrace("SEARCHPATH", "RETURN", "FILE=%s NOT FOUND ON SEARCH PATH", wangfilename);
+		WL_wtrace("SEARCHPATH", "RETURN", "FILE=%s NOT FOUND ON SEARCH PATH", wangfilename);
 	}
 	else
 	{
-		wtrace("SEARCHPATH", "RETURN", "FILE=%s PATH=%s", wangfilename, filespec);
+		WL_wtrace("SEARCHPATH", "RETURN", "FILE=%s PATH=%s", wangfilename, filespec);
 	}
 	
 	return(not_found);
@@ -2277,40 +2239,41 @@ static int searchnative(const char* nativename, char* filespec)
 {
 	int	pathcnt;
 
-	for(pathcnt=1; link_path_seg(pathcnt); pathcnt++)
+	for(pathcnt=1; WL_link_path_seg(pathcnt); pathcnt++)
 	{
-		if (fexists(link_path_seg(pathcnt)))
+		if (fexists(WL_link_path_seg(pathcnt)))
 		{
 			char	testname[256];
 
-			buildfilepath( testname, link_path_seg(pathcnt), nativename);
+			buildfilepath( testname, WL_link_path_seg(pathcnt), nativename);
 
 			if (fexists(testname))
 			{
 				strcpy(filespec,testname);
 
-				wtrace("SEARCHNATIVE", "RETURN", "FILE=%s PATH=%s", nativename, filespec);
+				WL_wtrace("SEARCHNATIVE", "RETURN", "FILE=%s PATH=%s", nativename, filespec);
 				return 0;
 			}
 			
 		}
 	}
 
-	wtrace("SEARCHNATIVE", "RETURN", "FILE=%s NOT FOUND ON SEARCH PATH", nativename);
+	WL_wtrace("SEARCHNATIVE", "RETURN", "FILE=%s NOT FOUND ON SEARCH PATH", nativename);
 	
 	return 1;
 }
 
 
 /*
-**	Routine:	findrun()
+**	Routine:	WL_findrun()
 **
 **	Function:	To find the file to run.
 **
-**	Description:	This routine is called from "wproc" (Lexical Procedure Intrp) it's job is to return a native filespec
-**			and the linktype to use.
+**	Description:	This routine is called from "wproc" (Lexical Procedure Intrp) it's job 
+**			is to return a native filespec and the linktype to use.
 **			If lib or vol are supplied then it is a linktype 'P'
-**			If lib and vol are blank it will first look at PROGLIB/PROGVOL then the current dir (linktype ' ').
+**			If lib and vol are blank it will first look at PROGLIB/PROGVOL then the 
+**			current dir (linktype ' ').
 ** 			If still not found it will search the $PATH (linktype 'S').
 **
 **	Input:		file		Wang style filename
@@ -2329,21 +2292,26 @@ static int searchnative(const char* nativename, char* filespec)
 **
 */
 
-int findrun(char file[SIZEOF_FILE],char lib[SIZEOF_LIB], char vol[SIZEOF_VOL], char* native, char linktype[1])
+int WL_findrun(char file[SIZEOF_FILE],char lib[SIZEOF_LIB], char vol[SIZEOF_VOL], char* native, char linktype[1])
 {
 	int4	mode;
 	char	l_file[SIZEOF_FILE+1], l_lib[SIZEOF_FILE+1], l_vol[SIZEOF_VOL+1], l_filename[SIZEOF_FILE+1];
 	char	*ptr;
+	int	rc = 1;
 
-	loadpad(l_file,file,SIZEOF_FILE); 	l_file[SIZEOF_FILE] = (char)0;
-	loadpad(l_lib, lib, SIZEOF_LIB); 	l_lib[SIZEOF_LIB]  = (char)0;
-	loadpad(l_vol, vol, SIZEOF_VOL); 	l_vol[SIZEOF_VOL]  = (char)0;
+	WL_wtrace("FINDRUN","ENTRY","File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s]", file, lib, vol);
 
-	if (islinkvector(l_file))
+	WL_loadpad(l_file,file,SIZEOF_FILE); 	l_file[SIZEOF_FILE] = (char)0;
+	WL_loadpad(l_lib, lib, SIZEOF_LIB); 	l_lib[SIZEOF_LIB]  = (char)0;
+	WL_loadpad(l_vol, vol, SIZEOF_VOL); 	l_vol[SIZEOF_VOL]  = (char)0;
+
+	if (WL_islinkvector(l_file))
 	{
 		unloadpad(native,file,SIZEOF_FILE);
 		linktype[0] = 'S';
-		return(0);
+		rc = 0;
+		WL_wtrace("FINDRUN","RETURN", "RC=%d (LINKVECTOR) linktype=[%c] native=[%.80s]", rc, linktype[0], native);
+		return rc;
 	}
 
 	/*
@@ -2362,16 +2330,18 @@ int findrun(char file[SIZEOF_FILE],char lib[SIZEOF_LIB], char vol[SIZEOF_VOL], c
 
 	unloadpad(l_filename,l_file,SIZEOF_FILE);
 
-	if (0 != memcmp(l_lib,"        ",SIZEOF_LIB) || 
-	    0 != memcmp(l_vol,"      ",SIZEOF_VOL))					/* If lib or vol supplied - use em	*/
+	if (0 != memcmp(l_lib,"        ",SIZEOF_LIB) && 
+	    0 != memcmp(l_vol,"      ",SIZEOF_VOL))					/* If lib and vol supplied - use em	*/
 	{
 		linktype[0] = 'P';
-		mode = IS_SUBMIT;
-		ptr = wfname(&mode,l_vol,l_lib,l_file,native);				/* expand the name 			*/
+		mode = 0;
+		ptr = WL_wfname(&mode,l_vol,l_lib,l_file,native);			/* expand the name 			*/
 		*ptr = (char)0;
 		if (WL_isafile(native))							/* Check if found			*/
 		{
-			return(0);							/* FOUND				*/
+			rc = 0;
+			WL_wtrace("FINDRUN","RETURN", "RC=%d linktype=[%c] native=[%.80s]", rc, linktype[0], native);
+			return rc;							/* FOUND				*/
 		}
 
 		if (0==memcmp(l_lib,"@SYSTEM@",SIZEOF_LIB))
@@ -2380,8 +2350,11 @@ int findrun(char file[SIZEOF_FILE],char lib[SIZEOF_LIB], char vol[SIZEOF_VOL], c
 			**	If the library is @SYSTEM@ then try the $PATH
 			*/
 			linktype[0] = 'S';						/* Try searching the $PATH		*/
-			return(searchpath(l_filename,native));				/* Return if it was found or not	*/
+			rc = searchpath(l_filename,native);				/* Return if it was found or not	*/
+			WL_wtrace("FINDRUN","RETURN", "RC=%d linktype=[%c] native=[%.80s]", rc, linktype[0], native);
+			return rc;
 		}
+		WL_wtrace("FINDRUN","RETURN", "RC=1 (NOT FOUND)");
 		return(1);								/* NOT FOUND				*/
 	}
 
@@ -2389,26 +2362,28 @@ int findrun(char file[SIZEOF_FILE],char lib[SIZEOF_LIB], char vol[SIZEOF_VOL], c
 	**	Neither lib nor vol was supplied.
 	*/
 	linktype[0] = ' ';								/* Try PROGLIB/PROGVOL			*/
-	get_defs(DEFAULTS_PV,l_vol);
-	get_defs(DEFAULTS_PL,l_lib);
-	mode = IS_SUBMIT;
-	ptr = wfname(&mode,l_vol,l_lib,l_file,native);
+	WL_get_defs(DEFAULTS_PV,l_vol);
+	WL_get_defs(DEFAULTS_PL,l_lib);
+	mode = 0;
+	ptr = WL_wfname(&mode,l_vol,l_lib,l_file,native);
 	*ptr = (char)0;
-	if (WL_isafile(native)) return(0);							/* If found then return			*/
+	if (WL_isafile(native)) return(0);						/* If found then return			*/
 
 	memcpy(l_vol,".     ",SIZEOF_VOL);						/* Try the current dir			*/
 	memcpy(l_lib,".       ",SIZEOF_LIB);
-	mode = IS_SUBMIT;
-	ptr = wfname(&mode,l_vol,l_lib,l_file,native);
+	mode = 0;
+	ptr = WL_wfname(&mode,l_vol,l_lib,l_file,native);
 	*ptr = (char)0;
-	if (WL_isafile(native)) return(0);							/* If found then return			*/
+	if (WL_isafile(native)) return(0);						/* If found then return			*/
 
 	linktype[0] = 'S';								/* Try searching the $PATH		*/
-	return(searchpath(l_filename,native));						/* Return if it was found or not	*/
+	rc = searchpath(l_filename,native);						/* Return if it was found or not	*/
+	WL_wtrace("FINDRUN","RETURN", "RC=%d linktype=[%c] native=[%.80s]", rc, linktype[0], native);
+	return rc;
 }
 
 /*
-**	Routine:	firstproc()
+**	Routine:	WL_firstproc()
 **
 **	Function:	Called by "wproc" to record the filepath of the first proc run.
 **
@@ -2430,12 +2405,32 @@ int findrun(char file[SIZEOF_FILE],char lib[SIZEOF_LIB], char vol[SIZEOF_VOL], c
 **	11/17/92	Written by GSL
 **
 */
-int firstproc(char* filepath)
+int WL_firstproc(char* filepath)
 {
 	/*
 	**	NOT YET IMPLEMENTED
 	*/
 	return(0);
+}
+
+
+static int link_fixerr(int code)
+{
+	switch (code)
+	{
+		case EPERM: 
+		case EACCES:	
+				return LINK_RC_28_ACCESS_DENIED;
+		case EBUSY:	return LINK_RC_8_VOLUME_BUSY;
+		case ENOENT: 	return LINK_RC_20_FILE_NOT_FOUND;
+		case EIO:	return LINK_RC_44_IO_ERROR;
+		case ENXIO:	return LINK_RC_4_VOLUME_NOT_FOUND;
+		case ENOEXEC:	return LINK_RC_52_NOT_A_PROGRAM;
+		case EAGAIN:	return LINK_RC_24_EXCEEDS_LIMITS;
+		case ENOMEM:	return LINK_RC_60_NO_MEMORY;
+		case ENOTDIR:	return LINK_RC_16_LIBRARY_NOT_FOUND;
+		default:	return code;
+	}
 }
 
 
@@ -2445,27 +2440,136 @@ int firstproc(char* filepath)
 /*
 **	History:
 **	$Log: link.c,v $
-**	Revision 1.61.2.2.2.2  2002/11/14 21:12:23  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.100  2003/07/03 18:55:17  gsl
+**	trace
 **	
-**	Revision 1.61.2.2.2.1  2002/10/09 19:20:30  gsl
-**	Update fexists.c to match HEAD
-**	Rename routines WL_xxx for uniqueness
+**	Revision 1.99  2003/06/11 19:21:38  gsl
+**	add tracing to findrun
 **	
-**	Revision 1.61.2.2  2002/08/20 18:22:16  gsl
+**	Revision 1.98  2003/03/19 21:11:13  gsl
+**	error checking for blank vol/lib and blank defaults
+**	
+**	Revision 1.97  2003/02/20 23:14:34  gsl
+**	Add OPTIONS get to DISPLAY utility that gets the record size RECSIZE
+**	
+**	Revision 1.96  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.95  2003/02/17 20:30:36  gsl
+**	Define return codes in vssubs.h
+**	
+**	Revision 1.94  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.93  2003/01/30 20:24:13  gsl
+**	fix execvp const warnings
+**	
+**	Revision 1.92  2003/01/30 20:20:42  gsl
+**	fix execvp const warnings
+**	
+**	Revision 1.91  2003/01/29 20:20:52  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.90  2003/01/29 19:42:49  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.89  2003/01/22 19:51:06  gsl
+**	Removed the unused "LINK" entry point , fixed return type and comments
+**	
+**	Revision 1.88  2003/01/22 17:12:36  gsl
+**	Change to use LINK2 for MF instead of LINKMF
+**	
+**	Revision 1.87  2003/01/22 16:38:52  gsl
+**	Remove "LINK" entry point, unused
+**	
+**	Revision 1.86  2003/01/21 16:26:36  gsl
+**	remove LINKAIX
+**	
+**	Revision 1.85  2002/12/11 20:33:36  gsl
+**	Enhance tracing of runtype
+**	
+**	Revision 1.84  2002/12/10 20:54:14  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.83  2002/12/10 17:09:19  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.82  2002/12/04 21:01:52  gsl
+**	FIx const char * warnings
+**	
+**	Revision 1.81  2002/12/04 20:52:17  gsl
+**	Add to OPTIONS file
+**	WPROC
+**	WPROCDEBUG
+**	ACPCONFIG
+**	ACPMAP
+**	WISP_SCRATCH_MODE/WISPSCRATCHMODE
+**	WISP_DISPLAY_8BIT/DISPLAY8BIT/WISPDISPLAY8BIT
+**	WISPSYSADMIN
+**	
+**	Revision 1.80  2002/10/11 20:39:50  gsl
+**	Detect runtime Cobol type without needing INITWISP call.
+**	For ACU set in sub85.c,
+**	For utils set via WRUNCONFIG
+**	Default to MF on UNIX
+**	
+**	Revision 1.79  2002/08/20 16:09:50  gsl
 **	Add support for Micro Focus Shared Object files .so/.sl
-**	V4_4_04
 **	
-**	Revision 1.61.2.1.2.1  2002/08/20 17:56:36  gsl
-**	Add support for Micro Focus Shared Object files .so/.sl
-**	V4_4_04
+**	Revision 1.78  2002/07/22 20:32:34  gsl
+**	Unix commands put filenames in 'quotes' because they can contain $
 **	
-**	Revision 1.61.2.1  2002/08/19 15:31:01  gsl
-**	4403a
+**	Revision 1.77  2002/07/16 16:24:55  gsl
+**	Globals
 **	
-**	Revision 1.61  2001-11-16 10:45:18-05  gsl
+**	Revision 1.76  2002/07/15 17:09:58  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.75  2002/07/12 19:10:12  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.74  2002/07/12 17:00:57  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.73  2002/07/11 20:29:10  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.72  2002/07/11 15:21:42  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.71  2002/07/11 14:52:50  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.70  2002/07/11 14:33:57  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.69  2002/07/10 21:05:18  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.68  2002/07/10 04:27:37  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.67  2002/07/09 04:14:00  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.66  2002/07/02 21:15:25  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.65  2002/07/02 04:00:38  gsl
+**	change acu_cobol and mf_cobol to wisp_acu_cobol() and wisp_mf_cobol()
+**	
+**	Revision 1.64  2002/07/01 04:02:38  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.63  2002/06/25 18:18:39  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 1.62  2002/06/21 20:49:28  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.61  2001/11/16 15:45:18  gsl
 **	Change so VSEDIT is not linked in a separate window UTILSWINDOWS
-**
+**	
 **	Revision 1.60  2001-10-18 16:25:27-04  gsl
 **	Don't write the LINKxxx parameter files for SHELL scripts
 **
@@ -2483,7 +2587,7 @@ int firstproc(char* filepath)
 **	Add the SOFTLINK code to UNIX for both ACU & MF
 **
 **	Revision 1.55  1998-12-09 15:01:38-05  gsl
-**	Fix the WIN32 logic for win98 to use win32SetNewEnv() instead of setenvstr()
+**	Fix the WIN32 logic for win98 to use WL_win32SetNewEnv() instead of setenvstr()
 **	for the WISP_LINK_ENV and WISP_CANCELEXIT_ENV.
 **	Removed the cancelexit cleanup env logic since it is no longer needed.
 **
@@ -2491,7 +2595,7 @@ int firstproc(char* filepath)
 **	Remove the HIDE CHILD flag on WIN32 for Acucobol
 **
 **	Revision 1.53  1998-11-02 10:22:35-05  gsl
-**	Change WIN32 BAT file processing to use wsystem().
+**	Change WIN32 BAT file processing to use WL_wsystem().
 **	This was failing when costar was used.
 **
 **	Revision 1.52  1998-10-29 11:02:02-05  gsl
@@ -2500,7 +2604,7 @@ int firstproc(char* filepath)
 **	Revision 1.51  1998-10-22 14:10:01-04  gsl
 **	For softlink levels store the g_temp_file_list and g_print_file_list
 **	in the softlink stack. Then restore upon return.
-**	Fix TRK#763 where linklevel were incorrectly sharing the temp file list.
+**	Fix TRK#763 where WL_linklevel were incorrectly sharing the temp file list.
 **	,
 **
 **	Revision 1.50  1998-09-08 14:56:39-04  gsl
@@ -2543,10 +2647,10 @@ int firstproc(char* filepath)
 **	for WIN32 if in background don't use the SPN_HIDE_PARENT flag on the spawn.
 **
 **	Revision 1.39  1997-12-04 18:10:55-05  gsl
-**	change osd_path() to link_path_seg()
+**	change osd_path() to WL_link_path_seg()
 **
 **	Revision 1.38  1997-11-21 16:35:48-05  gsl
-**	Fixed the vsharedscreen() logic to work from HELP
+**	Fixed the VL_vsharedscreen() logic to work from HELP
 **
 **	Revision 1.37  1997-10-23 16:11:56-04  gsl
 **	Fix how a link to DISPLAY is handled.
@@ -2555,13 +2659,13 @@ int firstproc(char* filepath)
 **	arguments even if a parmfile was created.
 **
 **	Revision 1.36  1997-10-20 11:04:09-04  gsl
-**	Change to use get_swap()
+**	Change to use WL_get_swap()
 **
 **	Revision 1.35  1997-09-24 11:43:07-04  gsl
 **	Make call_acucobol_error() external
 **
 **	Revision 1.34  1997-09-22 12:32:26-04  gsl
-**	Change isdebug() to the more general vsharedscreen()
+**	Change isdebug() to the more general VL_vsharedscreen()
 **
 **	Revision 1.33  1997-06-09 11:18:50-04  gsl
 **	Fix memory overwrite by can_exit variable
@@ -2579,13 +2683,13 @@ int firstproc(char* filepath)
 **	Fix problem linking to WPROC on NT introduced in revision 1.24
 **	Arg 0 must be the WPROC exe path. On NT the path to WPROC is always
 **	fully qualified.
-**	Fix processing of wprocflags() when an empty string is returned.
+**	Fix processing of WL_wprocflags() when an empty string is returned.
 **
 **	Revision 1.29  1997-05-01 16:37:59-04  gsl
 **	Fix buff error for NT
 **
 **	Revision 1.28  1997-04-15 23:08:48-04  gsl
-**	Update to use wtrace()
+**	Update to use WL_wtrace()
 **
 **	Revision 1.27  1997-04-03 17:02:22-05  gsl
 **	Add trace info messages on result of LINK
@@ -2604,7 +2708,7 @@ int firstproc(char* filepath)
 **	syntax
 **
 **	Revision 1.23  1996-10-08 17:20:51-07  gsl
-**	Replace getenv() with wprocexe() and wprocflags()
+**	Replace getenv() with WL_wprocexe() and WL_wprocflags()
 **	replace shell_val() with wispshellexe()
 **
 **	Revision 1.22  1996-09-16 16:00:55-07  jockc

@@ -1,14 +1,13 @@
-
-000100**   Copyright (c) 1996 DevTech Migrations, All rights reserved.
+000100**   Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
 000200**   $Id:$
 000300**
 000400**   File:       wl0023.wcb
 000500**
 000600**   Project:    WISP/TEST
 000700**
-000800**   Purpose:    Test bit_off/lbit_off,
-      **                    bit_on/lbit_on,
-      **                    bit_test/lbit_test routine.
+000800**   Purpose:    Test BIT_OFF/LBIT_OFF,
+      **                    BIT_ON/LBIT_ON,
+      **                    BIT_TEST routine.
 000900**
 001000**   Example:
 001100**
@@ -26,53 +25,68 @@
        01  COMPLETION-STATUS        PIC 9(02) VALUE 0.
 
 001600 Procedure Division.
-      *bit_off.
+      *BIT_OFF.
            MOVE "@"     TO MASK-BYTE.
            MOVE "a"     TO TARGET-BYTE.
-           CALL "bit_off" USING MASK-BYTE, TARGET-BYTE.
+           CALL "BIT_OFF" USING MASK-BYTE, TARGET-BYTE.
 
            IF TARGET-BYTE NOT = "!" THEN
               ADD 1     TO COMPLETION-STATUS.
 
-      *lbit_off.
+      *LBIT_OFF.
            MOVE "   @"     TO LMASK-BYTE.
            MOVE "abca"     TO LTARGET-BYTE.
 
-           CALL "lbit_off" USING LMASK-BYTE, LTARGET-BYTE.
+           CALL "LBIT_OFF" USING LMASK-BYTE, LTARGET-BYTE.
 
            IF LTARGET-BYTE NOT = "ABC!" THEN
               ADD 1     TO COMPLETION-STATUS.
 
-      *bit_on.
+      *BIT_ON.
            MOVE "@"     TO MASK-BYTE.
            MOVE "!"     TO TARGET-BYTE.
-           CALL "bit_on" USING MASK-BYTE, TARGET-BYTE.
+           CALL "BIT_ON" USING MASK-BYTE, TARGET-BYTE.
 
            IF TARGET-BYTE NOT = "a" THEN
               ADD 1     TO COMPLETION-STATUS.
 
-      *lbit_on.
+      *LBIT_ON.
            MOVE "   @"     TO LMASK-BYTE.
            MOVE "ABC!"     TO LTARGET-BYTE.
 
-           CALL "lbit_on" USING LMASK-BYTE, LTARGET-BYTE.
+           CALL "LBIT_ON" USING LMASK-BYTE, LTARGET-BYTE.
 
            IF LTARGET-BYTE NOT = "abca" THEN
               ADD 1     TO COMPLETION-STATUS.
 
-      *bit_test.
+      *BIT_TEST.
            MOVE " "     TO MASK-BYTE.
            MOVE "@"     TO TARGET-BYTE.
-           CALL "bit_test" USING MASK-BYTE, TARGET-BYTE, TEST-RESULT.
+           CALL "BIT_TEST" USING MASK-BYTE, TARGET-BYTE, TEST-RESULT.
 
            IF TEST-RESULT NOT = "N" THEN
               ADD 1     TO COMPLETION-STATUS.
 
            MOVE "b"     TO MASK-BYTE.
            MOVE "c"     TO TARGET-BYTE.
-           CALL "bit_test" USING MASK-BYTE, TARGET-BYTE, TEST-RESULT.
+           CALL "BIT_TEST" USING MASK-BYTE, TARGET-BYTE, TEST-RESULT.
 
            IF TEST-RESULT NOT = "Y" THEN
+              ADD 1     TO COMPLETION-STATUS.
+
+      *WSETFACBLINK.
+           MOVE "J"     TO TARGET-BYTE.
+           CALL "WSETFACBLINK" USING TARGET-BYTE.
+
+           IF TARGET-BYTE NOT = "R" THEN
+	      DISPLAY "WSETFACBLINK J->R failed"
+              ADD 1     TO COMPLETION-STATUS.
+
+           MOVE "o"     TO TARGET-BYTE.
+           CALL "WSETFACBLINK" USING TARGET-BYTE.
+
+           IF TARGET-BYTE NOT = "w" THEN
+	      DISPLAY "WSETFACBLINK o->w failed"
               ADD 1     TO COMPLETION-STATUS.
 
            PERFORM CHECK-STATUS.
@@ -80,13 +94,14 @@
 
        CHECK-STATUS.
            IF  COMPLETION-STATUS = 0 THEN
-           DISPLAY "(l)bit_off, (l)bit_on, (l)bit_test
+                DISPLAY "BIT_OFF, BIT_ON, BIT_TEST, WSETFACBLINK
       -             " completion successful."
            ELSE
-                DISPLAY "(l)bit_off, (l)bit_on, (l)bit_test failed.".
-
-            EXIT PROGRAM.
-            STOP RUN.
+                DISPLAY "BIT_OFF, BIT_ON, BIT_TEST, WSETFACBLINK
+      -             " failed."
+           END-IF.
+           EXIT PROGRAM.
+           STOP RUN.
 
 
 

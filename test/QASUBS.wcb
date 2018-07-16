@@ -1,4 +1,4 @@
-000100
+000100* $Id:$
 000200/*****************************************************************
 000300*                                                                *
 000400*                       IDENTIFICATION DIVISION                  *
@@ -189,8 +189,39 @@
 011100     03  FILLER                     PIC X(01).
 011200     03  CURS-ROW                   PIC X(01).
 011300
-       01  CRT-ROW-NUM			  PIC 99.
-       01  NEXT-CRT-ROW		          PIC X(80).
+
+      ******************************************************************
+       01  PROGRESS-ROW-NUM		  PIC 99 VALUE 1.
+       01  NEXT-PROGRESS-ROW	          PIC X(79) VALUE SPACES.
+
+       01  PROGRESS-TITLE  PIC X(40) VALUE "PROGRESS SCREEN TITLE".
+       01  PROGRESS-FOOTER PIC X(40) VALUE "PROGRESS SCREEN FOOTER".
+       01  PROGRESS-ROWS.
+           05  FILLER OCCURS 20 TIMES.
+	       10  PROGRESS-ROW PIC X(79).
+
+       01  PROGRESS-LOCK-ORDER-AREA.
+           05  PROGRESS-LOCK-OA-ROW     PIC X VALUE HEX-01.
+           05  PROGRESS-LOCK-OA-WCC     PIC X VALUE HEX-20.
+           05  PROGRESS-LOCK-OA-CCOL    PIC X VALUE HEX-01.
+           05  PROGRESS-LOCK-OA-CROW    PIC X VALUE HEX-01.
+
+       01  PROGRESS-UNLOCK-ORDER-AREA.
+           05  PROGRESS-UNLOCK-OA-ROW     PIC X VALUE HEX-01.
+           05  PROGRESS-UNLOCK-OA-WCC     PIC X VALUE HEX-80.
+           05  PROGRESS-UNLOCK-OA-CCOL    PIC X VALUE HEX-01.
+           05  PROGRESS-UNLOCK-OA-CROW    PIC X VALUE HEX-01.
+           
+       01  PROGRESS-SCREEN USAGE IS DISPLAY-WS.
+           05  FILLER PIC X(40)      ROW  1 COLUMN 20
+               SOURCE PROGRESS-TITLE.
+           05  FILLER OCCURS 20 TIMES.
+	       10  FILLER PIC X(79)  ROW  3 COLUMN  2
+	           SOURCE PROGRESS-ROW.
+           05  FILLER PIC X(40)      ROW 24 COLUMN 20
+               SOURCE PROGRESS-FOOTER.
+
+      ******************************************************************
        
 011400******************************************************************
 011500
@@ -1925,7 +1956,7 @@
 181900 01  EXT-RECVR-3-X.
 182000     03  FILLER             BINARY    VALUE 0.
 182100     03  EXT-RECVR-3        BINARY    VALUE 0.
-182200
+182200 01  KW-PL  PIC XX VALUE "PL".
 182300******************************************************************
 182400
 182500 01  PRINT-SCREEN USAGE IS DISPLAY-WS.
@@ -2578,130 +2609,6 @@
 245200     03  FILLER  PIC X(23) ROW 24 COLUMN 10 VALUE
 245300         "PRESS (16) TO EXIT".
 245400
-245500******************************************************************
-245600
-245700 01  MSG-FN PIC XX VALUE SPACES.
-245800 01  MSG-PORT PIC X(4) VALUE "ABCD".
-245900 01  MSG-SND PIC X(55) VALUE SPACES.
-246000 01  MSG-RCV PIC X(55) VALUE SPACES.
-246100 01  MSG-RET PIC 9(4) VALUE ZERO.
-246200 01  MSG-RET-X.
-246300     03  FILLER BINARY VALUE ZERO.
-246400     03  MSG-RET-X-0 BINARY VALUE ZERO.
-246500 01  MSG-TYPE PIC X(1) VALUE SPACES.
-246600 01  MSG-TIME PIC 9(4) VALUE 500.
-246700 01  MSG-BUF-SIZE.
-246800     03  FILLER BINARY VALUE ZERO.
-246900     03  FILLER BINARY VALUE 2014.
-247000 01  MSG-KEEP PIC X VALUE "N".
-247100 01  MSG-TIME-X.
-247200     03  FILLER BINARY VALUE ZERO.
-247300     03  MSG-TIME-X-0 BINARY VALUE ZERO.
-247400 01  MSG-LEN-X.
-247500     03  FILLER BINARY VALUE ZERO.
-247600     03  FILLER BINARY VALUE 55.
-247700 01  MSG-LEN-X2.
-247800     03  FILLER BINARY VALUE ZERO.
-247900     03  FILLER BINARY VALUE 55.
-248000 01  MSG-DUMMY PIC X VALUE SPACES.
-248100
-248200 01  MESSAGE-SCR USAGE IS DISPLAY-WS.
-248300
-248400     03  FILLER PIC X(35) ROW 1 COLUMN 21
-248500         VALUE "*** TESTING THE MESSAGE VSSUB ***".
-248600
-248700     03  FILLER PIC X(30) ROW 3 COLUMN 23
-248800         VALUE "SPECIFY PARAMETERS FOR MESSAGE".
-248900
-249000     03  FILLER PIC X(5) ROW 5 COLUMN 14
-249100         VALUE "PORT ".
-249200
-249300     03  FILLER PIC X(4) ROW 5 COLUMN 19
-249400         SOURCE MSG-PORT OBJECT MSG-PORT.
-249500
-249600     03  FILLER PIC X(13) ROW 7 COLUMN 6
-249700         VALUE "SEND MESSAGE ".
-249800
-249900     03  FILLER PIC X(55) ROW 7 COLUMN 19
-250000         SOURCE MSG-SND OBJECT MSG-SND.
-250100
-250200     03  FILLER PIC X(16) ROW 8 COLUMN 3
-250300         VALUE "RECEIVE MESSAGE ".
-250400
-250500     03  FILLER PIC X(55) ROW 8 COLUMN 19
-250600         SOURCE MSG-RCV.
-250700
-250800     03  FILLER PIC X(12) ROW 10 COLUMN 7
-250900         VALUE "RETURN-CODE ".
-251000
-251100     03  MSG-RET-S PIC ZZZ9 ROW 10 COLUMN 19
-251200         SOURCE MSG-RET.
-251300
-251400     03  FILLER PIC X(35) ROW 12 COLUMN 2
-251500         VALUE "(1) (CR)   Create Message Port".
-251600
-251700     03  FILLER PIC X(25) ROW 12 COLUMN 43
-251800         VALUE "KEEP port on unlink (Y/N)".
-251900
-252000     03  FILLER PIC X ROW 12 COLUMN 70
-252100         SOURCE MSG-KEEP OBJECT MSG-KEEP.
-252200
-252300     03  FILLER PIC X(40) ROW 13 COLUMN 2
-252400         VALUE "(2) (DE)   Destroy Message Port".
-252500
-252600     03  FILLER PIC X(40) ROW 14 COLUMN 2
-252700         VALUE "(3) (XM)   Transmit".
-252800
-252900     03  FILLER PIC X(40) ROW 15 COLUMN 2
-253000         VALUE "(4) (XW)   Transmit and Wait".
-253100
-253200     03  FILLER PIC X(40) ROW 16 COLUMN 2
-253300         VALUE "(5) (CH-W) Check and Wait".
-253400
-253500     03  FILLER PIC X(35) ROW 17 COLUMN 2
-253600         VALUE "(6) (CH-T) Check with Timeout".
-253700
-253800     03  FILLER PIC X(4) ROW 17 COLUMN 41
-253900         VALUE "TIME".
-254000     03  FILLER PIC 9(4) ROW 17 COLUMN 47
-254100         SOURCE MSG-TIME OBJECT MSG-TIME.
-254200
-254300     03  FILLER PIC X(40) ROW 18 COLUMN 2
-254400         VALUE "(7) (CH-K) Check with Key Interrupt".
-254500
-254600     03  FILLER PIC X(60) ROW 19 COLUMN 2 VALUE
-254700         "(8) (CH-B) Check with Both          TIME (above)".
-254800
-254900     03  FILLER PIC X(11) ROW 21 COLUMN 2
-255000         VALUE "(16) EXIT".
-255100
-255200     03  FILLER PIC X(25) ROW 24 COLUMN 26
-255300         VALUE "PRESS A PFKEY TO CONTINUE".
-255400
-255500 01  MESSAGE-UNLOCK-OA.
-255600         10  FILLER  PIC X VALUE HEX-01.
-255700         10  FILLER  PIC X VALUE HEX-A0.
-255800         10  FILLER  PIC X VALUE HEX-00.
-255900         10  FILLER  PIC X VALUE HEX-00.
-256000 01  MESSAGE-LOCK-OA.
-256100         10  FILLER  PIC X VALUE HEX-01.
-256200         10  FILLER  PIC X VALUE HEX-40.
-256300         10  FILLER  PIC X VALUE HEX-00.
-256400         10  FILLER  PIC X VALUE HEX-00.
-256500 01  MESSAGECRT.
-256600     05  OA-MESSAGECRT PIC X(4).
-256700     05  FILLER PIC X(80) value
-256800     "             **** WAITING FOR MESSAGE OR AID CHAR ****".
-256900     05  FILLER pic x(400) value spaces.
-257000     05  FILLER PIC X(80) value
-257100     " Enter some text while waiting, then press an AID key".
-257200     05  MSG-FAC-01 pic x.
-257300     05  MSG-LINE-01 pic x(79) value spaces.
-257400     05  MSG-FAC-02 pic x.
-257500     05  MSG-LINE-02 pic x(79) value spaces.
-257600     05  MSG-FAC-03 pic x.
-257700     05  MSG-LINE-03 pic x(79) value spaces.
-257800     05  FILLER pic x(1120) value spaces.
 257900******************************************************************
 258000
 258100 01  SEARCH-ITEM PIC X(14) VALUE SPACES.
@@ -2911,7 +2818,7 @@
 278500        PERFORM LINK-CALL THRU LINK-CALL-EXIT
 278600        GO TO SUBROUTINE-TESTS
 278700     ELSE IF PF-KEY = "09" THEN
-278800        PERFORM MESSAGE-CALL
+278800        CALL "QAMESSAG"
 278900        GO TO SUBROUTINE-TESTS
 279000     ELSE IF PF-KEY = "10" THEN
 279100        PERFORM WCHAIN-CALL
@@ -3371,16 +3278,13 @@
       *$MF_END
            PERFORM TEST-READFDR4-CHAR1.
 
-           MOVE 106    TO READFDR-TEST-ID.
-           MOVE "IV"   TO READFDR-FUNCTION.
-           MOVE 0      TO READFDR-EXPECT-RC-X.
-      *$ACU_CODE PROCESS
-      *    MOVE "V4"    TO READFDR-EXPECT-CHAR8.
-      *$ACU_END
       *$MF_CODE PROCESS
+      *    MOVE 106    TO READFDR-TEST-ID.
+      *    MOVE "IV"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
       *    MOVE "C0"    TO READFDR-EXPECT-CHAR8.
+      *    PERFORM TEST-READFDR4-CHAR8.
       *$MF_END
-           PERFORM TEST-READFDR4-CHAR8.
 
       ************************************             
            MOVE "IDXFIX" TO READFDR-FILE.
@@ -3567,16 +3471,13 @@
       *$MF_END
            PERFORM TEST-READFDR4-CHAR1.
 
-           MOVE 206    TO READFDR-TEST-ID.
-           MOVE "IV"   TO READFDR-FUNCTION.
-           MOVE 0      TO READFDR-EXPECT-RC-X.
-      *$ACU_CODE PROCESS
-      *    MOVE "V4"    TO READFDR-EXPECT-CHAR8.
-      *$ACU_END
       *$MF_CODE PROCESS
+      *    MOVE 206    TO READFDR-TEST-ID.
+      *    MOVE "IV"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
       *    MOVE "I3"    TO READFDR-EXPECT-CHAR8.
+      *    PERFORM TEST-READFDR4-CHAR8.
       *$MF_END
-           PERFORM TEST-READFDR4-CHAR8.
       
       ************************************             
            MOVE "IDXVAR"  TO READFDR-FILE.
@@ -4295,6 +4196,50 @@
       *$ACU_END
 
       ************************************          
+      *	   VISION 4 file
+      *$ACU_CODE PROCESS
+      *    MOVE "ALTVARV4"  TO READFDR-FILE.
+      *    MOVE "LIBSAM" TO READFDR-LIB.
+      *    MOVE "VOLOUT" TO READFDR-VOL.
+      *
+      *    MOVE 2401    TO READFDR-TEST-ID.
+      *    MOVE "FT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "A"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2402    TO READFDR-TEST-ID.
+      *    MOVE "RT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2403    TO READFDR-TEST-ID.
+      *    MOVE "RS"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE 90     TO READFDR-EXPECT-INT4-X.
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2404    TO READFDR-TEST-ID.
+      *    MOVE "RC"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X
+      *    MOVE 1334   TO READFDR-EXPECT-INT4-X
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2405    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2406    TO READFDR-TEST-ID.
+      *    MOVE "IV"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V4"    TO READFDR-EXPECT-CHAR8.
+      *    PERFORM TEST-READFDR4-CHAR8.
+      *$ACU_END
+
+      ************************************          
       *	   IDX 4 file
       *$MF_CODE PROCESS
       *    MOVE "ALTVAR4"  TO READFDR-FILE.
@@ -4474,7 +4419,7 @@
 292605
 292606     PERFORM DO-CALL-FIND.
 292607
-292608     CALL "setwispfilext" USING MY-EXT.
+292608     CALL "WSETFILEXT" USING MY-EXT.
 292609     GO TO DO-FIND-LOOP.
 292610
 292611 DO-FIND-EXIT.
@@ -4671,14 +4616,14 @@
 295066     MOVE  1 TO FIND-STARTER-X.
 295067     MOVE 10 TO FIND-COUNTER-X.
 295068     PERFORM DO-CALL-FIND.
-295069     IF FIND-FILE-COUNT-X < 7 THEN
+295069     IF FIND-FILE-COUNT-X NOT = 7 THEN
 295070         ADD 1 TO FIND-FAILED
 295071         DISPLAY "FIND *** FAILED ***"
 295072             " FILE=" FIND-FILE
 295073             " LIB=" FIND-LIB
 295074             " VOL=" FIND-VOL
 295075             " FCOUNT=" FIND-FILE-COUNT-X
-295076             " EXPECT >= 7".
+295076             " EXPECT = 7".
 295077
 295078     MOVE "?"        TO FIND-FILE.
 295079     MOVE "?"        TO FIND-LIB.
@@ -5017,6 +4962,7 @@
 320600
 320700 SUBMIT-CALL.
 320800
+320801     CALL "EXTRACT" USING KW-PL, SUBMIT-LIB.
 320900     MOVE ZERO TO SUBMIT-RC-B2.
 321000     MOVE SUBMIT-TIME-B2 TO SUBMIT-TIME-X.
 321100     MOVE SUBMIT-RC-B2   TO SUBMIT-RC-X.
@@ -5209,7 +5155,7 @@
 339600
 339700     MOVE LINK-MESS-LEN-X TO LINK-MESS-LEN-2.
 339800     MOVE LINK-EXT TO LINK-EXT-FULL.
-339900     CALL "setwispfilext" USING LINK-EXT-FULL.
+339900     CALL "WSETFILEXT" USING LINK-EXT-FULL.
 340000
 340100     CALL "LINK" USING LINK-FILE LINK-TYPE LINK-LIB LINK-VOL
 340200         LINK-SPECIAL LINK-EXT-OPT LINK-PARM-CNT
@@ -5262,13 +5208,9 @@
 341703     IF WISPPLAT-WINDOWS-NT THEN
 341704         MOVE "PRTARGNT" TO LINKPROC-FILE
 341705     END-IF.
-341706*$ACU-CODE
-341707*    MOVE "TESTACU " TO LINKPROC-LIB.
-341708*$ACU-END
-341709*$MF-CODE
-341710*    MOVE "TESTMF  " TO LINKPROC-LIB.
-341711*$MF-END
 341800
+341801     CALL "EXTRACT" USING KW-PL, LINKPROC-LIB.
+341802
 341900     MOVE "SPECIFIY PARAMETERS FOR LINKPROC" TO LINKPROC-TITLE.
 342000
 342100     MOVE ZERO TO LINKPROC-RETURN-1.
@@ -5309,107 +5251,6 @@
 345600     DISPLAY AND READ LINKPROC-SCREEN ON CRT.
 345700
 345800
-345900******************************************************************
-346000
-346100 MESSAGE-CALL.
-346200     MOVE BRITE TO FAC OF MSG-RET-S.
-346300     DISPLAY AND READ MESSAGE-SCR ON CRT
-346400     PFKEYS 1, 2, 3, 4, 5, 6, 7, 8, 16.
-346500
-346600     IF PF-KEY = "01" THEN
-346700          MOVE "CR" TO MSG-FN
-346800          CALL "MESSAGE" USING MSG-FN
-346900                               MSG-PORT
-347000                               MSG-BUF-SIZE
-347100                               MSG-KEEP
-347200                               MSG-RET-X
-347300     ELSE IF PF-KEY = "02" THEN
-347400          MOVE "DE" TO MSG-FN
-347500          CALL "MESSAGE" USING MSG-FN
-347600                               MSG-PORT
-347700                               MSG-RET-X
-347800     ELSE IF PF-KEY = "03" THEN
-347900          MOVE "XM" TO MSG-FN
-348000          CALL "MESSAGE" USING MSG-FN
-348100                               MSG-PORT
-348200                               MSG-SND
-348300                               MSG-LEN-X
-348400                               MSG-RET-X
-348500     ELSE IF PF-KEY = "04" THEN
-348600          MOVE "XW" TO MSG-FN
-348700          CALL "MESSAGE" USING MSG-FN
-348800                               MSG-PORT
-348900                               MSG-SND
-349000                               MSG-LEN-X
-349100                               MSG-RET-X
-349200     ELSE IF PF-KEY = "05" THEN
-349300          MOVE "CH" TO MSG-FN
-349400          MOVE "W" TO MSG-TYPE
-349500          MOVE MSG-TIME TO MSG-TIME-X-0
-349600          CALL "MESSAGE" USING MSG-FN
-349700                               MSG-PORT
-349800                               MSG-TYPE
-349900                               MSG-TIME-X
-350000                               MSG-RCV
-350100                               MSG-LEN-X2
-350200                               MSG-DUMMY
-350300                               MSG-RET-X
-350400     ELSE IF PF-KEY = "06" THEN
-350500          MOVE "CH" TO MSG-FN
-350600          MOVE "T" TO MSG-TYPE
-350700          MOVE MSG-TIME TO MSG-TIME-X-0
-350800          CALL "MESSAGE" USING MSG-FN
-350900                               MSG-PORT
-351000                               MSG-TYPE
-351100                               MSG-TIME-X
-351200                               MSG-RCV
-351300                               MSG-LEN-X2
-351400                               MSG-DUMMY
-351500                               MSG-RET-X
-351600     ELSE IF PF-KEY = "07" THEN
-351700          perform message-unlock-screen
-351800          MOVE "CH" TO MSG-FN
-351900          MOVE "K" TO MSG-TYPE
-352000          MOVE MSG-TIME TO MSG-TIME-X-0
-352100          CALL "MESSAGE" USING MSG-FN
-352200                               MSG-PORT
-352300                               MSG-TYPE
-352400                               MSG-TIME-X
-352500                               MSG-RCV
-352600                               MSG-LEN-X2
-352700                               MSG-DUMMY
-352800                               MSG-RET-X
-352900          perform message-read-screen
-353000     ELSE IF PF-KEY = "08" THEN
-353100          perform message-unlock-screen
-353200          MOVE "CH" TO MSG-FN
-353300          MOVE "B" TO MSG-TYPE
-353400          MOVE MSG-TIME TO MSG-TIME-X-0
-353500          CALL "MESSAGE" USING MSG-FN
-353600                               MSG-PORT
-353700                               MSG-TYPE
-353800                               MSG-TIME-X
-353900                               MSG-RCV
-354000                               MSG-LEN-X2
-354100                               MSG-DUMMY
-354200                               MSG-RET-X
-354300          perform message-read-screen.
-354400
-354500     MOVE MSG-RET-X-0 TO MSG-RET.
-354600     IF PF-KEY NOT = "16" THEN
-354700          GO TO MESSAGE-CALL.
-354800
-354900 MESSAGE-UNLOCK-SCREEN.
-355000     move message-unlock-oa to oa-messagecrt.
-355100     move HEX-80 to MSG-FAC-01, MSG-FAC-02, MSG-FAC-03.
-355200     move messagecrt to crtrec.
-355300     REWRITE crtrec.
-355400
-355500 MESSAGE-READ-SCREEN.
-355600*    Lock the keyboard first
-355700     move message-lock-oa to crt-oa-only-rec.
-355800     rewrite crt-oa-only-rec.
-355900     read crt into messagecrt.
 356000
 356100******************************************************************
 356200
@@ -5493,9 +5334,7 @@
 364000
 364100     IF PF-KEY = "01" THEN
 364200*$WANG_CODE
-364300*$WANG_ELSE
-364400*       MOVE 3 TO WISP-LONGWORD
-364500*       CALL "wvaset" USING WISP-LONGWORD
+364300*$WANG_ELSE PROCESS
 364600*       CALL "EXTRACT" USING EXT-KW-1
 364700*                            EXT-RECVR-1
 364800*                            WISP-APPLICATION-NAME
@@ -5677,7 +5516,7 @@
 382400     IF PF-KEY NOT = "16" THEN
 382500       MOVE ZERO TO SCRATCH-RET-CODE
 382600
-382700       CALL "setwispfilext" USING SCRATCH-EXT
+382700       CALL "WSETFILEXT" USING SCRATCH-EXT
 382800
 382900       IF SCRATCH-EXP-DATE-CHECK = " "  THEN
 383000         CALL "SCRATCH" USING SCRATCH-TYPE,
@@ -5754,10 +5593,13 @@
            MOVE ZERO       TO SORTCALL-TESTED.
            MOVE ZERO       TO SORTCALL-FAILED.
            MOVE 2000       TO SORTCALL-MAX-KEY.
-	   PERFORM CLEAR-SCREEN.
-	   MOVE " --- SORTCALL AUTOTEST ---" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
-	   ADD 2 TO CRT-ROW-NUM.
+
+      *          1234567890123456789012345678901234567890
+	   MOVE "       --- SORTCALL AUTOTEST ---        " 
+	       TO PROGRESS-TITLE.
+	   MOVE "    PLEASE WAIT FOR TESTS TO COMPLETE   " 
+	       TO PROGRESS-FOOTER.
+	   PERFORM INIT-PROGRESS-SCREEN.
 
       ************************************
            MOVE 101        TO SORTCALL-TEST-ID.
@@ -5807,8 +5649,8 @@
            MOVE 2000       TO SORTCALL-RECCNT.
            PERFORM CALL-SORTCALL-AND-VERIFY.
 
-      * Comment out the VISION 2 tests
       ************************************
+      * Comment out the VISION 2 tests
       *** ACU_CODE PROCESS
       *    MOVE 107        TO SORTCALL-TEST-ID.
       *    MOVE "ALTVARV2" TO SORTCALL-INFILE.
@@ -5847,13 +5689,23 @@
       *    MOVE 1334       TO SORTCALL-RECCNT.
       *    PERFORM CALL-SORTCALL-AND-VERIFY.
       *$MF_END
+
+      ************************************
+      *$ACU_CODE PROCESS
+      *    MOVE 110        TO SORTCALL-TEST-ID.
+      *    MOVE "ALTVARV4" TO SORTCALL-INFILE.
+      *    MOVE "I"        TO SC-FILETYPE
+      *    MOVE 90         TO SC-RECSIZE-N.
+      *    MOVE 1334       TO SORTCALL-RECCNT.
+      *    PERFORM CALL-SORTCALL-AND-VERIFY.
+      *$ACU_END
+
            
       ************************************
 
-	   ADD 1 TO CRT-ROW-NUM.
-	   MOVE " Press (ENTER) to continue" TO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
-	   PERFORM UNLOCK-AND-READ-SCREEN.	   
+	   MOVE "        Press (ENTER) to continue       "
+	       TO PROGRESS-FOOTER.
+	   PERFORM UNLOCK-AND-READ-PROGRESS-SCRN.	   
 
            IF SORTCALL-FAILED = 0 THEN
                DISPLAY "SORTCALL *** PASSED *** ALL " 
@@ -5870,8 +5722,8 @@
 
 	   STRING " TESTING " DELIMITED BY SIZE
                SORTCALL-INFILE DELIMITED BY SIZE
-	       INTO NEXT-CRT-ROW.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	       INTO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
            ADD 1 TO SORTCALL-TESTED.
            SET SORTCALL-TEST-OK TO TRUE.
@@ -5900,16 +5752,16 @@
 	       STRING " TESTING "    DELIMITED BY SIZE
 		   SORTCALL-INFILE   DELIMITED BY SIZE
 		   " *** FAILED ***" DELIMITED BY SIZE
-		   INTO NEXT-CRT-ROW
+		   INTO NEXT-PROGRESS-ROW
 	   ELSE
 	       STRING " TESTING "  DELIMITED BY SIZE
 		   SORTCALL-INFILE DELIMITED BY SIZE
 		   " PASSED"	   DELIMITED BY SIZE
-		   INTO NEXT-CRT-ROW
+		   INTO NEXT-PROGRESS-ROW
 	   END-IF.
 
-	   SUBTRACT 1 FROM CRT-ROW-NUM.
-	   PERFORM WRITE-NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
 
        VERIFY-SORTCALL-OUTFILE-REC45.
 
@@ -6097,37 +5949,36 @@
       ************************************             
            EXIT.
 
-       CLEAR-SCREEN.
+      ******************************************************************
 
-           MOVE HEX-01 TO CRTREC-OA-1
-           MOVE HEX-20 TO CRTREC-OA-2
-           MOVE HEX-01 TO CRTREC-OA-3
-           MOVE HEX-01 TO CRTREC-OA-4
-	   MOVE SPACES TO CRTREC-MAPPING-AREA.
-	   REWRITE CRTREC.
+       INIT-PROGRESS-SCREEN.
 
-	   MOVE 1 TO CRT-ROW-NUM.
+	   MOVE PROGRESS-LOCK-ORDER-AREA TO 
+	       ORDER-AREA OF PROGRESS-SCREEN.
+	   MOVE SPACES TO PROGRESS-ROWS.
 
-       WRITE-NEXT-CRT-ROW.
+           DISPLAY AND READ PROGRESS-SCREEN ON CRT.
 
-           MOVE NEXT-CRT-ROW TO CRTREC-ROW (CRT-ROW-NUM).
+	   MOVE 1 TO PROGRESS-ROW-NUM.
+	   MOVE SPACES TO NEXT-PROGRESS-ROW.
 
-           MOVE HEX-01 TO CRTREC-OA-1
-           MOVE HEX-20 TO CRTREC-OA-2
-           MOVE HEX-01 TO CRTREC-OA-3
-           MOVE HEX-01 TO CRTREC-OA-4
-	   REWRITE CRTREC.
+       WRITE-NEXT-PROGRESS-ROW.
+
+           MOVE NEXT-PROGRESS-ROW TO PROGRESS-ROW (PROGRESS-ROW-NUM).
+	   MOVE PROGRESS-LOCK-ORDER-AREA TO 
+	       ORDER-AREA OF PROGRESS-SCREEN.
+           DISPLAY AND READ PROGRESS-SCREEN ON CRT.
 	   
-	   ADD 1 TO CRT-ROW-NUM.
-	   MOVE SPACES TO NEXT-CRT-ROW.
+	   ADD 1 TO PROGRESS-ROW-NUM.
+	   MOVE SPACES TO NEXT-PROGRESS-ROW.
 
-       UNLOCK-AND-READ-SCREEN.
-           MOVE HEX-01 TO CRTREC-OA-1
-           MOVE HEX-80 TO CRTREC-OA-2
-           MOVE HEX-01 TO CRTREC-OA-3
-           MOVE HEX-01 TO CRTREC-OA-4
-	   REWRITE CRTREC.
-	   READ CRT.
+       UNLOCK-AND-READ-PROGRESS-SCRN.
+
+	   MOVE PROGRESS-UNLOCK-ORDER-AREA TO 
+	       ORDER-AREA OF PROGRESS-SCREEN.
+           DISPLAY AND READ PROGRESS-SCREEN ON CRT.
+
+      ******************************************************************
 	   
            
 387800
@@ -6158,7 +6009,7 @@
 390300
 390400     MOVE RENAME-RETURN-X TO RENAME-RETURN.
 390500     MOVE RENAME-EXT TO RENAME-EXT-FULL.
-390600     CALL "setwispfilext" USING RENAME-EXT-FULL.
+390600     CALL "WSETFILEXT" USING RENAME-EXT-FULL.
 390700
 390800     IF PF-KEY = "01" THEN
 390900         PERFORM DO-RENAME-TEST-F

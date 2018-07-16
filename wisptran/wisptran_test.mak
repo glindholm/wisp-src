@@ -22,10 +22,10 @@ default: all
 
 WISPTRAN  = ..\bin\wisp.exe
 WISPLANG  = ACU
-WISPFLAGS = -V $(WISPLANG) 
+WISPFLAGS = -V $(WISPLANG) -u FORCEGENWISPCPY
 
-COBOL    = c:\acucorp\acucbl520\acugt\bin\ccbl32.exe
-COBFLAGS = -Da4 -Gd -Zi -Za -Te 800
+COBOL    = c:\acucorp\acucbl600\acugt\bin\ccbl32.exe
+COBFLAGS = -Da4 -Gd -Za -Te 800
 
 COPY=copy
 
@@ -69,7 +69,8 @@ TEST_COBOL_WCBS= \
 	t_string.wcb \
 	t_write.wcb \
 	test0000.wcb \
-	test0001.wcb
+	test0001.wcb \
+	DOCSRC01.wcb
 
 TEST_COBOL_COBS= $(TEST_COBOL_WCBS:.wcb=.cob)
 TEST_COBOL_OBJS= $(TEST_COBOL_WCBS:.wcb=.acu)
@@ -91,7 +92,6 @@ header:
 	@echo "PWD       ="
 	@cd
 	@echo " "
-
 
 clean:
 	@echo "Deleting old builds"

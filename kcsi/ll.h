@@ -1,5 +1,19 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #ifndef _LL_H
 #define _LL_H
 
@@ -59,8 +73,8 @@ void	*ll_select(void *base, int (*func) ());
 /*
 **	History:
 **	$Log: ll.h,v $
-**	Revision 1.7.2.1  2002/11/12 15:56:30  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.10  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
 **	
 **	Revision 1.9  2002/10/21 18:29:20  gsl
 **	cleanup

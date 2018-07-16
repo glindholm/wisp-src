@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*----
 Globals.
@@ -22,7 +36,6 @@ where the field was, and where it is in the new record. The work field
 is used for conversions.
 ------*/
 
-static char sccsid[]="@(#)rglb.c	1.11 6/8/93";
 
 void rpt_globals()
 {
@@ -352,7 +365,7 @@ int  rpt_key_to_sec_idx;
 The sort
 ------*/
 
-SORT rpt_sort[8];
+RPT_ASORT rpt_sort[8];
 
 RPT_DEF rpt_def;
 
@@ -368,8 +381,11 @@ long rpt_total_records,rpt_record_count,rpt_sorted_records;
 /*
 **	History:
 **	$Log: rglb.c,v $
-**	Revision 1.2.2.1  2002/11/12 15:56:34  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.8  2003/02/17 22:05:58  gsl
+**	Fix ambiguous SORT reference
+**	
+**	Revision 1.7  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.6  2002/10/24 14:20:35  gsl
 **	Make globals unique

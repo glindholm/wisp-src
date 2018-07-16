@@ -1,5 +1,23 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 
 /*
@@ -8,7 +26,7 @@ static char rcsid[]="$Id:$";
 **	Purpose:	To check if a file is executable
 **
 **	Routines:	
-**	isexec()		Test if an executable by looking at the magic number.
+**	WL_isexec()		Test if an executable by looking at the magic number.
 **	is_acuobj_magic()	Test if an Acucobol object file by magic number
 **	is_elf_magic()		Test if an ELF executable by looking at the header.
 **
@@ -22,6 +40,7 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include "idsistd.h"
 #include "wdefines.h"
@@ -139,7 +158,7 @@ static char rcsid[]="$Id:$";
 #endif
 
 /*
-**	ROUTINE:	is_acuobject_magic()
+**	ROUTINE:	WL_is_acuobject_magic()
 **
 **	FUNCTION:	Test if an Acucobol object file by the magic number
 **
@@ -158,7 +177,7 @@ static char rcsid[]="$Id:$";
 **	WARNINGS:	none
 **
 */
-int is_acuobject_magic(const char* buff, int len)
+int WL_is_acuobject_magic(const char* buff, int len)
 {
 #define ACUMAGIC "\x10\x12\x14\x20"
 #define ACUMAGIC_LEN	4
@@ -224,7 +243,7 @@ static int is_elf_magic(const char* header, int sizeof_header)
 #include <magic.h>
 
 #define ISEXEC_DEFINED
-int isexec(const char* name)
+int WL_isexec(const char* name)
 {
 	FILE *f;
 	MAGIC m;
@@ -232,13 +251,30 @@ int isexec(const char* name)
 	f=fopen(name,"r");
 	if (	!f )
 	{
+		WL_wtrace("ISEXEC","ACCERR","Unable to open File=[%s] errno=[%d]", name, errno);
 		return ACCERR;
 	}
 	fread(&m,sizeof(MAGIC),1,f);
 	fclose(f);
-	if (m.file_type==EXEC_MAGIC ||
-	    m.file_type==SHARE_MAGIC)     return ISEXEC;
-	if (is_acuobject_magic((char*)&m, sizeof(m))) return ISACU;
+
+	if (m.file_type==EXEC_MAGIC)
+	{
+		WL_wtrace("ISEXEC","ISEXEC","File=[%s] has EXEC_MAGIC magic number", name);
+		return ISEXEC;
+	}
+	if (m.file_type==SHARE_MAGIC)
+	{
+		WL_wtrace("ISEXEC","ISEXEC","File=[%s] has SHARE_MAGIC magic number", name);
+		return ISEXEC;
+	}
+
+	if (WL_is_acuobject_magic((char*)&m, sizeof(m)))
+	{
+		WL_wtrace("ISEXEC","ISACU","File=[%s] has ACUCOBOL magic number", name);
+		return ISACU;
+	}
+
+	WL_wtrace("ISEXEC","NOTEXEC","File=[%s] does not have an exec magic number", name);
 	return NOTEXEC;
 }
 #endif	/* hpux */
@@ -248,7 +284,7 @@ int isexec(const char* name)
 #define EXECMAGIC 0413
 #include <a.out.h>
 #define ISEXEC_DEFINED
-int isexec(const char* name)
+int WL_isexec(const char* name)
 {
 	FILE *f;
 	struct filehdr fhdr;		
@@ -264,7 +300,7 @@ int isexec(const char* name)
 	fread(&ahdr, sizeof(struct aouthdr), 1, f);
         fclose(f);
 	if (ahdr.magic == EXECMAGIC) return ISEXEC;
-	if (is_acuobject_magic((char*)&fhdr, sizeof(fhdr))) return ISACU;
+	if (WL_is_acuobject_magic((char*)&fhdr, sizeof(fhdr))) return ISACU;
 	return NOTEXEC;
 }
 #endif	/* ATT3B2 */
@@ -273,7 +309,7 @@ int isexec(const char* name)
 #include <a.out.h>
 
 #define ISEXEC_DEFINED
-int isexec(const char* name)
+int WL_isexec(const char* name)
 {
   	FILE *f;
   	struct exec estruct;
@@ -288,7 +324,7 @@ int isexec(const char* name)
 
   	if (estruct.a_magic==NMAGIC ||
             estruct.a_magic==ZMAGIC) return ISEXEC;
-	if (is_acuobject_magic((char*)&estruct, sizeof(estruct))) return ISACU;
+	if (WL_is_acuobject_magic((char*)&estruct, sizeof(estruct))) return ISACU;
   	return NOTEXEC;
 }
 #endif	/* sun */
@@ -296,7 +332,7 @@ int isexec(const char* name)
 #ifdef NCR32
 #include <filehdr.h>
 #define ISEXEC_DEFINED
-int isexec(const char* name)
+int WL_isexec(const char* name)
 {
 	FILE *f;
 	struct filehdr fhdr;
@@ -311,10 +347,11 @@ int isexec(const char* name)
 	if (fhdr.f_magic == NCR32200MAGIC) return ISEXEC;
 	if (fhdr.f_magic == NCR32600MAGIC) return ISEXEC;
 	if (fhdr.f_magic == NCR32800MAGIC) return ISEXEC;
-	if (is_acuobject_magic((char*)&fhdr, sizeof(fhdr))) return ISACU;
+	if (WL_is_acuobject_magic((char*)&fhdr, sizeof(fhdr))) return ISACU;
 	return NOTEXEC;
 }
 #endif
+
 
 #ifdef AIX
 /*
@@ -325,7 +362,7 @@ int isexec(const char* name)
 #define ISEXEC_DEFINED
 #include <filehdr.h>
 
-int isexec(const char* name)
+int WL_isexec(const char* name)
 {
 	FILE *f;
 	struct filehdr fhdr;
@@ -333,7 +370,7 @@ int isexec(const char* name)
 	f = fopen(name,"r");
 	if (!f)
 	{
-		wtrace("ISEXEC","ACCERR","Unable to open File=[%s] errno=[%d]", name, errno);
+		WL_wtrace("ISEXEC","ACCERR","Unable to open File=[%s] errno=[%d]", name, errno);
 		return ACCERR;
 	}
 	fread(&fhdr, sizeof(struct filehdr), 1, f);
@@ -341,14 +378,14 @@ int isexec(const char* name)
 
 	if (U802TOCMAGIC == fhdr.f_magic) 
 	{
-		wtrace("ISEXEC","ISEXEC","File=[%s] has AIX U802TOCMAGIC magic number", name);
+		WL_wtrace("ISEXEC","ISEXEC","File=[%s] has AIX U802TOCMAGIC magic number", name);
 		return ISEXEC;
 	}
 
 #ifdef U803XTOCMAGIC
 	if (U803XTOCMAGIC == fhdr.f_magic) 
 	{
-		wtrace("ISEXEC","ISEXEC","File=[%s] has AIX U803XTOCMAGIC magic number", name);
+		WL_wtrace("ISEXEC","ISEXEC","File=[%s] has AIX U803XTOCMAGIC magic number", name);
 		return ISEXEC;
 	}
 #endif
@@ -356,32 +393,31 @@ int isexec(const char* name)
 #ifdef U64_TOCMAGIC
 	if (U64_TOCMAGIC == fhdr.f_magic) 
 	{
-		wtrace("ISEXEC","ISEXEC","File=[%s] has AIX 64-bit XCOFF magic number", name);
+		WL_wtrace("ISEXEC","ISEXEC","File=[%s] has AIX 64-bit XCOFF magic number", name);
 		return ISEXEC;
 	}
 #endif
 
-	if (is_acuobject_magic((char*)&fhdr, sizeof(fhdr))) 
+	if (WL_is_acuobject_magic((char*)&fhdr, sizeof(fhdr))) 
 	{
-		wtrace("ISEXEC","ISACU","File=[%s] has ACUCOBOL magic number", name);
+		WL_wtrace("ISEXEC","ISACU","File=[%s] has ACUCOBOL magic number", name);
 		return ISACU;
 	}
 
-	wtrace("ISEXEC","NOTEXEC","File=[%s] does not have an exec magic number", name);
+	WL_wtrace("ISEXEC","NOTEXEC","File=[%s] does not have an exec magic number", name);
 	return NOTEXEC;
 }
 #endif /* AIX */
 
 
-
 #ifndef ISEXEC_DEFINED
 
 /*
-**	ROUTINE:	isexec()  (Default)
+**	ROUTINE:	WL_isexec()  (Default)
 **
 **	FUNCTION:	Test filehdr magic number and/of ELF
 **
-**	DESCRIPTION:	This is the default isexec() it can test either or both
+**	DESCRIPTION:	This is the default WL_isexec() it can test either or both
 **			1) EXECMAGIC == filehdr->f_magic
 **			2) ELF executable
 **
@@ -410,15 +446,18 @@ BOTH EXECMAGIC AND ELFMAG IS NOT DEFINED
 #endif
 #endif
 
-int isexec(const char* name)
+int WL_isexec(const char* name)
 {
 	FILE *f;
+#ifdef EXECMAGIC
 	struct filehdr *fhdrp;		
+#endif
 	char header[64];
 	
 	f = fopen(name,"r");
 	if ( NULL == f )
 	{
+		WL_wtrace("ISEXEC","ACCERR","Unable to open File=[%s] errno=[%d]", name, errno);
 		return ACCERR;
 	}
 	
@@ -428,6 +467,7 @@ int isexec(const char* name)
 #ifdef ELFMAG
 	if (is_elf_magic(header, sizeof(header)))
 	{
+		WL_wtrace("ISEXEC","ISEXEC","File=[%s] has ELF magic number", name);
 		return ISEXEC;
 	}
 #endif
@@ -436,28 +476,49 @@ int isexec(const char* name)
 	fhdrp = (struct filehdr *)header;
 	if (EXECMAGIC == fhdrp->f_magic)
 	{
+		WL_wtrace("ISEXEC","ISEXEC","File=[%s] has EXECMAGIC magic number", name);
 		return ISEXEC;
 	}
 #endif
 
-	if (is_acuobject_magic(header, sizeof(header)))
+	if (WL_is_acuobject_magic(header, sizeof(header)))
 	{
+		WL_wtrace("ISEXEC","ISACU","File=[%s] has ACUCOBOL magic number", name);
 		return ISACU;
 	}
 	
+	WL_wtrace("ISEXEC","NOTEXEC","File=[%s] does not have an exec magic number", name);
 	return NOTEXEC;	
 } 
-#endif	/* Default isexec() */
+#endif	/* Default WL_isexec() */
 
 #endif	/* unix */
 /*
 **	History:
 **	$Log: isexec.c,v $
-**	Revision 1.15.2.2  2003/02/11 21:20:46  gsl
+**	Revision 1.23  2003/03/12 18:18:10  gsl
+**	FIx -Wall warnings
+**	
+**	Revision 1.22  2003/02/11 21:22:07  gsl
 **	Add AIX 64-bit XCOFF support
 **	
-**	Revision 1.15.2.1  2002/09/05 19:22:29  gsl
+**	Revision 1.21  2003/02/11 21:21:20  gsl
+**	Add AIX 64-bit XCOFF support
+**	
+**	Revision 1.20  2003/01/31 21:40:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.19  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.18  2002/09/04 18:11:04  gsl
 **	LINUX
+**	
+**	Revision 1.17  2002/07/11 20:29:09  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.16  2002/07/10 21:05:17  gsl
+**	Fix globals WL_ to make unique
 **	
 **	Revision 1.15  1998/10/15 14:05:43  gsl
 **	fix const warning

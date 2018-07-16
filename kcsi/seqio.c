@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*---
 seqio.c
 
@@ -16,7 +30,6 @@ read and write.
 #include "kcsio.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)seqio.c	1.6 1/18/93";
 
 /*----
 Space cannot be determined and is always returned as 1.
@@ -194,10 +207,12 @@ void seq_start_gt_keyed(KCSIO_BLOCK *kfb)
 /*----
 Executes a start and sets up a new _last_io_key.
 ------*/
+#ifdef NOT_USED
 static void do_start(KCSIO_BLOCK *kfb,int mode)
 {
 	kfb->_status = EBADARG;
 }
+#endif /* NOT_USED */
 
 /*----
                <<<<<<<< WRITE REWRITE DELETE  >>>>>>>>>>>>
@@ -300,8 +315,11 @@ void seq_open_shared(KCSIO_BLOCK *kfb)
 /*
 **	History:
 **	$Log: seqio.c,v $
-**	Revision 1.7.2.1  2002/11/12 15:56:38  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.10  2003/02/20 19:29:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.9  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.8  2002/10/24 14:20:33  gsl
 **	Make globals unique

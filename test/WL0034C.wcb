@@ -1,0 +1,118 @@
+      **   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+      **   $Id:$
+      **
+      **   File:       WL0034C.wcb
+      **
+      **   Project:    WISP/TEST - LIBRARY Routines
+      **
+      **   Purpose:    Test LINK routine 
+      **
+      **   Tests:	This program is called from WL0034 and passes 
+      **		32 Args - Add 100 to each arg.
+      **
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. WL0034C.
+
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+
+
+       DATA DIVISION.
+       FILE SECTION.
+
+       WORKING-STORAGE SECTION.
+
+      *==============================================================
+       LINKAGE SECTION.
+       01  ARG01	PIC 9999.
+       01  ARG02	PIC 9999.
+       01  ARG03	PIC 9999.
+       01  ARG04	PIC 9999.
+       01  ARG05	PIC 9999.
+       01  ARG06	PIC 9999.
+       01  ARG07	PIC 9999.
+       01  ARG08	PIC 9999.
+       01  ARG09	PIC 9999.
+       01  ARG10	PIC 9999.
+       01  ARG11	PIC 9999.
+       01  ARG12	PIC 9999.
+       01  ARG13	PIC 9999.
+       01  ARG14	PIC 9999.
+       01  ARG15	PIC 9999.
+       01  ARG16	PIC 9999.
+       01  ARG17	PIC 9999.
+       01  ARG18	PIC 9999.
+       01  ARG19	PIC 9999.
+       01  ARG20	PIC 9999.
+       01  ARG21	PIC 9999.
+       01  ARG22	PIC 9999.
+       01  ARG23	PIC 9999.
+       01  ARG24	PIC 9999.
+       01  ARG25	PIC 9999.
+       01  ARG26	PIC 9999.
+       01  ARG27	PIC 9999.
+       01  ARG28	PIC 9999.
+       01  ARG29	PIC 9999.
+       01  ARG30	PIC 9999.
+       01  ARG31	PIC 9999.
+       01  ARG32	PIC 9999.
+      *==============================================================
+       PROCEDURE DIVISION USING 
+		ARG01, ARG02, ARG03, ARG04, ARG05, 
+		ARG06, ARG07, ARG08, ARG09, ARG10, 
+		ARG11, ARG12, ARG13, ARG14, ARG15, 
+		ARG16, ARG17, ARG18, ARG19, ARG20, 
+		ARG21, ARG22, ARG23, ARG24, ARG25, 
+		ARG26, ARG27, ARG28, ARG29, ARG30, 
+		ARG31, ARG32.
+       0000-MAIN SECTION.
+
+           MOVE 50 TO RETURN-CODE.
+
+	   ADD 100 TO ARG01.
+	   ADD 100 TO ARG02.
+	   ADD 100 TO ARG03.
+	   ADD 100 TO ARG04.
+	   ADD 100 TO ARG05.
+	   ADD 100 TO ARG06.
+	   ADD 100 TO ARG07.
+	   ADD 100 TO ARG08.
+	   ADD 100 TO ARG09.
+	   ADD 100 TO ARG10.
+
+	   ADD 100 TO ARG11.
+	   ADD 100 TO ARG12.
+	   ADD 100 TO ARG13.
+	   ADD 100 TO ARG14.
+	   ADD 100 TO ARG15.
+	   ADD 100 TO ARG16.
+	   ADD 100 TO ARG17.
+	   ADD 100 TO ARG18.
+	   ADD 100 TO ARG19.
+	   ADD 100 TO ARG20.
+
+	   ADD 100 TO ARG21.
+	   ADD 100 TO ARG22.
+	   ADD 100 TO ARG23.
+	   ADD 100 TO ARG24.
+	   ADD 100 TO ARG25.
+	   ADD 100 TO ARG26.
+	   ADD 100 TO ARG27.
+	   ADD 100 TO ARG28.
+	   ADD 100 TO ARG29.
+	   ADD 100 TO ARG30.
+
+	   ADD 100 TO ARG31.
+	   ADD 100 TO ARG32.
+
+      *==============================================================
+       9999-END SECTION.
+       9999-EXIT.
+           EXIT PROGRAM.
+       9999-STOP.
+           STOP RUN.
+      **
+      **   End of WL0034C.wcb
+      **

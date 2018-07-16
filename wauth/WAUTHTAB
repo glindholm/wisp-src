@@ -1,0 +1,30 @@
+#!/bin/ksh
+#
+#	WAUTHTAB - Email the WISP license tab file
+#
+#	Usage: WAUTHTAB [email-address]
+#
+#	If and email-address is not specified then 'logname'@neom.com will be used.
+#
+WLICDIR=/neomedia/WispLicense
+WTABFILE=wauthorize.tab
+WLICTAB=$WLICDIR/$WTABFILE
+THEDATE=`date "+%Y-%m-%d %H:%M"`
+
+EADDR=$1
+if [ "x" = "x$EADDR" ]
+then
+	EADDR=`logname`@neom.com
+fi
+
+echo Mailing the WISP license datebase to $EADDR
+uuencode $WLICTAB $WTABFILE | mailx -s "WISP License Database $THEDATE" $EADDR
+rc=$?
+if [ "0" != "$rc" ]
+then
+	echo Failed rc=$rc
+fi
+
+#
+# END
+#

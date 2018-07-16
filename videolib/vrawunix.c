@@ -1,11 +1,26 @@
-static char copyright[]="Copyright (c) 1995-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*	     VIDEO - Video Interactive Development Environment		*/
-			/*			Copyright (c) 1987-1992				*/
-			/*	An unpublished work by International Digital Scientific Inc.	*/
-			/*			  All rights reserved.				*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #ifdef unix
 /*
@@ -67,12 +82,15 @@ typedef struct termios termio_t;
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
 
 #include "video.h"
 #include "vlocal.h"
+#include "vutil.h"
 #include "vraw.h"
 #include "vchinese.h"
 
@@ -132,39 +150,35 @@ static int padstatetab[PEVENTCNT][PSTCNT] =
 /*
  * Globals whose storage is defined in other compilation units:
  *
- * int vb_pure:		This will be TRUE (non-zero) when the higher
+ * int VL_vb_pure:		This will be TRUE (non-zero) when the higher
  *			layers are intending to write output that should
  *			not be post processed. If this flag is FALSE. then
  *			any new-line ('\n') character seen in the output
  *			stream will have be changed to carriage return 
  *			followed by new-line ('\r\n').
  *
- * int vb_count:	This is the count of how many characters are currently
+ * int VL_vb_count:	This is the count of how many characters are currently
  *			in the output buffer. It is read by higher layers
  *			of Video for optimization purposes.
  *
- * int debugging:	This is a debugging hook flag which will cause any
- *			output data in the buffer owned by this compilation
- *			unit to be flushed to the output device immediately.
  *
- * int vbuffering_on():	This flag is non-zero when the higher layers of
+ * int VL_vbuffering_on():	This flag is non-zero when the higher layers of
  *			Video wish to postpone flushing output waiting in the
  *			buffer until a "logical sequence" of operations is
  *			complete.
  * 
- * int v_control_data:  This flag is non-zero when the higher layers of 
+ * int VL_v_control_data:  This flag is non-zero when the higher layers of 
  *                      video have handed us output data that should not
  *                      be processed by the translation routine, ie, control
  *                      data.  The reason is because control data (ie cursor 
  *                      position) resembles IVS characters (^[[3;3H for example)
  *                      which would be munged up by the translator
  */
-extern int vb_pure;
-extern int vb_count;
-extern int debugging;
-extern int video_inited;
+extern int VL_vb_pure;
+extern int VL_vb_count;	/* # of chars valid in vraw_buffer. */
+extern int VL_video_inited;
 
-extern int v_control_data;
+extern int VL_v_control_data;
 
 /*
  * Video requires some "quit" and "interrupt" characters. Under Unix, "quit"
@@ -220,7 +234,7 @@ static termio_t prev_termio;		/* term io previous to vraw_init */
 static int vraw_init_flag = 0;								/* TRUE if module is init'ed.		*/
 static int vraw_fildes = 0;								/* File channel to fileno(stdin). 	*/
 
-int vcurbaud;
+static int vcurbaud;
 
 #define VRAW_BLOCKED 1
 #define VRAW_NONBLOCKED 2
@@ -245,10 +259,11 @@ static int vraw_errno = 0;		/* Module-specific error flag */
 static int vread_timed_out_flag = FALSE;
 static int vtimeout_value = 0;
 
+static int vrawinit(void);
+static unsigned char vrawgetc(int wait);
+static int vraw_add_outbuf(unsigned char ch);
 
-static unsigned char vrawgetc();
-static vraw_add_outbuf(unsigned char ch);
-
+static int xlat_read(int fd, unsigned char* callerbuf, int bufsize);
 
 /*
  * The following is the local output buffer. This buffer will be flushed
@@ -257,15 +272,11 @@ static vraw_add_outbuf(unsigned char ch);
  */
 static unsigned char vraw_buffer[VRAW_BUFSIZ];
 
-/* The following are the translation stream contexts defined in vchinese.c. 
- * They are used by the translation engine to keep track of a data stream.
- */
-extern struct xlcontext *inctx, *outctx;
 
 /* This is a scratch buff and size variable used by the routines below
  * which call xlat_read etc 
  */
-static  char xbuf[VRAW_BUFSIZ];
+static  unsigned char xbuf[VRAW_BUFSIZ];
 static 	int xcnt;
 
 /*
@@ -426,13 +437,8 @@ void* vrawttyalloc(void)
  */
 static int vrawinit()
 {
-	extern termio_t prev_termio;							/* Previous terminal settings. 		*/
-	extern termio_t vraw_termio;							/* "Raw" terminal settings. 		*/
-
 	int bau;
 	
-	termio_t buf;									/* termio buffer 			*/
-
 	vraw_fildes = fileno(stdin);							/* Get current terminal characteristics.*/
 	if ( vrawttyget(vraw_fildes, &prev_termio) )		 			/* These should be restored on exit. 	*/
 	{
@@ -510,10 +516,10 @@ static int vrawinit()
 	}
 
 	vraw_mode = VRAW_BLOCKED;
-	vb_count = 0;										/* At start of local buffer.	*/
+	VL_vb_count = 0;										/* At start of local buffer.	*/
 
 	vraw_init_flag = TRUE;									/* Mark as initialized.		*/
-	video_inited = TRUE;									/* Set  - video was initialized.*/
+	VL_video_inited = TRUE;									/* Set  - video was initialized.*/
 
 	return (SUCCESS);
 }												/* end of vrawinit(). 		*/
@@ -552,23 +558,24 @@ static int vrawinit()
  */
 char vrawinput()
 {
-	extern int	vrawinit();
 	unsigned char	the_char;
 	int	error;
 
 	if (!vraw_init_flag)
 	{
-		if (SUCCESS != vrawinit())					/* If init not successful then report set error	*/
+		if (SUCCESS != vrawinit())		/* If init not successful then report set error	*/
 		{
-			vseterr(vrawerrno());
+			VL_vseterr(vrawerrno());
 			return(CHAR_NULL);
 		}
 	}
 
 	the_char = (unsigned char) vrawgetc(TRUE);	/* Get a character and wait for it */
 
-	if (error = vrawerrno())	/* Check for an error */
-		vseterr(error);		/* There was an error so set the error number flag */
+	if ((error = vrawerrno()))			/* Check for an error */
+	{
+		VL_vseterr(error);			/* There was an error so set the error number flag */
+	}
 
 	return (the_char);
 }					/* end of vrawinput() */
@@ -612,24 +619,24 @@ char vrawinput()
  */
 char vrawcheck()
 {
-	extern unsigned char vrawgetc();
-	extern int  vrawinit();
 	unsigned char	the_char;
 	int	error;
 
 	if (!vraw_init_flag)
 	{
-		if (SUCCESS != vrawinit())					/* If init not successful then report set error	*/
+		if (SUCCESS != vrawinit())		/* If init not successful then report set error	*/
 		{
-			vseterr(vrawerrno());
+			VL_vseterr(vrawerrno());
 			return(CHAR_NULL);
 		}
 	}
 
 	the_char = (unsigned char) vrawgetc(FALSE);	/* Check for a char, don't wait */
 
-	if (error = vrawerrno())	/* Check for an error */
-		vseterr(error);		/* There was an error so set the error number flag */
+	if ((error = vrawerrno()))			/* Check for an error */
+	{
+		VL_vseterr(error);			/* There was an error so set the error number flag */
+	}
 
 	return (the_char);
 }					/* end of vrawcheck() */
@@ -675,11 +682,8 @@ char vrawcheck()
  *			if an error occurred.
  *
  */
-static unsigned char vrawgetc(wait)
-	int	wait;			/* IN -- TRUE means read synchronously/ */
+static unsigned char vrawgetc(int wait)
 {
-	extern	termio_t vraw_termio;	/* Current termio setting for input. */
-	extern	termio_t async_termio;	/* Current termio setting for input. */
 	extern	int	vraw_errno;	/* Package error caching variable. */
 	extern	int	vraw_fildes;	/* Module file number for IO. */
 	extern  int     vraw_mode;      /* mode: blocked or nonblocked */
@@ -687,9 +691,7 @@ static unsigned char vrawgetc(wait)
 	int	error = 0;		/* Local error flag */
 	unsigned char	ch_read = 0;		/* Character we read */
 
-	int     elapsed_time=0;
 	time_t	before_time, after_time;
-        int     per_call_wait=0;
 	
 	/*
 	 * If the caller does not wish to wait for a character to appear,
@@ -813,9 +815,9 @@ static unsigned char vrawgetc(wait)
  * Inputs:
  *
  *	Implicit:	vraw_buffer	-- buffer for output.
- *			vb_count	-- number of characters in buffer.
- *			vb_pure		-- CR stuffing flag.
- *			vbuffering_on()	-- false if buffer should be flushed 
+ *			VL_vb_count	-- number of characters in buffer.
+ *			VL_vb_pure		-- CR stuffing flag.
+ *			VL_vbuffering_on()	-- false if buffer should be flushed 
  *					   when this call completes.
  *			debugging	-- TRUE if buffer should be flushed when
  *					   this call completes.
@@ -825,7 +827,7 @@ static unsigned char vrawgetc(wait)
  *
  * Outputs:
  *
- *	Implicit:	vb_count	-- updated for how many characters are 
+ *	Implicit:	VL_vb_count	-- updated for how many characters are 
  *					   in buffer.
  *		        vraw_buffer	-- characters from input buffer are put
  *					   here.
@@ -844,7 +846,7 @@ static unsigned char vrawgetc(wait)
  */
 
    static unsigned char padbuf[2048];
-   static int           padidx=0, padstate=S_NORMAL, padevent, padms, abortidx;
+   static int           padidx=0, padstate=S_NORMAL, padevent, padms;
    static double        charsper, total;
 #  define PADCHAR '\0'
 #ifdef VDBGPADST
@@ -886,15 +888,15 @@ int vrawprint(char* buf)
 		return (vrawflush());	/* Yes, so flush the buffer. */
 	}
 
-	if (!v_control_data)            /* if this is screen data, not terminal control data */
+	if (!VL_v_control_data)            /* if this is screen data, not terminal control data */
 	{
-		xlat_stream(buf,strlen(buf),xbuf,&xcnt, &outctx);  /* call the xlat routine using the output stream context */
-		p =  xbuf;		/* and setup the pointer */
+		IVS_xlat_stream((unsigned char*)buf,strlen(buf),xbuf,&xcnt, &IVS_outctx);  /* call the xlat routine using the output stream context */
+		p =  (char*)xbuf;		/* and setup the pointer */
 	}
 	else
 	{
-		if (outctx)					   /* otherwise, adjust the xlcontext to clear any pending  */
-		  outctx->holdstart = outctx->holdpos;		   /* stuff that it thinks is part of a IVS sequence.       */
+		if (IVS_outctx)					   /* otherwise, adjust the xlcontext to clear any pending  */
+		  IVS_outctx->holdstart = IVS_outctx->holdpos;	   /* stuff that it thinks is part of a IVS sequence.       */
 								   /* a more object oriented approach would not allow this  */
 								   /* type of code.  but this is ok for now                 */
 
@@ -973,11 +975,11 @@ int vrawprint(char* buf)
 			
 			while (padbytecnt)
 			{
-				if (vb_count + padbytecnt > VRAW_BUFSIZ)
+				if (VL_vb_count + padbytecnt > VRAW_BUFSIZ)
 				{
-					memset(&vraw_buffer[vb_count],PADCHAR,VRAW_BUFSIZ-vb_count);
-					padbytecnt -= (VRAW_BUFSIZ - vb_count);
-					vb_count = VRAW_BUFSIZ;
+					memset(&vraw_buffer[VL_vb_count],PADCHAR,VRAW_BUFSIZ-VL_vb_count);
+					padbytecnt -= (VRAW_BUFSIZ - VL_vb_count);
+					VL_vb_count = VRAW_BUFSIZ;
 					if (vrawflush() == FAILURE)
 					{
 						return FAILURE;
@@ -985,8 +987,8 @@ int vrawprint(char* buf)
 				}
 				else
 				{
-					memset(&vraw_buffer[vb_count],PADCHAR,padbytecnt);
-					vb_count += padbytecnt;
+					memset(&vraw_buffer[VL_vb_count],PADCHAR,padbytecnt);
+					VL_vb_count += padbytecnt;
 					padbytecnt=0;
 				}
 			}
@@ -996,7 +998,7 @@ int vrawprint(char* buf)
 		      case S_ABORT:
 			while (padidx)
 			{
-				if (vb_count + padidx > VRAW_BUFSIZ)
+				if (VL_vb_count + padidx > VRAW_BUFSIZ)
 				{
 					if (vrawflush() == FAILURE)
 					{
@@ -1005,8 +1007,8 @@ int vrawprint(char* buf)
 				}
 				else
 				{
-					memcpy(&vraw_buffer[vb_count],padbuf,padidx);
-					vb_count += padidx;
+					memcpy(&vraw_buffer[VL_vb_count],padbuf,padidx);
+					VL_vb_count += padidx;
 					padidx=0;
 				}
 			}
@@ -1026,7 +1028,7 @@ int vrawprint(char* buf)
 	 * If we are debugging or no longer holding the output buffer, then
 	 * flush the buffer to the terminal now. Otherwise, simply return.
 	 */
-	if (debugging || !vbuffering_on())
+	if (!VL_vbuffering_on())
 	{
 		if (vrawflush()==FAILURE)		/* Do the output now! */
 		{
@@ -1036,19 +1038,24 @@ int vrawprint(char* buf)
 	return (SUCCESS);
 }					/* End of vrawprint(). */
 
-static vraw_add_outbuf(unsigned char ch)
+static int vraw_add_outbuf(unsigned char ch)
 {
-	if (((vraw_buffer[vb_count++] = ch) == '\n') && !vb_pure)
+	vraw_buffer[VL_vb_count++] = ch;
+
+	if ((ch == '\n') && !VL_vb_pure)
 	{
-		vraw_buffer[vb_count - 1] = '\r';
-		if (vb_count >= VRAW_BUFSIZ)
+		/*
+		**	Change a '\n' into a '\r\n'
+		*/
+		vraw_buffer[VL_vb_count - 1] = '\r';
+		if (VL_vb_count >= VRAW_BUFSIZ)
 		{
 			if (vrawflush() == FAILURE)
 			  return (FAILURE);
 		}
-		vraw_buffer[vb_count++] = '\n';
+		vraw_buffer[VL_vb_count++] = '\n';
 	}
-	if (vb_count >= VRAW_BUFSIZ)
+	if (VL_vb_count >= VRAW_BUFSIZ)
 	{
 		if (vrawflush() == FAILURE)
 		  return (FAILURE);
@@ -1065,19 +1072,17 @@ static vraw_add_outbuf(unsigned char ch)
  * Invocation:	success_flag = vrawputc(ch);
  *
  *	Implicit:	vraw_buffer	-- buffer for output.
- *			vb_count	-- number of characters in buffer.
- *			vb_pure		-- CR stuffing flag.
- *			vbuffering_on()	-- false if buffer should be flushed 
+ *			VL_vb_count	-- number of characters in buffer.
+ *			VL_vb_pure		-- CR stuffing flag.
+ *			VL_vbuffering_on()	-- false if buffer should be flushed 
  *					   when this call completes.
- *			debugging	-- TRUE if buffer should be flushed when
- *					   this call completes.
  *
  *	Explicit:	buf		-- pointer to buffer to be written to
  *					   terminal.
  *
  * Outputs:
  *
- *	Implicit:	vb_count	-- updated for how many characters are 
+ *	Implicit:	VL_vb_count	-- updated for how many characters are 
  *					   in buffer.
  *		        vraw_buffer	-- characters from input buffer are put
  *					   here.
@@ -1116,7 +1121,7 @@ int vrawputc(char ch)
  *	Implicit:	vraw_fildes	-- the output file number of the 
  *					   terminal.
  *			vraw_buffer	-- the buffer to write to the terminal.
- *			vb_count	-- the number of byte of vraw_buffer 
+ *			VL_vb_count	-- the number of byte of vraw_buffer 
  *					   to write.
  *			
  *
@@ -1124,7 +1129,7 @@ int vrawputc(char ch)
  *
  * Outputs:
  *
- *	Implicit:	vb_count	-- set back to 0 (all output written).
+ *	Implicit:	VL_vb_count	-- set back to 0 (all output written).
  *			vraw_errno	-- set to 'errno' if an error occurred.
  *
  *	Explicit:	None.
@@ -1141,7 +1146,6 @@ int vrawflush(void)
 {
 	extern	int	vraw_fildes;	/* File number to write to. */
 	extern	int	vraw_errno;	/* Module error caching variable. */
-	extern	int	vb_count;	/* # of chars valid in vraw_buffer. */
 
 	int		error;		/* Local error/write flag. */
 	register int	nb_written = 0;	/* Number of bytes written. */
@@ -1164,21 +1168,21 @@ int vrawflush(void)
 
 #ifdef VDBGPADST
 	fprintf(padlog,"flushbuf[");
-	fwrite(vraw_buffer,1,vb_count,padlog);
+	fwrite(vraw_buffer,1,VL_vb_count,padlog);
 	fprintf(padlog,"]\n");
 	fflush(padlog);
 #endif
 
-	while (vb_count > 0)
+	while (VL_vb_count > 0)
 	{
-		error = write(vraw_fildes, &vraw_buffer[nb_written], vb_count);
+		error = write(vraw_fildes, &vraw_buffer[nb_written], VL_vb_count);
 		if (error == -1)
 		{
-			vb_count = 0;	/* We don't know what happened... */
+			VL_vb_count = 0;	/* We don't know what happened... */
 			vraw_errno = errno;
 			return (FAILURE);
 		}
-		vb_count -= error;	/* Account for what was written */
+		VL_vb_count -= error;	/* Account for what was written */
 		nb_written += error;
 	}
 
@@ -1217,7 +1221,6 @@ int vrawflush(void)
  */
 int vrawexit()
 {
-	extern termio_t prev_termio;
 	extern int vraw_fildes;
 	termio_t exit_termio;
 
@@ -1414,14 +1417,8 @@ int vrawerrno(void)
  * Procedure to shut down pending inputs in anticipation of the creation
  * of a sub process.
  */
-void vshut(void)
+void VL_vshut(void)
 {
-}
-
-void vkbtimer(int cnt)
-{
-	vre_window("Warning: vkbtimer has been replaced by vtimeout");
-	return;
 }
 
 /*
@@ -1528,7 +1525,7 @@ void vrawerror(const char* message)
 	}
 	else
 	{
-		vwait(4,0);
+		VL_vwait(4,0);
 	}	
 }
 
@@ -1541,8 +1538,8 @@ void vrawerror(const char* message)
  * Video.
  */
 
-int	vb_count = 0;			/* Private vb_count for testing. */
-int	vb_pure = TRUE;			/* Private vb_pure flag for testing. */
+/* int	VL_vb_count = 0; */			/* Private VL_vb_count for testing. */
+/* int	VL_vb_pure = TRUE; */			/* Private VL_vb_pure flag for testing. */
 
 /*
  * This section is only compiled when testing of the vraw package is desired.
@@ -1641,7 +1638,7 @@ main()
 **      Function:       this acts as a front end to read which xlats incoming
 **                      data
 **
-**      Description:    read() is called  to get data.  xlat_stream is called
+**      Description:    read() is called  to get data.  IVS_xlat_stream is called
 **                      to operate on read data.  This procedure is repeated
 **                      until enough bytes to satisfy the call are gathered
 **
@@ -1656,15 +1653,12 @@ main()
 **      History:      
 **
 */
-xlat_read(fd,callerbuf,bufsize)
-int fd, bufsize;
-char *callerbuf;
+static int xlat_read(int fd, unsigned char* callerbuf, int bufsize)
 {
-	static char raw_buf[2048],xlat_buf[2048];
-	static int raw_cnt,xlat_cnt=0, xlat_st=0, xlat_end=0;
+	static unsigned char raw_buf[2048],xlat_buf[2048];
+	static int raw_cnt=0, xlat_cnt=0, xlat_st=0, xlat_end=0;
 
-	extern struct xlcontext *inctx;
-	extern char vlangfile[];
+	extern struct xlcontext *IVS_inctx;
 	int pos;
 	
 	pos=0;
@@ -1685,7 +1679,7 @@ char *callerbuf;
 				return raw_cnt;		   /* read returns -1, return it */
 			}
 			                                   /* otherwise, xlat what we got and put it in the xlat buffer */
-			xlat_stream(raw_buf,raw_cnt,xlat_buf,&xlat_cnt, &inctx);
+			IVS_xlat_stream(raw_buf,raw_cnt,xlat_buf,&xlat_cnt, &IVS_inctx);
 
 			xlat_st=0;			   /* reset the  "start of valid xlat data" index */
 			xlat_end=xlat_cnt;		   /* and the "end of valid xlat data" index */
@@ -1706,19 +1700,63 @@ char *callerbuf;
 		bufsize -= xlat_cnt;			   /* bufsize is adjusted by how many bytes we've stuck in his buffer */
 		xlat_cnt = xlat_end =  xlat_st = 0;	   /* reset these indices, as all the data was used     */
 	}
+
+	return 0;
 }
 #endif /* unix */
 
 /*
 **	History:
 **	$Log: vrawunix.c,v $
-**	Revision 1.26.2.1  2002/08/16 21:44:55  gsl
-**	Alpha Port 4402f
+**	Revision 1.41  2003/02/07 14:31:41  gsl
+**	fix warnings
 **	
-**	Revision 1.26  2001-10-12 16:04:26-04  gsl
+**	Revision 1.40  2003/02/04 17:05:01  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.39  2003/01/31 20:58:40  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.38  2003/01/31 19:38:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.37  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.36  2002/07/17 21:06:04  gsl
+**	VL_ globals
+**	
+**	Revision 1.35  2002/07/17 17:49:40  gsl
+**	Fix unsigned char warning
+**	
+**	Revision 1.34  2002/07/16 13:40:20  gsl
+**	VL_ globals
+**	
+**	Revision 1.33  2002/07/15 20:56:40  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.32  2002/07/15 20:20:17  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.31  2002/07/15 20:16:13  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.30  2002/07/15 17:10:06  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.29  2002/07/15 13:29:01  gsl
+**	IVS_ globals
+**	
+**	Revision 1.28  2002/07/12 20:40:44  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.27  2002/07/09 19:58:15  gsl
+**	Add missing include string.h
+**	
+**	Revision 1.26  2001/10/12 20:04:26  gsl
 **	Changed vrawerror() to only ask to press "ENTER" if initialized
 **	otherwise wait 4 seconds
-**
+**	
 **	Revision 1.25  1999-02-10 11:02:28-05  gsl
 **	Change vrawinit() to preserve IXON, IXOFF, IXANY, and IMAXBEL
 **
@@ -1726,7 +1764,7 @@ char *callerbuf;
 **	add time.h and change time vars to be time_t type.
 **
 **	Revision 1.23  1997-07-12 17:47:42-04  gsl
-**	Fix doc on vb_pure.
+**	Fix doc on VL_vb_pure.
 **	Change octals to control characters.
 **	Fix testing code
 **

@@ -141,8 +141,8 @@ void token::dump() const {
 //
 //	History:
 //	$Log: token.cpp,v $
-//	Revision 1.7.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.8  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.7  1998/09/02 21:28:21  gsl
 //	Changed to use trace() instead of printf()

@@ -1,0 +1,21 @@
+**   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+**   $Id:$
+**
+**   File:       WC0003A.wps
+**
+**   Project:    WISP/TEST - WANG COBOL Functionality
+**
+**   Purpose:    ACCEPT verb
+**
+**   Tests:       This program is called from WC0003 and runs WC0003B
+**                with the ACCEPT PUTPARMS
+**
+
+procedure WC0003A.wps
+
+rc: RUN WC0003B 
+    ENTER ACCEPT FIELD1="Field Test", FIELD2="2003"
+
+RETURN CODE = rc
+
+

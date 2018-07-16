@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,8 +83,8 @@ void kcsi_create_main(void)
 /*
 **	History:
 **	$Log: vscrglb.c,v $
-**	Revision 1.2.2.1  2002/11/12 15:56:41  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.7  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.6  2002/10/24 17:29:39  gsl
 **	Set the title

@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	               VIDEO VIEW Screen Management.			*/
 			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
@@ -23,7 +44,7 @@ static int is_sharedscreen = 0;
 
 /*					Report if we are running with a debugger.						*/
 
-int isdebug(void)									/* Report if a debugger is running.	*/
+int VL_isdebug(void)									/* Report if a debugger is running.	*/
 {
 	static int first = TRUE;							/* Set the first time control flag.	*/
 	static int override = 0;							/* Assume not in override mode.		*/
@@ -32,9 +53,9 @@ int isdebug(void)									/* Report if a debugger is running.	*/
 	if (first)									/* Is this the first time in?		*/
 	{
 		first = FALSE;								/* No longer the first time.		*/
-		set_isdebug();								/* Load the debugger state.		*/
+		VL_set_isdebug();								/* Load the debugger state.		*/
 
-		if (ptr = getenv("DEBUGACTIVE"))					/* Is the override flag set.		*/
+		if ((ptr = getenv("DEBUGACTIVE")))					/* Is the override flag set.		*/
 		{
 			if (0==strcmp(ptr,"off") || 0==strcmp(ptr,"OFF")) override = 2;			/* Force it off?	*/
 			else if (0==strcmp(ptr,"on") || 0==strcmp(ptr,"ON")) override = 1;		/* Force it on?		*/
@@ -45,7 +66,7 @@ int isdebug(void)									/* Report if a debugger is running.	*/
 	return ((is_debug== -1) ? 0 : is_debug);					/* No, then return the flag value.	*/
 }
 
-void set_isdebug(void)									/* Determine if debugger is running.	*/
+void VL_set_isdebug(void)									/* Determine if debugger is running.	*/
 {
 	char *ptr;									/* Working pointer.			*/
 
@@ -53,26 +74,26 @@ void set_isdebug(void)									/* Determine if debugger is running.	*/
 	
 	is_debug = 0;									/* Default to no COBOL debugger.	*/
 
-	if (ptr = getenv("COBSW"))							/* Is Microfocus COBOL running.		*/
+	if ((ptr = getenv("COBSW")))							/* Is Microfocus COBOL running.		*/
 	{
 		if (strstr(ptr,"+A") != NULL) is_debug = 1;				/* Is there an animate switch?		*/
 	}
 }
 
-void set_isdebug_true(void)								/* Set the debugging control flag on.	*/
+void VL_set_isdebug_true(void)								/* Set the debugging control flag on.	*/
 {
 	is_debug = TRUE;								/* Set the flag.			*/
 	return;
 }
 
-void set_isdebug_false(void)								/* Set the control flag off.		*/
+void VL_set_isdebug_false(void)								/* Set the control flag off.		*/
 {
 	is_debug = FALSE;								/* Clear the flag.			*/
 	return;
 }
 
 /*
-**	ROUTINE:	vsharedscreen()
+**	ROUTINE:	VL_vsharedscreen()
 **
 **	FUNCTION:	Report if screen is being shared.
 **
@@ -89,9 +110,9 @@ void set_isdebug_false(void)								/* Set the control flag off.		*/
 **	WARNINGS:	None
 **
 */
-int vsharedscreen(void)
+int VL_vsharedscreen(void)
 {
-	if (isdebug())
+	if (VL_isdebug())
 	{
 		return 1;
 	}
@@ -100,7 +121,7 @@ int vsharedscreen(void)
 		return is_sharedscreen;
 	}
 }
-void set_vsharedscreen_true(void)
+void VL_set_vsharedscreen_true(void)
 {
 	is_sharedscreen = 1;
 }
@@ -109,6 +130,18 @@ void set_vsharedscreen_true(void)
 /*
 **	History:
 **	$Log: visdebug.c,v $
+**	Revision 1.13  2003/01/31 20:35:57  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.12  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.11  2002/07/15 17:10:04  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.10  2002/07/12 20:40:44  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.9  1997/09/22 16:28:16  gsl
 **	Change the set_debug routines to set_isdebug for consistent naming.
 **	Add vsharedscreen() routines

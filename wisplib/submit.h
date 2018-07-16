@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1997 NeoMedia Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 /*
@@ -26,64 +46,59 @@
 #define SUBMIT_USER_LEN		40
 #define SUBMIT_PASS_LEN		40
 
-#define SUBMIT_ERR_SUCCESS	0
-#define SUBMIT_ERR_NOVOL	4
-#define SUBMIT_ERR_VOLLOCK	8
-#define SUBMIT_ERR_FILELOCK	12
-#define SUBMIT_ERR_NOLIB	16
-#define SUBMIT_ERR_NOFILE	20
-#define SUBMIT_ERR_NOACCESS	28
-#define SUBMIT_ERR_INVALID	40
-#define SUBMIT_ERR_SERVICE	44
-#define SUBMIT_ERR_ACCESS	52
-#define SUBMIT_ERR_OPTIONS	56
-#define SUBMIT_ERR_STATUS	900
-#define SUBMIT_ERR_DISP		901
-#define SUBMIT_ERR_CLASS	902
-#define SUBMIT_ERR_ABORT	903
-#define SUBMIT_ERR_TIME		904
-#define SUBMIT_ERR_LIMIT	905
-#define SUBMIT_ERR_ABORTED	1000
-
 /*
 **	Function Prototypes
 */
-void SUBMIT();
-void SETSUBMIT();
-const char* submit_err(int error);
+void SUBMIT(char* l_file, ...);
+void SETSUBMIT(short *arg_count_ptr, ...);
 
-void setbatchcmd(const char* command);
-const char* batchcmd(void);
+const char* WL_submit_err(int error);
 
-void setbatchcmd95(const char* command);
-const char* batchcmd95(void);
+void WL_setbatchcmd(const char* command);
+const char* WL_batchcmd(void);
 
-void setbatchlogvol(const char* value);
-const char* batchlogvol(void);
+void WL_setbatchcmd95(const char* command);
+const char* WL_batchcmd95(void);
 
-void setbatchloglib(const char* value);
-const char* batchloglib(void);
+void WL_setbatchlogvol(const char* value);
+const char* WL_batchlogvol(void);
 
-void setbatchpass(const char* value);
-const char* batchpass(void);
+void WL_setbatchloglib(const char* value);
+const char* WL_batchloglib(void);
 
-void setbatchuser(const char* value);
-const char* batchuser(void);
+void WL_setbatchpass(const char* value);
+const char* WL_batchpass(void);
 
-void setbatchserver(const char* value);
-const char* batchserver(void);
+void WL_setbatchuser(const char* value);
+const char* WL_batchuser(void);
 
-void setbatchhold(const char* value);
-const char* batchhold(void);
+void WL_setbatchserver(const char* value);
+const char* WL_batchserver(void);
 
-void setbatchrun(const char* value);
-const char* batchrun(void);
+void WL_setbatchhold(const char* value);
+const char* WL_batchhold(void);
+
+void WL_setbatchrun(const char* value);
+const char* WL_batchrun(void);
 
 #endif /* submit_H */
 
 /*
 **	History:
 **	$Log: submit.h,v $
+**	Revision 1.6  2003/03/19 20:03:17  gsl
+**	Standardize SUBMIT return code defines
+**	
+**	Revision 1.5  2003/01/31 19:18:00  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.4  2003/01/20 17:01:56  gsl
+**	Change to use stdarg.h
+**	plus document args
+**	
+**	Revision 1.3  2002/07/12 20:40:38  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.2  1997/08/23 21:14:33  gsl
 **	Add all the new prototypes plus defines for all
 **	the SUBMIT return codes

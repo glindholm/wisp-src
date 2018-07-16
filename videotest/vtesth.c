@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <video.h>
 
-testh()
+int testh()
 {
 	return(SUCCESS);
 }

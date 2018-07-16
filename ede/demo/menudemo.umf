@@ -19,7 +19,7 @@
 WISPTRAN=wisp
 WISPFLAGS=-m -I . -1
 COBOL=ccbl
-COBOLFLAGS=-da4 -zd -ce
+COBFLAGS=-Da4 -Gd -Za
 OPT=-O menudemo.opt
 
 
@@ -27,38 +27,38 @@ all: MCBBLD MCBEDIT MENUDISP MENULOGO MENUVECT MENUDEMO
 
 
 MCBBLD:	mcbbld.cob
-	$(COBOL) $(COBOLFLAGS) -o MCBBLD mcbbld.cob
+	$(COBOL) $(COBFLAGS) -o MCBBLD mcbbld.cob
 
 mcbbld.cob: mcbbld.wcb
 	$(WISPTRAN) $(WISPFLAGS) $(OPT) mcbbld
 
 MCBEDIT: mcbedit.cob
-	$(COBOL) $(COBOLFLAGS) -o MCBEDIT mcbedit.cob
+	$(COBOL) $(COBFLAGS) -o MCBEDIT mcbedit.cob
 
 mcbedit.cob: mcbedit.wcb
 	$(WISPTRAN) $(WISPFLAGS) mcbedit
 
 MENUDISP: menudisp.cob
-	$(COBOL) $(COBOLFLAGS) -o MENUDISP menudisp.cob
+	$(COBOL) $(COBFLAGS) -o MENUDISP menudisp.cob
 
 menudisp.cob: menudisp.wcb
 	$(WISPTRAN) $(WISPFLAGS) $(OPT) menudisp
 
 MENULOGO: menulogo.cob
-	$(COBOL) $(COBOLFLAGS) -o MENULOGO menulogo.cob
+	$(COBOL) $(COBFLAGS) -o MENULOGO menulogo.cob
 
 menulogo.cob: menulogo.wcb
 	$(WISPTRAN) $(WISPFLAGS) $(OPT) menulogo
 
 MENUVECT: menuvect.cob
-	$(COBOL) $(COBOLFLAGS) -o MENUVECT menuvect.cob
+	$(COBOL) $(COBFLAGS) -o MENUVECT menuvect.cob
 
 menuvect.cob: menuvect.wcb
 	$(WISPTRAN) $(WISPFLAGS) menuvect
 
 
 MENUDEMO: menudemo.cob
-	$(COBOL) $(COBOLFLAGS) -o MENUDEMO menudemo.cob
+	$(COBOL) $(COBFLAGS) -o MENUDEMO menudemo.cob
 
 menudemo.cob: menudemo.wcb
 	$(WISPTRAN) $(WISPFLAGS) $(OPT) menudemo

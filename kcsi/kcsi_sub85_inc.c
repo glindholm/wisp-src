@@ -100,7 +100,7 @@ void RPTWOP();
 /*----
 Call to file io routine kcsi_create_main();
 ------*/
-call_kcsi_create_main( name, num_args, args, initial)
+int call_kcsi_create_main( name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -114,7 +114,7 @@ int 		initial;
 Call to file io routine KCSIO(*IO_BLOCK, *UFB, *record);
 UFB passed but not used in vision 3
 ------*/
-call_kcsio( name, num_args, args, initial)
+int call_kcsio( name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -127,7 +127,7 @@ int 		initial;
 /*----
 INIDIO(*IO_BLOCK)
 ------*/
-call_inidio(name, num_args, args, initial)
+int call_inidio(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -140,7 +140,7 @@ int		initial;
 /*----
 KDISP(*file_sys_name,*type,*return_code)
 ------*/
-call_kdisp(name, num_args, args, initial)
+int call_kdisp(name, num_args, args, initial)
 char 	*name;
 int	num_args;
 Argument	args[];
@@ -153,7 +153,7 @@ int	initial;
 KFORMAT(*decimals,*receiver,*RFL)
 -------*/
 
-call_kformat(name, num_args, args, initial)
+int call_kformat(name, num_args, args, initial)
 char 	*name;
 int	num_args;
 Argument	args[];
@@ -168,7 +168,7 @@ All versions are passed a receiving string for a formatted version
 and logo.
 CTRLVERS(*vers)
 ------*/
-call_ctrlvers(name, num_args, args, initial)
+int call_ctrlvers(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -181,7 +181,7 @@ int		initial;
 /*----
 RPTVERS(char *VERS, char *A-BINARY, char *STYLE)
 ------*/
-call_rptvers(name, num_args, args, initial)
+int call_rptvers(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -191,7 +191,7 @@ int		initial;
 	return Okay;
 }
 
-call_inqvers(name, num_args, args, initial)
+int call_inqvers(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -201,7 +201,7 @@ int		initial;
 	return Okay;
 }
 
-call_datvers(name, num_args, args, initial)
+int call_datvers(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -217,7 +217,7 @@ RPTCALL(*RPT_OPTIONS,*RHD,*RDF,*RCB,*RCD,*RFL,*CRF,*RTT,*ST,*DL,*NF,
 	*printer_file,*library,*volume,
 	*caller,*kts)
 ------*/
-call_rptcall(name, num_args, args, initial)
+int call_rptcall(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -247,7 +247,7 @@ int		initial;
 /*----
 PARSEINQ(*RFL,*DL,*result,*scr_flds,*message,*return_code);
 ------*/
-call_parseinq(name, num_args, args, initial)
+int call_parseinq(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -268,7 +268,7 @@ GENINQ(	*SHELL_IO_BLOCK,*display_opt,*run_opt,
 	*CONTROL_IO_BLOCK,*query_title,*query_lines,
 	*EXTRACT_IO_BLOCK)
 ------*/
-call_geninq(name, num_args, args, initial)
+int call_geninq(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -291,7 +291,7 @@ DBSC(*CTRL_HEADERS,*CTRL_TABLE1,*CTRL_TABLE2,
 	*CTRL_IO_BLOCK,*DATA_IO_BLOCK,*return_code)
 ------*/
 
-call_dbsc(name, num_args, args, initial)
+int call_dbsc(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -310,7 +310,7 @@ DMNT(*CTRL_HEADERS,*CTRL_TABLE1,*CTRL_TABLE2,
 	*CTRL_IO_BLOCK,*DATA_IO_BLOCK,*menu_mode,*key_index)
 ------*/
 
-call_dmnt(name, num_args, args, initial)
+int call_dmnt(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -330,7 +330,7 @@ int		initial;
 VALNAM(*NAME (or LIB) ,*RC);
 ------*/
 
-call_valnam(name, num_args, args, initial)
+int call_valnam(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -345,7 +345,7 @@ int		initial;
 VALVOL(*VOL ,*RC);
 ------*/
 
-call_valvol(name, num_args, args, initial)
+int call_valvol(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -360,7 +360,7 @@ int		initial;
 VALFNM(*FIELDNAME ,*RC);
 ------*/
 
-call_valfnm(name, num_args, args, initial)
+int call_valfnm(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -375,7 +375,7 @@ int		initial;
 KEXISTS(*RC,*FILE, *LIBm, *VOL)
 ------*/
 
-call_kexists(name, num_args, args, initial)
+int call_kexists(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -392,7 +392,7 @@ int		initial;
 RPTWOP(*RC,*OPTIONS, *MESSAGE)
 ------*/
 
-call_rptwop(name, num_args, args, initial)
+int call_rptwop(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -408,7 +408,7 @@ int		initial;
 /*----
 KMATCH(*rc,*general-field-1, *general-field-2)
 ------*/
-call_kmatch(name, num_args, args, initial)
+int call_kmatch(name, num_args, args, initial)
 char 	*name;
 int	num_args;
 Argument	args[];
@@ -418,7 +418,7 @@ int	initial;
 	return Okay;
 }
 
-call_kfiltyp(name, num_args, args, initial)
+int call_kfiltyp(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -432,7 +432,7 @@ int		initial;
 KTRACE(*str[80])
 ------*/
 
-call_ktrace(name, num_args, args, initial)
+int call_ktrace(name, num_args, args, initial)
 char		*name;
 int		num_args;
 Argument	args[];
@@ -452,6 +452,9 @@ int		initial;
 /*
 **	History:
 **	$Log: kcsi_sub85_inc.c,v $
+**	Revision 1.2  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
 **	Revision 1.1  2002/10/21 20:47:26  gsl
 **	KCSI Replacement for crid.h cridtbl.c and crid85.c
 **	Includes CRID + CREATE cobol API's

@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1995-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		getopt.c
 **
@@ -13,7 +32,7 @@ static char rcsid[]="$Id:$";
 **	getopt()       
 */
 
-#if defined(MSDOS) || defined(WIN32)
+#if defined(WIN32)
 
 /*
 **	Includes
@@ -181,12 +200,19 @@ int	getopt( int argc, char *const argv[], const char *flags)
 	return(ret_code);
 }	
 
-#else	/* MSDOS || WIN32 */
-static int dummy_getopt;
-#endif
+#endif /*  WIN32 */
 /*
 **	History:
 **	$Log: getopt.c,v $
+**	Revision 1.10  2003/01/31 21:40:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.9  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.8  2002/07/18 21:04:22  gsl
+**	Remove MSDOS code
+**	
 **	Revision 1.7  1997/02/17 15:49:07  gsl
 **	Fixed prototype so same as ansi C standard
 **	

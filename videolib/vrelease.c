@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -17,7 +38,7 @@ static char rcsid[]="$Id:$";
 
 /*						Subroutine entry point.								*/
 
-int vrelease(void)									/* Release from optimization.		*/
+int VL_vrelease(void)									/* Release from optimization.		*/
 {
 	vdefer_restore();								/* Restore from current optimization.	*/
 	return(SUCCESS);								/* Return to the caller.		*/
@@ -25,6 +46,12 @@ int vrelease(void)									/* Release from optimization.		*/
 /*
 **	History:
 **	$Log: vrelease.c,v $
+**	Revision 1.12  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.11  2002/07/15 20:16:14  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.10  1997/07/09 16:09:23  gsl
 **	Removed the BLOCK_MODE support so now is the same as vdefer_restore()
 **	

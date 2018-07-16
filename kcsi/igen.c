@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 In the option to generate a duplicate inquiry, the following
 information is requested from the user
@@ -70,6 +84,7 @@ July 21, 91 mjb
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <time.h>
 
 #include "shrthand.h"
@@ -78,7 +93,6 @@ July 21, 91 mjb
 #include "intdef.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)igen.c	1.10 9/2/94";
 
 #define COMMAND     ""				/* Obsolete remnant */
 #define COMMENT	   ( (gen_wproc) ? "* ":"# " ) 	/* PROC vs Shell comment chars */
@@ -126,17 +140,17 @@ void GENINQ(char *gio,char *display,char *endrun,char *dio,char *change,
 
 	if (gen_wproc)
         {
-		setwispfilext("wps");
+		WSETFILEXT("wps");
         }
 	else
         {
 #ifdef KCSI_UNIX
-		setwispfilext("sh");
+		WSETFILEXT("sh");
 #endif
         }
 	
 	mode = IS_OUTPUT;
-	wfopen2(&mode,&gio[VOLUME_POS],&gio[LIBRARY_POS],&gio[NAME_POS],
+	WFOPEN2(&mode,&gio[VOLUME_POS],&gio[LIBRARY_POS],&gio[NAME_POS],
 			inq_sys_name,"INQUIRY ","INQUIRY ");
 	KCSI_strunc(inq_sys_name);
 	qfile = fopen(inq_sys_name,"w");
@@ -470,8 +484,11 @@ int KCSI_isnblank(char *mem,int len)
 /*
 **	History:
 **	$Log: igen.c,v $
-**	Revision 1.8.2.1  2002/11/12 15:56:25  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.18  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.17  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.16  2002/10/17 21:22:41  gsl
 **	cleanup

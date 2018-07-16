@@ -16,7 +16,7 @@
 static void testex(enum e_vop vop, int scroll);
 
 
-teste()
+int teste()
 {
 	char c;
 	char *ctime();
@@ -27,7 +27,7 @@ teste()
 	verase(FULL_SCREEN);
 	vmove(0,0);
 	vprint("Test group E - Output timing speeds - loops %d times.\n",LOOPS);
-start:	vbuffering_start();
+start:	VL_vbuffering_start();
 	vprint("\nChoose: 0 - To exit\n");
 vprint("        1 -    scrolling, no tracking, no optimization, no defer\n");
 vprint("        2 -    scrolling,    tracking, no optimization, no defer\n");
@@ -42,7 +42,7 @@ vprint("        8 - no scrolling,    tracking,    optimization,    defer\n");
 	c = vgetc(); vprint("%c\n",c);
 	while (vcheck() != 0);
 	verase(FULL_SCREEN);
-	vbuffering_end();
+	VL_vbuffering_end();
 	start_time = time(NULL);
 	switch(c)
 	{

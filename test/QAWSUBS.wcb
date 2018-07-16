@@ -108,6 +108,53 @@
 
       ******************************************************************
 
+       01  WFNAME2-FILE                  PIC X(8) VALUE SPACES.
+       01  WFNAME2-LIB                   PIC X(8) VALUE SPACES.
+       01  WFNAME2-VOL                   PIC X(6) VALUE SPACES.
+       01  WFNAME2-NAME                  PIC X(80) VALUE SPACES.
+       01  WFNAME2-ATTR                  PIC x(10) VALUE SPACES.
+       01  WFNAME2-TITLE                 PIC X(40) VALUE SPACES.
+
+       01  WFNAME2-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              " *** TESTING THE WFNAME2 WISPSUB ***".
+
+           03  FILLER PIC X(40) ROW 4 COL 20 SOURCE WFNAME2-TITLE.
+
+           03  FILLER PIC X(4) ROW 6 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 6 COL 20 
+               SOURCE WFNAME2-FILE OBJECT WFNAME2-FILE.
+
+           03  FILLER PIC X(7) ROW 6 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 6 COL 38                                  
+               SOURCE WFNAME2-LIB OBJECT WFNAME2-LIB.
+
+           03  FILLER PIC X(6) ROW 6 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 55 
+               SOURCE WFNAME2-VOL OBJECT WFNAME2-VOL.
+
+           03  FILLER PIC X(4)  ROW 8 COL 15 VALUE "ATTR".
+           03  FILLER PIC X(10) ROW 8 COL 20 
+               SOURCE WFNAME2-ATTR OBJECT WFNAME2-ATTR.
+
+           03  PIC X(40) ROW  8 COLUMN 40 VALUE
+               "P  Printer file".
+           03  PIC X(40) ROW  9 COLUMN 40 VALUE
+               "O  Opened for OUTPUT".
+           03  PIC X(40) ROW 10 COLUMN 40 VALUE
+               "W  WORK file".
+           03  PIC X(40) ROW 11 COLUMN 40 VALUE
+               "#  Scratch file (#xxxx)".
+           03  PIC X(40) ROW 12 COLUMN 40 VALUE
+               "T  Temp file (##xxxx)".
+
+           03  FILLER PIC X(79) ROW 20 COL 2 SOURCE WFNAME2-NAME.
+
+           03  FILLER PIC X(40) ROW 24 COL 20 VALUE 
+               "PRESS (ENTER) TO CONTINUE, (16) EXIT".
+
+      ******************************************************************
+
        01  WFNAME-FILE                  PIC X(8) VALUE SPACES.
        01  WFNAME-LIB                   PIC X(8) VALUE SPACES.
        01  WFNAME-VOL                   PIC X(6) VALUE SPACES.
@@ -117,7 +164,7 @@
 
        01  WFNAME-SCREEN USAGE IS DISPLAY-WS.
            03 FILLER PIC X(40) ROW 2 COL 20 VALUE
-              "     *** TESTING THE wfname SUB ***".
+              "     *** TESTING THE WFNAME SUB ***".
 
            03  FILLER PIC X(40) ROW 4 COL 20 SOURCE WFNAME-TITLE.
 
@@ -171,8 +218,8 @@
 
            03  FILLER PIC X(79) ROW 20 COL 2 SOURCE WFNAME-NAME.
 
-           03  FILLER PIC X(40) ROW 24 COL 28 VALUE 
-               "PRESS RETURN TO CONTINUE, PF16 EXIT".
+           03  FILLER PIC X(40) ROW 24 COL 20 VALUE 
+               "PRESS (ENTER) TO CONTINUE, (16) EXIT".
 
       ******************************************************************
 
@@ -228,12 +275,12 @@
                "TRY THINGS:".
            03  FILLER  PIC X(15) ROW 1 COL 60 VALUE
                "WISPSUBS-SCREEN".
-           03  FILLER  PIC X(10) ROW 3 COL 2 VALUE
-               "(1) wfname".
-           03  FILLER  PIC X(25) ROW 5 COL 2 VALUE
-               "(2) NetronCAP subroutines".
-           03  FILLER  PIC X(12) ROW 7 COL 2 VALUE
-               "(3) PRNTNAME".
+           03  FILLER  PIC X(35) ROW 3 COL 2 VALUE
+               "(1) WFNAME".
+           03  FILLER  PIC X(35) ROW 5 COL 2 VALUE
+               "(2) WFNAME2".
+           03  FILLER  PIC X(35) ROW 7 COL 2 VALUE
+               "(3) NetronCAP subroutines".
            03  FILLER  PIC X(30) ROW 9 COL 2 VALUE
                "(4) WTITLE".
            03  FILLER  PIC X(04) ROW 11 COL 2 VALUE
@@ -294,10 +341,10 @@
               PERFORM WFNAME-CALL THRU WFNAME-CALL-EXIT
               GO TO WISPSUBS-TESTS
            ELSE IF PF-KEY = "02" THEN
-              PERFORM WSFNS-WSFNM-CALL
+              PERFORM WFNAME2-CALL THRU WFNAME2-CALL-EXIT
               GO TO WISPSUBS-TESTS
            ELSE IF PF-KEY = "03" THEN
-              PERFORM PRNTNAME-CALL
+              PERFORM WSFNS-WSFNM-CALL
               GO TO WISPSUBS-TESTS
            ELSE IF PF-KEY = "04" THEN
               ACCEPT NEWTITLE
@@ -312,11 +359,9 @@
 
        WFNAME-CALL.
 
-           MOVE WISPFILEXT TO MY-EXT.
 
            DISPLAY AND READ WFNAME-SCREEN ON CRT PFKEYS 16.
 
-           MOVE MY-EXT TO WISPFILEXT.
  
            IF PF-KEY = "16" THEN
               GO TO WFNAME-CALL-EXIT.
@@ -348,9 +393,9 @@
               ADD 4096  TO  WFNAME-MODE.
 
 
-           CALL "setwispfilext" USING WISPFILEXT.
+           CALL "WSETFILEXT" USING MY-EXT.
 
-           CALL "wfname" USING  WFNAME-MODE,
+           CALL "WFNAME" USING  WFNAME-MODE,
                                 WFNAME-VOL,
                                 WFNAME-LIB,
                                 WFNAME-FILE,
@@ -361,19 +406,29 @@
        WFNAME-CALL-EXIT.
            EXIT.
 
-       WSFNS-WSFNM-CALL.
-           CALL "QANETCAP".
-
       ******************************************************************
 
-       PRNTNAME-CALL.
-           DISPLAY FILE-NAME.
-           ACCEPT FILE-NAME.
-           IF FILE-NAME = "EXIT"
-               STOP RUN.
+       WFNAME2-CALL.
 
-      *    CALL "PRNTNAME" USING FILE-NAME FILE-LIB.
-           DISPLAY FILE-NAME.
+           DISPLAY AND READ WFNAME2-SCREEN ON CRT PFKEYS 16.
+ 
+           IF PF-KEY = "16" THEN
+              GO TO WFNAME2-CALL-EXIT.
+
+           CALL "WFNAME2" USING WFNAME2-ATTR,
+                                WFNAME2-VOL,
+                                WFNAME2-LIB,
+                                WFNAME2-FILE,
+                                WFNAME2-NAME.
+
+           GO TO WFNAME2-CALL.
+
+       WFNAME2-CALL-EXIT.
+           EXIT.
+
+      ******************************************************************
+       WSFNS-WSFNM-CALL.
+           CALL "QANETCAP".
 
       ******************************************************************
 

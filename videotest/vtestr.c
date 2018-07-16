@@ -19,7 +19,7 @@ static void set_input();
 static void draw_input();
 static void reset_input();
 
-testr()
+int testr()
 {
 	enum e_vop sav_op;
 

@@ -1,4 +1,4 @@
-#	Copyright (c) 2002-2003 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -21,11 +21,13 @@
 #
 #		The following targets are recognized in this makefile.
 #
-#		acu		Build ACULINK and ACUUSING
+#		acu		Build ACULINK.acu and ACUUSING.acu
 #
 #		acn		Build Acucobol Native Screen routines
 #
 #			
+
+MAKEFILE=wacu.umf
 
 #============================================================================
 #
@@ -40,11 +42,24 @@
 ACUDIR=/usr/local/acucobol
 WISPDIR=/usr/local/wisp
 
-COBOL=$(ACUDIR)/bin/ccbl.exe
-COBFLAGS = -da4 -zd -te 800 -C32 -Z32
+COBOL=$(ACUDIR)/bin/ccbl
+COBFLAGS = -Da4 -Gd -Te 800 -C50 -Z50
 
-WISPTRAN=$(WISPDIR)/bin/wisp.exe
-WISPFLAGS=-VACU
+WISPTRAN=$(WISPDIR)/bin/wisp
+WISPFLAGS=-VACU -u ACU50
+
+.wcb.cob:
+	$(WISPTRAN) $(WISPFLAGS) $*.wcb
+
+.wcb.acu:
+	$(WISPTRAN) $(WISPFLAGS) $*.wcb
+	$(COBOL) $(COBFLAGS) -o $*.acu $*.cob
+
+.cob.acu:
+	$(COBOL) $(COBFLAGS) -o $*.acu $*.cob
+
+.SUFFIXES: .acu .cob .wcb
+
 
 #============================================================================
 
@@ -73,75 +88,79 @@ $(COBOL):
 
 #============================================================================
 #
-#	ACULINK and ACUUSING
+#	ACULINK.acu and ACUUSING.acu
 #
-ACU_BLD = ACULINK ACULINK.cob ACUUSING 
+#	$ make -f wacu.umf acu
+#
+ACU_DST = ACULINK.acu ACUUSING.acu 
+ACU_BLD = $(ACU_DST) ACULINK.cob 
 
-acu:	acu_header $(ACU_BLD)
+acu:	acu_header $(ACU_DST)
 	@echo "Target $@ is up-to-date."
 
-acu_header: $(COBOL) $(WISPTRAN)
+ACULINK.cob: $(WISPTRAN)
+
+$(ACU_DST): $(COBOL)
+
+acu_header:
 	@echo "BUILDING WISP ACUCOBOL Programs"
 	@echo " "
 	@echo "COBOL    =  $(COBOL)"
 	@echo "WISPTRAN =  $(WISPTRAN)"
 	@echo ""
 
-ACULINK: ACULINK.cob
-	$(COBOL) $(COBFLAGS) -o $@ ACULINK.cob
-
-ACULINK.cob: $(WISPTRAN) ACULINK.wcb
-	$(WISPTRAN) $*.wcb
-
-ACUUSING: ACUUSING.cob
-	$(COBOL) $(COBFLAGS) -o $@ ACUUSING.cob
-
 #============================================================================
 #
 #	ACUCOBOL Native Screens programs
 #
-#	$ nmake -f wwruncbl.mak acn
+#	$ make -f wacu.umf acn
 #
 
-ACN_BLD = 	WACUERROR \
-		WACUDISPLAY \
-		WACUFAC2SCREEN \
-		WACUGETPARM \
-		WACUGETPFKEY \
-		WACUHELP \
-		WACUWSB
+ACN_DST = 	WACUERROR.acu \
+		WACUDISPLAY.acu \
+		WACUFAC2SCREEN.acu \
+		WACUGETPARM.acu \
+		WACUGETPFKEY.acu \
+		WACUHELP.acu \
+		WACUWSB.acu
+ACN_BLD = $(ACN_DST)
 
-acn: acn_header $(ACN_BLD)
+acn: acn_header $(ACN_DST)
 	@echo "Native Screens programs:"
-	@echo "$(ACN_BLD)"
+	@echo "$(ACN_DST)"
 	@echo "are up-to-date."
 
-acn_header: $(COBOL)
+$(ACN_DST): $(COBOL)
+
+acn_header:
 	@echo "BUILDING WISP ACUCOBOL Native Screens Programs"
 	@echo " "
 	@echo "COBOL  =  $(COBOL)"
 	@echo ""
 
-WACUERROR: WACUERROR.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUERROR.cob
 
-WACUDISPLAY: WACUDISPLAY.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUDISPLAY.cob
+#============================================================================
+#
+#	Distribution
+#
 
-WACUFAC2SCREEN: WACUFAC2SCREEN.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUFAC2SCREEN.cob
+DIST_ACU=$(ACU_DST) $(ACN_DST)
 
-WACUGETPARM: WACUGETPARM.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUGETPARM.cob
+dist:
+	@echo "BUILDING WISP ACUCOBOL Distribution Files"
+	@echo " "
+	@echo "COBOL    =  $(COBOL)"
+	@echo "WISPTRAN =  $(WISPTRAN)"
+	@echo ""
+	@for f in $(DIST_ACU) ; do \
+	   if [ ! -f $${f} ] ; then \
+	      echo Making $${f} ; \
+	      make -f $(MAKEFILE) COBOL=$(COBOL) WISPTRAN=$(WISPTRAN) $${f} ; \
+	   fi \
+	done
+	@echo "$(DIST_ACU)"
+	@echo "are up-to-date."
 
-WACUGETPFKEY: WACUGETPFKEY.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUGETPFKEY.cob
-
-WACUHELP: WACUHELP.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUHELP.cob
-
-WACUWSB: WACUWSB.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUWSB.cob
 
 #============================================================================
 #
@@ -149,6 +168,7 @@ WACUWSB: WACUWSB.cob
 
 clean:
 	rm -f $(ACN_BLD) $(ACU_BLD)
+	rm -f core *~ wc*.cpy
 
 #
 # End of file

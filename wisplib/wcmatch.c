@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	wcmatch.c
@@ -15,7 +28,7 @@ static char rcsid[]="$Id:$";
 
 
 /*
- * wcmatch()	-- wild-card string matching routine..
+ * WL_wcmatch()	-- wild-card string matching routine..
  *
  * FUNCTIONAL DESCRIPTION:
  *		This function attempts to match the pattern string specified by the pat'
@@ -33,7 +46,7 @@ static char rcsid[]="$Id:$";
  *		Further modified to pass the wildcard characters.
  *
  * CALLING SEQUENCE:
- *		match.w.u = wcmatch(pat, str, sex, MATCHONE, MATCHMANY);
+ *		match.w.u = WL_wcmatch(pat, str, sex, MATCHONE, MATCHMANY);
  *
  * FORMAL PARAMETERS:
  *		char		*pat		- pointer to pattern C-string
@@ -66,7 +79,7 @@ static char rcsid[]="$Id:$";
 #include "idsistd.h"
 #include "wdefines.h"
 
-int wcmatch(pat, str, sex, MATCHONE, MATCHMANY)
+int WL_wcmatch(pat, str, sex, MATCHONE, MATCHMANY)
 	register char	*pat;								/* IN -- pointer to the pattern string */
 	register char	*str;								/* IN -- pointer to the target string */
 		int	sex;								/* IN -- boolean for case sensitivity */
@@ -90,7 +103,7 @@ int wcmatch(pat, str, sex, MATCHONE, MATCHMANY)
 				;
 			while (strend >= str)						/* Recurse to match rest of string */
 				{
-				if (wcmatch(pat, strend, sex, MATCHONE, MATCHMANY))
+				if (WL_wcmatch(pat, strend, sex, MATCHONE, MATCHMANY))
 					return (TRUE);
 				strend--;
 				}
@@ -111,11 +124,11 @@ int wcmatch(pat, str, sex, MATCHONE, MATCHMANY)
 		else									/* Match character-for-character */
 			{
 			s = *str;
-			if (sex == FALSE && isalpha(c) && isalpha(s))			/* Case insensitive? */
+			if (sex == FALSE && isalpha((int)c) && isalpha((int)s))			/* Case insensitive? */
 				{
-				if (!islower(c))
+				if (!islower((int)c))
 					c = tolower(c);
-				if (!islower(s))
+				if (!islower((int)s))
 					s = tolower(s);
 				}
 			if (s != '\0' && c == s)
@@ -137,6 +150,18 @@ int wcmatch(pat, str, sex, MATCHONE, MATCHMANY)
 /*
 **	History:
 **	$Log: wcmatch.c,v $
+**	Revision 1.12  2003/02/04 18:43:32  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.11  2003/02/04 18:29:12  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.10  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.9  2002/07/10 21:05:29  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.8  1996/08/19 22:33:08  gsl
 **	drcs update
 **	

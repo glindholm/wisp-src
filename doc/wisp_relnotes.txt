@@ -3,12 +3,12 @@ All Rights Reserved.
 
 ====================================================================
 
-Title:          RELEASE NOTES FOR WISP VERSION 4.4
+Title:          RELEASE NOTES FOR WISP VERSION 5.0
 
-Document:       wisp_relnotes.txt (RELNOTES)
+Document:       wisp_relnotes.txt
 Last Updated:   $Date:$
 Products:       WISP for UNIX, WISP for Windows (WIN32)
-Versions:       4.4.07
+Versions:       5.0.00
 
 Summary:        Release notes for changes to WISP since version 3.3c.
 
@@ -23,23 +23,45 @@ Summary:        Release notes for changes to WISP since version 3.3c.
         Fax   (239) 337-1605
         Web   www.neom.com
         Email support@neom.com
-        FAQ   http://www.neom.com/support/wispfaq.htm
-        Ftp   ftp://support.neom.com/public/wisp
+        FAQ   http://www.neom.com/support/wisp/faq.jsp
 
 
-CHANGES FROM 4.4.06 TO 4.4.07
-=============================
+
+CHANGES FOR RELEASE 5.0.00
+==========================
 The following items describe corrections and improvements that have
-been made to the WISP toolkit from release 4.4.06 to release 4.4.07.
+been made to the WISP toolkit for release 5.0.00.
 
-On Unix the name and location of the WISP license file has
-changed.  The old license file was "/lib/wisp.license".  The
-new license file is located in the $WISPCONFIG directory and is
-named "wisp.{machineid}.license" where {machineid} is the 
-WISP license machine id for that machine.
+The version numbers of utilities that are released with this version
+or WISP are:
+
+    KCSI   v4.1.00
+
+This release supports the following Cobol Compiler releases:
+    - Acucobol-GT 6.0
+    - Acucobol-GT 5.2
+    - Acucobol-GT 5.1
+    - Acucobol-GT 5.0
+    - Micro Focus Server Express 2.1
+    - Micro Focus Object Cobol 4.1
+
+This release of WISP supports Acucobol-GT 6.0, 5.2, 5.1, and 5.0, 
+earlier releases of Acucobol are not supported.  The WISP 
+translator will by default use features of Acucobol-GT 5.2 that 
+are not available in Acucobol-GT 5.1 or 5.0.  For this reason it 
+is recommended that you upgrade to Acucobol-GT 5.2 or 6.0 .  If 
+you cannot upgrade then you will need to use the WISP translator 
+option "-u ACU51" or "-u ACU50" when translating.
+
+
+Changes to licensing on Unix:
+
+On Unix the location of the WISP license file has changed.  The 
+old license file was "/lib/wisp.license".  The new license file 
+is located in the $WISPCONFIG directory.
 
     Old: /lib/wisp.license
-    New: $WISPCONFIG/wisp.{machineid}.license
+    New: $WISPCONFIG/wisp.license
 
 If you are upgrading from a previous release of WISP you will 
 need to create the new license file(s) by running the wlicense
@@ -50,12 +72,552 @@ Code, use "cat /lib/wisp.license" to view there values.
 If you have more then one $WISPCONFIG directory you will need
 to create a license file in each location.  Once a license file
 has been created you can copy it to each $WISPCONFIG location.
-If multiple machines share the the same $WISPCONFIG directory 
-then you will need to create a license file from each machine.
 
 In order to run the wlicense utility the variable $WISPCONFIG 
 must be set and you must have priviledges to write into the 
 $WISPCONFIG directory.
+
+The old WISP UNLIMITED runtime licenses are no longer supported 
+and have been replaced with ENTERPRISE licenses.  If you have 
+an UNLIMITED license please contact your WISP vendor or NeoMedia 
+to have it replaced by an ENTERPRISE license.
+
+
+Changes to the WISP distribution kit on UNIX:
+
+  Changed:
+  All the the Cobol source file names are now uppercase.
+  All Acucobol object file will have a .acu extension.
+  acu/xterm.a_termcap    - Replaces old xterm.acu
+
+  Added:
+  acu/sub85_acu50.c      - WISP sub85.c for Acucobol 5.0
+  acu/sub85_acu51.c      - WISP sub85.c for Acucobol 5.1
+  acu/sub85_acu52.c      - WISP sub85.c for Acucobol 5.2
+  acu/sub85_acu60.c      - WISP sub85.c for Acucobol 6.0
+  acu/wacu.umf           - New makefile for WISP Acucobol objects
+  acu/wisp_sub85_inc.c   - WISP include file for sub85.c
+  acu/ACULINK.acu        - The built ACULINK object file
+  acu/ACUUSING.acu       - The built ACUUSING object file
+  acu/WACUDISPLAY.acu    - The built WACUDISPLAY object file
+  acu/WACUERROR.acu      - The built WACUERROR object file
+  acu/WACUFAC2SCREEN.acu - The built WACUFAC2SCREEN object file
+  acu/WACUGETPARM.acu    - The built WACUGETPARM object file
+  acu/WACUGETPFKEY.acu   - The built WACUGETPFKEY object file
+  acu/WACUHELP.acu       - The built WACUHELP object file
+  acu/WACUWSB.acu        - The built WACUWSB object file
+  mf/wisp4400.c          - C file for obsolete interfaces
+  mf/wisp4400.o          - Object file for obsolete interfaces
+
+  Removed:
+  acu/sub85.c            - replaced by sub85_acuXX.c files
+  bin/which              - removed as is a standard OS utility
+  bin/makemsg            - obsolete
+  config/wispmsg.dat     - obsolete
+  config/wispmsg.txt     - obsolete
+  mf/wrunmf.c            - obsolete
+  mf/wrunmf.o            - obsolete
+  acu/wispacn.txt        - Incorporated in WISP manual
+  etc/nonascii.txt       - Incorporated in WISP manual
+
+
+Changes to the WISP distribution kit on Windows:
+
+  Changed:
+  All the the Cobol source file names are now uppercase.
+  All Acucobol object file will have a .acu extension.
+
+  Added:
+  acu\acu50\             - Build files for Acucobol 5.0
+  acu\acu51\             - Build files for Acucobol 5.1
+  acu\acu52\             - Build files for Acucobol 5.2
+  acu\acu60\             - Build files for Acucobol 6.0
+  acu\wacu.mak           - New makefile for WISP Acucobol objects
+  acu\wisp_sub85_inc.c   - WISP include file for sub85.c
+  acu\ACULINK.acu        - The built ACULINK object file
+  acu\ACUUSING.acu       - The built ACUUSING object file
+  acu\WACUDISPLAY.acu    - The built WACUDISPLAY object file
+  acu\WACUERROR.acu      - The built WACUERROR object file
+  acu\WACUFAC2SCREEN.acu - The built WACUFAC2SCREEN object file
+  acu\WACUGETPARM.acu    - The built WACUGETPARM object file
+  acu\WACUGETPFKEY.acu   - The built WACUGETPFKEY object file
+  acu\WACUHELP.acu       - The built WACUHELP object file
+  acu\WACUWSB.acu        - The built WACUWSB object file
+
+  Removed:
+  acu\wwruncbl.mak       - obsolete
+  bin\makemsg.exe        - obsolete
+  config\wispmsg.dat     - obsolete
+  config\wispmsg.txt     - obsolete
+  lib\videom.lib         - video.lib is now multi-threaded
+  lib\wispm.lib          - wisp.lib is now multi-threaded
+  acu\wispacn.txt        - Incorporated in WISP manual
+  etc\nonascii.txt       - Incorporated in WISP manual
+  etc\nttelnet.txt       - Incorporated in WISP manual
+  etc\vcolors.txt        - Incorporated in WISP manual
+
+
+The makefile instructions for building ACULINK.acu, ACUUSING.acu, 
+and the Acucobol Native Screens objects has been move to wacu.mak 
+on Windows and to wacu.umf on Unix.
+
+The distribution file $WISPDIR/acu/xterm.acu has been renamed to 
+xterm.a_termcap. The extension has been changed so as not to be 
+confused with an Acucobol object file.
+
+The file wispmsg.dat, wispmsg.txt and makemsg have been removed 
+from the distribution.  They are no longer used.
+
+All Acucobol object files are compiled with -Z50 options to allow
+them to be run with Acucobol-GT 5.0 or later runtimes. 
+
+All of the WISP changes needed to sub85.c have now been moved 
+into the file wisp_sub85_inc.c.  This file is then included 
+into sub85.c.  The new WISP version of sub85.c is now the same
+as the Acucobol version with the exception of some comments and
+three places where #include "wisp_sub85_inc.c" has been inserted.
+The purpose is to simplify the changes needed to sub85.c so
+that future release of Acucobol will be easier to support.
+
+
+Changes to the WISP Translator:
+
+When translating for Acucobol the WISP translator defaults to
+inserting calls to "C$GETLASTFILEOP" to retrieve the last file
+operation. If you are using an earlier version of Acucobol that
+does not support "C$GETLASTFILEOP" then you will need to use 
+the new #NOGETLASTFILEOP translator option when translating. 
+(Using the "-u ACU50" or "-u ACU51" option has the same effect.)
+It appears that "C$GETLASTFILEOP" was added in Acucobol-GT 5.2.0.
+
+If you are translating for Micro Focus or use the 
+#NOGETLASTFILEOP translator option then the file IO operation 
+name is moved into the WISP-LASTFILEOP field. Previously a 
+code was moved into the WISP-DECLARATIVES-STATUS field.
+
+The WISP translator has been changed for "READ WITH HOLD" to 
+no-longer generate calls to "wfwait". Instead for Acucobol it
+generates calls to "C$SLEEP" and for Micro Focus it generates
+a call to "SLEEPONE" to cause a 1 second wait before it
+retries the READ.
+
+The WISP translator now generates file logic that uses an
+attribute field (ATTR-{filename}) instead of the previous
+status field (S-{filename}).  The attribute field contains
+a list of single character attributes instead of status
+field bitmask.  These attributes are easier to read and
+understand then the status field values. The attributes 
+are used to identify the type of file and current state.
+This table describes the attributes:
+   "P"  Printer file
+   "I"  Indexed file
+   "S"  Sequential/Sequential file
+   "Y"  Sequential/Dynamic file
+   "R"  Relative file
+   "Z"  Sort file
+   "D"  Database file
+   "O"  Opened for OUTPUT
+   "U"  Opened for IO
+   "X"  Opened EXTEND
+   "G"  Initial GETPARM has been done
+   "E"  Error GETPARM needed
+   "W"  WORK file
+   "#"  Scratch file (#xxxx)
+   "T"  Temp file (##xxxx)
+   "N"  NORESPECIFY
+   "!"  File has DECLARITIVES
+
+These routines have been replaced to use the ATTR-xxx attribute 
+field instead of the S-xxx status field.
+   SETFILE   -> SETFILE2
+   X4DBFILE  -> X4DBFILE2
+   WFOPEN3   -> WFOPEN4
+   WFNAME    -> WFNAME2
+   WFILECHK2 -> WFILECHK3
+
+The WISP Translator will now preserve 77 level numbers instead of
+changing them to 01 unless the #CHANGE_LEVEL77 translator option is
+specified. 
+
+The WISP Translator will move 01 and 77 level numbers to Area-A
+(column 8) unless the #DONT_FORCE_AREA_A_LEVELS translator option is
+specified.
+
+The WISP Translator will remove the SOURCE-COMPUTER and
+OBJECT-COMPUTER paragraphs unless the #KEEP_CONFIG_COMPUTER translator
+option is specified.  Additionally the paragraphs will be
+un-translated unless the #TRANSLATE_CONFIG_COMPUTER translator option
+is specified.
+
+The WISP Translator will use the file extension of ".cob" for
+generated copybook files. Previously it was using ".lib" which is
+inappropriate on Windows.  You can optionally instruct it to use the
+extension ".cpy" or ".lib" by specifying the translator option
+#COPYBOOK_EXT_CPY or #COPYBOOK_EXT_LIB respectively.
+
+The WISP Translator will delete the "DATA RECORDS ARE" clause from
+FD's and SD's if the #DELETE_DATA_RECORDS translator option is 
+specified.
+
+The WISP Translator will now generate uppercase copybook files if the
+source copybook file was uppercase.
+
+Removed word "LENGTH" from the WISP Translators internal list of COBOL
+reserved words (words.def) that it will automatically translate.
+
+The WISP Translator has changed the FAC OF and ORDER-AREA OF data
+names to be FAC-OF-xxx and ORDER-AREA-xxx. Previously it used
+F-xxx and O-A-xxx which was shorter but less natural.
+
+The WISP Translator for Micro Focus will insert the clause "NUMERIC 
+SIGN IS TRAILING SEPARATE" into the SPECIAL-NAMES paragraph if the
+#SIGN_TRAILING_SEPARATE translator option is specified.  Use this
+option if you used the SEPSGN=YES compiler option on the Wang. 
+This is equivalent to the Acucobol compiler flag "-Ds".
+
+The WISP Translator supports a new command line option '-E' will 
+echo the command line and OPTION file options in use to stdout.  
+This option is useful for displaying which options were used when 
+build results are being logged in a build tool.
+
+The WISP Translator now allows you to specify any of the OPTION 
+file translator options on the command line with 
+the '-u option[=value[,value]]' option.  Multiple '-u' options can 
+be specified.  The leading '#' character of the option name is not 
+required.  (It is difficult to specify '#' in a unix command line 
+as the '#' character is usually defined as the comment character.)  
+If the option requires a value then the value should follow an '=' 
+character with no whitespace characters 
+(e.g '-u SORT_FILE=MY-SORT-FILE'). 
+
+The WISP translator no longer recognizes the obsolete $WANG_PROC
+directive.  To set the file extension call the WSETFILEXT routine.
+
+If the WISP translator is given a path to the source file to translate
+it will use that path as it's working directory (pwd). All relative
+paths supplied for copy libraries etc. will be calculated relative to
+the location of the source file.  This allows you to translate
+without having to be located in the same directory as the program
+source file.
+
+The WISP translator was aborting if a DISPLAY AND READ statement was
+missing the required "ON crt" clause. The has been changed so it
+reports a meaningful message then terminates.
+
+The WISP translator was aborting if an OPEN statement was missing the 
+required open mode. The has been changed so it reports a meaningful 
+message then terminates.
+
+The WISP translator could on occasion generate a data name that ended
+in a dash "-" character, this would cause a compiler warning. It has
+been corrected.
+
+The WISP translator now recognizes and removes "END PROGRAM {progid}."
+sentences. 
+
+The WISP translator no longer issues YEAR2000 warnings for
+calls to DATE, DAY or READFDR. (See DATE6 support in this document.)
+
+The WISP translator now recognizes the ACCEPT statement 
+syntax  "ACCEPT xxx FROM DATE YYYYMMDD" and 
+"ACCEPT xxx FROM DAY YYYYDDD".  These are now supported in
+both Acucobol and Micro Focus Cobol.
+
+The WISP translator will now warn if a horizontally repeating field 
+in a DISPLAY-WS record will not fit across the screen. It will also
+warn if a VALUE clause literal on a screen field is too big for  
+the PIC clause.
+
+For Micro Focus changed the calls to WVASET to a simpler form
+using WVASETV which takes a numeric literal passed by VALUE.
+    CALL "WVASETV" USING VALUE nn
+The older form of WVASET is still supported for backwards 
+compatibility.
+
+Switch to INITWISP3 that has a simpler interface then INITWISP2.
+INITWISP3 has been added to the library. INITWISP2 will still be
+supported for backwards compatibility.
+
+
+
+Changes to WISP configuration:
+
+On WIN32 the environment variable $WISPCONFIG can now be used to 
+override the Registry value of WISPCONFIG to identify the location
+of the WISP Configuration Directory.  This change will allows you 
+to run multiple configurations at the same time on a server. 
+
+On WIN32 all the registry settings now have corresponding environment 
+variables. This allows you to configure the WISP runtime without 
+having to make changes to the registry (via WCONFIG utility).
+The following environment variables can be used to override
+(or replace) the registry settings. These are the same variables
+that are used on Unix.
+   $WISPCONFIG         - WISP configuration directory
+   $WISPDIR            - WISP installation directory
+   $WISPSERVER         - WISP network license server (WIN32 only)
+   $WISPUSERSDIR       - Parent of User's directories (WIN32 only)
+   $WISPLINKPATH       - Path for LINK type 'S'
+   $WISPTMPDIR         - WISP temp file directory
+   $WISPSYSTMPDIR      - System temp file directory
+   $WISPTERM           - WISP terminal type
+   $WISPSORTMEM        - Memory to use for file sorts.
+   $WISPSHAREDIR       - WISP share directory for MESSAGE (WIN32 only)
+   $WISPCPU            - CPU number for EXTRACT "C#"
+   $WISPNETID          - Network Id for EXTRACT "W$"
+   $WISPSCRATCHMODE    - SCRATCH behaviour flag
+   $WISPDISPLAY8BIT    - 8-BIT characters flag
+   $WISPEDITOR         - Editor to use from Manage Files.
+   $WPROC              - Path to procedure interpreter.
+   $WPROCDEBUG         - Wproc debug flags
+   $VIDEOCAP           - Videocap directory
+
+The default for WISPSORTMEM has been changed to 2048K (2 meg).
+
+The $WEDITOR environment variable has be changed to $WISPEDITOR.
+
+The $WISP_DISPLAY_8BIT envvar has been changed to $WISPDISPLAY8BIT.
+The $WISP_SCRATCH_MODE envvar has been changed to $WISPSCRATCHMODE.
+
+On Unix you can change the location of temporary files by setting
+the variables $WISPTMPDIR and $WISPSYSTMPDIR.
+   $WISPTMPDIR         - Defaults to /usr/tmp
+   $WISPSYSTMPDIR      - Defaults to /tmp
+If you change WISPTMPDIR to something other then '/usr/tmp' then 
+it is important that the $WISPTMPDIR environment variable is 
+set to the same value for all users including for when 'wsysinit'
+is run. 
+
+Replaced the OPTIONS file ERRFLAG option with WISPDEBUG option that
+can be set to "FULL", "ERRORS", or "NONE". The environment variable
+WISPDEBUG can be set to the same values in order to override the
+OPTIONS file values. The default behavior (ERRORS) of logging only
+errors remains the same.
+
+A number of OPTIONS file options have been added that previously 
+could only be specified by setting environment variables.  The order
+of priority for all of these is; first environment variable, then
+on WIN32 registry setting (if available), then OPTIONS file, then
+finally default values.  See the OPTIONS file and the WISP manual
+for detailed documentation on each of these options.
+
+  WISPTMPDIR
+  WISPSYSTMPDIR
+  WISPSORTMEM
+  WISPCPU
+  WISPNETID
+  WPROC
+  WPROCDEBUG
+  ACPCONFIG
+  ACPMAP
+  WISPSCRATCHMODE
+  WISPDISPLAY8BIT
+
+The OPTIONS file option DISPLAY8BIT has been replaced by 
+WISPDISPLAY8BIT to match the envvar $WISPDISPLAY8BIT.
+
+The new OPTIONS file option WISPPS1 allows you to specify 
+the shell prompt by setting the PS1 environment variable 
+value to use when you "shell out" from the WISP Command 
+Processor on Unix with the "(11) Enter Commands" option.  
+If WISPPS1 is not specified then PS1 is not changed.
+
+
+Changes to the WISP Runtime Library:
+
+There have been a number of changes to WISP library routines.
+Most routines that had lowercase names have been shifted to 
+uppercase and many have been renamed to be more appropriate.
+If you are using Acucobol and upgrading from a previous release
+the SUB85 interface will automatically translate the old names
+to the new.  If you are using Micro Focus Cobol and upgrading
+from a previous release you can either re-translate your 
+applications or you can include wisp4400.o when building the
+runtime to provide the translation from the previous API's.
+See wrunmf.umf makefile with target "rtsx4400".
+
+The following list summarizes WISP Runtime Library changes:
+
+  Old Name      New Name
+  --------      --------
+  wpause        PAUSE
+  wrename       RENAME
+  bit_off       BIT_OFF
+  lbit_off      LBIT_OFF
+  bit_on        BIT_ON
+  lbit_on       LBIT_ON
+  bit_test      BIT_TEST
+  getwfilext    WGETFILEXT
+  initwisp2     INITWISP2       Deprecated (last used 4.4)
+  mwconv        MWCONV
+  setprogid     SETPROGID       Deprecated (last used 4.4)
+  setretcode    SETRETCODE
+  setwfilext    WSETFILEXT
+  setwispfilext WSETFILEXT
+  w2rowcol      WGETCURPOS
+  wexith        WISPEXIT
+  wfclose       WFCLOSE
+  wfilechk      WFILECHK        Obsolete (last used 3.3.19)
+  wfilechk2     WFILECHK2       Deprecated (last used 4.4)
+  wfname        WFNAME
+  wfopen        WFOPEN          Obsolete (last used 2.0B)
+  wfopen2       WFOPEN2         Obsolete (last used 2.0C)
+  wfopen3       WFOPEN3         Deprecated (last used 4.4)
+  wfwait        WFWAIT          Deprecated (last used 4.4)
+  wmemcpy       WMEMCPY         Deprecated (last used 4.4)
+  wscreen       WSCREEN
+  wsetstat      WSETSTAT        Deprecated (last used 4.4)
+  wvaset        WVASET          Deprecated (last used 4.4)
+  x4dbfile      X4DBFILE        Deprecated (last used 4.4)
+  xx2byte       W99TOX
+  wswap         WSWAP           'C' only routine
+
+
+  New           Description
+  ---           -----------
+  WSETFACBLINK  Sets the BLINK bit in a FAC
+  WS_CLOSE      Workstation CLOSE 
+  WS_READ       Workstation READ 
+  WS_READ_ALT   Workstation READ ALTERED 
+  WS_REWRITE    Workstation REWRITE 
+
+  INITWISP3     Replaces INITWISP2
+  DATE6         VSSUB
+  SLEEPONE      Pause for one second, replaces WFWAIT
+  SETFILE2      Replaces SETFILE
+  X4DBFILE2     Replaces X4DBFILE
+  WFOPEN4       Replaces WFOPEN3
+  WFNAME2       Replaces WFNAME
+  WFILECHK3     Replaces WFILECHK2
+  WVASETV       Replaces WVASET
+
+  Removed
+  -------
+  wdfinish      Not used with Unix or Windows 
+  wdinit        Not used with Unix or Windows 
+  wfswait       Not used with Unix or Windows 
+
+
+Added support for VSSUB DATE6. DATE6 accepts all the same
+functions as DATE4 except it use 2 digit years for all date
+parameters.  The century is calculated based on a 100 year
+floating window. The current year is considered to be in 
+the middle of this 100 year floating window. To manually 
+set the century window see YYPIVOTYEAR in the OPTIONS file.
+
+The VSSUBS DATE and DAY now default to using DATE6 internally
+(unless the OPTIONS file USEOLDVSDATE option is used.)
+
+In VSSUB DATE2 and DATE4 using functions "AJ" and "EJ" the 
+input date argument was incorrectly being changed into system
+format. And in functions "GD", "AD", "ED", and "JD" the day
+of week was incorrectly being returned as an Alpha(9) field
+instead of an Alpha(11).  These problems have been fixed.
+
+On Unix the shared memory processing used by GETPARM/PUTPARM has
+been replaced with an implementation that uses temporary files
+(this is the same mechanism that is used on WIN32). If you 
+require compatibility with older utilities that use shared memory 
+for PUTPARM data then you can use the OPTIONS file 
+option USESHAREDMEMORY, see the OPTIONS file for a complete 
+description.
+
+If you are using Shared Memory then the "out of sync" error 
+messages will now only be displayed if the logic to automatically
+correct the problem fails.
+
+The WISP screen handler now handles the special case of DISPLAY-WS 
+screens with horizontally repeating PIC X(79) fields being treated
+as vertically repeating fields.  The following example is written 
+as a horizontally repeating field but it will be displayed as if 
+it were a vertically repeating field. This is an undocumented  
+behavior on the Wang.
+
+  Example: Horizontally repeating field:
+
+  05 sc-field PIC X(79) OCCURS 10 ROW 10 COLUMN 2 SOURCE ws-field.
+
+  Treated as Vertically repeating field:
+
+  05 FILLER OCCURS 10.
+     10 sc-field PIC X(79) ROW 10 COLUMN 2 SOURCE ws-field.
+
+Very early releases of WISP before release 3.2 (circa 1992) 
+used a screen representation that is no longer supported in 
+this release. If you upgrading from a very early release of 
+WISP the Cobol will need to be retranslated.
+
+On UNIX the LINK vssub could fail with an access error if you 
+attempt to run a system executable that had execute permission 
+but not read permission. This has been corrected.
+
+Corrected a problem with Acucobol Native Screen support where
+a DISPLAY AND READ of a screen with a LOCKED keyboard was not
+being displayed.
+
+The WISP runtime defines a number of "pseudo" volumes that
+are not explicitly specified in LGMAP.  The volumes and 
+locations are:
+    (CFG)    The WISP configuration directory
+    (CWD)    The current working directory
+    (HOME)   The users home directory
+    (ROOT)   The root directory of the file system
+These pseudo volumes can be used the same as any other 
+volumes.  If the directory path for any of these exceeds
+the LGMAP translation size then the volume will not be 
+enabled.  In earlier releases the pseudo volume "CONFIG" was
+defined, this has been replaced by "(CFG)".
+
+The WISP runtime will now report any errors encountered 
+while loading LGMAP.  
+
+In the VSSUB READFDR/READFDR4 with keyword "IV" the value "V5" will
+be return for Acucoobl Vision 5 files.
+
+The VSSUB FIND was failing to find a file with an extension (like a 
+print file) if no wildcard characters were specified in the file 
+portion.  This has been corrected.
+
+
+Changes to Utilities:
+
+The WISP DISPLAY utility now issues a hidden GETPARM "OPTIONS"
+with field RECSIZE that allows you to specify the starting
+record size. A value of 0 means variable sized (line terminated)
+which is the default.  The records size can be changed with
+PF11.  This option is not used when the DISPLAYUTIL option
+is used to specify a different display utility.
+
+In VSX fixed warning message regarding Unrecognized fdr1filesection
+for DMS/TX files.
+
+VSX now defaults to creating uppercase file names. Use the "-lc"
+option to create lowercase names.
+
+VSX now defaults to including the Volume name in the path. Use the
+"-nv" to not include the volume name.
+
+VSX now logs all messages to the file vsx.log in the current
+directory.
+
+VSX no longer uses a default tape device, you must supply the input
+device for file.
+
+In VSX fixed misleading error messages regarding Missing EOT Block
+
+The WPROC utility could on occasion reset the PROGLIB and PROGVOL 
+usage constants to blank while executing a RUN statement. This would 
+cause the RUN statement to fail.  This condition has been fixed.
+
+The WPROC utility was not properly returning a return code when 
+a proc was CALL "LINK"ed from a COBOL program. This has been fixed.
+
+
+CHANGES FROM 4.4.06 TO 4.4.07
+=============================
+The following items describe corrections and improvements that have
+been made to the WISP toolkit from release 4.4.06 to release 4.4.07.
+
 
 If upgrading on platform "HP/Compaq TRU64 Alpha (OSF/1)" the
 Machine Id has changed and you will need to get new Validation
@@ -2402,6 +2964,7 @@ three part version number.
 
     WISP VERSION      CUTOVER DATE 
     ------------      ------------
+        5.0.00          07/09/03        Major Release
         4.4.07          02/14/03        Unix license file changes
         4.4.06          11/12/02        KCSI v4.0.00
         4.4.05          10/09/02        Huge file support

@@ -90,10 +90,6 @@ SOURCE=.\ACPTEST.wcb
 # End Source File
 # Begin Source File
 
-SOURCE=.\ACULINK.wcb
-# End Source File
-# Begin Source File
-
 SOURCE=.\DISPFILE.wcb
 # End Source File
 # Begin Source File
@@ -127,6 +123,10 @@ SOURCE=.\QAFILE2.wcb
 # Begin Source File
 
 SOURCE=.\QAFILEIO.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\QAMESSAG.wcb
 # End Source File
 # Begin Source File
 
@@ -215,6 +215,42 @@ SOURCE=.\TOCCURS.wcb
 # Begin Source File
 
 SOURCE=.\TRIGGER.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0000.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0001.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0002.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0002A.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0002B.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0002E.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0003.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0003B.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0004.wcb
 # End Source File
 # Begin Source File
 
@@ -318,15 +354,35 @@ SOURCE=.\WL0030.wcb
 # End Source File
 # Begin Source File
 
-SOURCE=.\WL0030P.wps
-# End Source File
-# Begin Source File
-
 SOURCE=.\WL0031.wcb
 # End Source File
 # Begin Source File
 
 SOURCE=.\WL0032.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0033.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0034.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0034C.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0034D.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0035.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WT0000.wcb
 # End Source File
 # Begin Source File
 
@@ -354,14 +410,6 @@ SOURCE=.\XLINK1.wcb
 # PROP Default_Filter "cob"
 # Begin Source File
 
-SOURCE=.\ACULINK.cob
-# End Source File
-# Begin Source File
-
-SOURCE=.\ACUUSING.cob
-# End Source File
-# Begin Source File
-
 SOURCE=.\DISPFILE.cob
 # End Source File
 # Begin Source File
@@ -383,6 +431,10 @@ SOURCE=.\QAFILE2.cob
 # Begin Source File
 
 SOURCE=.\QAFILEIO.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\QAMESSAG.cob
 # End Source File
 # Begin Source File
 
@@ -443,6 +495,42 @@ SOURCE=.\SUB3.cob
 # Begin Source File
 
 SOURCE=.\TRIGGER.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0000.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0001.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0002.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0002A.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0002B.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0002E.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0003.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0003B.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0004.cob
 # End Source File
 # Begin Source File
 
@@ -534,10 +622,6 @@ SOURCE=.\WL0028.cob
 # End Source File
 # Begin Source File
 
-SOURCE=.\WL0029.cob
-# End Source File
-# Begin Source File
-
 SOURCE=.\WL0030.cob
 # End Source File
 # Begin Source File
@@ -547,6 +631,42 @@ SOURCE=.\WL0031.cob
 # Begin Source File
 
 SOURCE=.\WL0032.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0033.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0034.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0034C.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0034D.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0035.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WT0000.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WT0010.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WT0011.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WT0012.cob
 # End Source File
 # Begin Source File
 
@@ -589,9 +709,225 @@ SOURCE=.\config_nt\wrun.cfg
 SOURCE=.\config_nt\wsysconf.cfg
 # End Source File
 # End Group
+# Begin Group "WPS"
+
+# PROP Default_Filter "wps"
+# Begin Source File
+
+SOURCE=.\pptest1.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\qa0000.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\qa0001.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabckpc2.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabckprc.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\qacopy.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\qacreate.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\qasort.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\qastart.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0002C.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0002D.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0003A.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0030P.wps
+# End Source File
+# Begin Source File
+
+SOURCE=.\WL0034B.wps
+# End Source File
+# End Group
+# Begin Group "SCRIPTS"
+
+# PROP Default_Filter "sh;bat"
+# Begin Source File
+
+SOURCE=.\configacu.bat
+# End Source File
+# Begin Source File
+
+SOURCE=.\configacu.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\configmf.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\envtest.bat
+# End Source File
+# Begin Source File
+
+SOURCE=.\prtargds.bat
+# End Source File
+# Begin Source File
+
+SOURCE=.\prtargnt.bat
+# End Source File
+# Begin Source File
+
+SOURCE=.\prtargsh.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabacksh.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabckac2.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabckacu.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabcklp2.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabcklpi.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabckmf.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabckmf2.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabkpacu.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabkplpi.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qabkpmf.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qaflags.bat
+# End Source File
+# Begin Source File
+
+SOURCE=.\qaflags.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\qautils.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\sampleacu.bat
+# End Source File
+# Begin Source File
+
+SOURCE=.\startacu.bat
+# End Source File
+# Begin Source File
+
+SOURCE=.\startupacu.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\startupmf.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\testsub.sh
+# End Source File
+# Begin Source File
+
+SOURCE=.\tstpp.sh
+# End Source File
+# End Group
+# Begin Group "LICENSE"
+
+# PROP Default_Filter "license"
+# Begin Source File
+
+SOURCE=.\wisp.license.ozone
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp.license.panther
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp.license.redrum
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp.license.tribble
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp.license.wakko
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp.license.zigzag
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=..\doc\portwin32.txt
+# End Source File
+# Begin Source File
+
+SOURCE=..\doc\qawisp.lis
+# End Source File
+# Begin Source File
+
+SOURCE=.\sample.umf
+# End Source File
 # Begin Source File
 
 SOURCE=.\sampleacu.mak
+# End Source File
+# Begin Source File
+
+SOURCE=.\sampleacu.umf
+# End Source File
+# Begin Source File
+
+SOURCE=.\samplemf.umf
 # End Source File
 # Begin Source File
 

@@ -1,13 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 	findcase:	This routine finds the correct case for a given filepath.
@@ -25,12 +36,14 @@ static char rcsid[]="$Id:$";
 */
 
 #include <string.h>
+#include <stdio.h>
 #include "idsistd.h"
 #include "wisplib.h"
+#include "idsisubs.h"
 
 #ifdef unix
 
-int findcase(char* o_name, char* c_name)
+int WL_findcase(char* o_name, char* c_name)
 {
 	char	buff[128], volume[80], library[20], file[20], ext[45], *ptr;
 	int	i;
@@ -42,12 +55,12 @@ int findcase(char* o_name, char* c_name)
 	file[0]	   = '\0';
 	ext[0]     = '\0';
 
-	if (ptr = strrchr(buff,'/'))
+	if ((ptr = strrchr(buff,'/')))
 	{
 		*ptr++ = '\0';
 		strcpy(file,ptr);
 
-		if (ptr = strrchr(buff,'/'))
+		if ((ptr = strrchr(buff,'/')))
 		{
 			*ptr++ = '\0';
 			strcpy(library,ptr);
@@ -66,7 +79,7 @@ int findcase(char* o_name, char* c_name)
 		strcpy(file,buff);
 	}
 
-	if (ptr = strchr(file,'.'))
+	if ((ptr = strchr(file,'.')))
 	{
 		strcpy(ext,ptr);
 		*ptr = '\0';
@@ -77,17 +90,17 @@ int findcase(char* o_name, char* c_name)
 		switch(i)
 		{
 		case 0:
-			lower_string(file);						/* library file				*/
-			lower_string(library);
+			WL_lower_string(file);						/* library file				*/
+			WL_lower_string(library);
 			break;
 		case 1:
-			upper_string(file);						/* library FILE				*/
+			WL_upper_string(file);						/* library FILE				*/
 			break;
 		case 2:
-			upper_string(library);						/* LIBRARY FILE				*/
+			WL_upper_string(library);						/* LIBRARY FILE				*/
 			break;
 		case 3:
-			lower_string(file);						/* LIBRARY file				*/
+			WL_upper_string(file);						/* LIBRARY file				*/
 			break;
 		}
 
@@ -104,10 +117,10 @@ int findcase(char* o_name, char* c_name)
 #else
 
 /* 
-	On VMS and MSFS the filepaths are not case sensitive so just check access.
+	On WIN32 the filepaths are not case sensitive so just check access.
 */
 
-int findcase(char* o_name, char* c_name)
+int WL_findcase(char* o_name, char* c_name)
 {
 	if ( fexists(o_name) )
 	{
@@ -123,6 +136,24 @@ int findcase(char* o_name, char* c_name)
 /*
 **	History:
 **	$Log: findcase.c,v $
+**	Revision 1.15  2003/01/31 21:24:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.14  2003/01/31 17:33:56  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.13  2003/01/29 19:42:50  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.12  2002/07/25 17:03:44  gsl
+**	MSFS->WIN32
+**	
+**	Revision 1.11  2002/07/11 20:29:08  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.10  2002/07/11 14:33:58  gsl
+**	Fix WL_ unique globals
+**	
 **	Revision 1.9  1996/08/19 22:32:21  gsl
 **	drcs update
 **	

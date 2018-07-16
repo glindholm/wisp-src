@@ -1,8 +1,29 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
-**	setprogid()
+**	SETPROGID()
 */
 
 #include <string.h>
@@ -11,13 +32,18 @@ static char rcsid[]="$Id:$";
 static char WISPPROGID[9];
 
 /* Set global variable to current program id.	*/
-void setprogid(const char *wisp_application_name)
+void SETPROGID(const char *wisp_application_name)
+{
+	WL_setprogid(wisp_application_name);
+}
+
+void WL_setprogid(const char *wisp_application_name)
 {
 	memcpy(WISPPROGID,wisp_application_name,8);
 	WISPPROGID[8] = '\0';
 }
 
-const char* getprogid(void)
+const char* WL_getprogid(void)
 {
 	return WISPPROGID;
 }
@@ -27,6 +53,18 @@ const char* getprogid(void)
 /*
 **	History:
 **	$Log: setprgid.c,v $
+**	Revision 1.14  2003/01/31 18:54:38  gsl
+**	Fix copyright header
+**	
+**	Revision 1.13  2002/08/01 02:42:48  gsl
+**	globals
+**	
+**	Revision 1.12  2002/07/12 19:10:16  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.11  2002/07/10 21:05:24  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.10  1997/10/21 14:16:32  gsl
 **	Removed global WISPPROGID and addded getprogid()
 **	

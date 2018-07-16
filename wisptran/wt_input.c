@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wt_input.c
 **
@@ -57,13 +78,15 @@ static	int	mf_compress = 0;
 **	Static Function Prototypes
 */
 
-static write_sel(int printer, int this_file, int org, int accmod, int optional_found);	/* Write initial part of SELECT.	*/
+static int write_sel(int printer, int this_file, int org, int accmod, int optional_found);	/* Write initial part of SELECT.	*/
 static int del_sel(char* the_file);							/* Determine if delete current SELECT.	*/
 static NODE get_record_key(NODE curr_node, char* reckey, char* reckeyqual, char** splitkey);
 static int add2buff(char *buff, char *addstr, int col, int newline);
 static int chk_sort(const char* fname);							/* Check list of SORT files.		*/
-static int gen_io_control(void);
 
+#ifdef NOT_USED
+static int gen_io_control(void);
+#endif
 
 /*
 **	Routine:	input_output_section()
@@ -197,13 +220,9 @@ NODE file_control_para(NODE the_statement)
 */
 NODE io_control_para(NODE the_statement)
 {
-	NODE	curr_node;
-
 	if (!eq_token(the_statement->next->token,KEYWORD,"I-O-CONTROL"))
 	{
 		write_log("WISP",'I',"IOCTRL","I-O-CONTROL paragraph not found.");
-
-		if ( vax_cobol ) gen_io_control();				/* Generate I-O-CONTROL manual rec locks	*/
 
 		return(the_statement);
 	}
@@ -219,52 +238,10 @@ NODE io_control_para(NODE the_statement)
 	if (!eq_token(the_statement->next->token,KEYWORD,"DATA") &&
 	    !eq_token(the_statement->next->token,KEYWORD,"PROCEDURE")   )
 	{
-		if ( vax_cobol ) 
-		{
-			/*
-			**	Were going to add to the end of the I-O-CONTROL so
-			**	strip off the period.
-			*/
-
-			curr_node = the_statement->next;
-			while(curr_node && curr_node->token && PERIOD != curr_node->token->type)
-			{
-				curr_node = curr_node->next;
-			}
-
-			if (curr_node && curr_node->token && PERIOD == curr_node->token->type)
-			{
-				free_token_from_node(curr_node);
-			}
-			ioc_found = 2;						/* Found I-O-CONTROL statement (add period)	*/
-		}
-
 		tput_statement(12,the_statement);
 		free_statement(the_statement);
 
 		the_statement = get_statement();
-	}
-	else
-	{
-		if ( vax_cobol ) 
-		{
-			/*
-			**	First print all the fluff before the keyword.
-			**	This handles $VAX_CODE/END w/o PROCESS when it
-			**	makes up all of the I-O-CONTROL para.
-			*/
-			if (the_statement->down)
-			{
-				tput_statement(12,the_statement->down);
-				free_statement(the_statement->down);
-				the_statement->down = NULL;
-			}
-		}
-	}
-
-	if ( vax_cobol )
-	{
-		gen_io_control();						/* Generate I-O-CONTROL manual rec locks	*/
 	}
 
 	return(the_statement);
@@ -396,13 +373,13 @@ get_next_statement:
 
 	if (sortfile)
 	{
-		if (sf_count == MAX_SF_ITEMS)
+		if (opt_sort_file_cnt == MAX_SF_ITEMS)
 		{
 			write_log("WISP",'E',"MAXSFITEMS","Maximum number of SORT_FILE items exceeded.");
 		}
 		else
 		{
-			strcpy(sf_item[sf_count++],token_data(name_node->token));	/* Save the name of the file.		*/
+			opt_sort_file_item[opt_sort_file_cnt++] = (char*)wdupstr(token_data(name_node->token));	/* Save the name of the file.		*/
 		}
 
 		sortfile = 0;
@@ -449,11 +426,11 @@ get_next_statement:
 	curr_node = curr_node->next;
 	if ( LITERAL == curr_node->token->type )
 	{
-		if (eq_token(curr_node->token,LITERAL,"\"DISPLAY\""))
+		if (eq_token_literal(curr_node->token,"DISPLAY"))
 		{
 			prog_ftypes[prog_cnt] = -1;
 		}
-		else if (eq_token(curr_node->token,LITERAL,"\"PRINTER\""))
+		else if (eq_token_literal(curr_node->token,"PRINTER"))
 		{
 			FSET(prog_ftypes[prog_cnt],PRINTER_FILE);		/* it is a print file			*/
 			printer = 1;
@@ -462,7 +439,7 @@ get_next_statement:
 			*/
 			if (autolockprint) prog_ftypes[prog_cnt] |= AUTOLOCK;	/* Turn on automatic locking flag	*/
 		}
-		else if (eq_token(curr_node->token,LITERAL,"\"TAPE\""))
+		else if (eq_token_literal(curr_node->token,"TAPE"))
 		{
 			prog_ftypes[prog_cnt] = TAPE_FILE;
 		}
@@ -489,24 +466,22 @@ get_next_statement:
 	}
 
 	*seqtype = '\0';
-	if (!vax_cobol)
+
+	if ( printer || seqline) 
 	{
-		if ( printer || seqline) 
-		{
-			strcpy(seqtype,"LINE ");
-		}
-		if ( seqbinary )
-		{
-			if (mf_cobol) 	strcpy(seqtype,"RECORD ");
-			else 		strcpy(seqtype,"BINARY ");
-		}
-		seqline = 0;
-		seqbinary = 0;
+		strcpy(seqtype,"LINE ");
 	}
+	if ( seqbinary )
+	{
+		if (mf_cobol) 	strcpy(seqtype,"RECORD ");
+		else 		strcpy(seqtype,"BINARY ");
+	}
+	seqline = 0;
+	seqbinary = 0;
 
 	if (prog_ftypes[prog_cnt] == -1)					/* is it a DISPLAY?			*/
 	{
-		if (data_conv)
+		if (opt_data_conv)
 		{
 			free_statement(the_statement);
 			goto get_next_statement;
@@ -521,7 +496,6 @@ get_next_statement:
 		write_log("WISP",'I',"SELDISPLAY","SELECT for the display, name is %s",token_data(name_node->token));
 		strcpy(crt_file[crt_fcount],token_data(name_node->token));	/* copy the screen file name		*/
 
-		if (!comments) tput_blank();
 		tput_line_at(12, "SELECT %s",crt_file[crt_fcount]);		/* include SELECT for dummy CRT file	*/
 		tput_line_at(16, "ASSIGN TO \"WISP-CRTFILE\".");
 
@@ -645,16 +619,10 @@ get_next_statement:
 		add_change_word(get_prog_status(this_file));
 
 		strcpy(buff,token_data(prname_node->token));
-		if (vax_cobol && (strpos(buff,"#") != -1))			/* found a # symbol in the name		*/
-		{
-			write_log("WISP",'I',"NAMECHANGE","Changed %s to ",buff);
-			do {} while(stredt(buff,"#","$") != -1);		/* change # to $ in SELECT 		*/
-			write_log(" ",' '," ","%s.",buff);
-		}
 
-		stredt(buff,"\"","");						/* Remove any quotes.			*/
-		stredt(buff,"\"","");
-		if (ptr = strchr(buff,' '))
+		remove_quotes(buff);	/* Remove any quotes.			*/
+
+		if ((ptr = strchr(buff,' ')))
 		{
 			*ptr = (char)0;
 		}
@@ -667,64 +635,6 @@ get_next_statement:
 		
 		strcpy(prog_prname[this_file],buff);				/* Save the prname.			*/
 
-#ifdef OLD_SHORT_CUT
-		if (PERIOD == curr_node->token->type )				/* end it now				*/
-		{
-			if (data_conv)
-			{
-				prog_cnt--;
-				free_statement(the_statement);
-				goto get_next_statement;
-			}
-
-			org = SEQUENTIAL;
-			accmod = SEQUENTIAL;
-			prog_ftypes[this_file] |= SEQ_FILE;
-			prog_ftypes[this_file] |= SEQ_SEQ;
-
-			write_sel(printer,this_file,org,accmod,optional_found);	/* Normal SELECT gen for SEQ-SEQ.	*/
-
-			if (*seqtype)
-			{
-				tput_line_at(16, "ORGANIZATION IS %sSEQUENTIAL",seqtype);
-			}
-
-			if (chk_sort(prog_files[this_file]))			/* if a SORT file were done		*/
-			{
-				tput_fluff(the_statement->next);
-				free_statement(the_statement);
-				tput_clause(12,".");				/* End it all				*/
-				goto get_next_statement;
-			}
-
-			for (i=0; i<nfs_count; i++)				/* If there are files not needing stat	*/
-			{
-				if (!strcmp(prog_files[this_file],nfs_item[i])) break;
-			}
-
-			if (i < nfs_count)					/* It was there.			*/
-			{
-			}
-			else
-			{
-				write_log("WISP",'I',"NOSTATUS",
-						"No file status for file %s, WISP-FILE-STATUS used.",
-						prog_files[this_file]);
-
-				tput_line_at(16, "FILE STATUS IS WISP-FILE-STATUS");
-				strcpy(prog_fstats[this_file],"WISP-FILE-STATUS");	/* save the name		*/
-			}
-			tput_fluff(the_statement->next);
-			tput_clause(12,".");					/* End it all				*/
-
-			if ( mf_compress )					/* If MF file compression is on		*/
-			{
-				tput_noprocess("      $SET DATACOMPRESS\"0\"");	/* Turn it off				*/
-				mf_compress = 0;
-			}
-		}
-		else								/* Find out more about it.		*/
-#endif /* OLD-SORT-CUT */
 		{
 			reckey[0] = '\0';					/* Doesn't have a record key.		*/
 			reckeyq[0] = '\0';					/* Doesn't have a record key.		*/
@@ -802,9 +712,22 @@ get_next_statement:
 					FSET(prog_ftypes[this_file],INDEXED_FILE);    	/* It is an indexed file.	*/
 					org = INDEX;					/* Set the mode.			*/
 				}
-				else if (eq_token(curr_node->token,KEYWORD,"RELATIVE"))	/* Process organization.	*/
+				else if (eq_token(curr_node->token,KEYWORD,"RELATIVE"))	
 				{
-					org = RELATIVE;
+					if (eq_token(curr_node->next->token,0,"KEY"))
+					{
+						write_tlog(curr_node->token, "WISP",'W',"RELKEYVAL",
+							"RELATIVE KEY found not on ACCESS clause");
+						curr_node = curr_node->next;
+						curr_node = curr_node->next;
+						curr_node = get_record_key(curr_node,relkey,relkeyq,&splitkey);
+						key_name(relkey,relkeyq);
+						write_log("WISP",'I',"RELKEYVAL","  RELATIVE KEY is %s",relkey);
+					}
+					else
+					{
+						org = RELATIVE;
+					}
 				}
 				else if (eq_token(curr_node->token,KEYWORD,"ACCESS"))	/* Process access mode.			*/
 				{
@@ -830,7 +753,10 @@ get_next_statement:
 					{
 						curr_node = curr_node->next;
 						curr_node = curr_node->next;
-						if (eq_token(curr_node->token,0,"KEY"))		curr_node = curr_node->next;
+						if (eq_token(curr_node->token,0,"KEY"))
+						{
+							curr_node = curr_node->next;
+						}
 	
 						curr_node = get_record_key(curr_node,relkey,relkeyq,&splitkey);
 						key_name(relkey,relkeyq);
@@ -874,12 +800,12 @@ get_next_statement:
 			if (!prog_fstats[this_file][0])				/* was there no STATUS?			*/
 			{
 
-				for (i=0; i<nfs_count; i++)			/* If there are files not needing stat	*/
+				for (i=0; i<opt_no_file_status_cnt; i++)			/* If there are files not needing status	*/
 				{
-					if (!strcmp(prog_files[this_file],nfs_item[i])) break;
+					if (!strcmp(prog_files[this_file],opt_no_file_status_item[i])) break;
 				}
 
-				if (i >= nfs_count)				/* It was not there.			*/
+				if (i >= opt_no_file_status_cnt)				/* It was not there.			*/
 				{
 					write_log("WISP",'I',"NOSTATUS",
 						"No file status for file %s, WISP-FILE-STATUS used.",
@@ -891,7 +817,7 @@ get_next_statement:
 			if (!org) org = SEQUENTIAL;
 			if (!accmod) accmod = SEQUENTIAL;
 
-			if (data_conv)
+			if (opt_data_conv)
 			{
 				if (SEQUENTIAL==org)
 				{
@@ -917,6 +843,10 @@ get_next_statement:
 			{
 				prog_ftypes[this_file] |= SEQ_FILE;
 				prog_ftypes[this_file] |= SEQ_SEQ;
+			}
+			if (org == RELATIVE ) 
+			{
+				prog_ftypes[this_file] |= RELATIVE_FILE;
 			}
 
 			was_seq_dyn = 0;
@@ -967,7 +897,7 @@ get_next_statement:
 				/*
 				**	MF: The LOCK clause comes before the KEY clauses.
 				*/
-				if (manual_locking)
+				if (opt_manual_locking)
 				{
 					tput_line_at(16, "LOCK MODE MANUAL WITH LOCK ON MULTIPLE RECORDS");
 				}
@@ -1027,7 +957,7 @@ get_next_statement:
 				/*
 				**	ACU: The LOCK clause comes after the KEY clauses.
 				*/
-				if (manual_locking)
+				if (opt_manual_locking)
 				{
 					tput_line_at(16, "LOCK MODE MANUAL WITH LOCK ON MULTIPLE RECORDS");
 				}
@@ -1079,7 +1009,7 @@ int key_name(char* the_name, const char* the_qual)					/* Change the name if on 
 	return(-1);
 }
 
-static write_sel(int printer, int this_file, int org, int accmod, int optional_found)	/* Write initial part of SELECT.	*/
+static int write_sel(int printer, int this_file, int org, int accmod, int optional_found)	/* Write initial part of SELECT.	*/
 {
 #ifdef OLD
 	if (prog_ftypes[this_file] & AUTOLOCK)
@@ -1093,7 +1023,6 @@ static write_sel(int printer, int this_file, int org, int accmod, int optional_f
 	}
 #endif
 
-	if (!comments) tput_blank();
 
 	mf_compress = 0;
 	if ( compressfile && mf_cobol )							/* Turn on MF file compression		*/
@@ -1104,7 +1033,7 @@ static write_sel(int printer, int this_file, int org, int accmod, int optional_f
 											/* SEQ-SEQ are OPTIONAL.		*/
 	if ( (	!nooptional &&
 		!chk_sort(prog_files[this_file]) && 
-		use_optional && 
+		!opt_no_seq_seq_optional && 
 		!printer && 
 		(org == SEQUENTIAL) && 
 		(accmod == SEQUENTIAL)			) || optional_found )
@@ -1125,10 +1054,6 @@ static write_sel(int printer, int this_file, int org, int accmod, int optional_f
 		{
 			tput_clause(16, "WITH COMPRESSION");
 		}
-	}
-	else if (lpi_cobol)								/* If lpi cobol.			*/
-	{										/* Only write for printers.		*/
-		if (printer) tput_line_at(16, "ASSIGN TO PRINTER");
 	}
 	else
 	{										/* write the name			*/
@@ -1166,18 +1091,18 @@ static int chk_sort(const char* fname)							/* Check list of SORT files.		*/
 {
 	int i;
 
-	if (sf_count)
+	if (opt_sort_file_cnt)
 	{
-		for (i=0; i<sf_count; i++)
+		for (i=0; i<opt_sort_file_cnt; i++)
 		{
-			if (!strcmp(fname,sf_item[i])) return(1);			/* Found it.				*/
+			if (!strcmp(fname,opt_sort_file_item[i])) return(1);		/* Found it.				*/
 		}
 	}
 
 	return(0);									/* Not found.				*/
 }
 
-
+#ifdef NOT_USED
 static int gen_io_control(void)								/* Add an I-O-CONTROL section and insert*/
 											/* APPLY LOCK-HOLDING statements to do	*/
 											/* manual record locking.		*/
@@ -1210,6 +1135,8 @@ static int gen_io_control(void)								/* Add an I-O-CONTROL section and insert*
 	}
 	return 0;
 }
+#endif /* NOT_USED */
+
 
 /*
 **	Routine:	get_record_key
@@ -1276,7 +1203,7 @@ static NODE get_record_key(NODE curr_node, char* reckey, char* reckeyqual, char*
 					0==strcmp(buff,"DUPLICATES") 	||
 					0==strcmp(buff,"FILE") 		||
 					0==strcmp(buff,"STATUS") 	||
-					isdigit(buff[0])		  )	/* a second alternate record key		*/
+					isdigit((int)buff[0])		  )	/* a second alternate record key		*/
 				{
 					break;					/* end of split-key segment list		*/
 				}
@@ -1391,6 +1318,46 @@ static int add2buff(
 /*
 **	History:
 **	$Log: wt_input.c,v $
+**	Revision 1.32  2003/03/17 20:33:16  gsl
+**	remove commented old code
+**	
+**	Revision 1.31  2003/03/06 21:43:01  gsl
+**	Add RELATIVE file flag
+**	
+**	Revision 1.30  2003/03/03 22:08:40  gsl
+**	rework the options and OPTION file handling
+**	
+**	Revision 1.29  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.28  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.27  2003/02/04 18:29:12  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.26  2003/02/04 18:02:20  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.25  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.24  2002/10/14 19:08:02  gsl
+**	Remove the -c options as obsolete since comments are now always
+**	included in the output.
+**	
+**	Revision 1.23  2002/09/30 21:02:00  gsl
+**	update
+**	
+**	Revision 1.22  2002/08/13 20:20:31  gsl
+**	RELATIVE KEY not on ACCESS clause
+**	
+**	Revision 1.21  2002/08/12 20:13:50  gsl
+**	quotes and literals
+**	
+**	Revision 1.20  2002/06/20 23:04:30  gsl
+**	remove obsolete code
+**	
 **	Revision 1.19  2002/03/21 23:27:08  gsl
 **	Remove the simple SELECT short-cut to avoid duplicating code
 **	

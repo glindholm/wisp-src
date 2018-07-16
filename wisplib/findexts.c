@@ -1,13 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #include <stdio.h>
 #include <string.h>
@@ -18,7 +29,7 @@ static char rcsid[]="$Id:$";
 #include "wcommon.h"
 
 /*
-**	Routine:	matchnative()
+**	Routine:	WL_matchnative()
 **
 **	Function:	To match the file spec components to the actual native file.
 **
@@ -28,12 +39,12 @@ static char rcsid[]="$Id:$";
 **			If the file is not matched then none of the args will be altered.
 **
 **	Arguments:
-**		mode		(I)	The mode
 **		native_vol	(I)	The Volume component 
 **		native_lib	(I/O)	The Library component
 **		native_file	(I/O)	The File component
 **		native_ext	(I/O)	The Extension component
 **		nomodext	(I)	Flag - no modifications of extension allowed
+**		is_lib		(I)	Flag - is a lib (no file portion)
 **
 **					VOLUME		LIBRARY		FILE		EXT
 **				VMS: 	"xxxxxx:"	"[xxxxxx]"	"xxxxxx"	".xxx"
@@ -44,12 +55,13 @@ static char rcsid[]="$Id:$";
 **		1	A file match was made.
 **		0	File was not found.
 **
-**	Warnings:	VMS: 	The volume and library may be NULL.
+**	Warnings:	
 **			UNIX:	The ext will usually be NULL.
 **
 **			CISAM: 	Files don't return the ext portion as that is added by COBOL.
 **				Check first for ".idx" before ".dat"  and if found then DON'T return it.
-**				This means that READFDR, RENAME, SCRATCH, FILECOPY etc still have to deal with ".idx" extension.
+**				This means that READFDR, RENAME, SCRATCH, FILECOPY etc still have 
+**				to deal with ".idx" extension.
 **
 **			VISION4: Files have 2 or more "segments" the 1st index has a ".vix" extension.
 **
@@ -60,48 +72,48 @@ static char rcsid[]="$Id:$";
 **
 */
 static char* g_exts[] = 
-#ifdef unix
 	{ "",
 	".idx",
 	".dat",
 	".vix",
-	".lis",
-	".txt",
-	".seq",
-	".doc",
+	".acu",
+	".cbx",
+#ifdef unix
 #ifdef HPUX
- 	".sl",		/* Look for .sl/.so before .gnt before .int -- same order as MF does*/
+	".sl",	/* Look for .sl/.so before .gnt before .int -- same order as MF does*/
 #else
- 	".so", 
+	".so", 
+#endif
 #endif
 	".gnt",
 	".int",
+#ifdef unix
 	".sh", 
+#endif
+#ifdef WIN32
+	".bat", 
+	".com",
+#endif
 	".exe",
 	".wps",
 	".wpr",
-	".cbx",
-	".acu",
+	".seq",
+	".lis",
+	".txt",
+	".doc",
 	".cob",
 	".wcb",
 	NULL };
-#endif
-#ifdef VMS
-	{           ".DAT",".LIS",".TXT",".DOC",                     ".COM",".EXE",              ".SEQ",              ".COB",".WCB",NULL };
-#endif
-#ifdef MSFS
-	{ "",".IDX",".DAT",".VIX",".LIS",".TXT",".DOC",".GNT",".INT",".BAT",".COM",".EXE",".WPS",".WPR",".SEQ",".CBX",".ACU",".COB",".WCB",NULL };
-#endif
 
-int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file, char *native_ext, int nomodext )
+int WL_matchnative(char *native_vol, char *native_lib, char *native_file, char *native_ext, int nomodext, int is_lib )
 {
 	char	buff[256];
 	int	i;
 #ifdef unix
-	char cmd[256], upper_lib[20], upper_file[20];
+	char upper_lib[20], upper_file[20];
 #endif
 
-	if (!(mode & IS_LIB))
+	if (!(is_lib))
 	{
 		sprintf(buff,"%s%s%s%s", native_vol, native_lib, native_file, native_ext );
 		if (fexists(buff)) return 1;
@@ -115,7 +127,7 @@ int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file
 	if (!fexists(buff))
 	{
 		strcpy(upper_lib,native_lib);
-		upper_string(upper_lib);
+		WL_upper_string(upper_lib);
 		sprintf(buff,"%s%s",native_vol,upper_lib);				/* Try uppercase library		*/
 		buff[strlen(buff)-1] = '\0';						/* Remove trailing '/'			*/
 		if (fexists(buff))
@@ -131,7 +143,7 @@ int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file
 		if (fexists(buff)) return 1;
 	}
 
-	if (mode & IS_LIB) return 1;							/* If looking for a lib we've found it	*/
+	if (is_lib) return 1;							/* If looking for a lib we've found it	*/
 
 	/*
 	**	Match the CASE of the file and extension
@@ -141,7 +153,7 @@ int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file
 	**		- try uppercase with extensions-list
 	*/
 	strcpy(upper_file,native_file);
-	upper_string(upper_file);
+	WL_upper_string(upper_file);
 
 	sprintf(buff,"%s%s%s%s", native_vol, native_lib, upper_file, native_ext); 	/* Try uppercase			*/
 	if (fexists(buff))
@@ -205,11 +217,11 @@ int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file
 		sprintf(buff,"%s%s%s%s", native_vol, native_lib, native_file, g_exts[i] );
 		if (fexists(buff))
 		{
-			if (0 == strcmp(g_exts[i],".IDX"))
+			if (0 == strcmp(g_exts[i],".idx"))
 			{
 				native_ext[0] = '\0';					/* If ".idx" then return NULL		*/
 			}
-			else if (0 == strcmp(g_exts[i],".VIX"))	/* Vision 4 */
+			else if (0 == strcmp(g_exts[i],".vix"))	/* Vision 4 */
 			{
 				native_ext[0] = '\0';					/* If ".VIX" then return NULL		*/
 			}
@@ -225,7 +237,7 @@ int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file
 }
 
 /*
-**	ROUTINE:	findexts()
+**	ROUTINE:	WL_findexts()
 **
 **	FUNCTION:	Attempts to find a file name by adding known extensions before searching
 **
@@ -245,9 +257,8 @@ int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file
 **	WARNINGS:	
 **
 */
-#if defined(unix) || defined(MSFS)
 
-int findexts(char* basename, char* base_ext)
+int WL_findexts(char* basename, char* base_ext)
 {
 	int 	i;
 	char	base[WISP_FILEPATH_LEN];
@@ -286,16 +297,44 @@ int findexts(char* basename, char* base_ext)
 	return(not_found);								/* return 1 if not found, 0 if found.	*/
 }
 
-#endif /* unix || MSFS */
 /*
 **	History:
 **	$Log: findexts.c,v $
-**	Revision 1.13.2.2  2002/08/21 15:30:33  gsl
-**	Reorder so .so/.sl is before .gnt then .int
+**	Revision 1.25  2003/07/14 17:17:17  gsl
+**	fix .so extension to be unix only (except HP-UX)
 **	
-**	Revision 1.13.2.1  2002/08/20 17:56:36  gsl
+**	Revision 1.24  2003/03/17 20:32:24  gsl
+**	reorder extensions so .acu is before sequential files and .txt .lis .doc are near the end
+**	
+**	Revision 1.23  2003/01/31 21:53:42  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.22  2003/01/31 21:24:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.21  2003/01/31 17:33:56  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.20  2002/08/21 15:42:56  gsl
+**	move .so/.sl before .gnt and .int
+**	
+**	Revision 1.19  2002/08/20 16:09:51  gsl
 **	Add support for Micro Focus Shared Object files .so/.sl
-**	V4_4_04
+**	
+**	Revision 1.18  2002/07/25 17:03:44  gsl
+**	MSFS->WIN32
+**	
+**	Revision 1.17  2002/07/11 14:33:58  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.16  2002/07/10 04:27:38  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.15  2002/06/26 06:26:21  gsl
+**	Mode/status bit field changes
+**	
+**	Revision 1.14  2002/06/21 03:10:36  gsl
+**	Remove VMS & MSDOS
 **	
 **	Revision 1.13  1998/08/03 20:46:32  jlima
 **	Support Logical Volume Translation to long file names containing eventual embedded blanks.

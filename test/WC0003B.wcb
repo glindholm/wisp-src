@@ -1,0 +1,57 @@
+      **   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+      **   $Id:$
+      **
+      **   File:       WC0003B.wcb
+      **
+      **   Project:    WISP/TEST - WANG COBOL Functionality
+      **
+      **   Purpose:    ACCEPT verb
+      **
+      **
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. WC0003B.
+
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+
+      *==============================================================
+       01  FIELD1		PIC X(10).
+       01  FIELD2		PIC 9999.
+      *==============================================================
+       PROCEDURE DIVISION.
+       0000-MAIN SECTION.
+
+
+	   ACCEPT FIELD1, FIELD2.
+
+	   IF FIELD1 = "Field Test" AND
+	      FIELD2 = 2003 THEN
+	      MOVE 1 TO RETURN-CODE
+	   ELSE
+	      MOVE 2 TO RETURN-CODE
+
+	      IF FIELD1 NOT = "Field Test" THEN
+	           DISPLAY "FIELD1 = ", FIELD1
+	      END-IF
+
+	      IF FIELD2 NOT = 2003 THEN
+	           DISPLAY "FIELD2 = ", FIELD2
+	      END-IF
+	   END-IF.
+
+      *============================================================	  
+       9999-END SECTION.
+       9999-EXIT.
+           EXIT PROGRAM.
+       9999-STOP.
+           STOP RUN.
+        
+      *============================================================	  
+
+      **
+      **   End of WC0003B.wcb
+      **

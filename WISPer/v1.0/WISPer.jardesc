@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jardesc>
+    <jar path="C:/dev/wisp/src/WISPer/v1.0/WISPer.jar"/>
+    <options overwrite="true" compress="true" exportErrors="true"
+        exportWarnings="true" saveDescription="true"
+        descriptionLocation="/WISPer v1.0/WISPer.jardesc"
+        useSourceFolders="false" buildIfNeeded="true"/>
+    <manifest manifestVersion="1.0" usesManifest="true"
+        reuseManifest="false" saveManifest="false"
+        generateManifest="true" manifestLocation="" mainClassHandleIdentifier="=WISPer v1.0/src&lt;com.neom.wisp.wisper{Main.java[Main">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="false">
+        <javaElement handleIdentifier="=WISPer v1.0/src"/>
+        <folder path="/WISPer v1.0/resources"/>
+    </selectedElements>
+</jardesc>
