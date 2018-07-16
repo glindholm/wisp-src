@@ -1,0 +1,6 @@
+Item Code
+---------
+The item code specifies if the value field is to be used
+as a menu control block number or a return code value.
+
+      M - Link to menu      P - Execute a program

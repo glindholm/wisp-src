@@ -1,0 +1,14 @@
+      **************************************************************
+      * International Digital Scientific, Incorporated
+      * Extended Development Environment
+      **************************************************************
+
+      * Copy member for the dynamic menu data file.
+      * Created 10/6/91
+000100*
+000200     SELECT MENU-DATA-FILE
+000300         ASSIGN TO DISK, "NODISPLAY"
+000400         ORGANIZATION    IS INDEXED
+000500         ACCESS MODE     IS DYNAMIC
+000600         RECORD KEY      IS MENU-IDENTIFIER
+000800         FILE STATUS     IS MENU-FILSTAT.

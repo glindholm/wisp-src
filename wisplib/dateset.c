@@ -1,0 +1,4 @@
+datetest()
+{
+	return(0);
+}

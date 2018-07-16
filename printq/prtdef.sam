@@ -1,0 +1,16 @@
+lp0:
+	baud=9600
+	lp=/dev/lp0
+	class=ABC
+	form=000
+	model=LA324
+	
+lp1:
+	baud=9600
+	lp=/dev/lp1
+	class=X
+	form=letter
+	model=TIXX
+
+
+

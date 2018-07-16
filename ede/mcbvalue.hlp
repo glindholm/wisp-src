@@ -1,0 +1,18 @@
+Item Value
+----------
+The item value can be interpreted as either
+a menu control block name or the name of a
+program or a script to be executed.
+
+If it is a menu control block name, then the
+menu manger will use it as an index into the
+menu control file and automatically link to
+the named menu.
+
+If it is a program or a script, then the menu
+manager will pass this name to the vectoring
+program.
+
+The reserved names EXIT and VOID are used to
+indicate the program should exit or that
+there is no associated menu.

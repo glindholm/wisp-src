@@ -1,0 +1,78 @@
+#/************************************************************************/
+#/*									 */
+#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
+#/*	 An unpublished work of International Digital Scientific Inc.	 */
+#/*			    All rights reserved.			 */
+#/*									 */
+#/************************************************************************/
+#
+#
+#	File:		wruncblx.umf
+#
+#			**** This is an IDSI only version ****
+#
+#	Function:	The UNIX makefile for building the Acucobol runtime
+#			systems that include the WISP runtime routines.
+#
+#	Description:	This makefile can generate the following versions
+#			of the Acucobol runtime system.
+#
+#			wruncbl		The standard runtime for Acucobol
+#					version 2 and up.
+#
+#			wruncble	The EDE version of the runtime.
+#
+#			wruncbl1	The Acucobol version 1.5 runtime.
+#					(Only used if running an old version
+#					of Acucobol.)
+#
+#	Instructions:	To create an Acucobol runtime system follow the
+#			instructions in Appendix A of the WISP Manual
+#			"Building an ACUCOBOL runtime system".
+#
+#			To build wruncbl:
+#				$ make -f wruncbl.umf
+#
+#			To build wruncble:
+#				$ make -f wruncbl.umf wruncble
+#
+#
+#	LIBPATH:	If your libraries reside in a directory other then
+#			/usr/lib then change LIBPATH to there correct
+#			location.
+#
+
+#
+#	Leave CDEBUG blank - it will be filled in manually on the build
+#
+CDEBUG=
+
+include $(WISP)/src/port/make.include
+
+SUBS1=sub.o
+SUBS2=sub.o filetbl.o
+
+LIBPATH=$(STDLIB)
+LIBPATHS=$(LIBPATH)/libwisp.a $(LIBPATH)/libilp.a $(LIBPATH)/libvideo.a
+LIBPATHDS=$(LIBPATH)/libwispd.a $(LIBPATH)/libilp.a $(LIBPATH)/libvideod.a
+LIBS=-lwisp -lilp -lvideo -lm
+LIBDS=-lwispd -lilp -lvideod -lm
+
+all:	wruncbl
+
+both:	wruncbl wruncble
+
+wruncbl: $(SUBS2) $(LIBPATHS)
+	$(CC) -O $(CFLAGS) -o $@ $(SUBS2) runcbl.a -L$(LIBPATH) $(LIBS)
+
+wruncbld: $(SUBS2) $(LIBPATHDS)
+	$(CC) -g $(CFLAGS) -o $@ $(SUBS2) runcbl.a -L$(LIBPATH) $(LIBDS)
+
+wruncble: $(SUBS2) $(LIBPATHS) $(LIBPATH)/libede.a
+	$(CC) -O $(CFLAGS) -o $@ $(SUBS2) runcbl.a -L$(LIBPATH) -lede $(LIBS)
+
+wruncbl1: $(SUBS1) $(LIBPATHS)
+	$(CC) -O $(CFLAGS) -o $@ $(SUBS1) runcbl.a -L$(LIBPATH) $(LIBS)
+
+sub.o: sub.c sub85.c
+

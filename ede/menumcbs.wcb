@@ -1,0 +1,21 @@
+      * International Digital Scientific Corporation
+      * Extended Development Environment
+      * COBOL 85 copy member to allocate menu control blocks.
+
+      * Menu control block allocation.
+
+       01 MAX-LEVELS PIC 9(9) BINARY VALUE 12.
+       01 MENU-CONTROL-BLOCKS.
+          02 MCB OCCURS 12 TIMES.
+             03 MCB-MENU-TYPE     PIC 9(9) BINARY.
+             03 MCB-MENU-OPTIONS  PIC 9(9) BINARY.
+             03 MCB-MENU-ROW      PIC 9(9) BINARY.
+             03 MCB-MENU-COLUMN   PIC 9(9) BINARY.
+             03 MCB-MENU-WIDTH    PIC 9(9) BINARY.
+             03 MCB-MENU-ITEMS    PIC 9(9) BINARY.
+             03 MCB-MENU-ITEM     PIC 9(9) BINARY.
+             03 MCB-MENU-BACKITEM PIC 9(9) BINARY.
+             03 MCB-MENU-SAVE     PIC 9(9) BINARY.
+             03 MCB-MENU-CODE     PIC 9(9) BINARY OCCURS 20 TIMES.
+             03 MCB-MENU-LINK     PIC 9(9) BINARY OCCURS 20 TIMES.
+             03 MCB-MENU-TEXT     PIC X(64) OCCURS 20 TIMES.

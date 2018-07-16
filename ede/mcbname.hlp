@@ -1,0 +1,7 @@
+Menu Control Block Name
+-----------------------
+The MCB name forms an index into the menu control file.
+Any 8 alphanumeric characters are supported except the
+following are reserved for special purposes:
+
+     EXIT - Exit program.   VOID - No menu.

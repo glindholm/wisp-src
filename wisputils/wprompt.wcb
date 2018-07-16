@@ -1,0 +1,225 @@
+000100/*****************************************************************        
+000200*                                                                *        
+000300*                       IDENTIFICATION DIVISION                  *        
+000400*                                                                *        
+000500******************************************************************        
+000600*                                                                         
+000700 IDENTIFICATION DIVISION.                                                 
+000800 PROGRAM-ID.                                                              
+000900     WPROMPT.                                                           
+001000 AUTHOR.                                                                  
+001100     IDSI CONVERSION TEAM                                                 
+001200 DATE-WRITTEN.                                                            
+001300     08/02/89.                                                            
+001400/*****************************************************************        
+001500*                                                                *        
+001600*                         ENVIRONMENT DIVISION                   *        
+001700*                                                                *        
+001800******************************************************************        
+001900*                                                                         
+002000 ENVIRONMENT DIVISION.                                                    
+002100 CONFIGURATION SECTION.                                                   
+002200 SOURCE-COMPUTER.                                                         
+002300     WANG-VS.                                                             
+002400 OBJECT-COMPUTER.                                                         
+002500     WANG-VS.                                                             
+002600 FIGURATIVE-CONSTANTS.                                                    
+           HEX-00     IS "00", HEX-01 IS "01", HEX-80 IS "80",
+           DEC-24     IS "18", DEC-80 IS "50",
+002700     HIMOD      IS "80",                                                  
+002800     HIMODUL    IS "A0",                                                  
+002900     HIMODUPR   IS "81",                                                  
+003000     HIMODUPRUL IS "A1",                                                  
+003100     HIMODNUM   IS "82",                                                  
+003200     HIMODNUMUL IS "A2",                                                  
+003300     HIPRO      IS "84",                                                  
+003400     HIPROUL    IS "A4",                                                  
+003500     HIPROUPR   IS "85",                                                  
+003600     HIPROUPRUL IS "A5",                                                  
+003700     HIPRONUM   IS "86",                                                  
+003800     HIPRONUMUL IS "A6",                                                  
+003900     LOMOD      IS "88",                                                  
+004000     LOMODUL    IS "A8",                                                  
+004100     LOMODUPR   IS "89",                                                  
+004200     LOMODUPRUL IS "A9",                                                  
+004300     LOMODNUM   IS "8A",                                                  
+004400     LOMODNUMUL IS "AA",                                                  
+004500     LOPRO      IS "8C",                                                  
+004600     LOPROUL    IS "AC",                                                  
+004700     LOPROUPR   IS "8D",                                                  
+004800     LOPROUPRUL IS "AD",                                                  
+004900     LOPRONUM   IS "8E",                                                  
+005000     LOPRONUMUL IS "AE",                                                  
+005100     FLMOD      IS "90",                                                  
+005200     FLMODUL    IS "B0",                                                  
+005300     FLMODUPR   IS "91",                                                  
+005400     FLMODUPRUL IS "B1",                                                  
+005500     FLMODNUM   IS "92",                                                  
+005600     FLMODNUMUL IS "B2",                                                  
+005700     FLPRO      IS "94",                                                  
+005800     FLPROUL    IS "B4",                                                  
+005900     FLPROUPR   IS "95",                                                  
+006000     FLPROUPRUL IS "B5",                                                  
+006100     FLPRONUM   IS "96",                                                  
+006200     FLPRONUMUL IS "B6",                                                  
+006300     SUMOD      IS "98",                                                  
+006400     SUMODUL    IS "B8",                                                  
+006500     SUMODUPR   IS "99",                                                  
+006600     SUMODUPRUL IS "B9",                                                  
+006700     SUMODNUM   IS "9A",                                                  
+006800     SUMODNUMUL IS "BA",                                                  
+006900     SUPRO      IS "9C",                                                  
+007000     SUPROUL    IS "BC",                                                  
+007100     SUPROUPR   IS "9D",                                                  
+007200     SUPROUPRUL IS "BD",                                                  
+007300     SUPRONUM   IS "9E",                                                  
+007400     SUPRONUMUL IS "BE",                                                  
+007500     SOLIDS     IS "0B",                                                  
+007600     POS-CURSOR IS "A0",                                                  
+007700     SOUNDALARM IS "E0".                                                  
+007800/*****************************************************************        
+007900*                                                                *        
+008000*                         INPUT-OUTPUT SECTION                   *        
+008100*                                                                *        
+008200******************************************************************        
+008300*                                                                         
+008400 INPUT-OUTPUT SECTION.                                                    
+008500 FILE-CONTROL.                                                            
+008600*                                                                         
+008700     SELECT CRT                                                           
+008800         ASSIGN TO "CRT",      "DISPLAY",                                 
+008900         ORGANIZATION    IS SEQUENTIAL                                    
+009000         ACCESS MODE     IS RANDOM                                        
+009100         RELATIVE KEY    IS LINENUM                                       
+009200         PFKEY           IS PF-KEY                                        
+009300         CURSOR POSITION IS CURSOR-POS                                    
+009400         FILE STATUS     IS FILSTAT.                                      
+009500*                                                                         
+010200/*****************************************************************        
+010300*                                                                *        
+010400*                      DATA DIVISION - FILE SECTION              *        
+010500*                                                                *        
+010600******************************************************************        
+010700*                                                                         
+010800 DATA DIVISION.                                                           
+010900 FILE SECTION.                                                            
+011000*                                                                         
+011100 FD  CRT                                                                  
+011200     LABEL RECORDS ARE OMITTED.                                           
+011300 01  CRTREC.                          
+           05  CRT-ORDER-AREA.
+               10  CRT-ROW-NUM            PIC X.
+               10  CRT-WCC                PIC X.
+               10  CRT-COL-ADD            PIC X.
+               10  CRT-ROW-ADD            PIC X.
+           05  CRT-RECORD                 PIC X(1920).
+011400*                                                                         
+011900/*****************************************************************        
+012000*                                                                *        
+012100*                         WORKING STORAGE                        *        
+012200*                                                                *        
+012300******************************************************************        
+012400*                                                                         
+012500 WORKING-STORAGE SECTION.                                                 
+012600 01  DATE-INFO.                                                           
+012700     03  DATEIN                     PIC 9(06).                            
+012800     03  DATEGROUP                  REDEFINES DATEIN.                     
+012900         05  YEAR-DIGITS            PIC 9(02).                            
+013000         05  MONTH-DIGITS           PIC 9(02).                            
+013100         05  DAY-DIGITS             PIC 9(02).                            
+013200     03  RPT-DATE.                                                        
+013300         05  RPT-MONTH              PIC 9(02).                            
+013400         05  FILLER                 PIC X(01)  VALUE "/".                 
+013500         05  RPT-DAY                PIC 9(02).                            
+013600         05  FILLER                 PIC X(01)  VALUE "/".                 
+013700         05  RPT-YEAR               PIC 9(02).                            
+013800******************************************************************        
+013900*                   FILE CONTROL STATUS SWITCHES                 *        
+014000******************************************************************        
+014100 01  FILSTAT.                                                             
+014200     03  ERR-FLAG                   PIC X(01).                            
+014300     03  PFK-BYTE                   PIC X(01).                            
+014400 77  LIST-STATUS                    PIC X(1)  VALUE "0".                  
+014500     88 MORE-LIST                   VALUE "0".                            
+014600     88 RECORD-FOUND-ON-LIST        VALUE "0".                            
+014700     88 NO-MORE-LIST                VALUE "1".                            
+014800     88 NO-RECORD-FOR-LIST          VALUE "2".                            
+014900     88 DUPLICATE-ON-LIST           VALUE "2".                            
+015000******************************************************************        
+015100*               EXTERNAL FILE LOCATION DEFINITIONS               *        
+015200******************************************************************        
+015300 77  REC-COUNT                      PIC 9(4)  VALUE 500.                  
+015400 77  FIL-FOR-LIST                   PIC X(8)  VALUE SPACES.               
+015500 77  LIB-FOR-LIST                   PIC X(8)  VALUE SPACES.               
+015600 77  VOL-FOR-LIST                   PIC X(6)  VALUE SPACES.               
+015700******************************************************************        
+015800*             WORKSTATION FILE CONTROL DESCRIPTIONS              *        
+015900******************************************************************        
+016000 77  LINENUM                        PIC 9(02) VALUE 1.                    
+016100 77  PF-KEY                         PIC 9(02) VALUE 01.                   
+016200 01  CURSOR-POS.                                                          
+016300     03  MOD-COL                    BINARY.                               
+016400     03  MOD-ROW                    BINARY.                               
+016500 01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.                 
+016600     03  FILLER                     PIC X(01).                            
+016700     03  CURS-COL                   PIC X(01).                            
+016800     03  FILLER                     PIC X(01).                            
+016900     03  CURS-ROW                   PIC X(01).                            
+017000/*****************************************************************        
+017100*                                                                *        
+017200*                   DISPLAY DEFINITIONS                          *        
+017300*                                                                *        
+017400******************************************************************        
+017500*                                                                         
+       01  WSA-PROGRAM               PIC X(8)         VALUE "SAMPLE".
+       01  WSA-USER-ID               PIC X(3)         VALUE SPACES.
+       01  ID                        PIC X(2)         VALUE "ID".
+       LINKAGE SECTION.
+      *$AIX_CODE
+      *    COPY "lkmntxt.cpy".
+      *$AIX_END
+034400/*****************************************************************        
+034500*                                                                *        
+034600*                         PROCEDURE DIVISION                     *        
+034700*                                                                *        
+034800******************************************************************        
+034900*                                                                         
+035000 PROCEDURE DIVISION USING CMD-LINE.                                                      
+035100 START-PROGRAM.                                                           
+035200     PERFORM INITIALIZATION.                                              
+035300     PERFORM MAIN-PROCESS.                                                
+035400     PERFORM TERMINATION.                                                 
+035500                                                                          
+035600 EXIT-PROGRAM.                                                            
+035700     STOP RUN.                                                            
+035800                                                                          
+035900******************************************************************        
+036000*                         INITIALIZATION                         *        
+036100******************************************************************        
+036200*                                                                         
+036300 INITIALIZATION.                                                          
+           CALL "EXTRACT" USING ID WSA-USER-ID.
+036400     ACCEPT DATEIN FROM DATE.                                             
+036800     OPEN I-O    CRT.                                                 
+           MOVE HEX-01  TO CRT-ROW-NUM.
+           MOVE DEC-24  TO CRT-COL-ADD.
+           MOVE DEC-80  TO CRT-ROW-ADD.
+           MOVE HEX-80  TO CRT-WCC.
+037000                                                                          
+037100******************************************************************        
+037200*                         MAIN PROCESS                           *        
+037300******************************************************************        
+037400*                                                                         
+037500 MAIN-PROCESS.                                                            
+037800     PERFORM DISPLAY-AND-READ-DISPLAY-REC.                                
+040200                                                                          
+047500 TERMINATION.                                                             
+047600     CLOSE CRT.                                                           
+048500******************************************************************        
+048600*                     DISPLAY AND READ DISPLAY REC               *        
+048700******************************************************************        
+048800*                                                                         
+048900 DISPLAY-AND-READ-DISPLAY-REC.                                            
+049000     READ CRT                                
+           MOVE PF-KEY TO RETURN-CODE.
+           REWRITE CRT-RECORD.

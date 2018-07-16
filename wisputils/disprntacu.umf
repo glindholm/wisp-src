@@ -1,0 +1,7 @@
+#
+# make file for WISP utilities DISPRINT.
+#
+include acu.rules
+
+all:	disprint
+

@@ -1,0 +1,533 @@
+							v32b_relnotes.lis
+							08/07/92
+
+	International Digital Scientific Inc. has moved to a new building
+	in the Valencia industrial park.  Our phone numbers remain the
+	same as before.  Our new address is:
+
+		International Digital Scientific Inc.
+		28460 Avenue Stanford Suite 100
+		Valencia CA 91355
+
+
+	RELEASE NOTES FOR WISP VERSION 3.2
+	==================================
+
+	Highlites:
+
+	- An emulation of the Wang MANAGE FILES AND LIBRARIES facility 
+	  has been added for UNIX.
+
+	- Support for Version 1.3 of Micro Focus COBOL/2.
+
+	- The WSYSCONF utility now has an "automatic" mode for easy use.
+
+	- The DISPLAY utility has been re-worked to dramatically increase
+	  its speed especially with large files.
+
+	- The UNIX Print Queue utility has been greatly improved and now
+	  has complete documentation.
+
+	- A new utility WDIAG has been created for UNIX.  This utility will
+	  assist in diagnosing errors in the runtime setup.
+
+	- Improved error reporting of misconfigured runtime environments.
+
+	- Many software defects have been corrected.
+
+
+	--------------------------------------------------------------------
+	The following items may alter the behaviour of already converted
+	software.  Please check these over carefully.
+
+	- UNIX: The WISP runtime system will now require that the machine it
+	  is running on be licensed.  A machine is licensed by running
+	  the "wlicense" utility and suppling it with your WISP LICENSE KEY.
+	  See the accompaning document "Installing a WISP License Key"
+	  for a complete description.
+
+	- UNIX: The usage constants PROGLIB and PROGVOL are now supported
+	  in a manner which is much closer to the way the Wang works.
+	  They are set automatically by a call "LINK" or "SUBMIT" or by 
+	  explicitly setting them with a call to "SET".  If they have 
+	  not been set by one of the above, they will default to the
+	  values of RUNLIB and RUNVOL.  The LINK vssub with a LINKTYPE=' ' 
+	  will now use PROGLIB and PROGVOL for the LIBRARY and VOLUME.  
+	  The SUBMIT vssub will default to PROGLIB and PROGVOL
+	  if the LIBRARY and VOLUME are not specified.  When a program
+	  returns from a call "LINK" the values of PROGLIB and PROGVOL
+	  will be restored to their values before the call "LINK".
+	  The constant "PGMVOL" is no longer returned from EXTRACT 
+	  for "PV".
+
+	- UNIX:	We have standardized the names of the COBOL runtime
+	  systems.  These are the names that will be used for the lastest
+	  releases of the compilers.  Older releases may be suffixed with
+	  a version number e.g. wruncbl1 for version 1 of ACUCOBOL. 
+	  Runtime systems that contain Add-On's will be suffixed with
+	  letters that indicates the additions.  The currently supported
+	  Add-On's are EDE (e) and the King utilities (k) Control, Report,
+	  Inquiry, and Datentry.
+
+		wruncbl		ACUCOBOL
+		wruncble	ACUCOBOL with EDE
+		wruncblk	ACUCOBOL with King utilities
+		wruncblek	ACUCOBOL with EDE and King utilities
+
+		wrunmf		Micro Focus COBOL/2
+		wrunmfe		Micro Focus COBOL/2 with EDE
+		wrunmfk		Micro Focus COBOL/2 with King utilities
+		wrunmfek	Micro Focus COBOL/2 with EDE & King
+
+	  NOTE: You may change these names to suit your own requirements.
+	  However the above names are what the WISP supplied makefiles
+	  will generate.
+
+	- UNIX: The makefiles for the COBOL runtime systems have been
+	  changed to allow a single makefile to make both the regular and
+	  the EDE versions of the runtimes.  By default they will make
+	  the regular version of the runtime system.  To make the EDE
+	  version add the name of the EDE runtime to the make command.
+
+		$ make -f wruncbl.umf			- create wruncbl
+		$ make -f wruncbl.umf wruncble		- create wruncble
+
+		$ make -f wrunmf.umf			- create wrunmf
+		$ make -f wrunmf.umf wrunmfe		- create wrunmfe
+
+	- UNIX: Micro Focus COBOL/2 FHISAM files do not support a call
+	  to READFDR of type "RC" (Record Count).  This information is
+	  not available from the FHISAM file system.
+
+
+	--------------------------------------------------------------------
+	The following items describe changes to the WISP distribution kit
+	that have been made since Version 3.1.
+
+	- UNIX: The Pre-Built ACUCOBOL runtime system (wruncbl) is no
+	  longer included in the standard WISP distribution kit.  If you
+	  are unable to build the ACUCOBOL runtime system on your machine
+	  because it lacks a C compiler we can send one to you.
+
+	  To have a pre-built ACUCOBOL runtime system sent to you please
+	  send us a request by letter or fax stating that you are 
+	  licensed by ACUCOBOL on the requested platform.
+
+	- UNIX: The following are the changes to the WISP distribution kit.
+
+		ADDITIONS
+		=========
+		wisp/bin/wshell		- startup script for WISP shell
+		wisp/bin/wdiag		- diagnostic utility
+		wisp/bin/wlicense	- WISP license installer
+
+		wisp/etc/make.include	- system C compile flags
+
+		wisp/etc/ilpdef.sam	- sample ilpdef file
+		wisp/etc/ilpremote.sam	- sample remote printing script
+		wisp/etc/ilpsrv.sam	- sample remote printing script
+
+		wisp/etc/PRINTQ.DOC	- IDSI Print Queue documentation
+
+		wisp/config/videocap/uterm
+					- Unisys uterm definition
+
+		ede/demo/menudemomf.umf	- EDE demo makefile for Micro Focus
+
+
+		DELETIONS
+		=========
+		wisp/bin/perl		- not needed by new bldmf
+		wisp/bin/wruncbl2	- see above "pre-built runtimes"
+
+		wisp/acu/filetbl.o	- see above "pre-built runtimes"
+		wisp/acu/sub.o		- see above "pre-built runtimes"
+		wisp/acu/wruncbl2.umf	- replaced by wruncbl.umf
+
+		wisp/mf/bldmfmf		- replaced by bldmf
+
+		ede/wruncble.umf	- obsolete
+		ede/wruncbl2e.umf	- replaced by wruncbl.umf
+
+	- UNIX: The file wisp/etc/make.include is now included with WISP.
+	  It is a file that gets included into makefiles to define standard
+	  C compiler and library options.  It is included for reference
+	  only.  It may be useful to you if you are adding you own C files
+	  to the COBOL runtime system.
+
+	- VMS: The following are the changes to the WISP distribution kit.
+
+		UTERM.VCAP		- new definition file for Unisys
+					  uterm terminal utility.
+
+
+	--------------------------------------------------------------------
+	The following items describe new features of WISP that have been
+	added since Version 3.1.  None of these items should alter the
+	behaviour of existing software.
+
+	- UNIX: MANAGE FILES AND LIBRARIES has been added to the Command
+	  Processor HELP Screen as PF5.  This is an emulation of the Wang 
+	  facility with some additions and enhancements that pertain to
+	  the UNIX environment.  It allows you to view libraries, delete 
+	  files, move files, display files, change protections, etc.
+
+	- NEW PLATFORMS: WISP has been ported to these new platforms:
+		  NCR 386/486
+		  NCR TOWER/32
+		  UNISYS/6000
+		  ICL DRS 6000
+
+	- DISPLAY utility: The speed of searches and other operations
+	  has been greatly increased.
+
+	- UNIX: The WSYSCONF utility now has an automatic configuring mode.
+	  When wsysconf is run it will ask if you wish to do automatic
+	  configuring. If you answer "y" it will not ask you any further
+	  questions and use default values for everything.
+
+	- UNIX: The WSYSCONF utility will now "wrap" device numbers if
+	  there are more then 254 devices.  All device numbers will be in
+	  the 0-254 range, 255 is a device not found.  Workstations (tty's)
+	  will use numbers 0-199, other devices use 200-254.  If there
+	  are more then 200 workstations it will reuse numbers 100-199.
+
+	- VMS: A terminal number of 255 is now returned if the terminal
+	  was not found in the TTMAP, it used to return 0.
+
+	- UNIX: A new utility WDIAG is now included with WISP.  It is used
+	  to diagnose problems in the setup of the runtime environment.
+	  When WDIAG is run it verifies that the required environment
+	  variables are set and that the configuration files are accessible.
+	  It prints a report detailing each variable and file tested and
+	  any problems detected.
+
+	- WISP now supports SPLIT-KEY.  ACUCOBOL 2.0 and Micro Focus COBOL/2
+	  version 1.3 allow split keys (Wang doesn't).  WISP now recognizes
+	  the split key syntax and generates correct SELECT statements.
+	  You must use the PROCESS keyword when using the WISP directive
+	  $UNIX_CODE etc. because the translator must see the statements
+	  to work correctly.
+
+	- WISP now supports Version 1.3 of Micro Focus COBOL/2.  This 
+	  version supports compressed files and variable length files 
+	  through a new file access method called FHISAM.  When a COBOL 
+	  program specifies either of the above file attributes then 
+	  a FHISAM file will be created instead of a CISAM file.
+
+	- Added support for FHISAM files found in Version 1.3 of Micro
+	  Focus COBOL/2.
+
+	- WISP now supports the $COMPRESSFILE directive when translating
+	  to Micro Focus COBOL/2.   Micro Focus 1.3 supports file 
+	  compression through use of $SET DATACOMPRESS directives.  When
+	  WISP encounters the $COMRESSFILE directive before a SELECT 
+	  statement it will insert the necessary DATACOMPRESS directives
+	  into the translated program.  When the DATACOMPRESS option is
+	  used, Micro Focus will create "FHISAM" files NOT CISAM.
+
+	- WISP now supports "DECIMAL-POINT IS COMMA".  To use it include
+	  the following in your Wang COBOL program.
+
+		001000 SPECIAL-NAMES.
+		001100     DECIMAL-POINT IS COMMA.
+
+	- WISP with the /NODMS (-S) options for ACUCOBOL will now also 
+	  change "FREE ALL" and "COMMIT" statements into the ACUCOBOL
+	  statement "UNLOCK ALL".
+
+	- GETPARM/PUTPARM: Added full backwards referencing functionality.
+	  Now fully supports GETPARM type="RD" and updating of labeled
+	  PRB's with the modified values.  WISP previously allowed "RD"
+	  type getparms but they were not processed correctly.
+
+	- WPUTPARM: A new option has been added "-r" that allows you
+	  to backward reference an entire PRB instead of having to use
+	  the GET option on individual keywords.
+
+		$ wputparm enter input -l abc
+		$ wrun MAINMENU
+		$ wputparm enter output -r abc
+
+	  The -r options on the second putparm will backwards reference
+	  the entire PRB with label "abc".
+
+	- GETPARM/PUTPARM: Fixed logic so it will not create a shared
+	  memory area when not needed.
+
+	- PRINTER file OPEN GETPARM's now include the keywords PRTCLASS,
+	  FORM and COPIES.  These can be specified with a PUTPARM and
+	  the values given will be used when the file is printed.
+
+	- UNIX: A call "LINK" to a shell script will now pass parameters
+	  in a manner the shell script expects to receive them.  This means
+	  you no longer need to code calls to LINKPROC to pass parameters
+	  to a shell script.  However, the mechanism used is the same
+	  as with LINKPROC and the same restrictions apply.   The parameters
+	  are not passed back into the COBOL when the shell script ends.
+	  The parameters can not include any embedded NULL characters as
+	  these are termination characters to the shell.
+
+	- An alternate Command Processor/HELP Screen is now available
+	  for users who don't want to use the Wang style HELP screen.
+	  Use the runtime OPTIONS file option HELPSTYLE2 to change the
+	  screen used when HELP is pressed.
+
+		HELPSTYLE1	The Wang style HELP screen (default)
+		HELPSTYLE2	A generic HELP screen
+
+	- UNIX: The Command Processor/HELP screen now show the actual
+	  system name.
+
+	- UNIX: WISPSORT/WSORT now accepts a filetype="I" for indexed. The
+	  utilities will then figure out what type of indexed file. (Vision,
+	  CISAM, or FHISAM.)
+
+	- UNIX: WISPSORT/WSORT of FHISAM file from Micro Focus use the
+	  Micro Focus utility "fhconvert" to unload the FHISAM file into
+	  a flat file.  The "fhconvert" utility MUST be on the path for
+	  these to work.
+
+	- UNIX: SORTLINK vssub now supports the "STABLE" sort option.
+	  NOTE: Duplicate records will be kept in-order when this option
+	  is used.  On ACUCOBOL this is primary key order.  On Micro
+	  Focus using CISAM this is the order of the records in the ".dat"
+	  file.
+
+	- UNIX: EXTRACT vssub keyword "C#" has been added.  On the Wang
+	  this returned the CPU ID and Microcode version numbers.  This
+	  has been implemented to return the 4 character value of the
+	  environment variable "WISPCPU".
+
+		$ WISPCPU=ccmm
+		$ export WISPCPU
+
+	  If WISPCPU is not set it will return spaces.
+
+	- UNIX: EXTRACT vssub, the "ID" keyword can optionally be made to
+	  return a 3 digit UNIX user id (uid) by adding the flag IDNUMERIC
+	  to the runtime OPTIONS file.
+
+		IDALPHA		3 Character User ID (default)
+		IDNUMERIC	3 Digit numeric UID
+
+	- UNIX: READFDR vssub now supports the "MD" keyword to return
+	  the modification date of the file.
+
+	- UNIX: READFDR: added new keyword "BS" that returns the Byte Size
+	  of the file. (Size of the file in bytes.)  The return value is
+	  a NUMERIC(18). I.e. PIC 9(18).
+
+	- UNIX: The BLDMF utility (Build MakeFile) has been rewriten in C 
+	  instead of PERL.  This utility will create a Makefile to WISP and
+	  compile an entire directory of COBOL programs.  It behaves almost
+	  the same as the earlier version but does not require the PERL
+	  interrupter.  An option has been added to create either ACUCOBOL 
+	  or Micro Focus COBOL.  To display the BLDMF help information
+	  issue the following command:
+
+		$ bldmf -h
+
+	- UNIX: The "bldmfmf" utility is no longer supported and has been
+	  replaced by "blfmf".
+
+	- UNIX: The SETFILE subroutine is now available on UNIX.
+
+	- UNIX: A new wispsub FILECOPY is available, it will copy a file.
+
+		Usage:	FILECOPY(File,Lib,Vol,Newfile,Newlib,Newvol,Retcode)
+		Description:	This routine will copy a file.  If Newlib
+				or Newvol are not supplied it will use
+				the input Lib and Vol arguments.
+				The return code values are the same as for
+				the RENAME vssub.
+		Parameters:
+		File	Alpha(8)	The input file.
+		Lib	Alpha(8)	The input library.
+		Vol	Alpha(6)	The input volume.
+		Newfile Alpha(8)	The new file.
+		Newlib	Alpha(8)	The new library. (optional)
+		NewVol	Alpha(6)	The new volume.  (optional)
+		Retcode Int(4)		The return code.
+
+	--------------------------------------------------------------------
+	The following items describe corrections that have been made to the
+	WISP runtime system since Version 3.1.
+
+	- SCREEN vssub and screen-print from the command processor now
+	  include a header with the user's name and a timestamp.
+
+	- Netron Cap routines were failing with a Signal 11 caused by a 
+	  memory overwrite, this has been fixed.
+
+	- MESSAGE vssub was failing if a NULL was passed as part of the
+	  message. This has been fixed.
+
+	- UNIX: SCRATCH vssub will now attempt to delete the empty 
+	  directories after it scratches the last file.
+
+	- The "PLEASE ASSIGN" text on the OPEN GETPARM was returning
+	  garbage, this has been corrected.
+
+	- The message "%SETRETCODE-E-QUEUE Cannot access msg queue" would
+	  occur after a system had been rebooted and "wsysinit" was not run.
+	  This has never caused an actual problem so has been downgraded
+	  to a warning which will not normally display to the user.
+
+	- The DISPLAY utility was showing a messed up display for terminals
+	  that have 25 lines and don't support setting the scroll-region
+	  to be 24 lines.  This was occuring on SCO machines that used
+	  the console as an ANSI terminal.  To solve this problem
+	  add a line to your videocap file "lines=25".
+	  NOTE: If this has not been a problem then do NOT add "lines=25"
+	  as it will slow down performance.
+
+	- The DISPLAY utility would display the lines of the file
+	  shifted one column to the left and blank lines would not be
+	  displayed.  This occured if it found a special character in column
+	  one of the first line in the file. This has been fixed.
+
+	- DISPLAY utility was giving vmove error on a large file
+	  when pf5 (Next screen) was pressed when already at the bottom
+	  of the file.
+
+	- The DISPLAY utility Search feature now positions the line of
+	  the file that contains the found search text onto row 12 of the
+	  screen.
+
+	- DISPLAY utility was positioning cursor incorrectly on a file that
+	  was less the 24 lines long.  This has been fixed.
+
+	- VMS: DISPLAY utility, the "Working..." messages was flashing far
+	  too slowly, it has been improved.
+
+	- There was a pseudo-blank problem where writing to a portion of
+	  the screen was causing the pseudo-blanks in a different area
+	  of the screen to disappear. This has been fixed.
+
+	- Switching between 80 and 132 column mode was causing some
+	  terminals to hang, this was caused by a timing problem which
+	  has been fixed.
+
+	- VIDEO will now issue a warning message if the videocap file
+	  requested was not found.
+
+	- The message
+		"%OSD_TERM-E-TTY Findtty returns TERM=-1 changed to TERM=0"
+	  would occur if the workstation device was not found.  This has
+	  been changed so that it returns 255 for device not found.  No
+	  error message will be reported.  A workstation number of 255
+	  means the device was not found.
+
+	- UNIX: The WSYSINIT utility was accidentally deleting an
+	  incorrect shared memory area on the HP/UX.  This has been fixed.
+
+	- UNIX: The WSYSINIT utility now runs quietly (no messages) unless
+	  the verbose "-v" option is used.  In verbose mode it will
+	  display messages indicating what actions it is performing.
+
+	- UNIX: Submitted processes were being left in a <DEFUNCT> state
+	  until the parent exited.  This has been fixed.
+
+	- SUBMIT vssub was not setting the RETURN-CODE.  The Wang VS SUBS
+	  manual incorrectly stated that RETURN-CODE is an optional
+	  parameter.  This has been corrected to treat RETURN-CODE as
+	  a required parameter.
+
+	- WISPSORT/WSORT was failing if the output library didn't exist.
+	  This has been fixed.
+
+	- WISP now reports better error messages when a runtime 
+	  configuration file is missing. E.g. if LGMAP is missing etc.
+
+	- The WISPMSG.DAT error message database was changed to remove the
+	  word "WANG" from all messages.  The error messages for VWANG have
+	  been changed to WVIDEO.
+
+	- The VWANG screen handler would on occasion appear to hang after
+	  the user pressed the NEWLINE key, shortly after the program
+	  would crash.  This was caused by an endless recursive loop and
+	  has been corrected.
+
+	- UNIX: The WRUN utility was failing to strip off trailing spaces
+	  that were in the file "wrunconfig".  This was causing it to 
+	  fail to "exec" the runtime.  This has been fixed.
+
+	- UNIX: The WRUN utility has been enhanced to prevent the terminal
+	  being left in "raw mode" when a program aborts with COBOL error.
+
+	- VMS: Running programs that performed a large number of calls to
+	  the SCRATCH or SUBMIT subroutines would gradually "grow" in 
+	  memory usage and would occasionally crash on an "Out of I/O
+	  Channels" error.  This has been corrected.
+
+	- UNIX: The MESSAGE VSSUB would get an error if the directory
+	  /usr/tmp/wpparms didn't already exist.  It has been fixed to
+	  create it if needed.
+
+	- EDE: The MENUDEMO program has been fixed to work with Micro
+	  Focus COBOL/2 and a new makefile "menudemomf.umf" is now
+	  included with EDE.
+
+	- UNIX: The WSUBMIT utility has been change to default to PROGLIB
+	  and PROGVOL if a library and volume are not supplied.  Previously
+	  the library and volume arguments were required, they are now
+	  optional.  It also now correctly sets the exit code to be
+	  equal to the return-code.
+
+		$ wsubmit file [library volume]
+
+	- VMS: The @UPDATE.COM procedure has been cleaned up so as to
+	  run without errors.
+
+	- UNIX: The VIDEO routines have been improved to better detect
+	  and handle lowlevel errors.  This results in better error messages
+	  being reported and programs not waiting forever for I/O that
+	  will not occur.
+
+	- WPUTPARM utility will now accept a usage count of zero.  This
+	  indicates an unlimited usage.
+
+
+	--------------------------------------------------------------------
+	The following items describe corrections that have been made to the
+	WISP translator since Version 3.1.
+
+	- WISP was incorrectly processing statements that occurred on
+	  the same line following a COPY statement.  The statements would
+	  end up before the contents of the copybook.  This has been
+	  corrected.
+
+	- WISP was crashing on USE statements where multiple files were
+	  specified if one of the files was a WORKSTATION file.  This
+	  has been fixed.
+
+	- WISP previously would generate invalid code if sections of the
+	  COBOL program were missing e.g. no WORKING-STORAGE section.
+	  WISP now correctly handles these programs.
+
+	- WISP was not translating the first statement in the PROCEDURE
+	  DIVISION when there was no leading paragraph or section header.
+	  This has been corrected.
+
+	- WISP for Micro Focus was not correctly translating SEQUENTIAL 
+	  DYNAMIC files, it was not making them sharable.  It now works
+	  correctly.
+
+	- WISP was not correctly handling blank lines when the CONVERT (-1)
+	  or COMMENTS (-c) options were used.  The sequence number from the
+	  blank line was being wrapped onto the end of the previous line.
+	  This has been corrected.
+
+	- WISP was crashing on a DISPLAY verb that was displaying literals
+	  that contained parentheses.  This has been corrected.
+
+	- WISP has tightened up it's checking of file status codes, 
+	  specifically for Record-Locked status codes.  It used to
+	  return the Record-Locked status code to the program for
+	  handling.  Now it will only return a Record-Locked file status
+	  if it occurred on a READ statement.  WISP now knows what type
+	  of I/O statement the file status occurred on and reports
+	  better error messages.
+
+	--------------------------------------------------------------------

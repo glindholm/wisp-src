@@ -1,0 +1,4 @@
+Menu Row
+--------
+Row that the menu should appear on. If left as 0, the
+EDE menu manager will select where to place the menu.

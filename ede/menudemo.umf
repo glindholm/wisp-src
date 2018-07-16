@@ -1,0 +1,67 @@
+#	/************************************************************************/
+#	/*									*/
+#	/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+#	/*	 An unpublished work of International Digital Scientific Inc.	*/
+#	/*			    All rights reserved.			*/
+#	/*									*/
+#	/************************************************************************/
+#
+#
+#	File:		memudeno.umf
+#
+#	Function:	Generic makefile for the EDE menudemo on all unix platforms.
+#			For use with ACUCOBOL.
+#
+# 	History:
+#			06/04/92	Changed $(WISP) to $(WISPTRAN) and added header. GSL
+#
+
+WISPTRAN=wisp
+WISPFLAGS=-m -I . -1
+COBOL=ccbl
+COBOLFLAGS=-da4 -zd -ce
+OPT=-O menudemo.opt
+
+
+all: MCBBLD MCBEDIT MENUDISP MENULOGO MENUVECT MENUDEMO
+
+
+MCBBLD:	mcbbld.cob
+	$(COBOL) $(COBOLFLAGS) -o MCBBLD mcbbld.cob
+
+mcbbld.cob: mcbbld.wcb
+	$(WISPTRAN) $(WISPFLAGS) $(OPT) mcbbld
+
+MCBEDIT: mcbedit.cob
+	$(COBOL) $(COBOLFLAGS) -o MCBEDIT mcbedit.cob
+
+mcbedit.cob: mcbedit.wcb
+	$(WISPTRAN) $(WISPFLAGS) mcbedit
+
+MENUDISP: menudisp.cob
+	$(COBOL) $(COBOLFLAGS) -o MENUDISP menudisp.cob
+
+menudisp.cob: menudisp.wcb
+	$(WISPTRAN) $(WISPFLAGS) $(OPT) menudisp
+
+MENULOGO: menulogo.cob
+	$(COBOL) $(COBOLFLAGS) -o MENULOGO menulogo.cob
+
+menulogo.cob: menulogo.wcb
+	$(WISPTRAN) $(WISPFLAGS) $(OPT) menulogo
+
+MENUVECT: menuvect.cob
+	$(COBOL) $(COBOLFLAGS) -o MENUVECT menuvect.cob
+
+menuvect.cob: menuvect.wcb
+	$(WISPTRAN) $(WISPFLAGS) menuvect
+
+
+MENUDEMO: menudemo.cob
+	$(COBOL) $(COBOLFLAGS) -o MENUDEMO menudemo.cob
+
+menudemo.cob: menudemo.wcb
+	$(WISPTRAN) $(WISPFLAGS) $(OPT) menudemo
+
+
+

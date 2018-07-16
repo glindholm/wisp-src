@@ -1,0 +1,479 @@
+********* OBSOLETE, DOCUMENTATION HAS BEEN TRANSFERRED TO THE MACINTOSH
+********* DO NOT USE...
+
+		Extended Development Environment for WISP V3.0
+			Preliminary  Documentation
+			Last revised: 24 July 1991
+			Copyright (c) 1991 by IDSI
+			    All Rights Reserved
+
+
+Introduction
+
+	The WISP translator was designed to provide multi-platform support
+from a single set of program sources. That is, to essentially turn Wang VS
+COBOL into a portability standard that will run, not only on the Wang, but
+also under VAX/VMS, UNIX and MS/DOS (PC LAN). On these target systems, the
+converted software retained its classical (Wang like) style of operation.
+
+	The Extended Development Environment allows software, converted by
+the WISP translator, to be taken beyond the classical Wang-like appearance.
+EDE provides windowing, pull-down and pop-up menus, and other exciting fa-
+cilities that will create a much more modern look and feel. A lot of EDE's
+sizzle becomes available without having to make any application changes at
+all; simply link the EDE library to existing converted software. Even more
+spectacular results can be achieved by writing new programs that call  EDE
+directly.
+
+	Underlying WISP is a powerful, efficient screen management package
+known as VIDEO.  Implemented with extensive optimization to yeild superior
+performance, VIDEO was utilized to emulate the Wang workstation in WISPLIB.
+The full capabilites of VIDEO,    enhanced to include modern look-and-feel
+facilities, are available with EDE.  It is integrated and fully compatible
+with WISP.    EDE is delivered in its own library and is a complete screen
+management package so it can be used with or without WISP.
+
+
+Overview
+
+	Many EDE facilities are available without the need to make program
+changes. When a module is linked with the EDE library, a pull-down bar menu
+appears when the help key is pressed, rather than just the classic
+environment control screens (i.e. the Wang help screens). From the bar menu,
+selections can be made including window oriented on-line help, generalized
+cut and paste as well as numerous "goodies". Of course, environment control
+remains selectable from the bar menu as well.
+
+On-line Help
+
+	The EDE on-line help is a context sensitive help which uses pop-up
+windows to display field specific information. The window is automatically
+placed so as not to hide the field the cursor is currently on.
+
+Goodies
+
+	The EDE goodies include such items as a clock, calculator, notepad
+and calendar. Each can be moved around on the screen and full pick-up, put-
+down and cut-and-paste support is provided.
+
+
+				- 2 -
+
+Programming
+
+	Of course, EDE is a full fledged development environment and comes
+complete with interfaces for programming in C and COBOL. With minimal effort,
+existing applications can be modified or new applications written to directly
+call EDE. These will have an exciting and modern look and feel and yet still
+be compatible with existing programs. The best of both worlds!
+
+
+Scope
+
+	The following sections describe the programming interface to EDED.
+
+
+				- 3 -
+
+		Environment Control
+		-------------------
+
+EDLOAD		Enable the EDE environment. This MUST be called before any
+		other EDE calls unless a converted Wang screen has been
+		utilized first. (vwang makes the equivalent of and EDLOAD
+		call.
+
+		EDLOAD does not make any changes to the screen, it only
+		sets up the environment.
+
+		Multiple calls to EDLOAD are non-destructive.
+
+
+EDEXIT		Disable the EDE environment. This is used to allow screen
+		I/O to occur from another source. For example, use EDEXIT
+		before using a direct COBOL DISPLAY statement.
+
+		After using EDEXIT, an EDLOAD must be done to continue
+		using the EDE environment.
+
+
+		Keystroke Tracing
+		-----------------
+
+TRACEGO		Start tracking the keystrokes a user enters.
+
+TRACEEND	End tracing the keystrokes a user enters.
+
+RETRACE		Replay the keystrokes saved in previous trace.
+
+		Note: Traces can be done to only one level, i.e. you
+		cannot trace a retrace.
+
+
+		PF Key Processing
+		-----------------
+
+PFKEYSON	Turn PF key processing on.
+
+NOPFKEYS	Turn PF key processing off.
+
+		If PF key processing is on, then any PF key depressed will
+		terminate the current menu chain as if a return key were
+		depressed. However, the value returned will have 10000 times
+		the PF key added to it. For example, if the normal return
+		code for a selection were 405 and PF key 12 was used, then
+		120405 would be returned.
+
+
+				- 4 -
+
+		Menu Environment Save / Restore
+		-------------------------------
+
+MENUSAVE	Save the choice path of the current menu set. This is
+		written to the file VIDEO.MEN.
+
+		Eg.   CALL "MENUSAVE" USING MYMENU.
+
+		where MYMENU is the root MCB (menu control block).
+
+
+MENUREST	Enable subsequent menu calls to select the previously
+		saved choices.
+
+		Note: MENUSAVE will save only an active path that is
+		terminated by an implicit or explicit DYNAMIC link.
+
+
+		Load a Menu Control Block
+		-------------------------
+
+MENULOAD	Each menu is managed using a Menu Control Block (MCB). MCBs
+		can be statically or dynamically linked together to form
+		a composite menu set.
+
+		MCBs can be initialized directly by the program or MENULOAD
+		can be utilized as a short hand method for doing the init-
+		ialization.
+
+		Example:	CALL "MENULOAD" USING MYMENU,
+						TYPE, OPTIONS,
+						ROW, COLUMN, WIDTH.
+
+		MYMENU	is the specified MCB.
+
+		TYPE	is the menu type. If 0, then the menu manager will
+			determine the type. Valid types are:
+
+			1  Load menu from a file.
+			2  Standard numeric selection menu.
+			3  Highlighted alphabetic menu.
+			4  Highlighted position menu.
+			5  Top line menu bar.
+			6  Pull down menu (from menu bar).
+			7  Pop-up window menu.
+			8  Display only window and pause.
+
+		OPTIONS	are the options for the menu. Valid options are:
+
+			 512  Chain to the left. *
+			1024  Chain to the right. *
+			2048  Exit to the right. *
+
+			      * If these options are not specified, the
+
+				- 5 -
+
+			      menu manager will determine appropriate
+			      values.
+
+			4096  Center the menu on the screen regardless of
+			      other positioning considerations.
+
+			Additionally, the parameters for VIDMODE specified
+			below can be included as menu options. Parameters
+			can be added. For example, a left handed menu in
+			reverse character mode to be centered on the screen
+			would be 512 + 8 + 4096.
+
+		ROW	is the row on which the menu is to be placed. If
+			set to 0, the menu manager will determine where to
+			place the menu.
+
+		COLUMN	is the column on which the menu is to be placed. If
+			set to 0, the menu manager will determine where to
+			place the menu.
+			
+
+MENUITEM	Add a menu selection item into a menu control block (MCB).
+
+		Eg.	CALL "MENUITEM" USING MCB, TEXT, CODE, LINK.
+
+		MCB	is the specified Menu Control Block.
+		TEXT	is the textual description of the item, i.e. what will
+			appear on the menu. The maximum length of a text item
+			is 64 characters.
+		CODE	is the value to be returned if this item is selected.
+			If CODE is -1, then a static link (another MCB must
+			be specified in the LINK field).
+			If CODE is -2, then a dynamic link is assumed for
+			this item.
+		LINK	is the menu to link to if this item is selected. LINK
+			must specify a subordinate MCB if CODE was set to -1.
+
+		MENUITEM will automatically count each item as it is added
+		up to a maximum of 16 items.
+
+
+MENUGO		Starts processing a menu or menu set (a menu set is a
+		colletion of menu control blocks (MCBs) linked together).
+
+			CALL "MENUGO" USING MCB, VALUE.
+
+		MCB is the root menu control block.
+
+		VALUE is the value returned when a selection is made. VALUE
+		will be set to the CODE specified for the selected item
+		with the MENUITEM call.
+
+		If the menu set is statically linked then processing will
+		continue until a final selection is made. The menu's will
+		be automatically erased and the VALUE returned.
+
+		If the menu set terminates in a dynamic link, or the menu
+		system is in dynamic mode, then the VALUE will still be
+		returned, however, the menu's will be left on the screen
+		and the menu system will be set for a subsequent MENUCONT
+		call.
+
+				- 6 -
+
+MENUCONT	Same as MENUGO except utilized after return from a MENUGO
+		that terminated because of a explic dynamic link or an
+		implicit dynamic menu mode.
+
+			CALL "MENUCONT" USING MCB, VALUE.
+
+		MCB is the root menu control block.
+
+		VALUE will return the selected code.
+
+
+		Static vs Dynamic Linking
+		-------------------------
+
+DYLINK		Dynamically link two MCBs together in preparation for
+		a MENUCONT call.
+
+			CALL "DYLINK" USING ROOTMCB, SUBMCB.
+
+		Where ROOTMCB is the lowest level MCB. Note, use the root MCB,
+		NOT the MCB one before SUBMCB.
+
+		SUBMCB is the menu control block being added.
+
+
+DYUNLINK	Dynamically unlink an MCB.
+
+			CALL "DYUNLINK" USING SUBMCB.
+
+		Where SUBMCB is the MCB to be unlinked. Note that the MCB
+		to which SUBMCB was previously linked will be flagged as
+		allowing subsequent dynamic links.
+
+
+MENUMODE	Select either dynamic or static menu mode.
+
+			CALL "MENUMODE" USING MODE
+
+		Where MODE is either -1 for dynamic or -2 for static.
+
+		In static mode, all slections will terminate the menu set
+		and return the code value unless the item is explicitly
+		flagged as dynamic (see MENUITEM). If the item selected
+		is not explicitly dynamic, then the menu set is erased
+		from the screen.
+
+		Behavior in dynamic mode is the same as static mode except
+		that the menu set currently displayed is left on the screen
+		even if the user selected a static terminal. MENUKILL must
+		subsequently be used to erase the menu display.
+}
+
+				- 7 -
+
+MENUKILL	This is utilized to erase a menu set still displayed on the
+		screen. Normally, selection of a non-linked item will erase
+		the screen automatically. However, if a dynamically linked
+		item is selected, or if the menu manager is in dynamic mode,
+		then the menu set will remain displayed.
+
+			CALL MENUKILL USING ROOTMCB, EXTENT.
+
+		Where ROOTMCB is the root MCB of the menu set. It MUST be
+		the same root utilized in the preceding MENUGO or MENUCONT
+		calls.
+
+		EXTENT is the extent of the erasure as follows:
+
+			7	Erase all menus.
+			8	Erase only the top menu of the menu set.
+			9	Erase all but the root of the menu set.
+
+		***** NOTE ***** Memory for screen maps etc. is allocated
+		dynamically and is permanently allocated to the user program.
+		Failing to make appropriate use of MENUKILL will result in
+		increasing use of memory and eventually program failure.
+		Never erase the screen (using ERASESCR for example) to get
+		rid of the menu display. Always use MENUKILL or MENUEXIT.
+
+MENUEXIT	MENUEXIT is the equivalent of MENUKILL specifiying all menus
+		but implies a total exit of the menu system. It is good
+		practice to call MENUEXIT prior to doing a STOP RUN or
+		EXIT PROGRAM statement.
+
+
+		General Display Routines
+		------------------------
+
+VIDMOVE		Move cursor to a specific location on the screen.
+
+			CALL "VIDMOVE" USING ROW,COLUMN.
+
+		Where ROW is the row from 1 to 24 and COLUMN is the column
+		from 1 to 80 in narrow screen mode or 1 to 132 in wide.
+
+
+VIDMODE		Select a character mode (rendition).
+
+			CALL "VIDMODE" USING MODE.
+
+		Valid modes are:
+
+			0  No rendition, use default characters.
+			1  Use bold characters.
+			2  Use underscored characters.
+			4  Use blinking characters.
+			8  Use characters in reverse video.
+
+		Note, modes can be added together for composite renditions.
+		For example, to select BOLD and BLINK together use 1 + 4.
+
+				- 8 -
+
+VIDTEXT		Output text.
+
+			CALL "VIDTEXT" USING TEXT.
+
+		Where TEXT is the text to be displayed. Max length is 64.
+
+
+		Graphics
+		--------
+
+VIDLINE		Although VT100, VT200, VT300 and V400 series terminals are
+		not graphics terminals per se, they do have a minimum
+		line drawing capability. EDE enhances this ability by
+		managing crossing lines to provide proper intersctions.
+		All lines are drawn from the current cursor position.
+
+			CALL "VIDLINE" USING TYPE, LENGTH.
+
+		Valid TYPEs are:
+
+			0  Narrow vertical line.
+			3  Narrow horizontal line.
+			6  Fat vertical line.
+			7  Fat horizontal line.
+
+		LENGTH is the length of the line.
+
+		For example, to draw a box use:
+
+			CALL "VIDMOVE" USING TWO, FIVE.
+			CALL "VIDLINE" USING THREE, TEN.   Draw the top.
+			CALL "VIDLINE" USING ZERO, TEN.    Draw the right side.
+			CALL "VIDMOVE" USING TWO, FIVE.
+			CALL "VIDLINE" USING ZERO, TEN.    Draw the left side.
+			CALL "VIDLINE" USING THREE, TEN.   Draw the bottom.
+
+
+EDCLRSCR	Clear the full screen.
+
+
+EDDRKSCR	Make the screen background dark (black).
+
+
+EDLTESCR	Make the screen background light (grey).
+
+
+EDWIDSCR	Select a wide (132 column) screen.
+
+
+EDNARSCR	Select a narrow (80 column) screen.
+
+		To fully initialize a screen, use:
+
+			CALL "EDLOAD"
+			CALL "EDCLRSCR"
+			CALL "EDDRKSCR"
+			CALL "EDNARSCR"
+
+
+				- 9 -
+
+	Goodies
+	-------
+
+	Included with the Extended Development Environment are a number
+of goodies including a clock, calculator, calendar, notepad and puzzle.
+Each of these can be triggered from the main bar or the pop-up bar when
+running WISP converted software.
+
+	Each goodie has one or more help windows which are activated
+using the help key. Instructions for each are included in help. In so
+far as practical, each goodie uses the same keys for similar purposes
+as follows:
+
+Key	Clock	Calc	Notes	Calend	Cal2	Description
+---	-----	----	-----	------	----	-----------
+
+Arrow	MOV	MOV	POS	POS	POS	POS - Position cursor.
+			MOV	MOV	MOV	MOV - Move window around.
+
+PF1	-	NXT	NXT	NXT		NXT - Next screen/page/month
+		'F'
+
+PF2	-	CLR	PRE	PRE		CLR - Clear display
+		PRE				PRE - Prev. screen/page/month
+
+PF3	-	'/'	PST	PST	PST	PST - Paste line/field
+		PST
+
+PF4	CUT	'*'	CUT	CUT	CUT	CUT - Cut field/line
+		CUT
+
+PF5	-	-	OPN	-	OPN	OPN - Open line for insertion
+
+PF6	-	-	RML	-	RML	RML - Remove line.
+
+PF16	XIT	XIT	XIT	XIT	XIT	XIT - Exitfrom the goodie.
+
+DEL	-	DEL	DEL	-	DEL	DEL - Delete previous character
+
+INS	-	-	INS	-	INS	INS - Open char for insertion
+
+REM	-	-	REM	-	REM	REM - Remove character.
+
+RETURN	-	'='	NEL	SEL	NEL	NEL - Newline.
+						SEL - Select the date.
+
+TAB	-	-	-	MOV	-	MOV - Move to next field/line.
+
+SPACE	-	-	' '	MOV	' '
+
+	*** WATCH OUT ***
+
+	The clear page/display key (PF2) is close to the next page key
+(PF1). Be careful to not wipe out what you are working on by accidently
+depressing PF2.

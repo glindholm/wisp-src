@@ -1,0 +1,183 @@
+#	files.all	-	List of all files in project/component.
+#				Used for unix version of scs.
+#				The unix command: scs borrow all
+#				will get every file listed in this file.
+#				The "#" in the first column = comment line.
+#				The file name should be followed by the
+#				name of the directory containing the file.
+#				For example, for scs init wisp lib, *.h files:
+#				scs$wisp:[lib.master.include]*.h and
+#				scs$wisp:[lib.qahold.include]*.h
+#				the directory would be: "include" and the
+#				directory is "source" for *.c files.
+#
+#	First, the header files:
+#
+# File		Directory
+#
+acp.h		include
+cobrun.h	include
+filext.h	include
+kbmap.h		include
+license.h	include
+menu.h		include
+movebin.h	include
+p0x386.h	include
+p2x386.h	include
+que_jobs.h	include
+quemgmt.h	include
+quidef.h	include
+scnfacs.h	include
+softkeys.h	include
+sortseqf.h	include
+sub_char.h	include
+trmdef.h	include
+visint.h	include
+visn2.h		include
+vwang.h		include
+wangkeys.h	include
+wcommon.h	include
+wdefines.h	include
+werrlog.h	include
+wfaccess.h	include
+wfiles.h	include
+wglobals.h	include
+wisp_pcb.h	include
+wisp_prb.h	include
+wngdcmls.h	include
+wperson.h	include
+wrunconf.h	include
+wscrn.h		include
+wshmem.h	include
+wsysconf.h	include
+#
+#	Now, the source "C" files:
+#
+# File		Directory
+#
+acpmap.c	source
+backgrnd.c	source
+bell.c		source
+bit_x.c		source
+bits.c		source
+breakacp.c	source
+btransl.c	source
+cancel.c	source
+cexit.c		source
+cgetneg.c	source
+checkacp.c	source
+closeacp.c	source
+coblink.c	source
+cobpic.c	source
+date.c		source
+dateset.c	source
+day.c		source
+delete.c	source
+dummy.c		source
+edestubs.c	source
+errgparm.c	source
+extract.c	source
+filgparm.c	source
+find.c		source
+get_name.c	source
+getparm.c	source
+greclen.c	source
+hexunpk.c	source
+idsisubs.c	source
+initglbs.c	source
+initscrn.c	source
+initwisp.c	source
+juster.c	source
+link.c		source
+linkproc.c	source
+linksubs.c	source
+logoff.c	source
+makepath.c	source
+menu_go.c	source
+menu_key.c	source
+menuread.c	source
+menuscan.c	source
+message.c	source
+mount.c		source
+msname.c	source
+mstime.c	source
+msvalue.c	source
+mvspaces.c	source
+mwconv.c	source
+onhelp.c	source
+openacp.c	source
+packer.c	source
+pbset.c		source
+print.c		source
+protect.c	source
+putparm.c	source
+que_jobs.c	source
+quemgmt.c	source
+readacp.c	source
+readfdr.c	source
+readvtoc.c	source
+rename.c	source
+rtransl.c	source
+scratch.c	source
+screen.c	source
+search.c	source
+set.c		source
+setfile.c	source
+setprgid.c	source
+settrigp.c	source
+setupqm.c	source
+sharemem.c	source
+shutexit.c	source
+sort.c		source
+sortcall.c	source
+spawn.c		source
+string.c	source
+submit.c	source
+sysinf.c	source
+updatfdr.c	source
+upper.c		source
+vdisplay.c	source
+vmspargs.c	source
+vwang.c		source
+wangmenu.c	source
+wanguid.c	source
+wchain.c	source
+wchkstrt.c	source
+wdellock.c	source
+wdfinish.c	source
+wdinit.c	source
+wdisplay.c	source
+werrpath.c	source
+werrvre.c	source
+wexit.c		source
+wexith.c	source
+wfaccess.c	source
+wfclose.c	source
+wfilechk.c	source
+wfileext.c	source
+wfiledis.c	source
+wfname.c	source
+wfopen.c	source
+wfstatus.c	source
+wfwait.c	source
+wglobals.c	source
+wisp_pic.c	source
+wispsync.c	source
+wpause.c	source
+wperson.c	source
+wprint.c	source
+writeacp.c	source
+wsclose.c	source
+wscreen.c	source
+wscset.c	source
+wsfnm.c		source
+wsfns.c		source
+wshelp.c	source
+wsmode.c	source
+wsmove.c	source
+wspawn.c	source
+wswap.c		source
+wsxio.c		source
+wtransl.c	source
+wvaset.c	source
+#

@@ -1,0 +1,10 @@
+Menu Width
+----------
+Width of the menu. Normally, the EDE menu manager determines
+the width of a menu based on the width of the longest line
+of text. If the Menu Width is specified, then the width of
+the menu will be set to that value regardless of the length
+of the longest text.
+
+For bar menus, the width field specifies the spacing between
+each item.

@@ -1,0 +1,24 @@
+#
+# makefile for the wisp library on MSDOS platforms.
+# Builds the WISPRTS.EXE run-time link library.
+#
+
+RTS=WISPRTS.EXE
+USERTS=E:\WISPBIN\$(RTS)
+
+WLIB=E:\LIB\WISP.LIB
+VLIB=E:\LIB\VIDEO.LIB
+TLIB=E:\LIB\WTEST.LIB
+
+
+all: $(USERTS)
+
+$(USERTS):      $(RTS)
+	COPY $(RTS) $(USERTS)
+
+$(RTS):         wisprts.obj $(WLIB) $(VLIB) $(TLIB)
+	LINK @LINKWRTS.LRF
+
+wisprts.obj:    wisprts.asm
+	MASM wisprts.asm
+

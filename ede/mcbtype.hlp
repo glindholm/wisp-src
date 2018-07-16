@@ -1,0 +1,13 @@
+Menu Type
+---------
+The Menu Type specifies the kind of menu to be displayed.
+Normally, a default value of 0 should be given so that the
+menu manager will select a primary root menu appropriate
+for the target display system. However, explicit types can
+be utilized:
+
+   0 - Environment Default      5 - Bar Menu
+   1 - <Not Available>          6 - Pull-down Menu
+   2 - Numeric Selection        7 - Pop-up Menu
+   3 - Alphabetic Selection     8 - Display Only
+   4 - Highlighted Selection

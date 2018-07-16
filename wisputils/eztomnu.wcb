@@ -1,0 +1,464 @@
+000100/*****************************************************************        
+000200*                                                                *        
+000300*                       IDENTIFICATION DIVISION                  *        
+000400*                                                                *        
+000500******************************************************************        
+000600*                                                                         
+000700 IDENTIFICATION DIVISION.                                                 
+000800 PROGRAM-ID.                                                              
+000900     EZTOMNU.                                                           
+001000 AUTHOR.                                                                  
+001100     IDSI CONVERSION TEAM                                                 
+001200 DATE-WRITTEN.                                                            
+001300     10/24/91.                                                            
+001400/*****************************************************************        
+001500*                                                                *        
+001600*                         ENVIRONMENT DIVISION                   *        
+001700*                                                                *        
+001800******************************************************************        
+001900*                                                                         
+002000 ENVIRONMENT DIVISION.                                                    
+002100 CONFIGURATION SECTION.                                                   
+002200 SOURCE-COMPUTER.                                                         
+002300     WANG-VS.                                                             
+002400 OBJECT-COMPUTER.                                                         
+002500     WANG-VS.                                                             
+002600 FIGURATIVE-CONSTANTS.
+           LOCK-KB    IS "00",
+           NOTAB      IS "80",                                                  
+           MOD-BRITA  IS "81",
+           MOD-BRITN  IS "82",
+003300     BRITE      IS "84",                                                  
+004500     DIM        IS "8C",                                                  
+           HIDE       IS "9C",
+           BLINK      IS "94",
+007500     SOLIDS     IS "0B",                                                  
+           TAB        IS "A0",
+007600     POS-CURSOR IS "A0",                                                  
+007700     SOUNDALARM IS "E0".                                                  
+007800/*****************************************************************        
+007900*                                                                *        
+008000*                         INPUT-OUTPUT SECTION                   *        
+008100*                                                                *        
+008200******************************************************************        
+008300*                                                                         
+008400 INPUT-OUTPUT SECTION.                                                    
+008500 FILE-CONTROL.                                                            
+008600*                                                                         
+008700     SELECT CRT                                                           
+008800         ASSIGN TO "DISPLAY",  "DISPLAY",                                 
+009000         ACCESS MODE     IS RANDOM                                        
+009400         FILE STATUS     IS SCRN-STAT.                                    
+008600*                                                                         
+008700     SELECT SCREEN-OUT
+008800         ASSIGN TO "OUTSCRN",  NODISPLAY                                 
+009000         ACCESS MODE     IS SEQUENTIAL.
+008600*                                                                         
+008700     SELECT SCREEN-MEMBER
+008800         ASSIGN TO "SCRNFILE",  NODISPLAY                                 
+009000         ACCESS MODE     IS SEQUENTIAL.
+008600*                                                                         
+008700     SELECT PRINTOUT
+008800         ASSIGN TO "PRINTER",  "PRINTER"
+009000         ACCESS MODE     IS SEQUENTIAL.
+009500*                                                                         
+010200/*****************************************************************        
+010300*                                                                *        
+010400*                      DATA DIVISION - FILE SECTION              *        
+010500*                                                                *        
+010600******************************************************************        
+010700*                                                                         
+010800 DATA DIVISION.                                                           
+010900 FILE SECTION.                                                            
+011000*                                                                         
+011100 FD  CRT                                                                  
+011200     LABEL RECORDS ARE STANDARD
+           DATA RECORD IS CRTREC.
+
+011300 01  CRTREC.
+           05  CRTREC-FULL           PIC X(1924).
+           05  FILLER REDEFINES CRTREC-FULL.
+               10  CRTREC-OA.
+                   15  CRTREC-OA-1   PIC X.
+                   15  CRTREC-OA-2   PIC X.
+                   15  CRTREC-OA-3   PIC X.
+                   15  CRTREC-OA-4   PIC X.
+               10  CRTREC-SCN        PIC X(1920).                          
+011310*
+       FD  SCREEN-OUT
+           VALUE OF FILENAME IS OUT-FILE
+           VALUE OF LIBRARY IS OUT-LIBRARY
+           VALUE OF VOLUME IS OUT-VOLUME
+           VALUE OF SPACE IS OUT-SPACE
+           LABEL RECORDS ARE STANDARD.
+
+000400 01  SCREEN-OUT-REC.
+           05 SCREEN-OUT-80            PIC X(80).
+           05 SCREEN-PF-REC REDEFINES SCREEN-OUT-80.
+              10  SCREEN-PF-PREFIX     PIC X(01).
+              10  SCREEN-PF-NUMBER     PIC X(02).
+              10  SCREEN-PF-FILLER1    PIC X(01).
+              10  SCREEN-PF-PROC       PIC X(08).
+              10  SCREEN-PF-FILLER2    PIC X(68).
+
+       FD  SCREEN-MEMBER
+           VALUE OF FILENAME IS LK-FILE
+           VALUE OF LIBRARY IS LK-LIBRARY
+           VALUE OF VOLUME IS LK-VOLUME
+           LABEL RECORDS ARE STANDARD.
+
+000400 01  SCREEN-RECORD.
+           05 SCREEN-RECORD-DISPLAY.
+              10  SCREEN-REC OCCURS 24 TIMES.
+                  15  SCREEN-REC-POS1     PIC X(01).
+                  15  SCREEN-REC-POS2-80  PIC X(79).
+           05 SCREEN-PFKEYS REDEFINES SCREEN-RECORD-DISPLAY.
+              10  SCREEN-PF-ID            PIC X(08).
+                  88  SCREEN-PF-KEY-REC   VALUE "$$MENU$$".
+              10  FILLER                  PIC X(08).
+              10  SCREEN-PF-KEYS OCCURS 32 TIMES PIC X(08).
+              10  FILLER                  PIC X(1648).
+011400*                                                                         
+       FD  PRINTOUT
+           LABEL RECORDS ARE STANDARD.
+
+000400 01  PRINTOUT-REC                   PIC X(132).
+      *
+011900/*****************************************************************        
+012000*                                                                *        
+012100*                         WORKING STORAGE                        *        
+012200*                                                                *        
+012300******************************************************************        
+012400*                                                                         
+012500 WORKING-STORAGE SECTION.                                                 
+       01  GENERAL-WORK-AREA.
+           05  FILLER                    PIC X(08)  VALUE "SCRNLIST".
+           05  NOPE                      PIC X      VALUE "N".
+           05  YEP                       PIC X      VALUE "Y".
+           05  FILESUB                   PIC S9(03) VALUE ZERO.
+           05  SCREENSUB                 PIC S9(02) VALUE ZERO.
+           05  THE-SEQ                   PIC S9(02) VALUE ZERO.
+           05  BUILD-PFKEY.
+               10  FILLER                PIC X(02)  VALUE "PF".
+               10  BUILD-PF              PIC 9(02).
+           05  SCREEN-REC-CT             PIC S9(02) VALUE ZERO.
+           05  SCRN-STAT.
+               10  SCRN-STAT1            PIC X.
+               10  SCRN-STAT2            PIC X.
+                   88  PF-ENTER                     VALUE "@".
+                   88  PF-1                         VALUE "A".
+                   88  PF-2                         VALUE "B".
+                   88  PF-3                         VALUE "C".
+                   88  PF-4                         VALUE "D".
+                   88  PF-5                         VALUE "E".
+                   88  PF-6                         VALUE "F".
+                   88  PF-7                         VALUE "G".
+                   88  PF-8                         VALUE "H".
+                   88  PF-9                         VALUE "I".
+                   88  PF-10                        VALUE "J".
+                   88  PF-11                        VALUE "K".
+                   88  PF-12                        VALUE "L".
+                   88  PF-13                        VALUE "M".
+                   88  PF-14                        VALUE "N".
+                   88  PF-15                        VALUE "O".
+                   88  PF-16                        VALUE "P".
+       01  INVALID-KEY-MSG               PIC X(50)  VALUE
+           "INVALID KEY PRESSED, TRY AGAIN.".
+
+       01  OA-SAVE.
+           05  OA-SAVE-ROW               PIC X(01).
+           05  OA-SAVE-WCC               PIC X(01).
+           05  OA-SAVE-CC                PIC X(01).
+           05  OA-SAVE-CR                PIC X(01).
+
+025300/*****************************************************************        
+025400*                                                                *        
+025500*                   DEFINITIONS FOR LINK CALL(S)                 *        
+025600*                                                                *        
+025700******************************************************************        
+025800*                                                                         
+025900 01  LK-FILE                        PIC X(08) VALUE SPACES.               
+026100 01  LK-LIBRARY                     PIC X(08) VALUE SPACES.               
+026200 01  LK-VOLUME                      PIC X(06) VALUE SPACES.               
+       01  LK-MODE                        PIC X(01) VALUE SPACES.
+       01  LK-DISPOSITION                 PIC X(02) VALUE SPACES.
+       01  LK-COPIES-BIN                  USAGE IS BINARY.
+           05  FILLER                               VALUE ZERO.
+           05  LK-COPIES.
+       01 LK-CLASS                        PIC X(01) VALUE SPACES.
+       01 LK-FORM-BIN                     USAGE IS BINARY.
+           05  FILLER                               VALUE ZERO.
+           05  LK-FORM.
+       01 LK-RET-CODE-BIN                 USAGE IS BINARY.
+           05  FILLER                               VALUE ZERO.
+           05  LK-RET-CODE.
+       01  LK-KEYWORD                     PIC X(02) VALUE SPACES.
+       01  LK-PASSBACK                    PIC X(06) VALUE SPACES.
+       01  LK-TYPE                        PIC X(01) VALUE SPACES.
+       01 LK-START-BIN                    USAGE IS BINARY.
+           05  FILLER                               VALUE ZERO.
+           05  LK-START.
+       01 LK-COUNTER-BIN                  USAGE IS BINARY.
+           05  FILLER                               VALUE ZERO.
+           05  LK-COUNTER.
+       01 LK-FILE-CTR-BIN                 USAGE IS BINARY.
+           05  FILLER                               VALUE ZERO.
+           05  LK-FILE-CRT.
+       01  LK-FILES-RECD                  PIC X(240) VALUE SPACES.
+       01  LK-SCRATCH-TYPE                PIC X(01) VALUE SPACES.
+       01  LK-BYPASS-EXP                  PIC X(01) VALUE SPACES.
+       01  LK-LIMIT-ACC                   PIC X(01) VALUE SPACES.
+       01  THE-FILES.
+           05  THE-FILE OCCURS 100 TIMES   PIC X(08).
+       01  LK-RETURN-CODE-TABLE.
+           05  FILLER PIC X(30) VALUE "00SUCCESSFUL                  ".
+           05  FILLER PIC X(30) VALUE "04VOLUME NOT FOUND            ".
+           05  FILLER PIC X(30) VALUE "08VOLUME NOT ACCESSIBLE NOW   ".
+           05  FILLER PIC X(30) VALUE "12UNABLE TO VERIFY SUCCESS    ".
+           05  FILLER PIC X(30) VALUE "16LIBRARY NOT FOUND           ".
+           05  FILLER PIC X(30) VALUE "20FILE NOT FOUND              ".
+           05  FILLER PIC X(30) VALUE "24BAD FILE TYPE OR ZERO LINES ".
+           05  FILLER PIC X(30) VALUE "28FILE ACCESS DENIED          ".
+           05  FILLER PIC X(30) VALUE "32VTOC ERROR (FDX1 & FDX2)    ".
+           05  FILLER PIC X(30) VALUE "36VTOC ERROR (FDX2 & FDR)     ".
+       01  LK-RETURN-CODE-TABLEX REDEFINES LK-RETURN-CODE-TABLE.
+           05  LK-LINE-ITEMS OCCURS 10 TIMES.
+               10  LK-TABLE-CODE          PIC 9(02).
+               10  LK-TABLE-REASON        PIC X(28).
+       01  LK-MISC.
+           05  LKSUB                      PIC 9(04) VALUE ZERO.
+           05  LKMAX                      PIC 9(04) VALUE 10.
+           05  LINK-RETURN-CODE           PIC 9(02).
+
+      ******************************************************************        
+
+       01  THE-USER-STATS.
+           05  THEUSERVOL    PIC X(06)   VALUE SPACES.
+           05  THEUSERLIB    PIC X(08)   VALUE SPACES.
+       01  THE-OUTPUT-STATS.
+           05  OUT-FILE      PIC X(08)   VALUE SPACES.
+           05  OUT-LIBRARY   PIC X(08)   VALUE SPACES.
+           05  OUT-VOLUME    PIC X(06)   VALUE SPACES.
+           05  OUT-SPACE     PIC 9(03)   VALUE ZERO.
+       01  OUT-EXT           PIC X(39)   VALUE "mnu".
+       01  LINE01.
+           05  FILLER         PIC X(15)   VALUE SPACES.
+           05  FILLER         PIC X(08)   VALUE "VOLUME:".
+           05  LINE01-VOLUME  PIC X(06)   VALUE SPACES.
+           05  FILLER         PIC X(10)   VALUE "LIBRARY:".
+           05  LINE01-LIBRARY PIC X(08)   VALUE SPACES.
+           05  FILLER         PIC X(10)   VALUE " SCREEN:".
+           05  LINE01-SCREEN  PIC X(08)   VALUE SPACES.
+           05  FILLER         PIC X(02)   VALUE SPACES.
+           05  LINE01-COUNT   PIC Z9.
+       01  LINE-O-DASH                    PIC X(80)
+           VALUE ALL "-".
+017000/*****************************************************************        
+017100*                                                                *        
+017200*                   DISPLAY DEFINITIONS                          *        
+017300*                                                                *        
+017400******************************************************************        
+017500*                                                                         
+       01  DISPLAY-REC USAGE IS DISPLAY-WS.
+           05  FILLER        PIC IS X(03)   ROW 01 COLUMN 01
+               SOURCE USER-ID   OBJECT USER-ID.
+           05  FILLER        PIC IS X(08)   ROW 01 COLUMN 60
+               VALUE "PROGRAM:".           
+           05  FILLER        PIC IS X(07)   ROW 01 COLUMN 69
+               VALUE IS "EZTOMNU".
+           05  FILLER        PIC IS X(70)   ROW 03 COLUMN 05
+               VALUE "This utility will convert EZFORMAT MENU files into
+      -        " text files than can".
+           05  FILLER        PIC IS X(34)   ROW 04 COLUMN 05
+               VALUE "be used with the TEXTMENU utility.".
+           05  FILLER        PIC IS X(54)   ROW 05 COLUMN 12
+               VALUE "NOTE:  There is a file limit of 100 files per libr
+      -        "ary.".
+           05  FILLER        PIC IS X(37)   ROW 07 COLUMN 21
+               VALUE IS "ENTER LOCATION OF EZFORMAT MENU FILES".
+           05  FILLER        PIC IS X(08)   ROW 09 COLUMN 20
+               VALUE IS "LIBRARY:".
+           05  FILLER        PIC IS X(08)   ROW 09 COLUMN 30
+               SOURCE IS THEUSERLIB  OBJECT IS THEUSERLIB.
+           05  FILLER        PIC IS X(07)   ROW 09 COLUMN 46
+               VALUE IS "VOLUME:".
+           05  FILLER        PIC IS X(06)   ROW 09 COLUMN 54
+               SOURCE IS THEUSERVOL  OBJECT IS THEUSERVOL.
+           05  FILLER        PIC IS X(35)   ROW 12 COLUMN 21
+               VALUE IS "ENTER LOCATION TO CREATE TEXT FILES".
+           05  FILLER        PIC IS X(08)   ROW 14 COLUMN 20      
+               VALUE IS "LIBRARY:".
+           05  FILLER        PIC IS X(08)   ROW 14 COLUMN 30
+               SOURCE IS OUT-LIBRARY OBJECT IS OUT-LIBRARY.
+           05  FILLER        PIC IS X(07)   ROW 14 COLUMN 46
+               VALUE IS "VOLUME:".
+           05  FILLER        PIC IS X(06)   ROW 14 COLUMN 54
+               SOURCE IS OUT-VOLUME  OBJECT IS OUT-VOLUME.
+           05  FILLER        PIC IS X(44)   ROW 17 COLUMN 22
+               VALUE "--------------------------------------".
+           05  FILLER        PIC IS X(40)   ROW 19 COLUMN 20
+               VALUE "PRESS <ENTER> TO CONTINUE,  PF16 TO EXIT".
+           05  S-PROCESS-MESG  PIC IS X(33)   ROW 23 COLUMN 23
+               SOURCE PROCESS-MESG.
+
+       01  USER-ID             PIC X(03)  VALUE SPACES.
+       01  ID                  PIC X(02)  VALUE "ID".
+       01  PROCESS-MESG        PIC X(50)  VALUE SPACES.
+034390*
+034400/*****************************************************************        
+034500*                                                                *        
+034600*                         PROCEDURE DIVISION                     *        
+034700*                                                                *        
+034800******************************************************************        
+034900*                                                                         
+035000 PROCEDURE DIVISION.
+035100 START-PROGRAM.                                                           
+035200     PERFORM INITIALIZATION.                                              
+035300     PERFORM 1000-PROCESS-LIBRARY
+             THRU 1000-EXIT
+             UNTIL PF-16.
+035400     PERFORM TERMINATION.                                                 
+035500                                                                          
+035600 EXIT-PROGRAM.                                                            
+035700     STOP RUN.                                                            
+035800                                                                          
+035900******************************************************************        
+036000*                         INITIALIZATION                         *        
+036100******************************************************************        
+036200*                                                                         
+036300 INITIALIZATION.                                                          
+           CALL "EXTRACT" USING ID USER-ID.
+036800     OPEN I-O    CRT
+                OUTPUT PRINTOUT.
+037000* 
+       1000-PROCESS-LIBRARY.
+           PERFORM 1010-GET-THE-LIBRARY
+             THRU 1010-EXIT.
+
+           IF PF-16
+             NEXT SENTENCE
+           ELSE
+             MOVE CRTREC-OA TO OA-SAVE
+             MOVE LOCK-KB TO OA-SAVE-WCC
+             MOVE OA-SAVE TO ORDER-AREA OF DISPLAY-REC
+             MOVE "PROCESSING LIBRARY - Please Wait!"
+               TO PROCESS-MESG
+             MOVE BLINK TO FAC OF S-PROCESS-MESG
+             DISPLAY AND READ DISPLAY-REC ON CRT
+             MOVE -99 TO LK-START
+             PERFORM 1100-PROCESS-THE-LIBRARY
+               THRU 1100-EXIT
+             MOVE CRTREC-OA TO OA-SAVE
+             MOVE POS-CURSOR TO OA-SAVE-WCC
+             MOVE OA-SAVE TO ORDER-AREA OF DISPLAY-REC
+             MOVE SPACES TO PROCESS-MESG
+             MOVE DIM TO FAC OF S-PROCESS-MESG.
+
+       1000-EXIT.
+           EXIT.
+
+       1010-GET-THE-LIBRARY.
+      *
+      *     THIS ROUTINE WILL DISPLAY AND READ THE SCREEN TO GET
+      *     THE LIBRARY OF THE SCREEN FORMATS.
+      *
+           DISPLAY AND READ DISPLAY-REC ON CRT
+             PFKEY   16.
+
+           IF PF-16
+              GO TO 1010-EXIT.
+
+       1010-EXIT.
+           EXIT.
+
+       1100-PROCESS-THE-LIBRARY.
+
+           MOVE SPACES TO LK-FILES-RECD, THE-FILES.
+           MOVE 100 TO LK-COUNTER.
+           ADD 100 TO LK-START.
+           MOVE "F" TO LK-TYPE.
+           MOVE THEUSERLIB TO LK-LIBRARY.
+           MOVE THEUSERVOL TO LK-VOLUME.
+
+           CALL "READVTOC" USING LK-TYPE, LK-LIBRARY,
+                                 LK-VOLUME, LK-START-BIN,
+                                 LK-COUNTER-BIN, LK-FILES-RECD,
+                                 LK-RET-CODE-BIN, LK-FILE-CTR-BIN.
+
+           IF LK-RET-CODE = 0
+             MOVE LK-FILES-RECD TO THE-FILES
+           ELSE
+             MOVE SPACES TO THE-FILES
+             DISPLAY "READ VTOC ERROR"
+             STOP RUN.
+
+           PERFORM 1200-OUTPUT-THE-SCREENS
+             THRU 1200-EXIT VARYING FILESUB FROM 1 BY 1
+             UNTIL THE-FILE (FILESUB) = SPACES
+             OR FILESUB IS GREATER THAN 100.
+
+       1100-EXIT.
+           EXIT.
+
+       1200-OUTPUT-THE-SCREENS.
+           MOVE THE-FILE (FILESUB) TO OUT-FILE
+                                      LK-FILE.
+           OPEN INPUT SCREEN-MEMBER.
+           CALL "setwispfilext" USING OUT-EXT.
+           OPEN OUTPUT SCREEN-OUT.
+           READ SCREEN-MEMBER AT END
+               DISPLAY "EOF ON FIRST READ"
+               STOP RUN.
+           MOVE ZERO TO SCREENSUB, THE-SEQ, SCREEN-REC-CT.
+           PERFORM 1210-OUTPUT-SCREEN
+             THRU 1210-EXIT
+             24 TIMES.
+
+           IF SCREEN-REC-CT IS GREATER THAN 24
+             MOVE LK-FILE TO LINE01-SCREEN
+             MOVE LK-LIBRARY TO LINE01-LIBRARY
+             MOVE LK-VOLUME TO LINE01-VOLUME
+             MOVE SCREEN-REC-CT TO LINE01-COUNT
+             WRITE PRINTOUT-REC FROM LINE01.
+
+           READ SCREEN-MEMBER AT END
+               DISPLAY "EOF ON SECOND READ"
+               STOP RUN.
+
+           MOVE ZERO TO SCREENSUB, THE-SEQ.
+           PERFORM 1220-OUTPUT-PFKEY
+             THRU 1220-EXIT
+             32 TIMES.
+
+           CLOSE SCREEN-MEMBER,
+                 SCREEN-OUT.
+
+       1200-EXIT.
+           EXIT.
+
+       1210-OUTPUT-SCREEN.
+           ADD 1 TO SCREENSUB.
+           MOVE SCREEN-REC-POS2-80 (SCREENSUB) TO SCREEN-OUT-80.
+           WRITE SCREEN-OUT-REC.
+           ADD 1 TO SCREEN-REC-CT.
+
+       1210-EXIT.
+           EXIT.
+
+       1220-OUTPUT-PFKEY.
+           ADD 1 TO SCREENSUB.
+           MOVE SCREEN-PF-KEYS (SCREENSUB) TO SCREEN-PF-PROC.
+           MOVE SCREENSUB TO SCREEN-PF-NUMBER.
+           MOVE SPACES TO SCREEN-PF-FILLER1, SCREEN-PF-FILLER2.
+           MOVE "P" TO SCREEN-PF-PREFIX.
+           IF SCREEN-PF-PROC NOT = SPACES
+             WRITE SCREEN-OUT-REC.
+
+       1220-EXIT.
+           EXIT.            
+040200                                                                          
+047500 TERMINATION.                                                             
+047600     CLOSE CRT                                                           
+                 PRINTOUT.
+
+           STOP RUN.

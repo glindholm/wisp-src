@@ -1,0 +1,354 @@
+000100/*****************************************************************        
+000200*                                                                *        
+000300*                       IDENTIFICATION DIVISION                  *        
+000400*                                                                *        
+000500******************************************************************        
+000600*                                                                         
+000700 IDENTIFICATION DIVISION.                                                 
+000800 PROGRAM-ID.                                                              
+000900     TEXTMENU.                                                           
+001000 AUTHOR.                                                                  
+001100     IDSI CONVERSION TEAM                                                 
+001200 DATE-WRITTEN.                                                            
+001300     08/02/89.                                                            
+001400/*****************************************************************        
+001500*                                                                *        
+001600*                         ENVIRONMENT DIVISION                   *        
+001700*                                                                *        
+001800******************************************************************        
+001900*                                                                         
+002000 ENVIRONMENT DIVISION.                                                    
+002100 CONFIGURATION SECTION.                                                   
+002200 SOURCE-COMPUTER.                                                         
+002300     WANG-VS.                                                             
+002400 OBJECT-COMPUTER.                                                         
+002500     WANG-VS.                                                             
+002600 FIGURATIVE-CONSTANTS.                                                    
+003300     HIPRO      IS "84",                                                  
+004500     LOPRO      IS "8C",                                                  
+007500     SOLIDS     IS "0B",                                                  
+007600     POS-CURSOR IS "A0",                                                  
+007700     SOUNDALARM IS "E0".                                                  
+007800/*****************************************************************        
+007900*                                                                *        
+008000*                         INPUT-OUTPUT SECTION                   *        
+008100*                                                                *        
+008200******************************************************************        
+008300*                                                                         
+008400 INPUT-OUTPUT SECTION.                                                    
+008500 FILE-CONTROL.                                                            
+008600*                                                                         
+008700     SELECT CRT                                                           
+008800         ASSIGN TO "CRT",      "DISPLAY",                                 
+008900         ORGANIZATION    IS SEQUENTIAL                                    
+009000         ACCESS MODE     IS RANDOM                                        
+009100         RELATIVE KEY    IS LINENUM                                       
+009200         PFKEY           IS PF-KEY                                        
+009300         CURSOR POSITION IS CURSOR-POS                                    
+009400         FILE STATUS     IS FILSTAT.                                      
+009410*
+      *$SEQLINE
+009420     SELECT MENU-FILE
+009430     ASSIGN TO "MENUFILE", "DISK", NODISPLAY
+009440       ORGANIZATION IS SEQUENTIAL
+009450       ACCESS MODE  IS SEQUENTIAL
+009470       FILE STATUS  IS FILE-STATUS.
+009500*                                                                         
+010200/*****************************************************************        
+010300*                                                                *        
+010400*                      DATA DIVISION - FILE SECTION              *        
+010500*                                                                *        
+010600******************************************************************        
+010700*                                                                         
+010800 DATA DIVISION.                                                           
+010900 FILE SECTION.                                                            
+011000*                                                                         
+011100 FD  CRT                                                                  
+011200     LABEL RECORDS ARE OMITTED.                                           
+011300 01  CRTREC                         PIC X(1924).                          
+011310*
+       FD  MENU-FILE
+           VALUE OF FILENAME IS CMD-FILE
+           VALUE OF LIBRARY IS CMD-LIB
+           VALUE OF VOLUME IS CMD-VOL
+           DATA RECORD IS MENU-RECORD.
+
+000400 01  MENU-RECORD.
+           05 MENU-PF.
+              10  MENU-PF-KEY  PIC X.
+              10  MENU-PF-NUM  PIC XX.
+              10  MENU-PF-N REDEFINES MENU-PF-NUM PIC 99.
+              10  MENU-P-FILLER  PIC X.
+              10  MENU-RUN-PROGRAM PIC X(8).
+           05 MENU-FILLER      PIC X(68).
+011400*                                                                         
+011900/*****************************************************************        
+012000*                                                                *        
+012100*                         WORKING STORAGE                        *        
+012200*                                                                *        
+012300******************************************************************        
+012400*                                                                         
+012500 WORKING-STORAGE SECTION.                                                 
+025300/*****************************************************************        
+025400*                                                                *        
+025500*                   DEFINITIONS FOR LINK CALL(S)                 *        
+025600*                                                                *        
+025700******************************************************************        
+025800*                                                                         
+025900 01  LINK-TO-NAME                   PIC X(08) VALUE SPACES.               
+026000 01  LINK-TYPE                      PIC X(01) VALUE SPACE.                
+026100 01  LINK-LIBRARY                   PIC X(08) VALUE SPACES.               
+026200 01  LINK-VOLUME                    PIC X(06) VALUE SPACES.               
+026300 01  LINK-PCOUNT.                                                         
+026400     03  FILLER                     BINARY    VALUE ZERO.                 
+026500     03  LINK-PCOUNT-NO             BINARY    VALUE 1.                    
+026600 01  LINK-CEXIT-FLAG                PIC X(01) VALUE " ".                  
+026700 01  LINK-CEXIT-MSG                 PIC X(27) VALUE SPACES.               
+026800 01  LINK-CEXIT-MSG-LEN.                                                  
+026900     03  FILLER                     BINARY    VALUE ZERO.                 
+027000     03  FILLER                     BINARY    VALUE ZERO.                 
+027100 01  LINK-HELP-FLAG                 PIC X(1)  VALUE SPACE.                
+027700 01  LINK-CODE.                                                           
+027800     03  FILLER                     BINARY    VALUE ZERO.                 
+027900     03  LINK-CODE-VAL              BINARY    VALUE ZERO.                 
+028000 01  LINK-RETURN-CODE.                                                    
+028100     03  FILLER                     BINARY    VALUE ZERO.                 
+028200     03  LINK-RTN-CODE-VAL          BINARY    VALUE ZERO.                 
+028300                                                                          
+025700******************************************************************        
+012600 01  DATE-INFO.                                                           
+012700     03  DATEIN                     PIC 9(06).                            
+012800     03  DATEGROUP                  REDEFINES DATEIN.                     
+012900         05  YEAR-DIGITS            PIC 9(02).                            
+013000         05  MONTH-DIGITS           PIC 9(02).                            
+013100         05  DAY-DIGITS             PIC 9(02).                            
+013200     03  RPT-DATE.                                                        
+013300         05  RPT-MONTH              PIC 9(02).                            
+013400         05  FILLER                 PIC X(01)  VALUE "/".                 
+013500         05  RPT-DAY                PIC 9(02).                            
+013600         05  FILLER                 PIC X(01)  VALUE "/".                 
+013700         05  RPT-YEAR               PIC 9(02).                            
+013800******************************************************************        
+013900*                   FILE CONTROL STATUS SWITCHES                 *        
+014000******************************************************************        
+014100 01  FILSTAT.                                                             
+014200     03  ERR-FLAG                   PIC X(01).                            
+014300     03  PFK-BYTE                   PIC X(01).                            
+014400 77  LIST-STATUS                    PIC X(1)  VALUE "0".                  
+014500     88 MORE-LIST                   VALUE "0".                            
+014600     88 RECORD-FOUND-ON-LIST        VALUE "0".                            
+014700     88 NO-MORE-LIST                VALUE "1".                            
+014800     88 NO-RECORD-FOR-LIST          VALUE "2".                            
+014900     88 DUPLICATE-ON-LIST           VALUE "2".                            
+015000******************************************************************        
+015100*               EXTERNAL FILE LOCATION DEFINITIONS               *        
+015200******************************************************************        
+015300 77  REC-COUNT                      PIC 9(4)  VALUE 500.                  
+015400 77  FIL-FOR-LIST                   PIC X(8)  VALUE SPACES.               
+015500 77  LIB-FOR-LIST                   PIC X(8)  VALUE SPACES.               
+015600 77  VOL-FOR-LIST                   PIC X(6)  VALUE SPACES.               
+015700******************************************************************        
+015800*             WORKSTATION FILE CONTROL DESCRIPTIONS              *        
+015900******************************************************************        
+016000 77  LINENUM                        PIC 9(02) VALUE 1.                    
+016100 77  PF-KEY                         PIC 9(02) VALUE 01.                   
+016200 01  CURSOR-POS.                                                          
+016300     03  MOD-COL                    BINARY.                               
+016400     03  MOD-ROW                    BINARY.                               
+016500 01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.                 
+016600     03  FILLER                     PIC X(01).                            
+016700     03  CURS-COL                   PIC X(01).                            
+016800     03  FILLER                     PIC X(01).                            
+016900     03  CURS-ROW                   PIC X(01).                            
+017000/*****************************************************************        
+017100*                                                                *        
+017200*                   DISPLAY DEFINITIONS                          *        
+017300*                                                                *        
+017400******************************************************************        
+017500*                                                                         
+017600 01  DISPLAY-REC USAGE IS DISPLAY-WS.
+           05  ROW01-COL1            PIC X(3) ROW 1 COLUMN 1
+               SOURCE WSA-USER-ID.
+           05  ROW01-COL62           PIC X(6) ROW 1 COLUMN 62
+               VALUE "MENU :"                          .
+           05  ROW01-COL69           PIC X(8) ROW 1 COLUMN 69
+               SOURCE WSA-PROGRAM.
+           05  ROW02-COL20           PIC X(40) ROW 2 COLUMN 20
+               SOURCE CMD-COMPANY-NAME.
+           05  FILLER OCCURS 21 TIMES.
+               10  ROW06-COL20      PIC X(80)  ROW 3 COLUMN 1
+               SOURCE WSA-MENU-LINE.
+           05  ROW20-COL20    PIC X(60) ROW 24 COLUMN 20
+               SOURCE WSA-ERROR.
+
+017400******************************************************************        
+
+017600 01  DISPLAY-REC-NOHEAD USAGE IS DISPLAY-WS.
+           05  FILLER OCCURS 23 TIMES.
+               10  NH-ROW06-COL20   PIC X(80)  ROW 1 COLUMN 1
+               SOURCE WSA-MENU-LINE.
+           05  NH-ROW20-COL20       PIC X(60) ROW 24 COLUMN 20
+               SOURCE WSA-ERROR.
+
+017400******************************************************************        
+
+       01  WSA-PROGRAM               PIC X(8)         VALUE SPACES.
+       01  WSA-USER-ID               PIC X(3)         VALUE SPACES.
+       01  ID                        PIC X(2)         VALUE "ID".
+       01  WSA-MENU.
+           05  WSA-MENU-DATA         PIC X(1920)       VALUE SPACES.
+           05  WSA-MENU-TABLE REDEFINES WSA-MENU-DATA.
+               10  WSA-MENU-LINE OCCURS 24 TIMES PIC X(80).
+020500 01  WSA-ERROR            PIC X(60)        VALUE SPACES.             
+       01  WSA-PROGRAM-TABLE.
+           05  WSA-PROGRAM-AREA OCCURS 33 TIMES.
+               10  WSA-RUN-PROGRAM  PIC X(8).
+020510*
+013500 01  FILE-STATUS.
+013600     03  UFB-FLAG1                  PIC X(01).
+013700         88  RECORD-FOUND           VALUE "0".
+013800         88  DUPLICATE-RECORD       VALUE "2".
+013900     03  UFB-FLAG2                  PIC X(01).
+       01  WSA-EXT                        PIC X(39)
+           VALUE "mnu".
+       01  WSA-IND             USAGE BINARY.
+       01  IND-001             USAGE BINARY.
+       01  IND-002             USAGE BINARY.
+       01  NUM-ROWS            USAGE BINARY.
+       01  BELL-TIMES.
+           05  FILLER          USAGE BINARY VALUE 0.
+           05  BELL-NUM        USAGE BINARY VALUE 1.
+
+034400/*****************************************************************        
+
+       LINKAGE SECTION.
+       01  CMD-FILE            PIC X(8).
+       01  CMD-LIB             PIC X(8).
+       01  CMD-VOL             PIC X(6).
+       01  CMD-COMPANY-NAME    PIC X(40).
+034390*
+034400/*****************************************************************        
+034500*                                                                *        
+034600*                         PROCEDURE DIVISION                     *        
+034700*                                                                *        
+034800******************************************************************        
+034900*                                                                         
+035000 PROCEDURE DIVISION USING CMD-FILE, CMD-LIB, CMD-VOL,
+                                CMD-COMPANY-NAME.
+035100 START-PROGRAM.                                                           
+035200     PERFORM INITIALIZATION.                                              
+           PERFORM A-PARSE-NAME.
+037800     PERFORM DISPLAY-AND-READ-DISPLAY-REC.                                
+035400     PERFORM TERMINATION.                                                 
+035500                                                                          
+035600 EXIT-PROGRAM.                                                            
+035700     STOP RUN.                                                            
+035800                                                                          
+035900******************************************************************        
+036000*                         INITIALIZATION                         *        
+036100******************************************************************        
+036200*                                                                         
+036300 INITIALIZATION.                                                          
+           CALL "EXTRACT" USING ID WSA-USER-ID.
+036400     ACCEPT DATEIN FROM DATE.                                             
+036800     OPEN I-O    CRT.                                                     
+037000*                                                                         
+       A-PARSE-NAME.
+           IF CMD-FILE NOT = SPACES
+             STRING CMD-FILE DELIMITED BY SIZE
+               INTO WSA-PROGRAM
+           ELSE
+               MOVE "SCRATCH" TO  WSA-PROGRAM.
+           IF CMD-COMPANY-NAME = SPACES
+               MOVE 24 TO NUM-ROWS
+           ELSE
+               MOVE 22 TO NUM-ROWS.
+           CALL "setwispfilext" USING WSA-EXT.
+           OPEN INPUT MENU-FILE.
+           IF FILE-STATUS = "00"
+              MOVE SPACES TO WSA-PROGRAM-TABLE
+              MOVE SPACES TO WSA-MENU-DATA
+              MOVE 1 TO IND-001
+              PERFORM A-READ-FILE THRU A-READ-EXIT.
+
+       A-READ-FILE.
+              READ MENU-FILE AT END 
+                  GO TO A-READ-EXIT.
+              IF MENU-PF-KEY = "P" OR MENU-PF-KEY = "p"
+                 IF MENU-PF-NUM NOT < "00" AND MENU-PF-NUM < "33"
+                     MOVE MENU-PF-NUM TO IND-002
+                     ADD 1 TO IND-002
+                     MOVE MENU-RUN-PROGRAM TO WSA-RUN-PROGRAM(IND-002)
+                 ELSE
+                     IF IND-001 < NUM-ROWS
+                         MOVE MENU-RECORD TO WSA-MENU-LINE(IND-001)
+                         ADD 1 TO IND-001
+                     ELSE
+                        NEXT SENTENCE
+              ELSE
+                 IF IND-001 < NUM-ROWS
+                     MOVE MENU-RECORD TO WSA-MENU-LINE(IND-001)
+                     ADD 1 TO IND-001.
+
+           GO TO A-READ-FILE. 
+
+       A-READ-EXIT.
+              EXIT.
+037090*
+047500 TERMINATION.                                                             
+047600     CLOSE CRT                                                           
+                 MENU-FILE.
+           STOP RUN.
+048500******************************************************************        
+048600*                     DISPLAY AND READ DISPLAY REC               *        
+048700******************************************************************        
+048800*                                                                         
+048900 DISPLAY-AND-READ-DISPLAY-REC.                                            
+           IF CMD-COMPANY-NAME = SPACES
+049000       DISPLAY AND READ DISPLAY-REC-NOHEAD  ON CRT                        
+049200       PFKEY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
+               17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32
+           ELSE
+049000       DISPLAY AND READ DISPLAY-REC  ON CRT                              
+049200       PFKEY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
+               17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32.
+049500                                                                          
+           MOVE PF-KEY TO IND-002.
+           ADD 1 TO IND-002.
+           IF WSA-RUN-PROGRAM(IND-002) = SPACES
+              CALL "BELL" USING BELL-TIMES
+              MOVE "          INVALID KEY TRY AGAIN" TO
+                    WSA-ERROR
+              GO TO DISPLAY-AND-READ-DISPLAY-REC
+           ELSE 
+              MOVE SPACES TO WSA-ERROR.
+
+           IF WSA-RUN-PROGRAM(IND-002) NOT = "EXIT" AND
+              WSA-RUN-PROGRAM(IND-002) NOT = "exit" 
+               PERFORM LINK-TO-PROGRAM THRU LINK-TO-EXIT
+               GO TO DISPLAY-AND-READ-DISPLAY-REC.
+
+           MOVE PF-KEY TO RETURN-CODE.
+053800
+051400 LINK-TO-PROGRAM.                                                         
+051500     MOVE WSA-RUN-PROGRAM(IND-002)      TO  LINK-TO-NAME.                 
+051600     MOVE " "                           TO  LINK-TYPE.                    
+051700     MOVE "        "                    TO  LINK-LIBRARY.                 
+051800     MOVE "      "                      TO  LINK-VOLUME.                  
+051900     MOVE  0                            TO  LINK-PCOUNT-NO.               
+052000     MOVE "C"                           TO  LINK-CEXIT-FLAG.              
+052100     MOVE "RETURN TO MENU             " TO  LINK-CEXIT-MSG.               
+052200     MOVE "H"                           TO  LINK-HELP-FLAG.               
+052300     CALL "LINK" USING LINK-TO-NAME,                                      
+052400                       LINK-TYPE, LINK-LIBRARY, LINK-VOLUME,              
+                             LINK-PCOUNT,
+052700                       LINK-CODE, LINK-RETURN-CODE.                       
+052800     IF LINK-RTN-CODE-VAL IS GREATER THAN ZERO                            
+               CALL "BELL" USING BELL-TIMES
+               MOVE "          INVALID PROGRAM CALLED "
+                 TO WSA-ERROR
+           ELSE
+               MOVE SPACES TO WSA-ERROR.
+053000                                                                          
+       LINK-TO-EXIT.
+           EXIT.

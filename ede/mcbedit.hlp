@@ -1,0 +1,7 @@
+Extended Development Environment
+Menu Control File Editor Program
+
+The program you are using is a maintenance tool designed
+to allow editing of menu control files (MCFs).  MCFs are
+subsequently used by the EDE menu manager as a data base
+for dynamic pull-down or pop-up menus.

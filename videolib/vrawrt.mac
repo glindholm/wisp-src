@@ -1,0 +1,240 @@
+;***********************************************************************
+;*                                                                     *
+;*          VIDEO - Video Interactive Development Environment          *
+;*                                                                     *
+;*                         Copyright (c) 1987                          *
+;*                                                                     *
+;*    An unpublished work by Gregory L. Adams; all rights reserved.    *
+;*                                                                     *
+;***********************************************************************
+
+	.TITLE	VRAW
+	.IDENT	/V05.00/
+	.ENABL	LC
+	.NLIST	BEX
+
+;+
+;	Macro Definitions
+;-
+
+	.MCALL .TTINR, .TTYIN, .GVAL, .PRINT
+
+;+
+;	Program Section Definition and Ordering. Use DECUS C section names.
+;-
+
+	.PSECT	V$DATA,D		; Data section.
+	.PSECT	V$CODE,I		; Code section.
+
+;+
+;	General Definitions
+;-
+
+BUFSIZ	=      250.			; Size of RT-11 .PRINT buffer.
+
+JSW	=	44			; RT-11 job status word.
+  BIT6	=      100			; Don't wait for TT I/O bit.
+  BIT12	=    10000			; Single character input mode.
+  BIT14	=    40000			; Allow lower case chars through.
+
+CR	=	15			; Carriage return.
+LF	=	12			; Line feed.
+
+
+;+
+;	Data storage
+;-
+
+	.PSECT	V$DATA
+
+;+
+;	System global data.
+;-
+
+	.GLOBL VB.PURE			; Reference the pure lf flag.
+	.GLOBL VB.COUNT			; Reference the global buffer count.
+	.GLOBL HOLDING.OUTPUT		; Reference the output held flag.
+	.GLOBL VIDEO.INITED		; Reference the initialization flag.
+$$NARG::.WORD 1				; Take care of DECUS C peculiarity.
+
+;+
+;	Local data (word aligned).
+;-
+
+AREA:	.BLKW	10			; EMT parameter area.
+OUTPNT:	.WORD	BUFFER			; Address of the output buffer.
+
+;+
+;	Local data (byte aligned).
+;-
+
+BUFFER:	.BLKB	BUFSIZ+4		; Allocate output buffer + overflow.
+WTFLAG:	.BYTE	0			; Flag to indicate wait for input.
+CHLAST:	.BYTE	0			; Last character input.
+SINGLE:	.ASCII	<035>/S/		; Single character activation.
+WAITMD:	.ASCII	<035>/U/<200>		; Allow no-wait mode.
+
+	.EVEN
+
+
+	.PSECT	V$CODE			; Use code section.
+
+;+
+;	Get single character routine (wait mode).
+;-
+
+VRAWINPUT::
+
+	JSR	R5,CSV$			; Save registers in a DECUS C manner.
+	CALL	FIRST			; Check if the first time here.
+
+VTINW:	MOVB	#-1,WTFLAG		; Indicate we are to wait.
+	BIC	#BIT6,@#JSW		; Turn on wait mode.
+	.TTYIN				; Get a character, wait for it.
+
+SENDIT:	CMPB	CHLAST,#CR		; Was the last char a CR?
+	BNE	10$			; No, then just go send the character.
+	CMPB	R0,#LF			; Yes, then is this char a line feed?
+	BNE	10$			; No, then don't have to worry.
+	CLRB	CHLAST			; Yes, then it is the auto LF RT-11
+	TSTB	WTFLAG			;   inserts, so ignore it.
+	BNE	VTINW			; Go back to the wait or no-wait
+	BR	VTIN			;   input routine as appropriate.
+
+10$:	MOVB	R0,CHLAST		; Remember the last char output.
+	JMP	CRET$			; Return to the caller.
+
+
+
+;+
+;	Check if a character is available and return it if so.
+;-
+
+VRAWCHECK::
+
+	JSR	R5,CSV$			; Register save.
+	CALL	FIRST			; Check if this is the first entry.
+
+VTIN:	CLRB	WTFLAG			; Indicate we're not to wait.
+	BIS	#BIT6,@#JSW		; No wait mode to on.
+	.TTINR				; Try to get a character.
+	BCC	SENDIT			; Did we get one?
+	CLR	R0			; No, then null out R0.
+	JMP	CRET$			; Return to the caller.
+
+
+;+
+;	Perform raw output.
+;-
+
+VRAWPUTC::
+
+	JSR	R5,CSV$			; Save registers.
+	MOVB	4(R5),R0		; Get the character to be printed.
+	BEQ	10$			; Just return if it is a null.
+	CALL	PCOUT			; Else output the character.
+	TST	HOLDING.OUTPUT		; Is output being held?
+	BNE	10$			; Yes, then don't do anything.
+	CALL	START			; No, then start the I/O.
+10$:	JMP	CRET$			; Return to caller.
+
+
+VRAWPRINT::
+
+	JSR	R5,CSV$			; Save registers.
+	MOV	R1,-(SP)		; Save R1.
+	MOV	4(R5),R1		; R1 -> string to be printed.
+	BNE	10$			; A null pointer?
+	CALL	START			; Yes, dump the buffer.
+	BR	30$			; And we're all done.
+
+10$:	MOVB	(R1)+,R0		; R0 = character to be printed.
+	BEQ	20$			; Don't do anything until null found.
+	CALL	PCOUT			; Output the character.
+	BR	10$			; Loop until done.
+
+20$:	TST	HOLDING.OUTPUT		; Is output being held?
+	BNE	30$			; Yes, then don't do anything.
+	CALL	START			; No, then start the I/O.
+
+30$:	MOV	(SP)+,R1		; Restore R1.
+	JMP	CRET$			; Return to caller.
+
+
+;+
+;	Subroutines to actually do the output and manipulate the buffer.
+;-
+PCOUT:	MOV	R1,-(SP)		; Save R1.
+	MOV	OUTPNT,R1		; R1 -> current location in buffer.
+
+	CMPB	R0,#LF			; Is this a line-feed?
+	BNE	10$			; No, then continue.
+	TST	VB.PURE			; Yes then are line feeds pure?
+	BNE	10$			; Yes then continue.
+	MOVB	#CR,(R1)+		; No, then insert a carriage-return.
+	INC	VB.COUNT		; Count the character.
+
+10$:	MOVB	R0,(R1)+		; Insert the character into buffer.
+	INC	VB.COUNT		; Count the character.
+	CMP	VB.COUNT,#BUFSIZ	; At end of buffer?
+	BLT	30$			; Is buffer full?
+
+20$:	CMP	R1,#BUFFER		; Is there anything in the buffer?
+	BEQ	30$			; No, then just return.
+	MOV	R1,OUTPNT		; Save the current pointer.
+	CALL	START			; Start the output.
+	MOV	OUTPNT,R1		; Restore the working pointer.
+
+30$:	MOV	R1,OUTPNT		; Remember where we are for next time.
+	MOV	(SP)+,R1		; Restore R1.
+	RETURN				; Return to caller.
+
+START:	MOV	#-1, VIDEO.INITED	; Flag that we are inited.
+	CMP	OUTPNT,#BUFFER		; Anything to output?
+	BEQ	10$			; No, then just return.
+
+	MOVB	#200,@OUTPNT		; Store negative null (no CRLF).
+	MOV	#BUFFER,R0		; R0 -> start of the buffer.
+	MOV	R0,OUTPNT		; Reset the buffer pointer.
+	.PRINT				; Print the string.
+	CLR	VB.COUNT		; Reset the output counter.
+
+10$:	RETURN				; And back we go.
+
+
+;+
+;	Perform first time initialization.
+;-
+
+FIRST:	ROR	(PC)+			; Is this the first time?
+	 .WORD	 1			;  First flag (clear after 1st time).
+	BCC	100$			; Yes, then just return.
+
+	MOV	#-1,VIDEO.INITED	; Flag that we are running.
+	BIS	#BIT12!BIT14,@#JSW	; Single char and lower case on.
+
+	MOV	R0,-(SP)		; Save R0 for a while.
+
+	.GVAL	#AREA,#-4		; Find out what TSX+ leadin chars are.
+	BCS	90$			; Is this RT-11, yes, then return.
+
+	MOVB	R0,SINGLE		; Initialize the single char mode.
+	MOVB	R0,WAITMD		; Initialize wait mode (obey bit 6).
+	.PRINT  #SINGLE			; Turn them both on.
+
+90$:	MOV	(SP)+,R0		; Now restore R0.
+100$:	RETURN				; Return to the caller.
+
+;+
+;	Perform exit actions.
+;-
+VRAWEXIT::
+
+	MOV	R0,-(SP)		; Save R0.
+	CALL	START			; Dump the buffers.
+	MOV	(SP)+,R0		; Restore R0.
+	RETURN				; All done, return to caller.
+;+
+;	End of file
+;-
+	.END

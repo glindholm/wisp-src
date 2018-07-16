@@ -1,0 +1,42 @@
+      ****************************************************************
+      *International Digital Scientific, Incorporated
+      *Extended Development Environment
+      ****************************************************************
+
+      *Copy member for the dynamic menu data file.
+      *Created 10/6/91.
+
+       FD MENU-DATA-FILE
+          LABEL RECORDS ARE STANDARD
+          VALUE OF FILENAME IS MENU-FILE
+                   LIBRARY IS MENU-LIBRARY
+                   VOLUME IS MENU-VOLUME.
+
+       01 MENU-DATA-RECORD                     PIC X(3100).
+        
+       01 MENU-DATA-REC1.
+          03 MENU-IDENTIFIER                   PIC X(8).
+          03 MENU-TYPE                         PIC 9(2).
+          03 MENU-OPTIONS                      PIC 9(4).
+          03 MENU-ROW                          PIC 9(2).
+          03 MENU-COLUMN                       PIC 9(4).
+          03 MENU-WIDTH                        PIC 9(4).
+          03 MENU-ITEMS                        PIC 9(2).
+          03 MENU-ITEM-VALUES OCCURS 20 TIMES.
+             05 MENU-ITEM-TEXT                 PIC X(64).
+             05 MENU-ITEM-TYPE                 PIC X(1).
+                88 MIT-NULL-TYPE                   VALUE " ".
+                88 MIT-MENU                        VALUE "M".
+                88 MIT-PROGRAM                     VALUE "P".
+                88 MIT-SCRIPT                      VALUE "S".
+                88 MIT-COMMAND                     VALUE "C".
+                88 MIT-VALID-TYPES                 VALUE " " "C" "M"
+                                                         "P" "S".
+             05 MENU-ITEM-VALUE                PIC X(8).
+             05 FILLER                         PIC X(77).
+          03 FILLER                            PIC X(74).
+
+       01 MENU-DATA-REC2.
+          03 FILLER                            PIC X(26).
+          03 MENU-ITEM-TABLE                   PIC X(3100).
+          03 FILLER                            PIC X(74).

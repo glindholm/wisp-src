@@ -1,0 +1,6 @@
+Menu Column
+-----------
+Column on which to start the menu. If left as zero, the
+EDE menu manager will determine where to place the menu.
+If the menu type is a bar menu, then the column field
+specifies the indent to the first item.

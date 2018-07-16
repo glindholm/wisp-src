@@ -1,0 +1,100 @@
+000100/*****************************************************************
+000200*                                                                *
+000300*                       IDENTIFICATION DIVISION                  *
+000400*                                                                *
+000500******************************************************************
+000600*
+000700 IDENTIFICATION DIVISION.
+000800 PROGRAM-ID.
+000900     MENUBLD.
+001100 AUTHOR.
+001200     John Kiesler.
+001300 DATE-WRITTEN.
+001400     09/15/91.
+002100/*****************************************************************
+002200*                                                                *
+002300*                         ENVIRONMENT DIVISION                   *
+002400*                                                                *
+002500******************************************************************
+002600*
+002700 ENVIRONMENT DIVISION.
+002800 CONFIGURATION SECTION.
+002900 SOURCE-COMPUTER.
+003000     WANG-VS.
+003100 OBJECT-COMPUTER.
+003200     WANG-VS.
+009500  
+009600/*****************************************************************
+009700*                                                                *
+009800*                    INPUT-OUTPUT SECTION                        *
+009900*                                                                *
+010000******************************************************************
+010100*
+010200 INPUT-OUTPUT SECTION.
+010300 FILE-CONTROL.
+011300*
+011400     COPY MENUCPY1.
+011500 
+012100
+012200/*****************************************************************
+012300*                                                                *
+012400*                      DATA DIVISION - FILE SECTION              *
+012500*                                                                *
+012600******************************************************************
+012700*
+012800 DATA DIVISION.
+012900 FILE SECTION.
+013000*
+014000
+014100     COPY MENUCPY2.
+014200
+014600
+014700/*****************************************************************
+014800*                                                                *
+014900*                         WORKING STORAGE                        *
+015000*                                                                *
+015100******************************************************************
+015200*
+015300 WORKING-STORAGE SECTION.
+016600******************************************************************
+016700*                   FILE CONTROL STATUS SWITCHES                 *
+016800******************************************************************
+016900 01  FILSTAT.
+017000     03  ERR-FLAG                   PIC X(01).
+017100     03  PFK-BYTE                   PIC X(01).
+
+017200 01  MENU-DATA-FILE-STATUS            PIC X(1)  VALUE "0".
+017300     88 MORE-MENU-DATA-FILE               VALUE "0".
+017400     88 RECORD-FOUND-ON-MENU-DATA-FILE    VALUE "0".
+017500     88 NO-MORE-MENU-DATA-FILE            VALUE "1".
+017600     88 NO-RECORD-FOR-MENU-DATA-FILE      VALUE "2".
+017700     88 DUPLICATE-ON-MENU-DATA-FILE       VALUE "2".
+
+017800******************************************************************
+017900*               EXTERNAL FILE LOCATION DEFINITIONS               *
+018000******************************************************************
+018100 01  REC-COUNT                   PIC 9(4)  VALUE 500.
+
+       01  FILE-CONTROL-NAMES.
+           03  MENU-FILE               PIC X(8)  VALUE "MENUFILE".
+           03  MENU-LIBRARY            PIC X(8)  VALUE "        ".
+           03  MENU-VOLUME             PIC X(8)  VALUE "        ". 
+
+025100
+026000 01  NDX                            PIC 9(5)  VALUE ZERO.
+026100 01  MORE-BACKUP-FLAG               PIC X(3)  VALUE "YES".
+026200 01  TEMP-NDX                       PIC 9(3)  VALUE ZERO.
+026300 01  START-POINT-FOUND              PIC X(3)  VALUE "NO".
+041000 01  INDX                           PIC 9(01) VALUE ZEROES.
+
+048800/*****************************************************************
+048900*                                                                *
+049000*                         PROCEDURE DIVISION                     *
+049100*                                                                *
+049200******************************************************************
+049300*
+049400 PROCEDURE DIVISION.
+049500 START-PROGRAM.
+051400     OPEN OUTPUT MENU-DATA-FILE.
+050000     CLOSE MENU-DATA-FILE.
+050100     EXIT PROGRAM.

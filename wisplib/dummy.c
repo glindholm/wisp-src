@@ -1,0 +1,4 @@
+dummy()
+{
+	return(0);
+}
