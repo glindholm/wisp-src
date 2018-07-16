@@ -1,19 +1,19 @@
 #!/bin/sh
 #
-#	Usage: untarz {source}.tar.Z
+#	Usage: uncpioz {source}.cpio.Z
 #
-MYNAME=untarz
+MYNAME=uncpioz
 ARG1=$1
 
 if [ "$ARG1" = "" ]
 then
-	echo "Usage: $MYNAME {source}.tar.Z"
+	echo "Usage: $MYNAME {source}.cpio.Z"
 	exit 1
 fi
 
-# Strip off then re-add the .tar.Z
-SOURCE=`echo $1|sed 's/\.tar\.Z//'`
-SOURCE=$SOURCE.tar.Z
+# Strip off then re-add the .cpio.Z
+SOURCE=`echo $1|sed 's/\.cpio\.Z//'`
+SOURCE=$SOURCE.cpio.Z
 
 if [ ! -f $SOURCE ]
 then
@@ -21,7 +21,7 @@ then
 	exit 1
 fi
 
-uncompress -c $SOURCE|tar -xvpf -
+uncompress -c $SOURCE|cpio -icvd
 RC=$?
 
 if [ $RC != 0 ]
@@ -31,4 +31,3 @@ then
 fi
 
 exit 0
-

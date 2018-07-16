@@ -1,10 +1,10 @@
 #!/bin/sh
 #
-#	Usage: tarz {source directory}
+#	Usage: cpioz {source directory}
 #
-MYNAME=tarz
+MYNAME=cpioz
 SRCDIR=$1
-OUTFILE=$SRCDIR.tar.Z
+OUTFILE=$SRCDIR.cpio.Z
 
 if [ "$SRCDIR" = "" ]
 then
@@ -18,7 +18,7 @@ then
 	exit 1
 fi
 
-tar -cvf - $SRCDIR|compress>$OUTFILE
+find $SRCDIR -print|cpio -ocv|compress>$OUTFILE
 RC=$?
 
 if [ $RC != 0 ]
@@ -31,5 +31,4 @@ echo Created $OUTFILE
 
 ls -l $OUTFILE
 exit 0
-
 

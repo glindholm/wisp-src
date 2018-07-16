@@ -23,6 +23,13 @@ static char rcsid[]="$Id:$";
 
 
 #ifdef unix
+
+#ifdef SCO
+#define NO_USLEEP 1
+#endif /* SCO */
+
+#ifndef NO_USLEEP /* !NO_USLEEP (double negative) - have a usleep() so use it */
+
 #include <unistd.h>
 void vwait(int seconds, int hundredths)
 {
@@ -44,9 +51,9 @@ void vwait(int seconds, int hundredths)
 		usleep((unsigned int)hundredths * 10000U);
 	}	
 }
-#endif
 
-#ifdef OLD_UNIX
+#else /* NO_USLEEP - If no usleep() then simulate it.  */
+
 extern unsigned sleep(unsigned secs);
 
 void vwait(int seconds, int hundredths)
@@ -60,7 +67,10 @@ void vwait(int seconds, int hundredths)
 		sleep_secs = sleep(sleep_secs);
 	}
 }
-#endif
+
+#endif /* NO_USLEEP */
+#endif /* unix */
+
 
 
 #ifdef WIN32
@@ -76,6 +86,10 @@ void vwait(int seconds, int hundredths)
 /*
 **	History:
 **	$Log: vwait.c,v $
+**	Revision 1.13  2002-02-14 10:48:55-05  gsl
+**	Merged the SCO changes for 4.4.01
+**	SCO does not have usleep() so use old method to simulate
+**
 **	Revision 1.12  2001-10-03 14:59:12-04  gsl
 **	Solaris 2.5.1 doesn't define useconds_t so cast to unsigned
 **

@@ -107,8 +107,8 @@
 		This will set your $WISPCONFIG plus COBOL specific variables.
 		It will also set $QA to point to your test directory.
 
-		ACU	$ . startup.acu
-		MF	$ . startup.mf
+		ACU	$ startupacu.sh
+		MF	$ startupmf.sh
 
 	****
 	****    THE ABOVE STEPS MUST BE DONE EVERYTIME YOU RE-START.
@@ -1147,7 +1147,7 @@
 
 		UNIX
 		$ cd ../testxx
-		$ . startup.xxx
+		$ startupxxx.sh
 		$ wrun SAMPLE
 
 
