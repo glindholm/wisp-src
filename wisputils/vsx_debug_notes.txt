@@ -1,0 +1,48 @@
+vsx debug notes
+
+  0x800 =   2K	  (2048)
+0x20000 = 128K 	(131072)
+
+@ 0
+- Read tape header (144 bytes)
+- Skip 1904 bytes
+@ 0x800
+- read 4 byte int (big)
+	--> big (x00 01 FC 8C) = 130188
+	--> bigextra = 880 (0x20000 - big - 4)
+@ 0x804
+- read 4 byte int (med)
+	--> med (x00 00 08 00) = 2048
+	--> big -= 4 = 130184
+@ 0x808
+- read med bytes (2048)
+	--> big -= med = 128136
+	--> write out med block to tmp
+	--> med = 0
+
+@ 0x1008
+- read 4 bytes int (med)
+	--> med (xFF FF 00 90)
+	--> big -= 4 = 128132
+
+	END OF FILE MARKER
+	--> med = 0
+
+@ 0x100C
+- Read tape header (144 bytes)
+	--> big -= 144 (127988)
+
+@ 0x109C
+- read 4 bytes (med)
+	--> med (x00 00 08 00) = 2048
+	--> big -= 4 = 127984
+@ 0x10A0
+- read med bytes (2048)
+	--> big -= med = 125936
+	--> write out med block to tmp
+	--> med = 0
+
+@ 0x18A0
+
+
+

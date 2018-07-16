@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) 1994-2004, NeoMedia Technologies, Inc. All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
@@ -236,9 +236,9 @@ static char applname[9]="VSEDIT  ";
 
 int main(int argc,char **argv)
 {
-			   /*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
-	strcpy(VSE_COPYRIGHT,
-	       "(c) 1994-" WISP_COPYRIGHT_YEAR_STR " NeoMedia - VSEDIT Integrated Program Development Editor - v 2.14");
+	strcpy(VSE_COPYRIGHT,	        
+/*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
+  "(c) Shell Stream Software LLC - VSEDIT Integrated Development Editor - v 5.01");
 
 	WL_wpload();
 	vsedit_globals();
@@ -317,7 +317,7 @@ static void vse(void)
 		    (!vse_native)          )
 		{
 			translate_name(vse_gp_input_file, vse_gp_input_library, vse_gp_input_volume, vse_sysname);
-			trunc(vse_sysname);
+			vse_trunc(vse_sysname);
 		}
 			
 		if(vse_input_pick == 0)
@@ -446,13 +446,13 @@ static void val_vs_name(void)
 		vse_new_file = 0;
 
 	translate_name(vse_gp_input_file, vse_gp_input_library, vse_gp_input_volume, vse_sysname);
-	trunc(vse_sysname);
+	vse_trunc(vse_sysname);
 	val_file_exists(vse_sysname);
 }
 
 static int val_file_exists(char *sysname)
 {
-	if(!exists(sysname))
+	if(!vse_exists(sysname))
 	{
 		screen_error = 1;
 		strcpy(error_message,"The file was NOT FOUND.");
@@ -510,6 +510,16 @@ int is_read_only(void)
 /*
 **	History:
 **	$Log: vsemain.c,v $
+**	Revision 1.39  2010/01/10 00:36:15  gsl
+**	refactor utils to add vse_ prefix to avoid conflicts with trunc
+**	vse_trunc
+**	
+**	Revision 1.38  2009/10/18 21:01:34  gsl
+**	Copyright
+**	
+**	Revision 1.37  2004/04/13 15:59:49  gsl
+**	Change VSEDIT version to 5.01 with Move Single Line Bug fix
+**	
 **	Revision 1.36  2003/02/05 21:47:54  gsl
 **	fix -Wall warnings
 **	

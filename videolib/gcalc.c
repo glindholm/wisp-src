@@ -89,7 +89,6 @@ int gcalc(void)
 {
 	int k;
 	int active;
-	unsigned char *vsss();
 
 	reg_x = 0.0;
 	reg_y = 0.0;
@@ -320,8 +319,6 @@ static int showcalc(m) int m;
 
 static int move()
 {
-	unsigned char *vsss();
-
 	vrss(save);
 	save = vsss(row,col,rows,cols);
 	showcalc(mode);
@@ -792,6 +789,12 @@ static int givehelp(m) int m;
 /*
 **	History:
 **	$Log: gcalc.c,v $
+**	Revision 1.21  2010/02/10 14:50:17  gsl
+**	fix warnings
+**	
+**	Revision 1.20  2010/02/10 03:52:33  gsl
+**	fix warnings for redefined functions
+**	
 **	Revision 1.19  2003/06/27 15:54:03  gsl
 **	fix EDE API
 **	

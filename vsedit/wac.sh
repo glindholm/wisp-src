@@ -1,7 +1,7 @@
 #!/bin/sh
 ########################################################################
 #
-#	Copyright (c) 1995-1999 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC, All rights reserved.
 #	$Id:$
 #
 ########################################################################

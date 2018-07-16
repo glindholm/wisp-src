@@ -1,26 +1,7 @@
 /*
-******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** WISP - Wang Interchange Source Processor
-**
 ** $Id:$
-**
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
-** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
-******************************************************************************
+** WISP - Wang Interchange Source Processor
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 */
 
 
@@ -33,11 +14,6 @@
 **			Only add things to this that a truely GLOBAL to absolutely
 **			everything.
 **
-**
-**	History:
-**	07/16/93	Written by JEC.
-**	07/17/93	Added comments and hfile.x. GSL
-**	07/20/93	Added the size_t typedef. GSL
 **
 */
 
@@ -61,14 +37,13 @@ typedef unsigned int size_t;
 #define TRUE !FALSE
 #endif
 
-#ifdef WIN32
-#include "win32std.h"
-#endif
-
 #endif /* IDSISTD_H */
 /*
 **	History:
 **	$Log: idsistd.h,v $
+**	Revision 1.9  2009/10/18 20:24:56  gsl
+**	Remove obsolete win32std.h
+**	
 **	Revision 1.8  2003/01/31 19:26:33  gsl
 **	Fix copyright header
 **	

@@ -1,17 +1,8 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 **
 ** $Id:$
-**
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
 ** 
 ** CVS
 ** $Source:$
@@ -26,31 +17,6 @@
 **
 **      Purpose:        header stuff for bldfm.c
 **
-**
-**      History:        06/11/92         Written by JEC
-**
-**      RCS change log:
-**
-**      $Log: bldmf.h,v $
-**      Revision 1.7  2003/02/05 15:40:13  gsl
-**      Fix copyright headers
-**
-**      Revision 1.6  1996/07/23 18:12:49  gsl
-**      drcs update
-**
-**      Revision 1.5  1995-04-25 02:57:58-07  gsl
-**      drcs state V3_3_15
-**
- * Revision 1.4  1995/04/17  11:50:27  gsl
- * drcs state V3_3_14
- *
- * Revision 1.3  1995/01/27  23:30:33  gsl
- * drcs load
- *
- * Revision 1.2  1992/12/23  19:49:37  jockc
- * added lines flag for headcnt and new state for state machine to handle
- * quoted copy name
- *
 */
 
 #ifndef BLDMF_H

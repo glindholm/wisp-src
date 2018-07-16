@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="all"
+	ProjectGUID="{8A416EB0-2EFC-4703-BB0C-81EB2B97E152}"
+	RootNamespace="all"
+	Keyword="MakeFileProj"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory=".\Debug"
+			IntermediateDirectory=".\Debug"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="ECHO ALL IS BUILT"
+				ReBuildCommandLine="ECHO ALL IS BUILT /a"
+				CleanCommandLine=""
+				Output="ALL"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory=".\Release"
+			IntermediateDirectory=".\Release"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="ECHO ALL IS BUILT"
+				ReBuildCommandLine="ECHO ALL IS BUILT"
+				CleanCommandLine=""
+				Output="ALL"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<File
+			RelativePath="all.bsc"
+			>
+		</File>
+		<File
+			RelativePath="make.include"
+			>
+		</File>
+		<File
+			RelativePath="makewisp.umf"
+			>
+		</File>
+		<File
+			RelativePath="..\doc\portunix.txt"
+			>
+		</File>
+		<File
+			RelativePath="..\doc\portwin32.txt"
+			>
+		</File>
+		<File
+			RelativePath="wispship.umf"
+			>
+		</File>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

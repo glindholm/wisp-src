@@ -177,6 +177,30 @@ Package=<4>
 
 ###############################################################################
 
+Project: "acu62_kcsi"=.\acu\acu62\acu62_kcsi.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "acu62_wisp"=.\acu\acu62\acu62_wisp.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "all"=.\port\all.dsp - Package Owner=<4>
 
 Package=<5>
@@ -336,6 +360,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "mfn"=.\mf\mfn.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "mfsubs"=.\MF\mfsubs.dsp - Package Owner=<4>
 
 Package=<5>
@@ -470,6 +506,18 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name wispkit
     End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "sswsort"=.\sswsort\sswsort.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################

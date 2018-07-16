@@ -27,6 +27,7 @@ typedef FILE state_file;
 class state_object : public object {
    public:
       state_object();
+      virtual ~state_object();
       virtual void save_state() = 0;
       virtual void restore_state() = 0;
       state_object *next_state_object;
@@ -48,6 +49,9 @@ class state_object : public object {
 //
 //	History:
 //	$Log: stateobj.hpp,v $
+//	Revision 1.6  2010/01/10 18:07:33  gsl
+//	fix missing virtual destructor warnings
+//	
 //	Revision 1.5  1998/08/31 19:14:18  gsl
 //	drcs update
 //	

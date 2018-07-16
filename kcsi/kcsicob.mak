@@ -52,17 +52,22 @@ MAKEFILE=kcsicob.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu51.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 #
-KCSI_VERSION=4100
+KCSI_VERSION=4200
 
 #-----------------------------------------------------------------------
 #
-WISPTRAN=..\bin\wisp.exe
+#WISPDIR=C:\WISP5001
+WISPTRAN=$(WISPDIR)\bin\wisp.exe
 WISPFLAGS= -VACU -u ACU50 
 #-----------------------------------------------------------------------
 #
 # 	ACUCOBOL
 #
-ACUDIR= C:\acucorp\ACUCBL600\acugt
+#ACUDIR=C:\Acucorp\ACUCBL600\ACUGT
+#ACUDIR=C:\Acucorp\ACUCBL610\ACUGT
+#ACUDIR=C:\Acucorp\ACUCBL722\ACUGT
+#ACUDIR=C:\Acucorp\ACUCBL810\ACUGT
+
 ACU_COBOL = $(ACUDIR)\bin\ccbl32.exe
 ACU_COBFLAGS = -Da4 -Za -C50 -Z50
 CBLUTIL= $(ACUDIR)\bin\cblutl32.exe
@@ -140,6 +145,7 @@ header_acu:
 	@echo "=="
 	@echo "== Building KCSI $(KCSI_VERSION) for ACUCOBOL"
 	@echo "== ACUDIR=" $(ACUDIR)
+	@echo "== WISPTRAN=" $(WISPTRAN)
 	@echo "== PWD="
 	@CD
 	@echo "=="
@@ -154,7 +160,7 @@ $(WISPTRAN) :
 	@echo "=="
 	@exit 1
 
-rebuild_all: clean crid
+rebuild_all: clean kcsi_acu
 
 clean:
 	-del /Q CONTROL REPORT INQUIRY DATENTRY CREATE

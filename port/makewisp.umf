@@ -1,5 +1,5 @@
 #
-#	Copyright (c) 1988-2003 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 #	$Id:$
 #
 #
@@ -13,7 +13,7 @@
 #				$ make -f makewisp.umf
 #
 
-WISPVER=5001
+WISPVER=5100
 
 
 include $(WISPSRC)/port/make.include
@@ -199,157 +199,4 @@ clean:
 		rm -f make.err *~
 		@echo All is CLEAN.
 
-#
-# 	History:
-#	$Log: makewisp.umf,v $
-#	Revision 1.51.4.1  2003/11/10 19:26:42  gsl
-#	Release 5.0.01
-#	
-#	Revision 1.51  2003/08/05 19:41:41  gsl
-#	Add CC to make of wruncbl.umf
-#	
-#	Revision 1.50  2003/07/08 20:55:24  gsl
-#	WISP 5000
-#	
-#	Revision 1.49  2003/06/26 16:18:35  gsl
-#	version numbers
-#	
-#	Revision 1.48  2003/06/24 18:24:33  gsl
-#	microfocus subs CFLAGS
-#	
-#	Revision 1.47  2003/06/24 17:28:56  gsl
-#	Add quotes around CC="$(CC)"
-#	
-#	Revision 1.46  2003/05/07 14:45:49  gsl
-#	Add CC=$(CC) to rts_acu and rts_acu_ede
-#	
-#	Revision 1.45  2003/05/06 18:14:27  gsl
-#	Pass CC=$(CC) to mfsubs and acusubs
-#	
-#	Revision 1.44  2003/02/25 18:43:36  gsl
-#	FIx acusubs target
-#	
-#	Revision 1.43  2003/01/22 20:32:59  gsl
-#	wrunmf_x4400 MF runtime with 4400 API support.
-#	wrunmf.umf target rtsx4400
-#	
-#	Revision 1.42  2003/01/21 16:43:49  gsl
-#	clean wauth
-#	
-#	Revision 1.41  2002/11/26 16:32:08  gsl
-#	Remove acusubs because it attempts to build on Panther (no acucobol
-#	ccbl).
-#	1) Default make on panther is broken (builds when doen't need to)
-#	2) CVS doesn't set the mod-time on the file to match the archive
-#	
-#	Revision 1.40  2002/11/25 16:43:58  gsl
-#	rm port/*~ files
-#	
-#	Revision 1.39  2002/11/25 16:39:06  gsl
-#	Fix ACUSUBS target
-#	
-#	Revision 1.38  2002/11/25 16:25:04  gsl
-#	Add ACUSUBS to build the Acucobol acu/*.acu files for the shipkit
-#	
-#	Revision 1.37  2002/11/07 19:55:55  gsl
-#	clean removes make.err
-#	
-#	Revision 1.36  2002/11/07 19:52:30  gsl
-#	clean now removes QA
-#	
-#	Revision 1.35  2002/11/07 16:44:04  gsl
-#	Change to use variable $(WISPSRC)
-#	
-#	Revision 1.34  2002/10/22 14:18:49  gsl
-#	Combined KCSI utils
-#	
-#	Revision 1.33  2002/10/03 20:06:12  gsl
-#	update
-#	
-#	Revision 1.32  2002/07/24 15:25:12  gsl
-#	Clean up lib
-#	
-#	Revision 1.31  2002/07/18 20:25:22  gsl
-#	add WISPVER to clean
-#	
-#	Revision 1.30  2002/07/18 19:49:52  gsl
-#	Add WISPVER
-#	
-#	Revision 1.29  2002/07/18 18:50:16  gsl
-#	Add wisp and ede shipkit to ALL
-#	
-#	Revision 1.28  2002/07/09 19:56:46  gsl
-#	Fix clean target
-#	
-#	Revision 1.27  2002/06/26 19:22:59  gsl
-#	Echo what target we are making
-#	
-#	Revision 1.26  2002/06/13 19:15:20  gsl
-#	fix cleanup
-#	
-#	Revision 1.25  2002/06/03 20:13:41  gsl
-#	Fixed CRID and CREATE to now be directly in the kcsi dir
-#	
-#	Revision 1.24  2002/06/03 20:09:13  gsl
-#	Fix build of EDE RTS
-#	
-#	Revision 1.23  2002/04/01 19:27:23  gsl
-#	change to add targets "all_acu" and "all_mf"
-#	
-#	Revision 1.22  2002-03-19 16:10:13-05  gsl
-#	Split the rts target into rts and rts_ede
-#
-#	Revision 1.21  2001-09-10 15:00:34-04  gsl
-#	Removed AMU target from ALL
-#
-#	Revision 1.20  1998-07-31 10:01:26-04  gsl
-#	Add dependencies for CRID and CREATE
-#
-#	Revision 1.19  1998-07-30 10:47:04-04  gsl
-#	Changed to use new cridmake.umf makefile
-#
-#	Revision 1.18  1997-10-02 11:31:44-04  gsl
-#	update the clean target
-#
-#	Revision 1.17  1997-08-13 10:59:05-04  scass
-#	Changed to build CRID and CREATE with the ExtFH as the
-#	default targets.
-#
-#	Revision 1.16  1997-05-20 16:34:56-04  scass
-#	Added definition for WISPTRAN to make of AMU
-#
-#	Revision 1.15  1997-05-13 15:23:29-04  scass
-#	Fixed amu_all.  Was on wrong line.
-#
-#	Revision 1.14  1997-05-06 10:27:34-04  scass
-#	Changed AMU to build everything.  AcuCOBOL, Micro Focus COBOL
-#	and a source kit.  This is done in amuunix.umf so don't need
-#	to seperate here.
-#
-#	Revision 1.13  1997-05-05 16:22:34-04  scass
-#	Added make rules for AMU with ACUCOBOL and Micro Focus COBOL
-#
-#	Revision 1.12  1997-03-26 11:26:52-05  gsl
-#	Add auto build of the RTS
-#	Reorg into products
-#
-#	Revision 1.11  1997-03-25 18:05:59-05  gsl
-#	Add logic to build KCSI kits automatically
-#
-#	Revision 1.10  1996-07-26 17:44:00-04  gsl
-#	Changed to specify each makefile name with  the -f option
-#
-#	Revision 1.9  1996-04-10 05:38:22-07  gsl
-#	Fix the targets to install the libs into the ../lib dir
-#
-# Revision 1.8  1996/04/10  12:05:26  gsl
-# Fix WPROC build stuff
-#
-# Revision 1.7  1996/01/08  10:07:58  gsl
-# Removed UNIQUE and added WPROC and the start of KCSI
-#
-#			06/08/92	Written by GSL
-#			06/09/92	Change to use Makefile instead of .umf. GSL
-#			06/12/92	Added mfsubs. GSL
-#			07/07/92	Added wisplib as a dependency of printq. GSL
-#
+### END ###

@@ -13,24 +13,18 @@
 //
 //	cDialogs::_DISPLAY::Initialize
 //
-cDialogs::_DISPLAY::Initialize ( )
+int cDialogs::_DISPLAY::Initialize ( )
 {
 	HKEY hKey;
 	HWND hDlg = Dialogs.DISPLAY.hDISPLAY;
-	DWORD BufSize = _MAX_PATH, Disp;
+	DWORD BufSize = _MAX_PATH;
 	UCHAR sRegValue[_MAX_PATH];
-	//	Attempt to open the registry key, we are using RegCreateKeyEx
-	//	so that if the key doesn't exist then it will be created at
-	//	this time.
-	if ( RegCreateKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\WISPBin\\DISPLAY",
-		0, NULL, REG_OPTION_NON_VOLATILE,
-		KEY_ALL_ACCESS, NULL, &hKey, &Disp ) == ERROR_SUCCESS ) {
+
+	if ( CreateRegistryKey ( REGKEY_WISP_WISPBIN_DISPLAY,&hKey ) == ERROR_SUCCESS ) {
 
 		BufSize = _MAX_PATH;
 		//	Get the value from the registry
-		if ( RegQueryValueEx ( hKey, "WISPDISPLAY8BIT",
+		if ( RegQueryValueEx ( hKey, REGVAL_DISPLAY_WISPDISPLAY8BIT,
 			0, NULL, sRegValue, &BufSize ) == ERROR_SUCCESS ) {
 			sRegValue[BufSize] = '\0';
 			SetDlgItemText (
@@ -47,10 +41,6 @@ cDialogs::_DISPLAY::Initialize ( )
 	}
 
 	HWND hCtl = GetDlgItem ( hDISPLAY, S08_DISPLAY8BIT );
-	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//	***** CHANGED *****
-//	HDC hDC = GetDC ( hCtl );
-	// ***** END CHANGED *****
 	ChkInvalid ( hCtl );
 
 	return 0;
@@ -61,22 +51,18 @@ cDialogs::_DISPLAY::Initialize ( )
 //	cDialogs::_DISPLAY::Save
 //		Writes the data in the dialog box to the registry
 //
-cDialogs::_DISPLAY::Save ( )
+int cDialogs::_DISPLAY::Save ( )
 {
 	HWND hDlg;
 	HKEY hKey;
 	UCHAR sRegVal[_MAX_PATH];
 
 	hDlg = Dialogs.DISPLAY.hDISPLAY;
-	RegOpenKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\WISPBin\\DISPLAY",
-		0, KEY_ALL_ACCESS, &hKey );
+	RegOpenKeyEx (HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_DISPLAY, 0, KEY_ALL_ACCESS, &hKey );
 
 	GetDlgItemText (
 		hDlg, S08_DISPLAY8BIT, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "WISPDISPLAY8BIT", 0, REG_SZ,
+	RegSetValueEx (	hKey, REGVAL_DISPLAY_WISPDISPLAY8BIT, 0, REG_SZ,
 		sRegVal, strlen ((char *) sRegVal )+1);
 
 	RegFlushKey ( hKey );

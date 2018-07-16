@@ -1,17 +1,27 @@
-#	Copyright (c) 1988-2003 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC, All rights reserved.
 #	$Id:$
 #
 #
 #	File:	wruncbl.umf
 #
 #	Versions:
-#		Acucobol-GT	6.0, 5.2, 5.1, 5.0
-#		WISP		5.0.01
-#		KCSI		4.1.00
+#		Acucobol-GT/Extend  (Statically linked)
+#				8.1, 7.2, 6.2, 6.1, 6.0, 
+#				5.2, 5.1, 5.0
+#				
+#		WISP		5.1.00
+#		KCSI		4.2.00
 #
 #	Function:
 #		The UNIX makefile for building the ACUCOBOL runtime
 #		systems that include the WISP runtime routines.
+#
+#		This makefile is for building the statically linked
+#		version of the Acucobol runtime. To build the Shared
+#		version see the platform and version specific
+#		makefiles:
+#			acu/acu81/Makefile_aix53sh_32.mak
+#			acu/acu81/Makefile_hpux1123sh_32.mak
 #
 #	Description:
 #		This makefile can generate the following versions
@@ -48,8 +58,8 @@
 #		Edit this file and change WISPDIR and ACUDIR to 
 #		point to the correct locations.
 #
-#			WISPDIR=/usr/local/wisp
-#			ACUDIR=/usr/local/ACUCOBOL
+#			WISPDIR=/opt/wisp
+#			ACUDIR=/opt/acu
 #
 #		To build a standard runtime:
 #			$ cd $WISPDIR/acu
@@ -66,8 +76,8 @@
 #		then use the "-e" flag with make. (The -e flag causes the
 #		environment variables to override the internal variables.)
 #
-#			$ WISPDIR=/usr/local/wisp
-#			$ ACUDIR=/usr/local/ACUCOBOL
+#			$ WISPDIR=/opt/wisp
+#			$ ACUDIR=/opt/acu
 #			$ export WISPDIR ACUDIR
 #
 #		To build a standard runtime:
@@ -135,16 +145,16 @@
 # ACUDIR	The ACUCOBOL directory
 # ACU_LIBDIR	The ACUCOBOL lib directory
 #
-WISPDIR=/usr/local/wisp
-ACUDIR=/usr/local/acucobol
+WISPDIR=/opt/wisp
+ACUDIR=/opt/acu
 ACU_LIBDIR=$(ACUDIR)/lib
 
 #
 # EDEDIR	The EDE lib directory
 # KCSIDIR	The KCSI directory
 # 
-EDEDIR=$(WISPDIR)/ede_5001
-KCSIDIR=$(WISPDIR)/kcsi_acu_4100
+EDEDIR=$(WISPDIR)/ede_5100
+KCSIDIR=$(WISPDIR)/kcsi_acu_4200
 
 #============================================================================
 #
@@ -408,6 +418,9 @@ $(RTSKE): $(ACUSUBS:.o=.c) sub85.c $(WISPEDE_LIBS_PATHS) $(KCSI_LIB_PATH)
 
 CP=cp -f
 
+callc.c: $(ACUSRCDIR)/callc.c 
+	cmp -s $(ACUSRCDIR)/callc.c $@ || $(CP) $(ACUSRCDIR)/callc.c $@
+
 sub.c: $(ACUSRCDIR)/sub.c sub85.c wisp_sub85_inc.c
 	cmp -s $(ACUSRCDIR)/sub.c $@ || $(CP) $(ACUSRCDIR)/sub.c $@
 
@@ -442,7 +455,7 @@ $(RTS).alc $(RTSE).alc $(RTSK).alc $(RTSKE).alc : $(RTSALC)
 #
 CLEANUP=$(RTS) $(RTSE) $(RTSK) $(RTSKE) \
 	*.alc \
-	sub.o sub.c filetbl.o filetbl.c sub85.c
+	$(ACUSUBS:.o=.c) $(ACUSUBS) sub85.c
 
 clean:	
 	rm -f $(CLEANUP) core *~

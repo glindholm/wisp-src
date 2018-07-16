@@ -1,5 +1,5 @@
 #######################################################################
-# Copyright (c) 2002-2003 by NeoMedia Technologies Inc. 
+# Copyright (c) Shell Stream Software LLC 
 # All Rights Reserved.
 #######################################################################
 #
@@ -427,3 +427,9 @@ UTILSWINDOWS
 # then PS1 is not changed.
 #
 #WISPPS1 "*** WISP PS1 PROMPT ***> "
+
+# The NOTITLE option will disable the WTITLE routine. This will 
+# prevent calls to WTITLE from changing the Window title in a Co*STAR 
+# or Windows environment.
+#
+#NOTITLE

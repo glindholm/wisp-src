@@ -14,24 +14,18 @@
 //	cDialogs::_ACP::Initialize
 //		Initializes the ACP dialog
 //
-cDialogs::_ACP::Initialize ( )
+int cDialogs::_ACP::Initialize ( )
 {
 	HKEY hKey;
 	HWND hDlg = Dialogs.ACP.hACP;
-	DWORD BufSize = _MAX_PATH, Disp;
+	DWORD BufSize = _MAX_PATH;
 	UCHAR sRegValue[_MAX_PATH];
-	//	Attempt to open the registry key, we are using RegCreateKeyEx
-	//	so that if the key doesn't exist then it will be created at
-	//	this time.
-	if ( RegCreateKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\ACP",
-		0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-		NULL, &hKey, &Disp ) == ERROR_SUCCESS ) {
+
+	if ( CreateRegistryKey ( REGKEY_WISP_ACP,&hKey ) == ERROR_SUCCESS ) {
 		BufSize = _MAX_PATH;
 		//*************************************************************
 		//	Get value for ACPCONFIGDIR field
-		if ( RegQueryValueEx (
-			hKey, "ACPCONFIG", 0, NULL, sRegValue,
+		if ( RegQueryValueEx ( hKey, REGVAL_ACP_ACPCONFIG, 0, NULL, sRegValue,
 			&BufSize ) == ERROR_SUCCESS ) {
 			sRegValue[BufSize] = '\0';
 			SetDlgItemText (
@@ -47,8 +41,7 @@ cDialogs::_ACP::Initialize ( )
 		//*************************************************************
 		//	Get value for ACPMAP field
 		BufSize = _MAX_PATH;
-		if ( RegQueryValueEx (
-			hKey, "ACPMAP", 0, NULL, sRegValue,
+		if ( RegQueryValueEx ( hKey, REGVAL_ACP_ACPMAP, 0, NULL, sRegValue,
 			&BufSize ) == ERROR_SUCCESS ) {
 			sRegValue[BufSize] = '\0';
 			SetDlgItemText (
@@ -66,17 +59,9 @@ cDialogs::_ACP::Initialize ( )
 	//*********************************************************************
 	//	Now run the validation on the fields
 	HWND hCtl = GetDlgItem ( hACP, S10_ACPCONFIGDIR );
-	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//	***** CHANGED *****
-//	HDC hDC = GetDC ( hCtl );
-	// ***** END CHANGED *****
 	ChkInvalid ( hCtl );
 
 	hCtl = GetDlgItem ( hACP, S10_ACPMAP );
-	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//	***** CHANGED *****
-//	hDC = GetDC ( hCtl );
-	// ***** END CHANGED *****
 	ChkInvalid ( hCtl );
 
 	return 0;
@@ -88,7 +73,7 @@ cDialogs::_ACP::Initialize ( )
 //		Save the data in the fields of the ACP dialog to the
 //		registry
 //
-cDialogs::_ACP::Save ( )
+int cDialogs::_ACP::Save ( )
 {
 	HWND hDlg;
 	HKEY hKey;
@@ -96,20 +81,13 @@ cDialogs::_ACP::Save ( )
 
 	hDlg = Dialogs.ACP.hACP;
 	//	Open the registry key "Software\NeoMedia\WISP\ACP"
-	RegOpenKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\ACP",
-		0, KEY_ALL_ACCESS, &hKey );
+	RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_ACP, 0, KEY_ALL_ACCESS, &hKey );
 
-	GetDlgItemText ( 
-		hDlg, S10_ACPCONFIGDIR, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "ACPCONFIG", 0, REG_SZ, sRegVal,
+	GetDlgItemText ( hDlg, S10_ACPCONFIGDIR, (char *) sRegVal, _MAX_PATH );
+	RegSetValueEx (	hKey, REGVAL_ACP_ACPCONFIG, 0, REG_SZ, sRegVal,
 		strlen ((char *) sRegVal )+1);
-	GetDlgItemText (
-		hDlg, S10_ACPMAP, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "ACPMAP", 0, REG_SZ, sRegVal,
+	GetDlgItemText ( hDlg, S10_ACPMAP, (char *) sRegVal, _MAX_PATH );
+	RegSetValueEx (	hKey, REGVAL_ACP_ACPMAP, 0, REG_SZ, sRegVal,
 		strlen ((char *) sRegVal )+1);
 
 	RegFlushKey ( hKey );

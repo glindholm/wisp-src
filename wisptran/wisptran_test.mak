@@ -1,5 +1,5 @@
 #
-#	Copyright (c) 1988-1996 NeoMedia Migrations, All rights reserved.
+#	Copyright (c) 1988-2005 NeoMedia Migrations, All rights reserved.
 #	$Id:$
 #
 #
@@ -24,7 +24,8 @@ WISPTRAN  = ..\bin\wisp.exe
 WISPLANG  = ACU
 WISPFLAGS = -V $(WISPLANG) -u FORCEGENWISPCPY
 
-COBOL    = c:\acucorp\acucbl600\acugt\bin\ccbl32.exe
+#ACUDIR=C:\acucorp\acucbl610\acugt
+COBOL=$(ACUDIR)\bin\ccbl32.exe
 COBFLAGS = -Da4 -Gd -Za -Te 800
 
 COPY=copy
@@ -54,6 +55,7 @@ TEST_COBOL_WCBS= \
 	t_go.wcb \
 	t_hold.wcb \
 	t_if.wcb \
+	t_literal.wcb \
 	t_merge.wcb \
 	t_move.wcb \
 	t_open.wcb \

@@ -13,8 +13,8 @@ int WINAPI WinMain ( HINSTANCE hInst, HINSTANCE hInstPrev, LPSTR lpCmdLine, int 
 {
 	if (cApp.HaveRequiredPermissions())
 	{
-		Ctl3dRegister ( hInst );
-		Ctl3dAutoSubclass( hInst );
+		//Ctl3dRegister ( hInst );
+		//Ctl3dAutoSubclass( hInst );
 		InitCommonControls ( );
 		CustCtrl.Init ( hInst );
 
@@ -22,7 +22,7 @@ int WINAPI WinMain ( HINSTANCE hInst, HINSTANCE hInstPrev, LPSTR lpCmdLine, int 
 		cApp.MsgLoop ( );
 
 
-		Ctl3dUnregister ( hInst );
+		//Ctl3dUnregister ( hInst );
 	}
 	return 0;
 }

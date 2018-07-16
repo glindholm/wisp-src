@@ -399,6 +399,45 @@
 	   
 	   PERFORM CALL-FIND-8ARGS.
 	   PERFORM CHECK-FIND-SUCCESS.
+   
+
+      * TEST: FIND two files with extension (wildcard)
+       test012.
+	   MOVE "TEST012" TO TEST-NAME.
+	   
+      * Create 3 files - 2 with .seq extensions
+	   move "TEST012A"	TO base-fil.
+	   move QAPROG		TO base-lib.
+	   move INVOL		TO base-vol.
+	   perform create-seq-file.
+	   
+	   move "TEST012B"	TO base-fil.
+	   move QAPROG		TO base-lib.
+	   move INVOL		TO base-vol.
+	   perform create-seq-file.
+	   
+	   move "TEST012C"	TO base-fil.
+	   move QAPROG		TO base-lib.
+	   move INVOL		TO base-vol.
+	   perform create-base-file.
+
+	   move "TEST012?"	to FIND-FILE.
+	   move base-lib	to FIND-LIB.
+	   move base-vol	to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 10		to FIND-COUNT-NUM
+	   move "A"		TO FIND-TYPE
+
+	   move 2		to EXPECTED-COUNT-NUM
+	   move 2		to EXPECTED-TOTAL-NUM
+	   move FIND-FILE	TO EXPECTED-FILE.
+	   move FIND-LIB	TO EXPECTED-LIB.
+	   move FIND-VOL	TO EXPECTED-VOL.
+	   
+123456     CALL "WSETFILEXT" USING SEQ-FILE-EXTENSION.
+
+	   PERFORM CALL-FIND-8ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
       
       *============================================================	  
        9999-done.
@@ -462,7 +501,7 @@
 	   MOVE 0		TO FIND-COUNT-HIGH.
 	   MOVE FIND-COUNT-NUM	TO FIND-COUNT-BIN.
 
-           MOVE SPACES		TO FIND-REC.
+           MOVE SPACES	TO FIND-REC.
 
 	   MOVE 0		TO FIND-TOTAL-HIGH.
 	   MOVE 0		TO FIND-TOTAL-BIN.

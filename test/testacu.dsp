@@ -546,6 +546,22 @@ SOURCE=.\WC0005.cob
 # End Source File
 # Begin Source File
 
+SOURCE=.\wc105052.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\wc105053.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\wc225052.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\wc225053.cob
+# End Source File
+# Begin Source File
+
 SOURCE=.\WL0000.cob
 # End Source File
 # Begin Source File
@@ -894,27 +910,43 @@ SOURCE=.\tstpp.sh
 # PROP Default_Filter "license"
 # Begin Source File
 
-SOURCE=.\wisp.license.ozone
+SOURCE=".\wisp.license.glindholm-xp.txt"
 # End Source File
 # Begin Source File
 
-SOURCE=.\wisp.license.panther
+SOURCE=.\wisp.license.hpc240.h6.txt
 # End Source File
 # Begin Source File
 
-SOURCE=.\wisp.license.redrum
+SOURCE=.\wisp.license.hpc240.txt
 # End Source File
 # Begin Source File
 
-SOURCE=.\wisp.license.tribble
+SOURCE=.\wisp.license.ozone.txt
 # End Source File
 # Begin Source File
 
-SOURCE=.\wisp.license.wakko
+SOURCE=.\wisp.license.panther.txt
 # End Source File
 # Begin Source File
 
-SOURCE=.\wisp.license.zigzag
+SOURCE=.\wisp.license.redrum.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp.license.tribble.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp.license.wakko.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp.license.zhadum.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp.license.zigzag.txt
 # End Source File
 # End Group
 # Begin Source File

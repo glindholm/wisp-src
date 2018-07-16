@@ -892,9 +892,9 @@ static NODE parse_read_crt(NODE the_statement, NODE the_sentence)
 	
 	cur_crt = crt_index(token_data(file_node->token));
 	
-	if (acn_cobol)
+	if (opt_native_screens)		/* READ CRT - WARNING */
 	{
-		write_tlog(verb_node->token,"WISP",'W',"NATIVE","Workstation READ %s uses WISP Screens",crt_file[cur_crt]);
+		write_tlog(verb_node->token,"WISP",'W',"NATIVESCREENS","Workstation READ %s uses WISP Screens",crt_file[cur_crt]);
 	}
 
 	trailing_fluff_node = unhook_trailing_fluff(the_statement);
@@ -1261,6 +1261,14 @@ static NODE parse_read_crt(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_read.c,v $
+**	Revision 1.40  2003/09/08 19:43:27  gsl
+**	Change log entries for Native Screens
+**	
+**	Revision 1.39  2003/08/08 19:52:46  gsl
+**	Add native screens comments
+**	
+**	Revision 1.38  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.37  2003/03/10 22:42:16  gsl
 **	Add SLEEPONE to sleep one second as a replacement for WFWAIT
 **	

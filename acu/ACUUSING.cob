@@ -1,4 +1,4 @@
-000100**   Copyright (c) 1997 NeoMedia Technologies, All rights reserved.
+000100**   Copyright (c) Shell Stream Software LLC, All rights reserved.
 000200**   $Id:$
 000300**
 000400**   File:       acuusing.cob
@@ -29,7 +29,7 @@
        PROGRAM-ID.
            ACUUSING.
        AUTHOR.
-           NeoMedia Technologies Inc.
+           Shell Stream Software LLC.
 
        ENVIRONMENT DIVISION.
        CONFIGURATION SECTION.

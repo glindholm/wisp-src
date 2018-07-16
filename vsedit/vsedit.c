@@ -487,7 +487,7 @@ int load_txt_line(FILE *ff, TEXT **txtptr)
 	**	Truncate off trailing linenumbers and modcodes
 	*/
 	buf[vse_edit_start_col + vse_edit_width - 1] = (char)0;
-	trunc(buf);
+	vse_trunc(buf);
 	len = strlen(buf);
 
 	/*
@@ -881,7 +881,7 @@ int myfgets(char *buf, int size, FILE *file)
 		}
 
                 vse_untabify(linebuf,sizeof(linebuf));
-                trunc(linebuf); /* remove trailing spaces and newlines */
+                vse_trunc(linebuf); /* remove trailing spaces and newlines */
 
                 bytesleft=strlen(linebuf);
                 curpos=0;
@@ -981,7 +981,7 @@ static int check_lang(char *lang_string, int *type, char *ext)
 	strncpy(the_lang_string,lang_string,VSE_LANGUAGE_LEN);
 	the_lang_string[VSE_LANGUAGE_LEN] = (char)0;
 	WL_upper_string(the_lang_string);
-	trunc(the_lang_string);
+	vse_trunc(the_lang_string);
 
 	sprintf(temp,"%s!",the_lang_string);
 
@@ -1110,6 +1110,10 @@ int set_wang_style(int style)
 /*
 **	History:
 **	$Log: vsedit.c,v $
+**	Revision 1.22  2010/01/10 00:36:15  gsl
+**	refactor utils to add vse_ prefix to avoid conflicts with trunc
+**	vse_trunc
+**	
 **	Revision 1.21  2003/02/05 21:47:53  gsl
 **	fix -Wall warnings
 **	

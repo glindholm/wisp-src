@@ -26,7 +26,8 @@ WISPTRAN  = $(WISPDIR)\bin\wisp.exe
 WISPLANG  = ACU
 WISPFLAGS = -V $(WISPLANG) -I..\wisputils -M -u FORCEGENWISPCPY
 
-COBOL    = c:\acucorp\acucbl600\acugt\bin\ccbl32.exe
+#ACUDIR=C:\acucorp\acucbl610\acugt
+COBOL=$(ACUDIR)\bin\ccbl32.exe
 COBFLAGS = -Da4 -Gd -Za -Te 800
 
 CFLAGS = -DWIN32 -DMSFS
@@ -146,6 +147,8 @@ header:
 	@echo " "
 	@echo "WISPTRAN  =" $(WISPTRAN)
 	@echo "WISPFLAGS =" $(WISPFLAGS)
+	@echo "ACUDIR    =" $(ACUDIR)
+	@echo "WISPDIR   =" $(WISPDIR)
 	@echo "COBOL     =" $(COBOL)
 	@echo "COBFLAGS  =" $(COBFLAGS)
 	@echo "PWD       ="
@@ -168,17 +171,17 @@ $(ALL_COBOL_COBS): $(WISPTRAN)
 SAMPLE.cob: SAMPLE.wcb
 	$(WISPTRAN)  $(LANG) $(WISPFLAGS) -O samopt.opt SAMPLE
 
-ACULINK.acu: $(WISPDIR)\acu\ACULINK.acu
-	$(COPY) "$(WISPDIR)\acu\ACULINK.acu" .
+ACULINK.acu: $(WISPDIR)\acu\$(@F)
+	$(COPY) $** $@
 
-ACUUSING.acu: $(WISPDIR)\acu\ACUUSING.acu
-	$(COPY) "$(WISPDIR)\acu\ACUUSING.acu" .
+ACUUSING.acu: $(WISPDIR)\acu\$(@F)
+	$(COPY) $** $@
 
 
 DISPRINT.acu: DISPRINT.wcb
 
-DISPRINT.wcb: $(WISPDIR)\etc\DISPRINT.wcb
-	$(COPY) $(WISPDIR)\etc\$@ $@ 
+DISPRINT.wcb: $(WISPDIR)\etc\$(@F)
+	$(COPY) $** $@
 
 
 #
@@ -271,8 +274,14 @@ $(VIDEOCAPFILES):		$(WISPDIR)\config\videocap\$(@F)
 #
 #	History:
 #	$Log: sampleacu.mak,v $
-#	Revision 1.38.4.1  2003/11/10 18:50:12  gsl
-#	Sync with HEAD
+#	Revision 1.42  2007/08/09 16:58:26  gsl
+#	TT#8 Building with MSVS.NET 2003
+#	
+#	Revision 1.41  2004/05/03 17:21:01  gsl
+#	Acucobol 6.1
+#	
+#	Revision 1.40  2004/05/03 15:43:47  gsl
+#	Acucobol 6.1
 #	
 #	Revision 1.39  2003/11/10 17:09:11  gsl
 #	Fix WFILECHK3 has declaratives bug and add WC0005 test case

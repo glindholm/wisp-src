@@ -24,7 +24,7 @@
 */
 
 /* CHANGE-COPYRIGHT-DATE */
-static char vsx_copyright[]="Copyright (c) 1991-2003 NeoMedia Technologies, All rights reserved.";
+static char vsx_copyright[]="Copyright (c) Shell Stream Software LLC";
 static char vsx_rcsid[]="$Id:$";
 
 /*
@@ -129,7 +129,7 @@ static char vsx_moddate[20];
 #include <stdarg.h>
 
 #ifdef WIN32
-#include "win32std.h"
+#define mkdir(dir,mode) _mkdir(dir)
 #endif
 
 
@@ -486,10 +486,6 @@ static struct termio old,new;
 #define RT_GETBYTES 3
 #define RT_SKIPBYTES 4
 
-#if defined(unix) && !defined(LINUX)
-extern char *sys_errlist[];
-#endif
-
 /*--- END vsx.h ----*/
 
 
@@ -540,6 +536,36 @@ static char *strdup(char *str)
         return tmp;
 }
 #endif
+
+const char* WL_strerror(int errnum)
+{
+	const char* ptr = NULL;
+
+#ifdef USE_SYS_ERRLIST
+	extern char *sys_errlist[];
+	extern int   sys_nerr;
+
+
+	if (errnum >= 0 &&
+	    errnum < sys_nerr) 
+	{
+		ptr = sys_errlist[errnum];
+	}
+
+	if (NULL == ptr)
+	{
+		static char mess[30];
+		sprintf(mess,"Unknown errno=[%d]", errnum);
+		ptr = mess;
+	}
+#endif
+
+#ifndef USE_SYS_ERRLIST
+	ptr =  strerror(errnum);
+#endif
+
+	return ptr;
+}
 
 #ifdef SOLARIS
 static void load3480(char *tapedev, int cartridge);
@@ -962,7 +988,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 				else
 				{
 					printerr("Error opening %s: %s (errno=%d)\n",
-						arch_file,sys_errlist[errno],errno);
+						arch_file,WL_strerror(errno),errno);
 					handler(0);
 					exit(0); /* Never reached */
 				}
@@ -1021,7 +1047,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
                         if (tapebytes<0) 
                         {
                                 printerr("Error reading %s: %s (errno=%d)\n",
-					arch_file,sys_errlist[errno],errno);
+					arch_file,WL_strerror(errno),errno);
                                 exit(1);
                         }
 			/*
@@ -1643,7 +1669,7 @@ static int load(void)
 		}
 		D{
 			printdebug("header=%4.4s backsection=%1.1d volseq=%2.2d\n",
-			       tapehdr->encfhdr,tapehdr->backsection[1],tapehdr->volseq[1]); 
+			       tapehdr->encfhdr,tapehdr->backsection[0],tapehdr->volseq[0]); 
 		}
 
                 if (use_vol_name && action==ACT_EXTRACT)
@@ -3562,6 +3588,26 @@ static void printdebug(const char* format, ... /* args */)
 
 /*
  * $Log: vsx.c,v $
+ * Revision 1.132  2010/01/16 02:04:28  gsl
+ * new release
+ * wisp 5.1.00
+ * kcsi 4.2.00
+ *
+ * Revision 1.131  2010/01/10 00:22:38  gsl
+ * use strerror() instead of sys_errlist
+ *
+ * Revision 1.130  2009/10/18 21:21:40  gsl
+ * Copyright
+ *
+ * Revision 1.129  2007/01/03 14:11:44  gsl
+ * copyright 2007
+ *
+ * Revision 1.128  2005/01/03 19:12:06  gsl
+ * Copyright year 2005
+ *
+ * Revision 1.127  2004/10/08 14:40:04  gsl
+ * fixes during AIX 5.2 (64) port
+ *
  * Revision 1.126  2003/07/25 14:02:50  gsl
  * no message
  *

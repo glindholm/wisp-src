@@ -50,6 +50,7 @@
 #include "wisplib.h"
 #include "vchinese.h"
 #include "link.h"
+#include "idsisubs.h"
 
 /*
 **	Structures and Defines
@@ -67,7 +68,7 @@ typedef struct s_field
 	uint2 row;			/* UNSIGNED-SHORT 0-23	*/
 	uint2 col;			/* UNSIGNED-SHORT 0-79	*/
 	uint2 len;			/* UNSIGNED-SHORT 1-79	*/
-	char fac;			/* PIC X COMP-X 	*/
+	fac_t fac;			/* PIC X COMP-X 	*/
 	char field[MAX_WSB_FIELD_LEN];	/* PIC X(79) 		*/
 } field_t;
 
@@ -165,7 +166,7 @@ static int check_row(int row)
 {
 	if (row < 1 || row > WSB_ROWS)
 	{
-		wtrace("WSB","ROW","Invalid row value %d",row);
+		WL_wtrace("WSB","ROW","Invalid row value %d",row);
 		row = 1;
 	}
 
@@ -185,7 +186,7 @@ static int check_col(int col, int len)
 	
 	if (col < 1 || col > WSB_COLS)
 	{
-		wtrace("WSB","COLUMN","Invalid column value %d",col);
+		WL_wtrace("WSB","COLUMN","Invalid column value %d",col);
 		col = 1;
 	}
 
@@ -205,7 +206,7 @@ static int check_text_len(int len, int row, int col)
 	max_pos   = (WSB_ROWS * WSB_COLS);
 	if (end_pos > max_pos)
 	{
-		wtrace("WSB","LENGTH","Invalid text length value %d",len);
+		WL_wtrace("WSB","LENGTH","Invalid text length value %d",len);
 		len = max_pos - start_pos;
 	}
 
@@ -220,7 +221,7 @@ static int check_field_len(int len, int col)
 	*/
 	if ((len+col-1) > WSB_COLS)
 	{
-		wtrace("WSB","LENGTH","Invalid field length value %d",len);
+		WL_wtrace("WSB","LENGTH","Invalid field length value %d",len);
 		len = WSB_COLS - col;
 	}
 
@@ -292,9 +293,18 @@ HWSB wsb_new(void)
 			**	Initialize the values to a location on the screen 
 			**	which is unlikely to be used.
 			*/
-			wsb[idx]->na->field_list[i].row = 24;
-			wsb[idx]->na->field_list[i].col = 80;
-			wsb[idx]->na->field_list[i].len =  1;
+			if (wisp_acu_cobol())
+			{
+				wsb[idx]->na->field_list[i].row = 24;
+				wsb[idx]->na->field_list[i].col = 80;
+				wsb[idx]->na->field_list[i].len =  1;
+			}
+			else if (wisp_mf_cobol())
+			{
+				wsb[idx]->na->field_list[i].row = 0;
+				wsb[idx]->na->field_list[i].col = 0;
+				wsb[idx]->na->field_list[i].len = 0;
+			}
 		}
 	}
 	else
@@ -591,14 +601,14 @@ void wsb_add_menu_item(HWSB hWsb, int row, int col, int pfkey, const char *text)
 	row = check_row(row);
 	if (col < 2 || col > WSB_COLS-3) 
 	{
-		wtrace("WSB","COLUMN","Invalid column value %d (using 2)",col);
+		WL_wtrace("WSB","COLUMN","Invalid column value %d (using 2)",col);
 		col = 2;
 	}
 	len = check_field_len(len, col+3);
 
 	if (pfkey < 0 || pfkey > 33)
 	{
-		wtrace("WSB","PFKEY","Invalid pfkey value %d (using 0)", pfkey);
+		WL_wtrace("WSB","PFKEY","Invalid pfkey value %d (using 0)", pfkey);
 		pfkey = 0;
 	}
 
@@ -616,7 +626,7 @@ void wsb_add_menu_item(HWSB hWsb, int row, int col, int pfkey, const char *text)
 	*/
 	if ((*wsb[hWsb]->menumap)[pfkey])
 	{
-		wtrace("WSB","MENU","Duplicate pfkey [%d] is invalid.",pfkey);
+		WL_wtrace("WSB","MENU","Duplicate pfkey [%d] is invalid.",pfkey);
 		return;
 	}			
 	(*wsb[hWsb]->menumap)[pfkey] = (row-1)*WSB_COLS + col;
@@ -679,7 +689,7 @@ void wsb_add_tabstop(HWSB hWsb, int row, int col)
 	row = check_row(row);
 	if (col < 2 || col > WSB_COLS-3) 
 	{
-		wtrace("WSB","COLUMN","Invalid column value %d (using 2)",col);
+		WL_wtrace("WSB","COLUMN","Invalid column value %d (using 2)",col);
 		col = 2;
 	}
 	
@@ -822,7 +832,7 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 	if (wisp_nativescreens())
 	{
 		/*
-		**	CALL "WACUWSB" USING
+		**	CALL "WACUWSB"/"WMFNWSB" USING
 		**	[0]	static_text		PIC X(24*80)
 		**	[1]	field_cnt		PIC 99			0-40
 		**	[2]	field_table		PIC X(86) * 40	
@@ -865,7 +875,7 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 			}
 			if (key_cnt < 1)
 			{
-				wtrace("WSB","KEYLIST","Invalid keylist [%s]",l_keylist);
+				WL_wtrace("WSB","KEYLIST","Invalid keylist [%s]",l_keylist);
 				key_cnt = 1;
 				strcpy(l_keylist,"00X");
 			}
@@ -904,13 +914,28 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 		parms[9] = (char*)&timeout_hsecs;
 		lens[9]  = sizeof(timeout_hsecs);
 
-		WL_call_acucobol("WACUWSB", WACUWSB_ARGCNT, parms, lens, &rc);
+		if (wisp_acu_cobol())
+		{
+			WL_call_acucobol("WACUWSB", WACUWSB_ARGCNT, parms, lens, &rc);
+		}
+		else if (wisp_mf_cobol())
+		{
+			WL_call_mfcobol("WMFNWSB", WACUWSB_ARGCNT, parms, lens, &rc);
+		}
 
 		if (rc)
 		{
 			int4	wrc, wcc;
 			
-			WL_call_acucobol_error(rc, &wrc, &wcc, "WACUWSB");
+			if (wisp_acu_cobol())
+			{
+				WL_call_acucobol_error(rc, &wrc, &wcc, "WACUWSB");
+			}
+			else if (wisp_mf_cobol())
+			{
+				/* trace error */
+				WL_wtrace("DISPLAYANDREAD","WMFNWSB","RC = [%d]", rc);
+			}
 
 			*piPfkey = 0;
 			*piCurcol = 1;
@@ -927,10 +952,20 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 			for(i=0; i<field_cnt; i++)
 			{
 				int	row,col,len;
+				fac_t	fac;
 
 				row = wsb[hWsb]->na->field_list[i].row - 1;
 				col = wsb[hWsb]->na->field_list[i].col - 1;
 				len = wsb[hWsb]->na->field_list[i].len;
+				fac = wsb[hWsb]->na->field_list[i].fac;
+
+				/*
+				**	If UPPER fac then ensure the text is uppercase.
+				*/
+				if ( FAC_UPPER(fac) && !FAC_PROTECTED(fac))
+				{
+					WL_upper_mem(wsb[hWsb]->na->field_list[i].field,len);
+				}
 				
 				memcpy(&wsb[hWsb]->na->data[row][col], wsb[hWsb]->na->field_list[i].field, len);
 			}
@@ -1022,19 +1057,19 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 	*/
 	if (*piPfkey < 0 || *piPfkey > 33) 
 	{
-		wtrace("WSB","TERMKEY","Invalid pfkey [%d] (using 0)", *piPfkey);
+		WL_wtrace("WSB","TERMKEY","Invalid pfkey [%d] (using 0)", *piPfkey);
 		*piPfkey = 0;
 	}
 
 	if (*piCurrow < 1 || *piCurrow > WSB_ROWS) 
 	{
-		wtrace("WSB","CURROW","Invalid cursor row [%d] (using 1)", *piCurrow);
+		WL_wtrace("WSB","CURROW","Invalid cursor row [%d] (using 1)", *piCurrow);
 		*piCurrow = 1;
 	}
 
 	if (*piCurcol < 1 || *piCurcol > WSB_COLS) 
 	{
-		wtrace("WSB","CURCOL","Invalid cursor column [%d] (using 1)", *piCurcol);
+		WL_wtrace("WSB","CURCOL","Invalid cursor column [%d] (using 1)", *piCurcol);
 		*piCurcol = 1;
 	}
 
@@ -1047,6 +1082,15 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 /*
 **	History:
 **	$Log: wsb.c,v $
+**	Revision 1.20  2003/08/28 15:13:44  gsl
+**	For native screens ensure UPPER fields are converted to uppercase
+**	
+**	Revision 1.19  2003/08/27 17:55:42  gsl
+**	MF Native Screens
+**	
+**	Revision 1.18  2003/08/25 21:10:17  gsl
+**	MF Native Screens
+**	
 **	Revision 1.17  2003/02/04 17:22:57  gsl
 **	Fix -Wall warnings
 **	

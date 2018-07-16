@@ -17,7 +17,7 @@
 //
 void cDialogs::_License::CalcLicenseFile (char* sDefVal )
 {
-	if ( 0 == stricmp ( cApp.Env.sWISPServer, "(LOCAL)" ) ) {
+	if ( 0 == _stricmp ( cApp.Env.sWISPServer, "(LOCAL)" ) ) {
 		strcpy( sDefVal, cApp.Env.sWISPDir );
 	}
 	else {
@@ -48,41 +48,19 @@ void cDialogs::_License::UpdateLicenseFile ( )
 //	cDialogs::_License::Initialize
 //		Initializes the License dialog
 //
-cDialogs::_License::Initialize ( )
+int cDialogs::_License::Initialize ( )
 {
 	HKEY hKey;
 	HWND hDlg = Dialogs.License.hLicense;
-	DWORD Disp;
+
 	//	If unable to open key
-	if ( RegCreateKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\License",
-		0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-		NULL, &hKey, &Disp ) == ERROR_SUCCESS ) 
+	if ( CreateRegistryKey ( REGKEY_WISP_LICENSE, &hKey ) == ERROR_SUCCESS ) 
 	{
-#ifdef OLD
-		DWORD BufSize = _MAX_PATH;
-		UCHAR sRegValue[_MAX_PATH];
-		//	Get value for LICENSEFILE field
-		if ( RegQueryValueEx (
-			hKey, "FILE", 0, NULL, sRegValue,
-			&BufSize ) == ERROR_SUCCESS ) 
-		{
-			sRegValue[BufSize] = '\0';
-			SetDlgItemText (
-				Dialogs.License.hLicense,
-				S06_LICENSEFILE, (char *) sRegValue );
-		}
-#endif /* OLD */
 		this->UpdateLicenseFile();
 		RegCloseKey ( hKey );
 	}
 
 	HWND hCtl = GetDlgItem ( hLicense, S06_LICENSEFILE );
-	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//	***** CHANGED *****
-//	HDC hDC = GetDC ( hCtl );
-	//	***** END CHANGED *****
 	ChkInvalid ( hCtl );
 
 	return 0;
@@ -93,27 +71,18 @@ cDialogs::_License::Initialize ( )
 //	cDialogs::_License::Save
 //		Saves the data in the License dialog to the registry
 //
-cDialogs::_License::Save ( )
+int cDialogs::_License::Save ( )
 {
 	HWND hDlg;
 	HKEY hKey;
 	char sRegVal[_MAX_PATH];
 
 	hDlg = Dialogs.License.hLicense;
-	RegOpenKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\License",
-		0, KEY_ALL_ACCESS, &hKey );
-#ifdef OLD
-	GetDlgItemText (
-		hDlg, S06_LICENSEFILE,
-		sRegVal, _MAX_PATH );
-#endif
+	RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_LICENSE, 0, KEY_ALL_ACCESS, &hKey );
 
 	this->CalcLicenseFile(sRegVal);
 
-	RegSetValueEx (
-		hKey, "FILE", 0, REG_SZ,
+	RegSetValueEx (	hKey, REGVAL_LICENSE_FILE, 0, REG_SZ,
 		(unsigned char*)sRegVal, strlen (sRegVal )+1);
 
 	RegFlushKey ( hKey );

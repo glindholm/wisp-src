@@ -31,7 +31,7 @@
 //		Creates the Select Directory dialog based on the
 //		arguments passed by the application
 //
-rControls::_Dialogs::_SelectDirDlg::Create ( HWND hParent, char *StartDir,
+int rControls::_Dialogs::_SelectDirDlg::Create ( HWND hParent, char *StartDir,
 						  BOOL MultiSelect, int Type, HWND Caller, char *Title )
 {
 	//	Type refers to whether the user needs the directory listing or the server listing
@@ -57,7 +57,7 @@ rControls::_Dialogs::_SelectDirDlg::Create ( HWND hParent, char *StartDir,
 //	clsWindowManager::_Dialogs::_SelectDirDlg::Initialize
 //		Initializes the dialog
 //
-rControls::_Dialogs::_SelectDirDlg::Initialize ( HWND hDlg, HINSTANCE hInst )
+int rControls::_Dialogs::_SelectDirDlg::Initialize ( HWND hDlg, HINSTANCE hInst )
 {
 //	HBITMAP hAddBmp, hRemoveBmp, hUpBmp, hDownBmp;
 	HWND hTVAvailDirs/*,
@@ -138,7 +138,7 @@ rControls::_Dialogs::_SelectDirDlg::Initialize ( HWND hDlg, HINSTANCE hInst )
 //	clsWindowManager::_Dialogs::_SelectDirDlg::AddClicked
 //		Adds a directory to the selected dirs list
 //
-rControls::_Dialogs::_SelectDirDlg::AddClicked ( HWND hDlg )
+int rControls::_Dialogs::_SelectDirDlg::AddClicked ( HWND hDlg )
 {
 	HWND hTVWnd,
 		hLBWnd;
@@ -203,7 +203,7 @@ rControls::_Dialogs::_SelectDirDlg::AddClicked ( HWND hDlg )
 //	clsWindowManager::_Dialogs::_SelectDirDlg::RemoveClicked
 //		Removes a dir from the selected dirs list
 //
-rControls::_Dialogs::_SelectDirDlg::RemoveClicked ( HWND hDlg )
+int rControls::_Dialogs::_SelectDirDlg::RemoveClicked ( HWND hDlg )
 {
 	HWND hLBWnd;
 
@@ -220,7 +220,7 @@ rControls::_Dialogs::_SelectDirDlg::RemoveClicked ( HWND hDlg )
 //		Moves the selected dir up one in the list of selected
 //		dirs
 //
-rControls::_Dialogs::_SelectDirDlg::MUpClicked ( HWND hDlg )
+int rControls::_Dialogs::_SelectDirDlg::MUpClicked ( HWND hDlg )
 {
 	HWND hLBWnd;
 	int index;
@@ -243,7 +243,7 @@ rControls::_Dialogs::_SelectDirDlg::MUpClicked ( HWND hDlg )
 //		Moves the selected dir down one in the list of selected
 //		dirs
 //
-rControls::_Dialogs::_SelectDirDlg::MDownClicked ( HWND hDlg )
+int rControls::_Dialogs::_SelectDirDlg::MDownClicked ( HWND hDlg )
 {
 	HWND hLBWnd;
 	int index, MaxCnt;
@@ -268,7 +268,7 @@ rControls::_Dialogs::_SelectDirDlg::MDownClicked ( HWND hDlg )
 //		Puts the list of selected dirs into the edit control
 //		that is specified as the Caller in the Create member func
 //
-rControls::_Dialogs::_SelectDirDlg::OKClicked ( HWND hDlg )
+int rControls::_Dialogs::_SelectDirDlg::OKClicked ( HWND hDlg )
 {
 	char *ch_DirList, ch_SingDir[MaxFileLen];
 
@@ -316,6 +316,9 @@ rControls::_Dialogs::_SelectDirDlg::OKClicked ( HWND hDlg )
 /*
 **	History:
 **	$Log: rDialogs.cpp,v $
+**	Revision 1.10  2009/10/17 19:55:05  gsl
+**	fix default return type to int
+**	
 **	Revision 1.9  2003/06/18 16:43:07  gsl
 **	Add CVS header and history
 **	

@@ -42,7 +42,7 @@
 #include "#Defines.h"
 #include "#Prototypes.h"
 #include "resource.h"
-#include "CTL3D.H"
+//#include "CTL3D.H"
 
 //*************************************************************************
 //
@@ -57,10 +57,10 @@ class cWindows {
 			TabFont;					// Font used for printing to the option tabs and other window controls and elements that don't require a monospaced font.
 		cWindows ( );					// Class constructor.
 		~cWindows ( );					// Class destructor.
-		PrintOutputWnd ( );				// Sends the contents of the output window to the printer.
-		CreateWnd ( HINSTANCE hInst );	// Creates the window classes.  Args: hInst = the current application instance.
-		ShowWnd ( HINSTANCE hInst );	// Initializes and displays the windows. Args: hInst = the current application instance.
-		SizeAppWindow ( );				// Resizes all child windows when the main application window is resized, so that they fill the application window.
+		int PrintOutputWnd ( );				// Sends the contents of the output window to the printer.
+		int CreateWnd ( HINSTANCE hInst );	// Creates the window classes.  Args: hInst = the current application instance.
+		int ShowWnd ( HINSTANCE hInst );	// Initializes and displays the windows. Args: hInst = the current application instance.
+		int SizeAppWindow ( );				// Resizes all child windows when the main application window is resized, so that they fill the application window.
 		struct _hWnd {
 			HWND hMenuDiv,		// Menu divider, the line at the top of the window that seperates the menu from the client portion of the application window.
 				hCOBOLOutWnd,	// COBOL output dialog window.
@@ -84,18 +84,18 @@ class cWindows {
 			public:
 				char ch_DirPath[_MAX_PATH];			// Holds the path for the directory of the files to be WISPed.
 				RECT OptionsRect;					// Holds the coordinates of the Options window.
-				AddTargets ( char *ch_FileSpecs );	// Adds files to the list of files to be WISPed and/or compiled.
-				BClicked ( LPARAM lp );				// Determines which button was clicked, what the context of the button was at the time it was clicked, and calls the appropriate function.
-				TabClicked ( );						// Responds to one of the option window tabs being clicked.
-				UnDimCOptions ( );					// Undims (enables) the controls in the COBOL option window.
-				SetCOBOLOptions ( BOOL Exec );		// Copies the settings that the user currently has in the COBOL option window, to a struct in memory.
-				CreateCCtls ( );					// Creates and displays the controls in the COBOL option window.
-				CBClicked ( LPARAM lp );			// Responds to a button being clicked in the COBOL option window.
+				int AddTargets ( char *ch_FileSpecs );	// Adds files to the list of files to be WISPed and/or compiled.
+				int BClicked ( LPARAM lp );				// Determines which button was clicked, what the context of the button was at the time it was clicked, and calls the appropriate function.
+				int TabClicked ( );						// Responds to one of the option window tabs being clicked.
+				int UnDimCOptions ( );					// Undims (enables) the controls in the COBOL option window.
+				int SetCOBOLOptions ( BOOL Exec );		// Copies the settings that the user currently has in the COBOL option window, to a struct in memory.
+				int CreateCCtls ( );					// Creates and displays the controls in the COBOL option window.
+				int CBClicked ( LPARAM lp );			// Responds to a button being clicked in the COBOL option window.
 				int CurLang;						// Keeps track of which COBOL version is currently selected.
-				CreateWCtls ( );					// Creates, displays, and initializes the controls in the WISP option window.
-				SetWISPOptions ( BOOL Exec);		// Copies the settings that the user currently has in the WISP option window, to a struct in memory.
-				UnDimWOptions ( );					// Undims (enables) the controls in the WISP option window.
-				WBClicked ( LPARAM lp );			// Responds to a button being clicked in the WISP option window.
+				int CreateWCtls ( );					// Creates, displays, and initializes the controls in the WISP option window.
+				int SetWISPOptions ( BOOL Exec);		// Copies the settings that the user currently has in the WISP option window, to a struct in memory.
+				int UnDimWOptions ( );					// Undims (enables) the controls in the WISP option window.
+				int WBClicked ( LPARAM lp );			// Responds to a button being clicked in the WISP option window.
 				RECT OptionShtRect;
 				struct _WCtls {
 					HWND
@@ -154,13 +154,13 @@ class cApplication {
 	public:
 		cApplication ( );		//	Class constructor
 		~cApplication ( );		//	Class destructor
-		AppInit ( HINSTANCE hInst );	//	Initializes the app
+		int AppInit ( HINSTANCE hInst );	//	Initializes the app
 		void MsgLoop ( );		//	Main message loop
-		CloseApp ( int ExitCode, int WinError );	//	Closes the app
+		int CloseApp ( int ExitCode, int WinError );	//	Closes the app
 		void CheckMsg ( );		//	Checks if there are any messages waiting in the que - if so, handles them (used for processes that take a long time, this can be called intermittenly so that the user does not have to wait for the process to end
-		GetReg ( );			//	Gets the configuration and environment variables from the registry
-		SetReg ( );
-		GetDrvInfo ( );
+		int GetReg ( );			//	Gets the configuration and environment variables from the registry
+		int SetReg ( );
+		int GetDrvInfo ( );
 		struct _Thread {
 			HANDLE hPreEntrySmphr;
 			DWORD Param;
@@ -168,19 +168,19 @@ class cApplication {
 		class _CmdLine {
 			public:
 				BOOL Break;					//	Flag used to break a long process if the user clicks the cancel button
-				Execute ( 
+				int Execute ( 
 					char *ch_CmdLine,
 					char *ch_FileName,
 					int i_FilesRemain,
 					int i_FilesSelect,
 					int i_TransComp,
 					int tc );				//	Executes WISP.EXE, passing the above switches
-				Build ( BOOL Exec,
+				int Build ( BOOL Exec,
 					int i_TransComp );		//	Builds the command line based on the info entered by the user
-				WriteLog ( 
+				int WriteLog ( 
 					char *ch_FileName,
 					char *ch_Msg );			//	Writes the same data that is sent to the output window to a log file for each file being wisped
-				DeleteLog ( 
+				int DeleteLog ( 
 					char *ch_FileName );    //  Deletes the .LOG file
 				struct _WOptions {			//	Encasulates the states of the controls/command line switches
 					BOOL
@@ -222,11 +222,11 @@ class cApplication {
 		}CmdLine;
 		class _FSettings {
 			public:
-				GetMaster ( );							//	Reads the default settings file for the directory
-				SetMaster ( );							//	Writes the default settings file for the directory
-				GetSingle ( char *ch_FileName );		//	Reads the settings file a the currently selected file
-				SetSingle ( char *ch_FileName );		//	Writes the settings file for the currently selected file
-				ChkOptFileExist ( char *ch_FileName );	//	Checks if a settings file exists for the currently selected file
+				int GetMaster ( );							//	Reads the default settings file for the directory
+				int SetMaster ( );							//	Writes the default settings file for the directory
+				int GetSingle ( char *ch_FileName );		//	Reads the settings file a the currently selected file
+				int SetSingle ( char *ch_FileName );		//	Writes the settings file for the currently selected file
+				int ChkOptFileExist ( char *ch_FileName );	//	Checks if a settings file exists for the currently selected file
 		}FSettings;
 		struct _Environment {
 			char ch_DirPath;							//	Holds the directory path to the application
@@ -271,6 +271,9 @@ class cApplication {
 /*
 **	History:
 **	$Log: #Classes.h,v $
+**	Revision 1.11  2007/08/02 13:22:51  gsl
+**	Remove CTL3Dxxxx stuff, obsolete.
+**	
 **	Revision 1.10  2003/06/18 16:55:56  gsl
 **	Add /F remove /C (replace)
 **	

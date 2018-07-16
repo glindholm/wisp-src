@@ -36,8 +36,40 @@
 #include "input.h"
 
 char *context_infile_name();
-cob_file_context *get_curr_cob_context();
 
+static int highest_serverity = SEVER_SUCCESS;
+
+static void got_serverity(char sever)
+{
+	int sever_num = SEVER_SUCCESS;
+	switch(sever)
+	{
+
+	case 'W': /* Warning */
+		sever_num = SEVER_WARNING;
+		break;
+	case 'E': /* Error */
+		sever_num = SEVER_ERROR;
+		break;
+	case 'F': /* Fatal */
+		sever_num = SEVER_FATAL;
+		break;
+	case 'S': /* Severe */
+		sever_num = SEVER_FATAL;
+		break;
+	}
+
+	if (sever_num > highest_serverity)
+	{
+		highest_serverity = sever_num;
+	}
+
+}
+
+int get_highest_serverity()
+{
+	return highest_serverity;
+}
 
 void write_tlog(tokptr,facil,sever,mess,lform,p0,p1,p2,p3,p4,p5,p6,p7)			/* write a log line to the current log	*/
 TOKEN *tokptr;
@@ -47,6 +79,8 @@ char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for th
 	char 	*ptr;
 	int	num;
 	char	where[80];
+
+	got_serverity(sever);
 
 	if (opt_nowarnings && sever == 'W') return;
 
@@ -138,6 +172,13 @@ int iscomment(const char* the_line)
 /*
 **	History:
 **	$Log: wt_io.c,v $
+**	Revision 1.22  2005/12/02 15:22:47  gsl
+**	Keep track of the highest severity level reported.
+**	Ensure an non-zero exit status if severity is fatal or higher.
+**	
+**	Revision 1.21  2003/12/03 16:18:48  gsl
+**	Fix so native screen fields and screen sections don't get generated in a copybook file.
+**	
 **	Revision 1.20  2003/02/28 21:49:05  gsl
 **	Cleanup and rename all the options flags opt_xxx
 **	

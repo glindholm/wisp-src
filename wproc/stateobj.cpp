@@ -32,6 +32,10 @@ state_object::state_object() {
    next_state_object = NULL;
 }
 
+state_object::~state_object() {
+   // Virtual destructor
+}
+
 
 Boolean state_object::open_state_file(const char *a_filename, state_mode a_mode) {
    switch (a_mode) {
@@ -100,6 +104,9 @@ void state_object::restore(char *&a_string) {
 //
 //	History:
 //	$Log: stateobj.cpp,v $
+//	Revision 1.7  2010/01/10 18:07:33  gsl
+//	fix missing virtual destructor warnings
+//	
 //	Revision 1.6  1998/08/31 19:14:17  gsl
 //	drcs update
 //	

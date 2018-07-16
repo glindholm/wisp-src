@@ -163,7 +163,7 @@ int VL_vre_window(char *text, ...)
 	int currrow;									/* Current row.				*/
 	int row,col,rows,cols;
 	int eot;									/* End of text flag.			*/
-	unsigned char *vsss(), *save;							/* Memory save pointer.			*/
+	unsigned char *save;							/* Memory save pointer.			*/
 	va_list args;
 
 	va_start(args,text);
@@ -399,6 +399,9 @@ void VL_vtitle(const char *titlestr)
 /*
 **	History:
 **	$Log: vutil.c,v $
+**	Revision 1.20  2010/02/10 03:52:33  gsl
+**	fix warnings for redefined functions
+**	
 **	Revision 1.19  2003/01/31 19:25:55  gsl
 **	Fix copyright header
 **	

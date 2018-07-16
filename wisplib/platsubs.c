@@ -68,14 +68,17 @@ static struct platform_struct	platform_table[] =
 	{PLATFORM_DGUX_INTEL,	"DI",	"DG/UX Intel",		"DGUX_INTEL"},	
 	{PLATFORM_HPUX,		"HP",	"HP-UX PA-RISC 32-bit",	"HPUX"},
 	{PLATFORM_HPUX_64,	"H6",	"HP-UX PA-RISC 64-bit",	"HPUX_64"},
+	{PLATFORM_HPUX_IA,	"IA",	"HP-UX IA 32-bit",	"HPUX_IA"},
+	{PLATFORM_HPUX_IA_64,	"I6",	"HP-UX IA 64-bit",	"HPUX_IA_64"},
 	{PLATFORM_LINUX,	"LX",	"LINUX Intel",		"LINUX"},
+	{PLATFORM_MSDOS,	"DS",	"MSDOS",		"MSDOS"},
 	{PLATFORM_SCO,		"SC",	"SCO UNIX Intel",	"SCO"},
 	{PLATFORM_SOLARIS,      "SO",   "Solaris Sparc 32-bit",	"SOLARIS"},
 	{PLATFORM_SOLARIS_64,   "S6",   "Solaris Sparc 64-bit",	"SOLARIS_64"},
 	{PLATFORM_SEQUENT,	"SQ",	"Sequent",		"SEQUENT"},
 	{PLATFORM_ULTRIX,	"UL",	"Ultrix (DEC RISC)",	"ULTRIX"},
 	{PLATFORM_UNIXWARE,	"UW",	"UNIXWARE Intel",	"UNIXWARE"},
-	{PLATFORM_WINDOWS_NT,	"WN",	"Windows NT (WIN32)",	"WIN32"},
+	{PLATFORM_WINDOWS_NT,	"WN",	"Windows (WIN32)",	"WIN32"},
 	{-1,			(char *)0, (char *)0,		(char *)0}
 
 #ifdef OLD
@@ -175,13 +178,27 @@ int WL_platform_number(void)
 #endif
 #endif
 
+/*
+* There are 4 flavors of HPUX (they will all define HPUX)
+* The 2 flavours of 64-bit will both define HPUX_64
+* The Itanium flavors will define also define HPUX_IA  
+*/
+#ifdef HPUX
+#ifdef HPUX_IA
+#ifdef HPUX_64
+	return PLATFORM_HPUX_IA_64;
+#else
+	return PLATFORM_HPUX_IA;
+#endif
+#else /* NOT HPUX_IA */
 #ifdef HPUX_64
 	return PLATFORM_HPUX_64;
 #else
-#ifdef HPUX
 	return PLATFORM_HPUX;
 #endif
-#endif
+#endif /* HPUX_IA */
+#endif /* HPUX */
+
 
 #ifdef SOLARIS_64
 	return PLATFORM_SOLARIS_64;
@@ -461,6 +478,22 @@ void WL_putplattab(void)
 /*
 **	History:
 **	$Log: platsubs.c,v $
+**	Revision 1.25  2010/02/10 14:50:05  gsl
+**	fix HPUX defines
+**	
+**	Revision 1.24  2010/02/10 03:56:29  gsl
+**	add HPUX IA Itanium platform
+**	
+**	Revision 1.23  2007/08/06 17:48:31  gsl
+**	Change "Windows NT (WIN32)" to "Windows (WIN32)"
+**	Drop the "NT"
+**	
+**	Revision 1.22  2004/05/03 17:40:41  gsl
+**	Add MS-DOS back into list of platforms (still in use)
+**	
+**	Revision 1.21  2004/05/03 17:24:49  gsl
+**	Add MS-DOS back into list of platforms (still in use)
+**	
 **	Revision 1.20  2003/05/19 18:53:52  gsl
 **	Add 32/64 bit to platform names
 **	

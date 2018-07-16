@@ -391,7 +391,9 @@ static int raw_write_personality_file(usr_defaults *the_def, const char *filenam
 		werrlog(WERRCODE(83022),"raw_write_personality_file",filename,errno,0,0,0,0,0);
 		return -2;	/* WRITE failed */
 	}
+#ifdef unix
 	chmod( filename, 0666 );
+#endif
 
 	WL_wtrace("WPERSON", "WRITE", "Wrote PERSONALITY file [%s]", filename);
 	return 0;
@@ -2172,7 +2174,12 @@ static void load_scmap(void)
 				WL_werrlog_error(WERRCODE(83024),"WPERSON", "TEXT", "%s", inlin);	/* Display the text.	*/
 				wexit(WERRCODE(83024));
 			}
-			inlin[strlen(inlin)-1] = '\0';				/* remove trailing NL			*/
+
+			if (inlin[strlen(inlin)-1]=='\n')
+			{
+				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
+			}
+
 			scmap_ptr->class = toupper(inlin[0]);			/* get the class			*/
 			scmap_ptr->nice = atoi(&inlin[2]);			/* convert nice to int			*/
 		}
@@ -2243,7 +2250,11 @@ static void load_cqmap(void)
 				WL_werrlog_error(WERRCODE(83024),"WPERSON", "TEXT", "%s", inlin);	/* Display the text.	*/
 				wexit(WERRCODE(83024));
 			}
-			inlin[strlen(inlin)-1] = '\0';				/* remove trailing NL			*/
+
+			if (inlin[strlen(inlin)-1]=='\n')
+			{
+				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
+			}
 			cqmap_ptr->class = toupper(inlin[0]);			/* get the class			*/
 			cqmap_ptr->queue = wisp_strdup(&inlin[2]);		/* dupe the queue name 			*/
 		}
@@ -2288,7 +2299,11 @@ static void load_forms(void)
 				forms_ptr->next = NULL;				/* set next pointer to zero		*/
 			}
 
-			inlin[strlen(inlin)-1] = '\0';				/* remove trailing NL			*/
+			if (inlin[strlen(inlin)-1]=='\n')
+			{
+				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
+			}
+
 			inlin[3] = '\0';					/* null term after form#		*/
 			forms_ptr->form_num = atoi(inlin);			/* convert formnum to int		*/
 			forms_ptr->form_string = wisp_strdup( &inlin[4] );	/* Get form control string		*/
@@ -2361,7 +2376,12 @@ static void load_prmap(void)
 				WL_werrlog_error(WERRCODE(83028),"WPERSON", "TEXT", "%s", inlin);	/* Display the text.	*/
 				wexit(WERRCODE(83028));
 			}
-			inlin[strlen(inlin)-1] = '\0';				/* remove trailing NL			*/
+
+			if (inlin[strlen(inlin)-1]=='\n')
+			{
+				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
+			}
+
 			inlin[3] = '\0';					/* null term after printer #		*/
 			prmap_ptr->prmap_num = atoi(inlin);			/* convert printer # to int		*/
 			if (prmap_ptr->prmap_num == 0)
@@ -2831,20 +2851,13 @@ int wisp_nativescreens(void)
 				flag = 1;
 				VL_set_vsharedscreen_true();
 			}
-		}
-	}
+			else if (wisp_mf_cobol())
+			{
+				WL_wtrace("OPTIONS","NATIVESCREENS","Using MICRO FOCUS native screens");
 
-	return flag;
-}
-int wisp_acu_nativescreens(void)
-{
-	static int flag = -1;
-	if (-1 == flag ) /* first time only */
-	{
-		flag = 0;
-		if (wisp_nativescreens() && wisp_acu_cobol())
-		{
-			flag = 1;
+				flag = 1;
+				VL_set_vsharedscreen_true();
+			}
 		}
 	}
 
@@ -3059,6 +3072,15 @@ int WL_wang_alphanumeric(const char* str)
 /*
 **	History:
 **	$Log: wperson.c,v $
+**	Revision 1.85  2009/10/18 20:48:21  gsl
+**	fix windows warnings
+**	
+**	Revision 1.84  2007/08/02 20:08:46  gsl
+**	fix how NL is trimmed off each line in the config files
+**	
+**	Revision 1.83  2003/08/25 21:10:17  gsl
+**	MF Native Screens
+**	
 **	Revision 1.82  2003/07/14 15:20:06  gsl
 **	fix PV/PL env buff size
 **	

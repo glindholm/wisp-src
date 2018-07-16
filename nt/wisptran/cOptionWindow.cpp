@@ -41,7 +41,7 @@
 //	cWindows::_OptionWindow::TabClicked
 //		Selects an option sheet when a tab is clicked
 //
-cWindows::_OptionWindow::TabClicked ( )
+int cWindows::_OptionWindow::TabClicked ( )
 {
 	int index;
 	index = SendMessage ( cWnd.hWnd.hTabWnd, TCM_GETCURSEL, 0, 0 );
@@ -143,7 +143,7 @@ cWindows::_OptionWindow::TabClicked ( )
 //	cWindows::_OptionWindow::BClicked
 //		Responds when a translate or compile button is clicked
 //
-cWindows::_OptionWindow::BClicked ( LPARAM lp ) 
+int cWindows::_OptionWindow::BClicked ( LPARAM lp ) 
 {
 	SECURITY_ATTRIBUTES sa;
 	DWORD thrdID;
@@ -266,7 +266,7 @@ cWindows::_OptionWindow::BClicked ( LPARAM lp )
 //	cWindows::_OptionWindow::UnDimWOptions
 //		Enables the WISP controls
 //
-cWindows::_OptionWindow::UnDimWOptions ( )
+int cWindows::_OptionWindow::UnDimWOptions ( )
 {
 	//	Get window handles for static controls 
 	WCtls.l_FromDir = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_FromDir );
@@ -324,7 +324,7 @@ cWindows::_OptionWindow::UnDimWOptions ( )
 //	cWindows::_OptionWindow::AddTargets
 //		Adds the target files to the combo boxes
 //
-cWindows::_OptionWindow::AddTargets ( char *ch_FileSpecs )
+int cWindows::_OptionWindow::AddTargets ( char *ch_FileSpecs )
 {
 	char ch_SingleFName[256];
 	int cnt, 
@@ -530,7 +530,7 @@ cWindows::_OptionWindow::AddTargets ( char *ch_FileSpecs )
 //	cWindows::_OptionWindow::CreateWCtls
 //		Creates the WISP controls
 //
-cWindows::_OptionWindow::CreateWCtls ( )
+int cWindows::_OptionWindow::CreateWCtls ( )
 {
 	WCtls._TargetFile = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_TargetFile );
 	WCtls._DirPath = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_DirPath );
@@ -587,7 +587,7 @@ cWindows::_OptionWindow::CreateWCtls ( )
 //	cWindows::_OptionWindow::SetWISPOptions
 //		Saves the current WISP options to glaobal vars
 //
-cWindows::_OptionWindow::SetWISPOptions ( BOOL Exec )
+int cWindows::_OptionWindow::SetWISPOptions ( BOOL Exec )
 {
 	//	Put the contents of the edit fields into struct in cApp.CmdLine
 	GetDlgItemText ( cWnd.hWnd.hWISPOpWnd, 
@@ -708,7 +708,7 @@ cWindows::_OptionWindow::SetWISPOptions ( BOOL Exec )
 //	cWindows::_OptionWindow::WBClicked
 //		Responds to a button being clicked on the WISP sheet
 //
-cWindows::_OptionWindow::WBClicked ( LPARAM lp )
+int cWindows::_OptionWindow::WBClicked ( LPARAM lp )
 {
 	OPENFILENAME OFN;			//	structure to hold information for the common open dialog box, used with browse buttons
 	char ch_FileName[1024];		//	Holds the name of the currently selected file
@@ -814,7 +814,7 @@ cWindows::_OptionWindow::WBClicked ( LPARAM lp )
 //	cWindows::_OptionWindow::SetCOBOLOptions
 //		Saves the current COBOL options to global vars
 //
-cWindows::_OptionWindow::SetCOBOLOptions ( BOOL Exec )
+int cWindows::_OptionWindow::SetCOBOLOptions ( BOOL Exec )
 {
 	//	Put the contents of the edit fields into struct in cApp.CmdLine
 	GetDlgItemText ( cWnd.hWnd.hCOBOLOpWnd, 
@@ -847,7 +847,7 @@ cWindows::_OptionWindow::SetCOBOLOptions ( BOOL Exec )
 //	cWindows::_AppWindow::_OptionWindow::_COBOLOps::CreateCCtls
 //		Creates the COBOL controls
 //
-cWindows::_OptionWindow::CreateCCtls ( )
+int cWindows::_OptionWindow::CreateCCtls ( )
 {
 	CCtls._TargetFile = GetDlgItem ( cWnd.hWnd.hCOBOLOpWnd, ctl_TargetFile );
 	CCtls._TargetBrs = GetDlgItem ( cWnd.hWnd.hCOBOLOpWnd, ctl_TargetBrs );
@@ -891,7 +891,7 @@ cWindows::_OptionWindow::CreateCCtls ( )
 //	cWindows::_OptionWindow::UnDimCOptions
 //		Enables the COBOL controls
 //
-cWindows::_OptionWindow::UnDimCOptions ( )
+int cWindows::_OptionWindow::UnDimCOptions ( )
 {
 	//	Get handles for static labels
 	CCtls.l_CFlags = GetDlgItem ( cWnd.hWnd.hCOBOLOpWnd, ctll_CFlags );
@@ -927,7 +927,7 @@ cWindows::_OptionWindow::UnDimCOptions ( )
 //	cWindows::_OptionWindow::CBClicked
 //		Responds to a button being clicked on the COBOL sheet
 //
-cWindows::_OptionWindow::CBClicked ( LPARAM lp )
+int cWindows::_OptionWindow::CBClicked ( LPARAM lp )
 {
 	OPENFILENAME OFN;							//	structure to hold information for the common open dialog box, used with browse buttons
 	char ch_FileName[1024];					//	Holds the name of the currently selected file
@@ -1020,6 +1020,9 @@ cWindows::_OptionWindow::CBClicked ( LPARAM lp )
 /*
 **	History:
 **	$Log: cOptionWindow.cpp,v $
+**	Revision 1.14  2009/10/17 19:55:36  gsl
+**	fix default return type to int
+**	
 **	Revision 1.13  2003/06/18 17:25:29  gsl
 **	pretty up the wisp options dialog
 **	

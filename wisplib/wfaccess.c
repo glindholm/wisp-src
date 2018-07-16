@@ -165,7 +165,14 @@ static int x_wfaccess(char* filename, int is_output, int is_indexed)
 			}
 		}
 
-		if (-1 != (file_desc = creat(filename, 00666)))			/* See if she'll open up.			*/
+#ifdef unix
+		file_desc = creat(filename, 0666);
+#endif
+#ifdef WIN32
+		file_desc = _creat(filename, _S_IREAD | _S_IWRITE);
+#endif
+
+		if (-1 != file_desc)			/* See if she'll open up.			*/
 		{
 			close(file_desc);
 			wisp_unlink(filename);
@@ -207,6 +214,9 @@ static int x_wfaccess(char* filename, int is_output, int is_indexed)
 /*
 **	History:
 **	$Log: wfaccess.c,v $
+**	Revision 1.24  2009/10/18 20:57:07  gsl
+**	Fix bug with Vista/2008 where creat() was failing because of unsupported mode.
+**	
 **	Revision 1.23  2003/01/31 19:08:37  gsl
 **	Fix copyright header  and -Wall warnings
 **	

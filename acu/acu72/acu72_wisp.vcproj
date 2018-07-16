@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="acu72_wisp"
+	ProjectGUID="{9088788C-1CF5-4159-9EC8-43D4F41A0631}"
+	Keyword="MakeFileProj"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory=".\Debug"
+			IntermediateDirectory=".\Debug"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="nmake /f &quot;acu72_wisp.mak&quot;"
+				ReBuildCommandLine="nmake /f &quot;acu72_wisp.mak&quot; /a"
+				CleanCommandLine=""
+				Output="acu72_wisp.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory=".\acu72_wisp___Win32_Release"
+			IntermediateDirectory=".\acu72_wisp___Win32_Release"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="NMAKE /f acu72_wisp.mak"
+				ReBuildCommandLine="NMAKE /f acu72_wisp.mak /a"
+				CleanCommandLine=""
+				Output="acu72_wisp.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<File
+			RelativePath="acu72_wisp.bsc"
+			>
+		</File>
+		<File
+			RelativePath=".\build_wisp_acu72_atm_rts.txt"
+			>
+		</File>
+		<File
+			RelativePath="build_wisp_acu72_rts.txt"
+			>
+		</File>
+		<File
+			RelativePath=".\run32.vcproj"
+			>
+		</File>
+		<File
+			RelativePath="wisp.rc"
+			>
+		</File>
+		<File
+			RelativePath="wrundll.vcproj"
+			>
+		</File>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

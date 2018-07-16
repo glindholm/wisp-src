@@ -14,22 +14,17 @@
 //	cDialogs::_MESSAGE::Initialize
 //		Initializes the MESSAGE dialog
 //
-cDialogs::_MESSAGE::Initialize ( )
+int cDialogs::_MESSAGE::Initialize ( )
 {
 	HKEY hKey;
 	HWND hDlg = Dialogs.MESSAGE.hMESSAGE;
-	DWORD BufSize = _MAX_PATH, Disp;
+	DWORD BufSize = _MAX_PATH;
 	UCHAR sRegValue[_MAX_PATH];
 	//	If unable to open key
-	if ( RegCreateKeyEx (
-		HKEY_LOCAL_MACHINE, 
-		"Software\\NeoMedia\\WISP\\VSSUBS\\MESSAGE",
-		0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-		NULL, &hKey, &Disp ) == ERROR_SUCCESS ) {
+	if ( CreateRegistryKey ( REGKEY_WISP_VSSUBS_MESSAGE, &hKey ) == ERROR_SUCCESS ) {
 		//	Get value for SHAREDIR field
 		BufSize = _MAX_PATH;
-		if ( RegQueryValueEx (
-			hKey, "SHAREDIR", 0, NULL, sRegValue,
+		if ( RegQueryValueEx (hKey, REGVAL_MESSAGE_SHAREDIR, 0, NULL, sRegValue,
 			&BufSize ) == ERROR_SUCCESS ) {
 			sRegValue[BufSize] = '\0';
 			SetDlgItemText (
@@ -47,10 +42,6 @@ cDialogs::_MESSAGE::Initialize ( )
 	}
 
 	HWND hCtl = GetDlgItem ( hMESSAGE, S04_SHAREDIR );
-	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//	***** CHANGED *****
-//	HDC hDC = GetDC ( hCtl );
-	//	***** END CHANGED *****
 	ChkInvalid ( hCtl );
 
 	return 0;
@@ -61,22 +52,18 @@ cDialogs::_MESSAGE::Initialize ( )
 //	cDialogs::_MESSAGE::Save
 //		Saves the data in the MESSAGE dialog to the registry
 //
-cDialogs::_MESSAGE::Save ( )
+int cDialogs::_MESSAGE::Save ( )
 {
 	HWND hDlg;
 	HKEY hKey;
 	UCHAR sRegVal[_MAX_PATH];
 
 	hDlg = Dialogs.MESSAGE.hMESSAGE;
-	RegOpenKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\VSSUBS\\MESSAGE",
-		0, KEY_ALL_ACCESS, &hKey );
+	RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_VSSUBS_MESSAGE, 0, KEY_ALL_ACCESS, &hKey );
 
 	GetDlgItemText (
 		hDlg, S04_SHAREDIR, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "SHAREDIR", 0, REG_SZ, sRegVal,
+	RegSetValueEx (	hKey, REGVAL_MESSAGE_SHAREDIR, 0, REG_SZ, sRegVal,
 		strlen ((char *) sRegVal )+1);
 
 	RegFlushKey ( hKey );

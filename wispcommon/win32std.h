@@ -48,23 +48,19 @@
 /*
 **	WIN32 does not have defines for some of the standard C lib routines
 */
-#define chmod 		_chmod
-#define getcwd		_getcwd
-#define getpid		_getpid
-#define unlink		_unlink
-#define rmdir		_rmdir
-#define close		_close
-#define	read		_read
-#define	open		_open
-#define	strdup		_strdup
-#define	spawnvp		_spawnvp
-#define	putenv		_putenv
-#define access		_access
-#define	creat		_creat
-#define write		_write
-#define stat		_stat
 
-#define mkdir(dir,mode) _mkdir(dir)
+/*
+#include <io.h>
+#define access		_access
+#define chmod 		_chmod
+#define	creat		_creat
+#define close		_close
+#define	open		_open
+#define	read		_read
+#define write		_write
+
+*/
+
 
 /*
 **	Function Prototypes
@@ -75,6 +71,9 @@
 /*
 **	History:
 **	$Log: win32std.h,v $
+**	Revision 1.4  2009/10/18 20:25:17  gsl
+**	Remove obsolete win32std.h
+**	
 **	Revision 1.3  2003/01/31 19:26:33  gsl
 **	Fix copyright header
 **	

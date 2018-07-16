@@ -40,7 +40,7 @@ and file manipulation.
 /*----
 Truncate to last non-space
 ----*/
-void trunc(char *str)
+void vse_trunc(char *str)
 {
 	int len;
 	len = strlen(str)-1;
@@ -63,7 +63,7 @@ Add spaces to the end of a field to len.
 Returns a null terminated string that is blank padded so strlen(s) == len.
 *** NOTE *** s must be at least len+1 bytes long.
 ------*/
-void untrunc(char *s, int len)
+void vse_untrunc(char *s, int len)
 {
 	int	i;
 
@@ -93,9 +93,9 @@ int isblankstr(char *str, int len)
 }
 
 /*----
-Returns true is a system named file exists.
+Returns true is a system named file vse_exists.
 ------*/
-int exists(char *name)
+int vse_exists(char *name)
 {
 	struct stat stat_buf;
 	int rc;
@@ -155,6 +155,10 @@ void vse_untabify(char *str, int size)
 /*
 **	History:
 **	$Log: vseutl.c,v $
+**	Revision 1.13  2010/01/10 00:36:15  gsl
+**	refactor utils to add vse_ prefix to avoid conflicts with trunc
+**	vse_trunc
+**	
 **	Revision 1.12  2003/02/04 18:57:00  gsl
 **	fix copyright header
 **	

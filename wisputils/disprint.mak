@@ -1,11 +1,11 @@
 #
-#	Copyright (c) 1998-2003 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC, All rights reserved.
 #	$Id:$
 #
 # makefile for WISP for WIN32 utilities DISPRINT.
 #
-ACUDIR=C:\Acucorp\ACUCBL600\ACUGT
-WISPDIR=C:\WISP5000
+#ACUDIR=C:\Acucorp\ACUCBL610\ACUGT
+WISPDIR=C:\WISP5001
 
 WISPTRAN=$(WISPDIR)\bin\wisp.exe
 WISPFLAGS= -u ACU50

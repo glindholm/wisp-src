@@ -70,7 +70,6 @@ int fkey() {
       }
       ring_bell();
    }
-   return 0; /* NEVER WILL OCCUR */
 }
 
 
@@ -763,6 +762,9 @@ char *tracer::symbol_data(symbol &a_symbol, int array_index) {
 /*
 **	History:
 **	$Log: tracer.cpp,v $
+**	Revision 1.13  2010/02/10 03:55:04  gsl
+**	fix unrreachable code warning
+**	
 **	Revision 1.12  2002/07/12 19:10:25  gsl
 **	Global unique WL_ changes
 **	
@@ -795,6 +797,9 @@ char *tracer::symbol_data(symbol &a_symbol, int array_index) {
 //
 //	History:
 //	$Log: tracer.cpp,v $
+//	Revision 1.13  2010/02/10 03:55:04  gsl
+//	fix unrreachable code warning
+//	
 //	Revision 1.12  2002/07/12 19:10:25  gsl
 //	Global unique WL_ changes
 //	

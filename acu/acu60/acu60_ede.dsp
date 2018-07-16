@@ -28,7 +28,7 @@ CFG=acu60_ede - Win32 Debug
 
 !IF  "$(CFG)" == "acu60_ede - Win32 Release"
 
-# PROP BASE Use_MFC
+# PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
 # PROP BASE Output_Dir "acu60_ede___Win32_Release"
 # PROP BASE Intermediate_Dir "acu60_ede___Win32_Release"
@@ -37,7 +37,7 @@ CFG=acu60_ede - Win32 Debug
 # PROP BASE Target_File "acu60_ede.exe"
 # PROP BASE Bsc_Name "acu60_ede.bsc"
 # PROP BASE Target_Dir ""
-# PROP Use_MFC
+# PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "acu60_ede___Win32_Release"
 # PROP Intermediate_Dir "acu60_ede___Win32_Release"
@@ -49,7 +49,7 @@ CFG=acu60_ede - Win32 Debug
 
 !ELSEIF  "$(CFG)" == "acu60_ede - Win32 Debug"
 
-# PROP BASE Use_MFC
+# PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
 # PROP BASE Output_Dir "Debug"
 # PROP BASE Intermediate_Dir "Debug"
@@ -58,7 +58,7 @@ CFG=acu60_ede - Win32 Debug
 # PROP BASE Target_File "acu60_ede.exe"
 # PROP BASE Bsc_Name "acu60_ede.bsc"
 # PROP BASE Target_Dir ""
-# PROP Use_MFC
+# PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
@@ -84,6 +84,10 @@ CFG=acu60_ede - Win32 Debug
 # Begin Source File
 
 SOURCE=.\acu60_ede.mak
+# End Source File
+# Begin Source File
+
+SOURCE=.\wrundll_ede_acu60.mak
 # End Source File
 # End Target
 # End Project

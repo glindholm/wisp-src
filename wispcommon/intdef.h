@@ -46,21 +46,21 @@ typedef int		int4;
 typedef unsigned int	uint4;
 
 #ifdef OSF1_ALPHA
-#define INT8_DEFINED
-typedef	long		INT8;
-typedef	unsigned long	UINT8;
+#define INT64_DEFINED
+typedef	long		INT64;
+typedef	unsigned long	UINT64;
 #endif
 
 #if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
-#define INT8_DEFINED
-typedef	long long		INT8;
-typedef	unsigned long long	UINT8;
+#define INT64_DEFINED
+typedef	long long		INT64;
+typedef	unsigned long long	UINT64;
 #endif
 
 #ifdef WIN32
-#define INT8_DEFINED
-typedef __int64			INT8;
-typedef unsigned __int64	UINT8;
+#define INT64_DEFINED
+typedef __int64			INT64;
+typedef unsigned __int64	UINT64;
 #endif
 
 /*
@@ -72,6 +72,9 @@ typedef unsigned __int64	UINT8;
 /*
 **	History:
 **	$Log: intdef.h,v $
+**	Revision 1.10  2007/07/31 16:51:06  gsl
+**	Change INT8 to INT64 to avoid conflicts on WIN32
+**	
 **	Revision 1.9  2003/01/31 19:26:33  gsl
 **	Fix copyright header
 **	

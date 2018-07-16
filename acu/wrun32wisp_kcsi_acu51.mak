@@ -6,7 +6,7 @@
 #################################################################
 #
 # Use this makefile to build an Acucobol-GT 5.1 runtime 
-# with WISP 5.0.01 and KCSI 4.1.00.
+# with WISP 5.1.00 and KCSI 4.2.00.
 #
 # ACUDIR=C:\acucorp\acucbl510\acugt
 #
@@ -75,8 +75,8 @@
 #################################################################
 
 # Set the installed WISP and KCSI directory here.
-WISPDIR=C:\WISP5001
-KCSIDIR=C:\KCSIACU4100
+WISPDIR=C:\WISP5100
+KCSIDIR=C:\KCSIACU4200
 
 #  Set the runtime name here. (Do not include a file extension.)
 WRUN32=wrun32wispk

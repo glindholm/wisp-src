@@ -147,8 +147,8 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 
 		if (0==memcmp(l_field,"BS",2))				/* Byte size PIC 9(18) */
 		{
-#ifdef INT8_DEFINED
-			INT8 stat_size;
+#ifdef INT64_DEFINED
+			INT64 stat_size;
 			rc = WL_stat_size_int8(filespec, &stat_size);
 #else
 			long stat_size;
@@ -466,8 +466,8 @@ static int4 unstructured_fileinfo(const char* path, const char* code, void* raw_
 		if (1==style)
 		{
 			int rc;
-#ifdef INT8_DEFINED
-			INT8 stat_size;
+#ifdef INT64_DEFINED
+			INT64 stat_size;
 			rc = WL_stat_size_int8(path, &stat_size);
 #else
 			long stat_size;
@@ -539,6 +539,9 @@ static int4 unstructured_fileinfo(const char* path, const char* code, void* raw_
 /*
 **	History:
 **	$Log: readfdr.c,v $
+**	Revision 1.36  2007/07/31 16:51:07  gsl
+**	Change INT8 to INT64 to avoid conflicts on WIN32
+**	
 **	Revision 1.35  2003/02/04 16:30:02  gsl
 **	Fix -Wall warnings
 **	

@@ -11,7 +11,7 @@
 ******************************************************************************
 */
 
-static	char 	*SORT_VERSION = "SSB SORT Program - Version 1.00.00";
+static	char 	*SORT_VERSION = "SyncSort SORT Program - Version 1.01.03";
 
 /*
 **	File:		sswsort.c
@@ -196,7 +196,7 @@ struct wang_file_s
 	char	lib[SIZEOF_LIB+1];		/* Wang LIBRARY name		*/
 	char	vol[SIZEOF_VOL+1];		/* Wang VOLUME name		*/
 	char	filename[COB_FILEPATH_LEN+1];	/* Native file name		*/
-	char	fileorg;			/* Organization (C/F, R, or I) Consecutive/Fixed is the same */
+	char	fileorg;			/* Organization (C/F, N, R, or I) Consecutive/Fixed is the same */
 	char	rectype;			/* Record type (F ov V)		*/
 };
 
@@ -241,10 +241,10 @@ struct select_getparms_s
 	struct 
 	{
 		unsigned int fldpos;			/* Test field starting position */
-		unsigned int fldlen;			/* Test field lenght */
-		char fldtyp;				/* Test field type */
+		unsigned int fldlen;			/* Test field length */
+		char fldtyp;					/* Test field type */
 		enum e_tstrel tstrel;			/* Test relationship to either tstval or tstpos */
-		char tstval[TSTVAL_FIELD_LEN+1];	/* Test constant string (or empty string if tstpos!=0) */
+		char tstval[TSTVAL_FIELD_LEN+1];/* Test constant string (or empty string if tstpos!=0) */
 		unsigned int tstpos;			/* Position of the test field (or 0 if a tstval ) */
 		enum e_tstcon tstcon;			/* AND or OR for next select test */
 	} selinfo[MAXSORTSELECTS];
@@ -318,6 +318,9 @@ struct output_getparm_s
 
 #define ISSUER_SORT	"SORT  "
 
+char WISPFILEXT[39];	/* Define the file extension variable.	*/
+char WISPRETURNCODE[3];	/* Define the return code field.	*/
+
 /*
 **	Static data
 */
@@ -356,7 +359,7 @@ static int wsort(void);
 static int get_options(struct options_getparm_s *options);
 static int get_input(enum e_sortfunc function_flag, struct input_getparms_s *input);
 static int get_select(unsigned int reclen, struct select_getparms_s *select);
-static int get_keys(unsigned int reclen, struct keys_getparm_s *keys);
+static int get_keys(unsigned int reclen, struct keys_getparm_s *keys, char fileorg);
 static int get_reformat(unsigned int reclen, struct format_getparms_s *reformat);
 static int get_output(struct output_getparm_s *output,  
 		      struct input_getparms_s *input,
@@ -598,7 +601,7 @@ static int wsort(void)
 	*/
 	memset(&keys,0,sizeof(keys));
 	keys.keycnt = 0;
-	pfkey = get_keys(input.min_recsize, &keys);
+	pfkey = get_keys(input.min_recsize, &keys, input.list[0].fileorg);
 	if (16 == pfkey)
 	{
 		return 16;
@@ -929,7 +932,7 @@ static int perform_syncsort(struct options_getparm_s *options,
 			    struct varstr_s *outstr)
 {
 	unsigned int i;
-	char buff[2048];
+	char buff[3000];
 	struct varstr_s *cmd = varstr_new();
 
 	if (debug_mode)
@@ -975,8 +978,12 @@ static int perform_syncsort(struct options_getparm_s *options,
 		FILEORG=I
 		/INFILE {filename} INDEXED FIXED
 
+  		FILEORG=N
+		/INFILE {filename} SEQUENTIAL MFLINESEQUENTIAL {recsize}
+
 		FILEORG=C/F
 		/INFILE {filename} SEQUENTIAL FIXED {recsize}
+
 	*/
 	for(i=0; i<input->infile_count; i++)
 	{
@@ -985,7 +992,12 @@ static int perform_syncsort(struct options_getparm_s *options,
 			varstr_printf(cmd," /INFILE \"%s\" INDEXED FIXED \n", 
 				input->list[i].filename);
 		}
-		else if (input->list[i].fileorg == 'C' || input->list[i].fileorg == 'F')
+		else if (input->list[i].fileorg == 'N' )
+		{
+			varstr_printf(cmd," /INFILE \"%s\" MFLINESEQUENTIAL \n", 
+				input->list[i].filename);
+		}
+		else if (input->list[i].fileorg == 'C' || input->list[i].fileorg == 'F' )
 		{
 			varstr_printf(cmd," /INFILE \"%s\" SEQUENTIAL FIXED %d \n", 
 				input->list[i].filename, input->list[i].recsize);
@@ -1147,8 +1159,10 @@ static int perform_syncsort(struct options_getparm_s *options,
 
 		/OUTFILE {filename} [OVERWRITE] SEQUENTIAL FIXED {recsize}
 
+  		/OUTFILE {filename} [OVERWRITE] SEQUENTIAL MFLINESEQUENTIAL {recsize}
+
 	*/
-	if (output->o.recsize > 0)
+	if ( input->list[0].fileorg == 'N' || output->o.recsize > 0)
 	{
 		int overwrite = FALSE;
 
@@ -1169,10 +1183,19 @@ static int perform_syncsort(struct options_getparm_s *options,
 			overwrite = TRUE;
 		}
 
-		varstr_printf(cmd," /OUTFILE \"%s\" %s SEQUENTIAL FIXED %d \n", 
-			output->o.filename, 
-			(overwrite?"OVERWRITE":""),
-			output->o.recsize);
+		if( input->list[0].fileorg == 'N' )
+		{
+			varstr_printf(cmd," /OUTFILE \"%s\" %s SEQUENTIAL MFLINESEQUENTIAL \n", 
+				output->o.filename, 
+				(overwrite?"OVERWRITE":""));
+		}
+		else
+		{
+			varstr_printf(cmd," /OUTFILE \"%s\" %s SEQUENTIAL FIXED %d \n", 
+				output->o.filename, 
+				(overwrite?"OVERWRITE":""),
+				output->o.recsize);
+		}
 	}
 	else
 	{
@@ -1328,7 +1351,7 @@ static int perform_syncsort(struct options_getparm_s *options,
 **	Description:	Copy in to out and shell escape any special shell characters,
 **			Add a backslash ('\\') before a special shell char to escape.
 **
-**			Special charactesrs are '\\', '\n', '\'', '\"', '(', ')'
+**		Special charactesrs are '\\', '\n', '\'', '\"', '(', ')', '$'
 **
 **	Arguments:
 **	in		The input string
@@ -1377,7 +1400,7 @@ static int shell_escape(const char* in, struct varstr_s *out)
 			ptr = buff;
 		}
 
-		if (NULL!=strchr("()\\\n\'\"",*in))	/* If a special shell char... */
+		if (NULL!=strchr("$()\\\n\'\"",*in))	/* If a special shell char... */
 		{
 			*ptr++ = '\\';			/* Add '\' before special char to escape */
 			size--;
@@ -1841,9 +1864,9 @@ static int get_input(enum e_sortfunc function_flag, struct input_getparms_s *inp
 			}
 		}
 
-		GPCTEXT("Is file type Indexed or Fixed ?",18,2);
+		GPCTEXT("Is file type Indexed, Fixed, Line Sequential ?",18,2);
 		GPKW(x_filetype,"FILETYPE",filetype_field,FILEORG_FIELD_LEN,18,47,"A");
- 		GPCTEXT("(I or F)",18,65);
+ 		GPCTEXT("(I, F or N)",18,65);
 
 		GPCTEXT("For FILETYPE=F, what is the record size ?",19,2);
 		GPKW(x_recsize,"RECSIZE ",recsize_field,RECSIZE_FIELD_LEN,19,47,"N");
@@ -2043,12 +2066,13 @@ static int get_input(enum e_sortfunc function_flag, struct input_getparms_s *inp
 		**	for unix and DOS.
 		*/
 
-		if (	filetype_field[0] != 'I' && 
-			filetype_field[0] != 'F'   )
+		if ( filetype_field[0] != 'I' && 
+			 filetype_field[0] != 'F' &&
+			 filetype_field[0] != 'N'   )
 		{
 			x_filetype="R";
 			messid="ER99";
-			mess1 = "\224SORRY\204- FILETYPE must be \"I\" or \"F\", please respecify.";
+			mess1 = "\224SORRY\204- FILETYPE must be \"I\", \"F\", or \"N\", please respecify.";
 			continue;
 		}
 		else
@@ -2111,7 +2135,7 @@ static int get_input(enum e_sortfunc function_flag, struct input_getparms_s *inp
 		}
 
 		/*
-		**	Call READFDR to get the record lenght.
+		**	Call READFDR to get the record length.
 		*/
 		if ('I' == in->fileorg)
 		{
@@ -2702,7 +2726,7 @@ static int get_select(unsigned int reclen, struct select_getparms_s *select)
 **	Warnings:	None
 **
 */
-static int get_keys(unsigned int reclen, struct keys_getparm_s *keys)
+static int get_keys(unsigned int reclen, struct keys_getparm_s *keys, char fileorg)
 {
 	int4	pfkey_mask;
 	char	*gptype;
@@ -2850,7 +2874,7 @@ static int get_keys(unsigned int reclen, struct keys_getparm_s *keys)
 				goto key_respec;
 			}
 			
-			if ( keys->keyinfo[chkidx].fldpos > reclen )
+			if ( fileorg != 'N' && keys->keyinfo[chkidx].fldpos > reclen )
 			{
 				messid="ER04";
 				mess1="\224SORRY\204- Key position greater then record size";
@@ -2870,7 +2894,7 @@ static int get_keys(unsigned int reclen, struct keys_getparm_s *keys)
 				goto key_respec;
 			}
 
-			if ( keys->keyinfo[chkidx].fldpos + keys->keyinfo[chkidx].fldlen - 1 > reclen )
+			if ( fileorg != 'N' && keys->keyinfo[chkidx].fldpos + keys->keyinfo[chkidx].fldlen - 1 > reclen )
 			{
 				messid="ER06";
 				mess1="\224SORRY\204- Key position plus key length exceeds record size";
@@ -3329,7 +3353,7 @@ static int get_reformat(unsigned int input_recsize, struct format_getparms_s *re
 **	output->o.vol		The output volume 	(returned)
 **	output->o.filename	The native output filename.
 **	output->replace_flag	Flag if doing a replace.
-**	output->o.fileorg		The file organization (C, R, or I)
+**	output->o.fileorg		The file organization (C, N, R, or I)
 **	output->o.rectype		The record type (F ov V)
 **	input->infile_count
 **	input->list[0].file
@@ -3581,7 +3605,6 @@ static int get_output(struct output_getparm_s *output,
 			{
 				output->replace_flag = FALSE;
 			}
-
 		}
 
 		if (!reformat_flag)
@@ -3606,22 +3629,29 @@ static int get_output(struct output_getparm_s *output,
 			**	  different then the input records size.
 			**
 			*/
-			if (field2uint(recsize_field,RECSIZE_FIELD_LEN,&new_recsize))
+			if( input->list[0].fileorg == 'N' )
 			{
-				messid="ER98";
-				mess1="\224SORRY\204- RECSIZE field is invalid, please respecify.";
-				x_recsize="R";
-				continue;
+				/*  Don't test the record lengths becaus not used.  */
 			}
-			if (new_recsize != output->o.recsize)
-			{
-				/*
-				**	If RECSIZE has changed then give error message - not supported.
-				*/
-				messid="ER98";
-				mess1="\224ERROR\204- Changing RECSIZE is not supported.";
-				x_recsize="R";
-				continue;
+			else
+			{	
+				if (field2uint(recsize_field,RECSIZE_FIELD_LEN,&new_recsize))
+				{
+					messid="ER98";
+					mess1="\224SORRY\204- RECSIZE field is invalid, please respecify.";
+					x_recsize="R";
+					continue;
+				}
+				if (new_recsize != output->o.recsize)
+				{
+					/*
+					**	If RECSIZE has changed then give error message - not supported.
+					*/
+					messid="ER98";
+					mess1="\224ERROR\204- Changing RECSIZE is not supported.";
+					x_recsize="R";
+					continue;
+				}
 			}
 
 			/*
@@ -3968,7 +3998,7 @@ static void CALL_GETPARM2(char* args[], int args_count)
 **	Return:		Point to the malloc-ed memory.
 **
 */
-#define VARSTR_CHUNK_SIZE 2048
+#define VARSTR_CHUNK_SIZE 3000
 static void *varstr_malloc(size_t size)
 {
 	void *ptr;
@@ -4021,7 +4051,7 @@ static void varstr_printf(struct varstr_s *str, const char* format, ... /* args 
 
 	if (format != NULL)
 	{
-		char	buff[2048];
+		char	buff[3000];
 
 		va_start(ap, format);
 		vsprintf(buff, format, ap);
@@ -4065,6 +4095,9 @@ static void varstr_free(struct varstr_s **buf)
 /*
 **	History:
 **	$Log: sswsort.c,v $
+**	Revision 1.44  2005/05/31 12:52:48  gsl
+**	Latest changes from Clerity.
+**	
 **	Revision 1.42  2003/05/21 20:00:57  gsl
 **	no message
 **	

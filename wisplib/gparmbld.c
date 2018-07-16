@@ -21,7 +21,7 @@
 
 
 #include <string.h>
-#include <varargs.h>
+#include <stdarg.h>
 #include "idsistd.h"
 #include "werrlog.h"
 #include "wdefines.h"
@@ -30,8 +30,7 @@
 
 
 
-void getparmbuild(va_alist)
-va_dcl
+void getparmbuild(char* arg0, ...)
 {
 	va_list arg_list;
 	static char* gp_args[GETPARM_MAX_ARGS];
@@ -39,7 +38,6 @@ va_dcl
 	int arg_count;
 	int i;
 
-	va_start(arg_list);
 	arg_count = WL_va_count();
 
 	WL_wtrace("GETPARMBUILD","ENTRY","Entry into GETPARMBUILD arg_count=%d prior_cnt=%d total=%d",
@@ -47,11 +45,21 @@ va_dcl
 
 	if (arg_count > 0)
 	{
-		for (i=0; i<arg_count; i++)
+		/* arg0 will be invalid if arg_count==0 */
+		va_start(arg_list, arg0);
+
+		/*
+		 * To support <stdarg.h> (instead of older <vargars.h>)
+		 * which doesn't support no-args:
+		 * The first arg is "hardcoded" as arg0 
+		 */
+		gp_args[cnt++] = arg0;
+
+		for (i=0; i<arg_count-1; i++)
 		{
-			gp_args[cnt] = va_arg(arg_list,char*);
-			++cnt;
+			gp_args[cnt++] = va_arg(arg_list,char*);
 		}
+		va_end(arg_list);
 	}
 	else /* arg_count == 0 */
 	{
@@ -75,6 +83,9 @@ va_dcl
 /*
 **	History:
 **	$Log: gparmbld.c,v $
+**	Revision 1.18  2005/06/13 18:43:38  gsl
+**	Change to use stdarg.h
+**	
 **	Revision 1.17  2003/02/19 22:16:13  gsl
 **	Add GETPARM2() the 2 arg interface to GETPARM()
 **	

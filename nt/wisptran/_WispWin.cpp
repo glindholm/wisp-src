@@ -38,8 +38,8 @@ int WINAPI WinMain ( HINSTANCE hInst, HINSTANCE hInstPrev, LPSTR lpCmdLine, int 
 {
     HINSTANCE hLibrary;
 
-	Ctl3dRegister ( hInst );
-	Ctl3dAutoSubclass( hInst );
+	//Ctl3dRegister ( hInst );
+	//Ctl3dAutoSubclass( hInst );
 	hLibrary = LoadLibrary("RichEd32.DLL");
 
 	cApp.Env->CurAppStatus = cas_StartUp;										//	Set flag 
@@ -52,7 +52,7 @@ int WINAPI WinMain ( HINSTANCE hInst, HINSTANCE hInstPrev, LPSTR lpCmdLine, int 
 
 	cApp.MsgLoop ( );																	//	Run the message loop
 
-	Ctl3dUnregister ( hInst );
+	//Ctl3dUnregister ( hInst );
     FreeLibrary(hLibrary);
 
 	return 0;
@@ -62,6 +62,9 @@ int WINAPI WinMain ( HINSTANCE hInst, HINSTANCE hInstPrev, LPSTR lpCmdLine, int 
 /*
 **	History:
 **	$Log: _WispWin.cpp,v $
+**	Revision 1.6  2007/08/02 13:22:51  gsl
+**	Remove CTL3Dxxxx stuff, obsolete.
+**	
 **	Revision 1.5  2003/06/18 16:43:07  gsl
 **	Add CVS header and history
 **	

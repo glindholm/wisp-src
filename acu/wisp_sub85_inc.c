@@ -1,5 +1,5 @@
 /*
-**	Copyright (c) 2003 Neomedia Technologies, All rights reserved.
+**	Copyright (c) Shell Stream Software LLC, All rights reserved.
 **
 **	$Id:$
 **
@@ -698,11 +698,7 @@ struct	PROCTABLE WISPTABLE[] = {
 };
 
 
-int wfrontend( name, num_args, args, initial )
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int wfrontend( char* name, int num_args, Argument args[], int initial )
 {
 #define MAXARGS 128
 	int i;
@@ -814,11 +810,7 @@ int		initial;
 	wfrontend2 - Acts just like wfrontend except it puts both the address and the length on the stack. So for each arg
 		     there 2 entries on the stack.
 */	
-int wfrontend2( name, num_args, args, initial )
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int wfrontend2( char* name, int num_args, Argument args[], int initial )
 {
 #define MAXARGS2 64
 	int i,l;
@@ -975,23 +967,18 @@ int wisp_acu_cobol()
 **	Warnings:	None
 **
 */
-void WL_call_acucobol( filespec, parmcnt, parms, lens, rc )
-char *filespec;
-int4 parmcnt;
-char *parms[];
-int4 lens[];
-int *rc;
+void WL_call_acucobol( char* filespec, int4 parmcnt, char *parms[], int4 lens[], int* rc )
 {
 #define MAX_CALL_ARGS	32
+
+#if !defined(WISP_ACU50) && !defined(WISP_ACU51) && !defined(WISP_ACU52)
+extern short *Astdlib_A_call_err();
+#define  A_call_err  (*Astdlib_A_call_err()) 
+#endif /* 6.0 - 8.1 */
 
 #if defined(WISP_ACU50) || defined(WISP_ACU51) 
 	extern	short A_call_err;
 #endif
-
-#if defined(WISP_ACU60)
-extern short *Astdlib_A_call_err();
-#define  A_call_err  (*Astdlib_A_call_err()) 
-#endif /* WISP_ACU60 */
 
 #if defined(WISP_ACU52)
 #ifndef A_call_err
@@ -1009,7 +996,9 @@ extern short *I59752();
 #ifdef ACUCANCEL42
 extern void acu_cancel(char *);
 #else
-extern void PASCAL acu_cancel(char *);
+#if defined(WISP_ACU60) || defined(WISP_ACU62)
+extern void PASCAL acu_cancel(char *); 
+#endif
 #endif
 #else
 extern void acu_cancel();
@@ -1055,8 +1044,7 @@ extern void acu_cancel();
 
 static int wisp_wexit = 0;
 
-void WL_shutexitcobol(exit_code)				/* Called by wisp from WL_wexit()  */
-int exit_code;
+void WL_shutexitcobol(int exit_code)				/* Called by wisp from WL_wexit()  */
 {
 	extern void stop_runtime();
 	
@@ -1080,20 +1068,11 @@ int exit_code;
 }
 
 /*
-  It's possible w_set_term() and w_reset_term() are reversed!
-  They seem to be coded different then the docs state.
-  I think the docs are wrong and the comments in sub.h are correct!
+	To prepare the terminal for C screen I/O, at the top of your C routine 
+	call w_reset_term() to place the terminal in its default state.
 
-  Acucobol-GT 5.2 docs:  Appendix C.1.1:
-  To place the terminal in the "default operating system state," 
-  call "w_set_term()". Then call "w_reset_term()" to restore the 
-  terminal to the state in which ACUCOBOL-GT operates. 
-
-  Comments in sub.h:
-  The following two routines are used to set the terminal state to its	
-  default operating state (w_reset_term()) and to the state it needs to be	
-  in to run ACUCOBOL (w_set_term()).  
-
+	To prepare the terminal for COBOL screen I/O, before your C routine returns 
+	call w_set_term() to place the terminal back into the "COBOL" state. 
 */
 
 void WL_start_cobol_screen_handler()
@@ -1110,9 +1089,7 @@ void WL_shutdown_cobol_screen_handler()
 **	AShutdown is called by ACUCOBOL at shutdown.
 **	If error_halt==0 then a normal STOP RUN otherwise error.
 */
-void
-AShutdown( error_halt )
-int	error_halt;
+void AShutdown( int error_halt )
 {
 	/*
 	**	If a normal exit from the runtime then just return.
@@ -1151,10 +1128,7 @@ int	error_halt;
 */
 #define AShutdown OLD_AShutdown
 
-int
-exam_args( argc, argv )
-int argc;
-char *argv[];
+int exam_args( int argc, char *argv[] )
 {
 	int idx;
 	int gotdashd = 0;
@@ -1211,11 +1185,7 @@ char *argv[];
 **	04/06/94	Written by GSL
 **
 */
-int ISDBFILE(select_name, l1, answer, l2)
-char *select_name;
-int4 l1;
-char *answer;
-int4 l2;
+int ISDBFILE(char* select_name, int4 l1, char* answer, int4 l2)
 {
 	static	int first = 1;
 	static	char	default_host[40];
@@ -1305,11 +1275,7 @@ int4 l2;
 **	04/06/94	Written by GSL
 **
 */
-int X4DBFILE(select_name, l1, select_status, l2)
-char *select_name;
-int4 l1;
-int *select_status;
-int4 l2;
+int X4DBFILE(char* select_name, int4 l1, int* select_status, int4 l2)
 {
 	char	answer;
 	int4	one = 1;
@@ -1326,11 +1292,7 @@ int4 l2;
 	}
 	return 0;
 }
-int X4DBFILE2(select_name, l1, file_attributes, l2)
-char *select_name;
-int4 l1;
-char *file_attributes;
-int4 l2;
+int X4DBFILE2(char* select_name, int4 l1, char* file_attributes, int4 l2)
 {
 	char	answer;
 	int4	one = 1;

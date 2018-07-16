@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------
-#	Copyright (c) 2002 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC, All rights reserved.
 #	$Id:$
 #
 #	File:		kcsi_mf.umf
@@ -11,9 +11,7 @@
 #	Purpose:	To re-build the KCSI executables.
 #
 #	Description:	The KCSI utilities are shipped pre-built as
-#			part of the KCSI shipping kit.  They were built
-#			with the latest version of Micro Focus COBOL
-#			that NeoMedia had at the time.  If you upgrade
+#			part of the KCSI shipping kit.  If you upgrade
 #			to a later version of Micro Focus COBOL you
 #			may wish to re-build the executables using this
 #			makefile.

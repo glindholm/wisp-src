@@ -1,32 +1,13 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** WISP - Wang Interchange Source Processor
-**
 ** $Id:$
-**
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
-** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
+** WISP - Wang Interchange Source Processor
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 */
 
 /*
 **	File:		wt_cli.c
 **
 **	Project:	WISP
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Command Language Interface (Handle command line args)
 **
@@ -111,6 +92,8 @@ static struct {
 {"#ACU50",			&opt_acu50, NULL, NULL, 0, NULL},
 {"#ACU51",			&opt_acu51, NULL, NULL, 0, NULL},
 {"#ACU52",			&opt_acu52, NULL, NULL, 0, NULL},
+{"#NATIVE_SCREENS",		&opt_native_screens, NULL, NULL, 0, NULL},
+{"#NOFAC",			&opt_nofac, NULL, NULL, 0, NULL},
 {NULL, NULL, NULL, NULL, 0, NULL}
 };
 
@@ -318,7 +301,7 @@ int get_cli(int argc, char *argv[])
 				else if ( 0 == strcmp( optarg, "ACN") )	/* Acucobol with native screens */
 				{
 					acu_cobol = 1;
-					acn_cobol = 1;
+					opt_native_screens = 1;
 				}
 				else if ( 0 == strcmp( optarg, "MF0") )
 				{
@@ -1049,7 +1032,7 @@ scan_key:
 }
 
 static char *copyright_display_str = 
-"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR " NeoMedia Technologies Inc., All rights reserved.";
+"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR " Shell Stream Software LLC";
 
 static void whodunit(void)
 {
@@ -1159,9 +1142,9 @@ static void showflags(void)
                 printf("     no -w           Leave WS FILLERS alone.\n");
         else				
                 printf("        -w           Change WS FILLERS to fields.\n");
-        if ( acu_cobol && acn_cobol)                                             
-                printf("        -VACN        Generate ACUCOBOL (NATIVE) COBOL.\n");
-        if ( acu_cobol && !acn_cobol)	
+        if ( acu_cobol && opt_native_screens)                                             
+                printf("        -VACN        Generate ACUCOBOL (NATIVE SCREEN) COBOL.\n");
+        if ( acu_cobol && !opt_native_screens)	
                 printf("        -VACU        Generate ACUCOBOL COBOL.\n");
         if ( mfoc_cobol )
                 printf("        -VMF         Generate MICRO FOCUS OBJECT COBOL.\n");
@@ -1190,6 +1173,17 @@ static void showflags(void)
 /*
 **	History:
 **	$Log: wt_cli.c,v $
+**	Revision 1.53  2009/10/18 20:19:39  gsl
+**	Copyright
+**	
+**	Revision 1.52  2003/08/13 20:57:06  gsl
+**	#NOFAC option
+**	
+**	Revision 1.51  2003/08/08 19:52:47  gsl
+**	Add native screens comments
+**	
+**	Revision 1.50  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.49  2003/06/18 18:17:46  gsl
 **	Use -1 instead of -C
 **	-C is still supported but removed from the displayed list of flags
@@ -1304,7 +1298,7 @@ static void showflags(void)
 **	Add -VACN for Native Acucobol
 **
 **	Revision 1.13  1997-07-29 10:31:21-04  gsl
-**	Change copyright to NeoMedia
+**	Change copyright 
 **
 **	Revision 1.12  1996-06-24 14:12:14-04  gsl
 **	add NT defaults and add missing return codes

@@ -109,8 +109,14 @@ char *globaldata()
 
 		if (!WL_fexists(wisptmpdir(NULL)))
 		{
+#ifdef unix
 			mkdir(wisptmpdir(NULL), 0777);
 			chmod(wisptmpdir(NULL), 0777);
+#endif
+#ifdef WIN32
+			_mkdir(wisptmpdir(NULL));
+#endif
+
 		}
 
 		sprintf(filepath,"%s/WPROC_%s_%u.gbl",wisptmpdir(NULL),WL_longuid(),(unsigned)WL_wgetpgrp());
@@ -179,6 +185,9 @@ void tempproc(char *file, char *lib, char *vol, char *filepath)
 /*
 **	History:
 **	$Log: miscsubs.c,v $
+**	Revision 1.32  2009/10/18 21:04:46  gsl
+**	fix windows warnings
+**	
 **	Revision 1.31  2003/02/17 22:07:18  gsl
 **	move VSSUB prototypes to vssubs.h
 **	

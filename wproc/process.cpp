@@ -99,13 +99,17 @@ void process::set_top_filename(const char *path)
 	{
 		strcpy(temp,"UNKNOWN");
 	}
-	else if ((ptr = strrchr(path,SLASH_CHAR)))
+	else 
 	{
-		strcpy(temp,&ptr[1]);
-	}
-	else
-	{
-		strcpy(temp,path);
+		const char *cptr;
+		if ((cptr = strrchr(path,SLASH_CHAR)))
+		{
+			strcpy(temp,&cptr[1]);
+		}
+		else
+		{
+			strcpy(temp,path);
+		}
 	}
 
 	if ((ptr = strchr(temp,'.')))
@@ -229,6 +233,9 @@ void process::load_from_env()
 /*
 **	History:
 **	$Log: process.cpp,v $
+**	Revision 1.15  2009/10/18 21:03:44  gsl
+**	Fixed strrchr() use bug, it returns a const char *
+**	
 **	Revision 1.14  2002/07/10 21:06:28  gsl
 **	Fix globals WL_ to make unique
 **	
@@ -272,6 +279,9 @@ void process::load_from_env()
 //
 //	History:
 //	$Log: process.cpp,v $
+//	Revision 1.15  2009/10/18 21:03:44  gsl
+//	Fixed strrchr() use bug, it returns a const char *
+//	
 //	Revision 1.14  2002/07/10 21:06:28  gsl
 //	Fix globals WL_ to make unique
 //	

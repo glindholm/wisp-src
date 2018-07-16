@@ -275,19 +275,31 @@ int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *
 	/*
 	**	Continued literal check
 	*/
-	if (continued_literal && '-' != ptr[6])
+	if (continued_literal)
 	{
-		if (' ' == ptr[6])
+		switch(ptr[6])
 		{
+		case '-': /* OK - found expected continuation char */
+			continued_literal = 0;
+			break;
+
+		case ' ': /* Add missing continuation char */
 			ptr[6] = '-';
 			write_log("WISP",'W',"CONTINUATION","Added missing CONTINUATION character.");
-		}
-		else
-		{
-			write_log("WISP",'E',"CONTINUATION","Missing CONTINUATION character.");
+			continued_literal = 0;
+			break;
+
+		case '*': /* Comment - keep continued_literal 'open'*/
+			break;
+
+		default:
+			write_log("WISP",'W',"CONTINUATION","Missing CONTINUATION character.");
+			continued_literal = 0;
+			break;
+
 		}
 	}
-	continued_literal = 0;
+	
 
 	/*
 	**	Handle a NOPROCESS && SPECIAL_COMMENT lines.
@@ -1415,6 +1427,21 @@ char *token_data(TOKEN *tokptr)
 	return(null_string);
 }
 
+/* 
+** Use token_indata() for logging, comments, and errors as it should return the
+** actual text from the file where token_data() may be changed for reserved words etc. 
+*/
+char *token_indata(TOKEN *tokptr)
+{
+	static char null_string[] = "";
+	if (tokptr)
+	{
+		if (tokptr->indata) return(tokptr->indata);
+		if (tokptr->data)   return(tokptr->data);
+	}
+	return(null_string);
+}
+
 char *token_type_mess(TOKEN *tokptr)
 {
 	char	*mess;
@@ -1449,6 +1476,16 @@ char *token_type_mess(TOKEN *tokptr)
 /*
 **	History:
 **	$Log: tokenize.c,v $
+**	Revision 1.19  2007/08/03 15:26:19  gsl
+**	The WISP translator was reporting an error if it found a comment
+**	in the middle of a continued literal.
+**	
+**	The WISP translator now recognizes the "BY VALUE" syntax of
+**	arguments in a CALL statement.
+**	
+**	Revision 1.18  2004/10/14 19:51:45  gsl
+**	added token_indata() for logging, comments, and errors as it should return the actual text from the file where token_data() may be changed for reserved words etc.
+**	
 **	Revision 1.17  2003/02/04 20:42:49  gsl
 **	fix -Wall warnings
 **	

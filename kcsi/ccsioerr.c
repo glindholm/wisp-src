@@ -26,6 +26,7 @@ Error logging for ccsio
 #include "shrthand.h"
 #include "kcsifunc.h"
 
+const char* WL_strerror(int errnum);
 
 static char *err_lit[]={
 	"Duplicate key",			/*100*/
@@ -119,11 +120,6 @@ static int ccsioerr(int status,char *io,char *name)
 	const char *io_msg;
 	int io_idx;
 
-#ifndef LINUX
-	extern int sys_nerr;
-	extern char *sys_errlist[];
-#endif
-
 	if((Streq(io,READ_RECORD)) && (status == ENOREC))
 		return(0);
 	if((Streq(io,HOLD_RECORD)) && (status == ENOREC))
@@ -165,9 +161,9 @@ static int ccsioerr(int status,char *io,char *name)
 	{
 		err_msg = err_lit[status - 100];	/* KSCI errors */
 	}
-	else if(status >= 0 && status <= sys_nerr)
+	else if(status >= 0)
 	{
-		err_msg = sys_errlist[status];		/* System errors */
+		err_msg = WL_strerror(status);		/* System errors */
 	}
 	else
 	{
@@ -262,6 +258,12 @@ static void add_mf_error(KFB *kfb)
 /*
 **	History:
 **	$Log: ccsioerr.c,v $
+**	Revision 1.17  2010/01/10 00:58:33  gsl
+**	fix LINUX warnings
+**	trunc
+**	isblank
+**	sys_errlist
+**	
 **	Revision 1.16  2003/03/20 15:23:21  gsl
 **	FIx warning
 **	

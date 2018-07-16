@@ -130,30 +130,8 @@ int WL_getmachineid(char* machineid)
 int WL_getmachineid(char* machineid)
 {
 	char name[80];
-	char* ptr;
-	*machineid = '\0';
-
 	WL_computername(name);
-	if (strlen(name) < 10)
-	{
-		strcat(name,"0102010301");
-		name[10] = '\0';
-	}
-
-	sprintf(machineid,"%s0%s0X0", WL_platform_code(), name);
-
-	/*
-	** Remove unwanted file name characters from machine id
-	*/
-	for(ptr = machineid; *ptr != '\0'; ptr++)
-	{
-		if (!isalnum(*ptr))
-		{
-			*ptr = '-';
-		}
-	}
-
-	WL_upper_string(machineid);
+	WL_GetMachineIdFromName(machineid, name, WL_platform_code());
 	return(0);
 }
 #endif /* LINUX || OSF1_ALPHA */
@@ -322,6 +300,7 @@ int WL_getmachineid(char* machineid)
 	
 	return 0;
 }
+#endif /* WIN32 */
 
 /*
 **	ROUTINE:	WL_encodemachid()
@@ -377,7 +356,36 @@ void WL_encodemachid(const char *source, char *target)
 	}
 	*trg = '\0';
 }
-#endif /* WIN32 */
+
+void WL_GetMachineIdFromName(char* machineid, const char* computername, const char* platform_code)
+{
+	char name[80];
+	char* ptr;
+	*machineid = '\0';
+
+	strcpy(name, computername);
+
+	if (strlen(name) < 10)
+	{
+		strcat(name,"0102010301");
+		name[10] = '\0';
+	}
+
+	sprintf(machineid,"%s0%s0X0", platform_code, name);
+
+	/*
+	** Remove unwanted file name characters from machine id
+	*/
+	for(ptr = machineid; *ptr != '\0'; ptr++)
+	{
+		if (!isalnum((int)(*ptr)))
+		{
+			*ptr = '-';
+		}
+	}
+
+	WL_upper_string(machineid);
+}
 
 #ifdef DEBUG
 #ifdef MAIN
@@ -405,6 +413,16 @@ main()
 /*
 **	History:
 **	$Log: machid.c,v $
+**	Revision 1.31  2004/06/14 15:56:43  gsl
+**	Fix isalnum() warning
+**	
+**	Revision 1.30  2004/06/14 15:42:57  gsl
+**	make external the routines to generate MachineId from the Unix Machine Name
+**	Used by Linux and Alpha. Add M function to wauthorize to generate machine id for Window or Linux or Alpha from the machine name.
+**	
+**	Revision 1.29  2004/06/11 15:06:03  gsl
+**	Move WL_encodemachid() out of WIN32 only code
+**	
 **	Revision 1.28  2003/02/13 21:29:25  gsl
 **	fix isalnum() test
 **	

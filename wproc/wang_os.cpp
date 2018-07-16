@@ -527,7 +527,7 @@ int_32 wang_os_putparm(
    const int triplets     = 80;		/* <<<<<<<<< HARDCODED LIMIT OF 80 KEYWORDS <<<<<<<<< */
    const int varying_args = triplets * 3;
 
-   void *arg[fixed_args + varying_args];
+   void *arg[fixed_args + varying_args];  /* 9 + (80*3)  == 249 :::  subscript 0-248 */
 
    assert(keycnt<=triplets);
 
@@ -604,7 +604,7 @@ int_32 wang_os_putparm(
       	arg[210],arg[211],arg[212],arg[213],arg[214],arg[215],arg[216],arg[217],arg[218],arg[219],
       	arg[220],arg[221],arg[222],arg[223],arg[224],arg[225],arg[226],arg[227],arg[228],arg[229],
       	arg[230],arg[231],arg[232],arg[233],arg[234],arg[235],arg[236],arg[237],arg[238],arg[239],
-      	arg[240],arg[241],arg[242],arg[243],arg[244],arg[245],arg[246],arg[247],arg[248],arg[249]
+      	arg[240],arg[241],arg[242],arg[243],arg[244],arg[245],arg[246],arg[247],arg[248]
       );
 
    WL_wswap(&retcode);
@@ -990,6 +990,9 @@ void wang_os_first_procedure_name(char *a_name) {
 /*
 **	History:
 **	$Log: wang_os.cpp,v $
+**	Revision 1.35  2004/10/08 14:40:04  gsl
+**	fixes during AIX 5.2 (64) port
+**	
 **	Revision 1.34  2003/02/11 19:12:44  gsl
 **	fix duplicate history
 **	

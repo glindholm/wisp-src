@@ -43,6 +43,8 @@
 #include <windows.h>
 #include <direct.h>
 #include <io.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <errno.h>
 
 #include "win32msg.h"
@@ -576,7 +578,7 @@ int WL_win32msgctl(int nTheKey, int nFunction, struct msqid_ds *mctlbuf)
 		/*
 		** rmid just deletes the message file.. 
 		*/ 
-		unlink(szFilePath);
+		_unlink(szFilePath);
 		break;
 		
 	case IPC_STAT:
@@ -636,7 +638,7 @@ static void makemsgdatafile(key_t keyval, char *szPath)
 		**	(This is kind of sloppy but any error will be picked up later when we go to use it.)
 		*/
 		_mkdir(msgdir);
-		chmod(msgdir,0777);
+		_chmod(msgdir, _S_IREAD | _S_IWRITE );
 	}
 }
 
@@ -667,6 +669,9 @@ int WL_win32move(char *src, char *dest)
 /*
 **	History:
 **	$Log: win32msg.c,v $
+**	Revision 1.10  2009/10/18 20:37:48  gsl
+**	fix windows warnings
+**	
 **	Revision 1.9  2003/01/31 19:08:37  gsl
 **	Fix copyright header  and -Wall warnings
 **	

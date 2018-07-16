@@ -1191,7 +1191,7 @@ static void p_putparm_keys(int *num_var,int *num_val)					/* Process the putparm
 		*cstr = '\0';								/* Null terminate the string.		*/
 		aptr++;									/* Step over the closing paren.		*/
 	}
-	else if (*aptr == '(')	write_log(util,'E','R',"NOTEXPECT","Not expecting a ( symbol.  Notify NeoMedia Migrations");
+	else if (*aptr == '(')	write_log(util,'E','R',"NOTEXPECT","Not expecting a ( symbol.  Notify WISP Support");
 
 	if (full_br)									/* Set the file, lib and volume params.	*/
 	{
@@ -1409,6 +1409,9 @@ static void check_write_string()							/* Check if need to write the STRING 	*/
 /*
 **	History:
 **	$Log: ptdoit.c,v $
+**	Revision 1.13  2010/01/10 16:04:27  gsl
+**	Shell Stream
+**	
 **	Revision 1.12  2003/02/05 21:15:03  gsl
 **	fix -Wall warnings
 **	

@@ -49,7 +49,7 @@ static HeapMem theHeap = { -1 };
 
 void HeapMem__Exception( size_t nbytes )
 {
-  fprintf( stderr, "*** Out of memory: Failed to allocate %u bytes ***\n\n", nbytes );
+  fprintf( stderr, "*** Out of memory: Failed to allocate %lu bytes ***\n\n", nbytes );
   kcsi_exit(1);
 }
 
@@ -121,6 +121,9 @@ void HeapMem__CheckForLeaks()
 /*
 **	History:
 **	$Log: kcsimem.c,v $
+**	Revision 1.5  2010/01/22 16:44:05  gsl
+**	Fix printf %lu size_t warnings
+**	
 **	Revision 1.4  2003/02/04 19:19:09  gsl
 **	fix header
 **	

@@ -116,19 +116,19 @@ NODE	the_statement;
 	/*
 	**	WORKING-STORAGE SECTION
 	*/
-	the_statement = (NODE)working_storage_section(the_statement);
+	the_statement = working_storage_section(the_statement);
 
 	/*
 	**	LINKAGE SECTION
 	*/
-	the_statement = (NODE)linkage_section(the_statement);
+	the_statement = linkage_section(the_statement);
 
 	/*
-	**	SCREEN SECTION (ACUCOBOL)
+	**	SCREEN SECTION
 	*/
-	if (acn_cobol)
+	if (opt_native_screens)	/* Generate SCREEN SECTION */
 	{
-		gen_acn_screens();
+		the_statement = gen_native_screen_section(the_statement);
 	}
 	
 	return(the_statement);
@@ -865,6 +865,22 @@ NODE the_statement;
 /*
 **	History:
 **	$Log: wt_datad.c,v $
+**	Revision 1.23  2003/12/03 16:18:48  gsl
+**	Fix so native screen fields and screen sections don't get generated in a copybook file.
+**	
+**	Revision 1.22  2003/12/02 21:23:20  gsl
+**	Fix so native screen sections don't get generated in a copybook file.
+**	Change generated copybooks (internal) to use same file extension rules
+**	as translated copybooks. Default to .cob extension.
+**	
+**	Revision 1.21  2003/08/11 17:18:19  gsl
+**	MF Native screens
+**	
+**	Revision 1.20  2003/08/08 19:52:47  gsl
+**	Add native screens comments
+**	
+**	Revision 1.19  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.18  2003/02/28 21:49:05  gsl
 **	Cleanup and rename all the options flags opt_xxx
 **	

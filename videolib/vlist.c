@@ -732,7 +732,7 @@ int disp_fl, *adjust_flag;									/* Flag to depict if redisplay or not.	*/
 	long *ipt;									/* Ptr to a long integer.		*/
 	long ril;
 	int i;										/* Working registers.			*/
-	int in_key, vgetm(), tx, ty, done;
+	int in_key, tx, ty, done;
 	long currpos;
 	enum e_vop svo;
 	short lf;
@@ -1480,6 +1480,9 @@ static int vlist_memory_err()
 /*
 **	History:
 **	$Log: vlist.c,v $
+**	Revision 1.19  2010/02/10 03:52:33  gsl
+**	fix warnings for redefined functions
+**	
 **	Revision 1.18  2003/02/05 15:23:59  gsl
 **	Fix -Wall warnings
 **	

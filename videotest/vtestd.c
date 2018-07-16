@@ -99,11 +99,11 @@ void testd()
 	vmove(2,1);
 	vprint("INVOICE NUMBER 00987.");
 	vmove(2,29);
-	vprint("NeoMedia Migrations Inc.");
+	vprint("My Company LLC");
 	vmove(3,29);
-	vprint("2201 Second Street, Suite 402");
+	vprint("123 Any Street");
 	vmove(4,29);
-	vprint("Fort Myers, FL 33901");
+	vprint("Any Town, FL 33901");
 
 	vmove(5,0);
 	vline(HORIZONTAL,60);						/* line 2					*/

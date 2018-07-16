@@ -229,7 +229,6 @@ static int4 vbar(int state, struct video_menu *md)					/* Do a bar menu.			*/
 	char temp[MAX_COLUMNS_PER_LINE+1];						/* Temporary storage.			*/
 	int i,j,k;									/* Working registers.			*/
 	int4 j4;
-	unsigned char *vsss();								/* Pointer to the section save routine.	*/
 	int item;									/* Menu choice.				*/
 	int active;									/* Active menu flag.			*/
 	int loc[MAX_MENU_ITEMS];							/* Item location.			*/
@@ -499,7 +498,6 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 {
 	int i,j,k;									/* Working registers.			*/
 	int row,col,rows,cols;								/* Window atributes.			*/
-	unsigned char *vsss();								/* Window save area.			*/
 	int4 j4, choice;								/* Selection made.			*/
 	int item;									/* Item being worked on.		*/
 	int active;									/* Active input flag.			*/
@@ -996,7 +994,6 @@ static int vdo(int state, struct video_menu *md)					/* Pull down menu processin
 {
 	register int i, k;								/* Working registers.			*/
 	int row,col,rows,cols;								/* Window atributes.			*/
-	unsigned char *vsss();								/* Window save area.			*/
 	int bmode,imode;								/* Display renditions.			*/
 	int4 save_row, save_column;							/* Save locations.			*/
 
@@ -1381,6 +1378,9 @@ static int padout3(char *text, int width, int graphics_1st)				/* Output padded 
 /*
 **	History:
 **	$Log: vmenu.c,v $
+**	Revision 1.23  2010/02/10 03:52:33  gsl
+**	fix warnings for redefined functions
+**	
 **	Revision 1.22  2003/06/23 15:28:04  gsl
 **	VL_ global symbols
 **	

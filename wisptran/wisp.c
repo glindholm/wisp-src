@@ -228,6 +228,7 @@ int exit_wisp(int err)									/* exit WISP, clean up 			*/
 	c_list *tptr;									/* if not an error-exit			*/
 	char	*exit_mess;
 	
+
 	switch(err)
 	{
 	case EXIT_OK: 		exit_mess = "OK";	break;
@@ -241,6 +242,24 @@ int exit_wisp(int err)									/* exit WISP, clean up 			*/
 	{
 		err = EXIT_WITH_ERR;
 		exit_mess = "DELAYED ERROR";
+	}
+
+	if (EXIT_OK == err)
+	{
+		/*
+		*	Catch fatal errors that didn't force an exit with error
+		*/
+		if (get_highest_serverity() > SEVER_ERROR)
+		{
+			err = EXIT_WITH_ERR;
+			exit_mess = "ERROR";
+		}
+		else if (get_highest_serverity() > SEVER_SUCCESS)
+		{
+			/*
+			* TODO - add option for non-zero return code on WARNING or ERROR
+			*/
+		}
 	}
 		
 	write_log("WISP",'I',"EXIT","Exiting with code %s [%d]", exit_mess, err);
@@ -411,13 +430,19 @@ static void wisp_exit_code(const char* prefix)
 	tput_blank();
 
 	tput_line			("       %sWISP-EXIT-PROGRAM.",prefix);
-	tput_line			("           CALL \"SETRETCODE\" USING WISP-RETURN-CODE.");
-	tput_line			("           IF WISP-APPLICATION-NAME = WISP-RUN-NAME");
-	tput_line			("               CALL \"WISPEXIT\".");
+	if (!opt_native)
+	{
+		tput_line		("           CALL \"SETRETCODE\" USING WISP-RETURN-CODE.");
+		tput_line		("           IF WISP-APPLICATION-NAME = WISP-RUN-NAME");
+		tput_line		("               CALL \"WISPEXIT\".");
+	}
 	tput_line			("           EXIT PROGRAM.");
 	tput_line			("       %sWISP-STOP-RUN.",prefix);
-	tput_line			("           CALL \"SETRETCODE\" USING WISP-RETURN-CODE.");
-	tput_line			("           CALL \"WISPEXIT\".");
+	if (!opt_native)
+	{
+		tput_line		("           CALL \"SETRETCODE\" USING WISP-RETURN-CODE.");
+		tput_line		("           CALL \"WISPEXIT\".");
+	}
 
 	stoprun = 1;
 	if (opt_keep_stop_run) 	stoprun = 1;
@@ -740,6 +765,13 @@ void xtab_log(const char* fileName, int lineNum, const char* xtype, const char *
 /*
 **	History:
 **	$Log: wisp.c,v $
+**	Revision 1.36  2005/12/02 15:22:47  gsl
+**	Keep track of the highest severity level reported.
+**	Ensure an non-zero exit status if severity is fatal or higher.
+**	
+**	Revision 1.35  2003/09/03 17:32:05  gsl
+**	With #NATIVE option don't gen SETRETCODE/WISPEXIT calls
+**	
 **	Revision 1.34  2003/03/11 19:26:46  gsl
 **	Add validate_options() routine which checks for option conficts.
 **	

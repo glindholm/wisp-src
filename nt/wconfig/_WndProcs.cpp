@@ -17,7 +17,7 @@ LRESULT CALLBACK AppWndProc ( HWND hAppWnd, UINT msg, WPARAM wp, LPARAM lp )
 	wpLo = LOWORD (wp);
 	switch ( msg ) {
 		case WM_SYSCOLORCHANGE:
-			Ctl3dColorChange ( );
+			//Ctl3dColorChange ( );
 			break;
 		case WM_DESTROY:
 			PostQuitMessage ( 1 );
@@ -907,7 +907,7 @@ BOOL CALLBACK WISPDirDlgProc ( HWND hDlg, UINT msg, WPARAM wp, LPARAM lp )
 
 	switch ( msg ) {
 		case WM_INITDIALOG:
-			if ( stricmp ( cApp.Env.sWISPServer, "(LOCAL)" ) != 0 ) {
+			if ( _stricmp ( cApp.Env.sWISPServer, "(LOCAL)" ) != 0 ) {
 				strcpy ( DefVal, "\\\\" );
 				strcat ( DefVal, cApp.Env.sWISPServer );
 				strcat ( DefVal, "\\wisp" );

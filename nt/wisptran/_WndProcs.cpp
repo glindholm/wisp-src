@@ -40,7 +40,7 @@ LRESULT CALLBACK ShellWndProc ( HWND hShellWnd, UINT msg, WPARAM wp, LPARAM lp )
 
 	switch ( msg ) {
 		case WM_SYSCOLORCHANGE:
-			Ctl3dColorChange ( );
+			//Ctl3dColorChange ( );
 			break;
 		case WM_CLOSE:
 			cApp.CloseApp ( 1001, 0 );												//	Call cApp.CloseApp
@@ -209,6 +209,9 @@ BOOL CALLBACK COBOLShtDlgProc ( HWND hDlg, UINT msg, WPARAM wp, LPARAM lp )
 /*
 **	History:
 **	$Log: _WndProcs.cpp,v $
+**	Revision 1.7  2007/08/02 13:22:51  gsl
+**	Remove CTL3Dxxxx stuff, obsolete.
+**	
 **	Revision 1.6  2003/06/18 16:43:07  gsl
 **	Add CVS header and history
 **	

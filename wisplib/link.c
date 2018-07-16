@@ -126,7 +126,6 @@
 /*
 **	Globals and Externals
 */
-extern void WL_call_mfcobol(char* name, int parmcnt, char* parms[], int lens[], int* rc);
 
 /*
 **	Static data
@@ -323,6 +322,7 @@ static	void do_link(
 	int4 	*retcod;								/* (17) Return Code			*/
 
 											/* These are used for all platforms.	*/
+	char	effective_ltype;
 	int4	to_do;
 	char	*dummy_char;
 	int	arg_used;
@@ -726,17 +726,29 @@ ARGEND:	/* END OF ARGUMENTS */
 
 	if ( *ltype == ' ' )								/* Use Program vol & lib.		*/
 	{
+		effective_ltype = ' ';
 		WL_get_defs(DEFAULTS_PV,l_vol);	/* NOTE: If PV/PL is not set then RV/RL	are returned */
 		WL_get_defs(DEFAULTS_PL,l_lib);
 	}
 	else if ( *ltype == 'P' )							/* Use arg3 & arg4			*/
 	{
+		effective_ltype = 'P';
 		memcpy( l_vol, volname, SIZEOF_VOL );
 		memcpy( l_lib, libname, SIZEOF_LIB );
 		leftjust(l_vol,SIZEOF_VOL);
 		leftjust(l_lib,SIZEOF_LIB);
 
-		if ( ' ' == l_vol[0] || ' ' == l_lib[0] )
+		if ( ' ' == l_vol[0] && ' ' == l_lib[0] )
+		{
+			/*
+			** Special case:
+			** If both lib and vol are blank then treat like ltype==' '.
+			*/
+			effective_ltype = ' ';
+			WL_get_defs(DEFAULTS_PV,l_vol);	/* NOTE: If PV/PL is not set then RV/RL	are returned */
+			WL_get_defs(DEFAULTS_PL,l_lib);
+		}
+		else if ( ' ' == l_vol[0] || ' ' == l_lib[0] )
 		{
 			WL_put_swap( comcode, (int4)LINK_CC_8_FAILED ) ;						/* Unsuccessful link.			*/
 			WL_put_swap( retcod, (int4)LINK_RC_40_INVALID_INPUT_PARAM ) ;						/* Invalid Parameter.			*/
@@ -747,6 +759,7 @@ ARGEND:	/* END OF ARGUMENTS */
 	}
 	else if ( *ltype == 'S' )							/* look in system dirs			*/
 	{
+		effective_ltype = 'S';
 		memset( l_vol, ' ', SIZEOF_VOL );
 		memset( l_lib, ' ', SIZEOF_LIB );
 	}
@@ -978,7 +991,7 @@ ARGEND:	/* END OF ARGUMENTS */
 		}
 	}
 
-	if ( not_found && (*ltype == ' ' || *ltype == 'P') )
+	if ( not_found && (effective_ltype == ' ' || effective_ltype == 'P') )
 	{
 		mode = 0;
 		p = WL_wfname(&mode,l_vol,l_lib,l_file,link_filespec);
@@ -994,9 +1007,9 @@ ARGEND:	/* END OF ARGUMENTS */
 	/*
 	**	Note: On WIN32 the current directory is ALWAYS checked first before the PATH.
 	*/
-	if (not_found && (*ltype == ' ' || *ltype == 'S' ))
+	if (not_found && (effective_ltype == ' ' || effective_ltype == 'S' ))
 #else
-	if (not_found && *ltype == ' ')
+	if (not_found && effective_ltype == ' ')
 #endif
 	{
 		/*
@@ -1013,7 +1026,7 @@ ARGEND:	/* END OF ARGUMENTS */
 		}
 	}
 
-	if (not_found && *ltype == 'S')
+	if (not_found && effective_ltype == 'S')
 	{
 		/*
 		**	Scan along the $PATH
@@ -2440,6 +2453,15 @@ static int link_fixerr(int code)
 /*
 **	History:
 **	$Log: link.c,v $
+**	Revision 1.102  2005/10/11 15:22:01  gsl
+**	Merge in patch for Link-Type=P
+**	
+**	Revision 1.101  2003/08/25 21:10:17  gsl
+**	MF Native Screens
+**	
+**	Revision 1.100.2.1  2005/10/11 14:01:26  gsl
+**	Special case when ltype=='P' but both lib and vol are blank then treat as ltype=' '.
+**	
 **	Revision 1.100  2003/07/03 18:55:17  gsl
 **	trace
 **	
@@ -2770,4 +2792,3 @@ static int link_fixerr(int code)
 **
 **
 */
-

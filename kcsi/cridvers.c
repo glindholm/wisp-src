@@ -2302,7 +2302,7 @@ EndRNotes
 #	wisp/src/acu/wrun32wisp_kcsi_acu51.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 */
-#define KCSI_VERSION	4100
+#define KCSI_VERSION	4200
 
 /*
 **	Static data
@@ -2360,7 +2360,7 @@ static char compiler[]=
 /* CHANGE-COPYRIGHT-DATE */
 
 static char logoformat[]=
-"     %-9s %s.%s%s - (c) 1989-2003 KCSI/NEOM";
+"     %-9s %s.%s%s - (c) KCSI/Shell Stream Software LLC";
 
 static char logo[80];
 
@@ -2431,6 +2431,17 @@ void KCSI_init_report_style(char *style)
 /*
 **	History:
 **	$Log: cridvers.c,v $
+**	Revision 2.111  2010/01/16 02:04:28  gsl
+**	new release
+**	wisp 5.1.00
+**	kcsi 4.2.00
+**	
+**	Revision 2.110  2007/01/03 14:11:43  gsl
+**	copyright 2007
+**	
+**	Revision 2.109  2005/01/03 19:12:06  gsl
+**	Copyright year 2005
+**	
 **	Revision 2.108  2003/04/11 18:34:16  gsl
 **	Add support for Acucobol 5.0 and 5.1
 **	

@@ -40,7 +40,6 @@
 
 int gclock(void)
 {
-	char *ctime();
 	time_t time_data;
 	int i,k;
 	int active;
@@ -48,7 +47,7 @@ int gclock(void)
 	int col = 24;
 	int rows = 3;
 	int cols = 30;
-	unsigned char *save, *vsss();
+	unsigned char *save;
 	char c;
 	int emode,cmode;
 
@@ -117,6 +116,9 @@ int gclock(void)
 /*
 **	History:
 **	$Log: gclock.c,v $
+**	Revision 1.15  2010/02/10 03:52:33  gsl
+**	fix warnings for redefined functions
+**	
 **	Revision 1.14  2003/06/27 15:54:03  gsl
 **	fix EDE API
 **	

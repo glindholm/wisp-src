@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------
-#	Copyright (c) 2002 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 #	$Id:$
 #
 #	File:		kcsilibs.umf
@@ -52,7 +52,7 @@ MAKEFILE=kcsilibs.umf
 #	wisp/src/acu/wrun32wisp_kcsi_acu51.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 #
-KCSI_VERSION=4100
+KCSI_VERSION=4200
 
 #-----------------------------------------------------------------------
 #
@@ -256,7 +256,7 @@ clean:
 	rm -f control report inquiry datentry create
 	rm -f CONTROL REPORT INQUIRY DATENTRY CREATE
 	rm -f wruncblk wruncblke 
-	rm -f wruncbl.umf *.alc sub.c sub85.c filetbl.c wisp_sub85_inc.c
+	rm -f wruncbl.umf *.alc sub.c sub85.c filetbl.c callc.c wisp_sub85_inc.c
 	rm -r -f kcsi*.ship
 
 header_acu:

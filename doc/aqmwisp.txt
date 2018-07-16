@@ -1,4 +1,4 @@
-	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 	
 	====================================================================
 	
@@ -331,8 +331,8 @@
 	    Email: info@ataman.com
 	    WEB:   www.ataman.com
 
-	Ataman Software, Inc. is not associated with NeoMedia
-	Technologies, Inc.  If you choose to use ATRLS then you must
+	Ataman Software, Inc. is not associated with Shell Stream 
+	Software LLC.  If you choose to use ATRLS then you must
 	license it from Ataman Software, Inc.
 
 	Download ATRLS for Windows NT (x86 architecture) and print the

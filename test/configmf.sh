@@ -111,8 +111,9 @@ ${WISPDIR}/bin/wsysconf
 
 # Copy license file
 echo Copy license file
-HOSTNAME=`hostname`
-HOSTLICENSE=${TESTDIR}/wisp.license.${HOSTNAME}
+#HOSTNAME=`hostname`
+HOSTNAME=`uname -n`
+HOSTLICENSE=${TESTDIR}/wisp.license.${HOSTNAME}.txt
 if [ -f ${HOSTLICENSE} ]
 then
 	echo cp ${HOSTLICENSE} ${WISPCONFIG}/wisp.license

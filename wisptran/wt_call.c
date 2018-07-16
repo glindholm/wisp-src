@@ -94,7 +94,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	char	program_name[80];
 	int	argcnt;
 	int	cnt;
-	NODE	by_content, by_reference;
+	NODE	by_content, by_reference, by_value;
 	int	delete_end_call = 0;
 	
 #define BYERROR(by_node) {if (by_node){ write_tlog(by_node->token,"WISP",'E',"CALL","Invalid BY %s phrase",token_data(by_node->token));} }	
@@ -115,7 +115,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	if (col < 12) col = 12;
 
 	/*
-	**	Frag-1:	CALL literal-1 [USING {[by {REFERENCE|CONTENT}] identifier-2 ... } ...]
+	**	Frag-1:	CALL literal-1 [USING {[by {REFERENCE|CONTENT|VALUE}] identifier-2 ... } ...]
 	**	Frag-2:	[END-CALL]
 	*/
 
@@ -133,6 +133,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	argcnt = 0;
 	by_content = NULL;
 	by_reference = NULL;
+	by_value = NULL;
 	if ( eq_token(using_node->token,KEYWORD,"USING"))
 	{
 		for(temp_node=using_node->next; 
@@ -157,6 +158,11 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 					{
 						/* skip over */
 						by_content = temp_node;
+					}
+					else if (eq_token(temp_node->token,KEYWORD,"VALUE"))
+					{
+						/* skip over */
+						by_value = temp_node;
 					}
 					else
 					{
@@ -245,18 +251,19 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	    0==strcmp(program_name,"\"WSFNS\""))
 	{
 		BYERROR(by_content);
+		BYERROR(by_value);
 		
-		if (acn_cobol)
+		if (opt_native_screens)	/* CALL WISP SCREEN HANDLER - WARNING */
 		{
 			if (0==strcmp(program_name,"\"MESSAGE\""))
 			{
-				write_log("WISP",'W',"NATIVE",
+				write_log("WISP",'W',"NATIVESCREENS",
 					  "Features of %s are not compatible with Native Screens",program_name);
 			}
 			else if (0==strcmp(program_name,"\"WSFNM\"") ||
 				 0==strcmp(program_name,"\"WSFNS\""))
 			{
-				write_log("WISP",'W',"NATIVE","Call %s uses WISP Screens",program_name);
+				write_log("WISP",'W',"NATIVESCREENS","Call %s uses WISP Screens",program_name);
 			}
 		}
 
@@ -269,30 +276,54 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 		tput_statement(col,the_statement);
 		the_statement = free_statement(the_statement);
 	}
-	else if (acn_cobol && 0==strcmp(program_name,"\"BELL\""))
+	else if (opt_native_screens && 0==strcmp(program_name,"\"BELL\""))
 	{
 		/* NATIVE SCREENS */
 
 		BYERROR(by_content);
+		BYERROR(by_value);
 
-		write_log("WISP",'I',"NATIVE","Call %s changed to DISPLAY OMITTED BELL.",program_name);
-
-		/*
-		**	Morph:	CALL    "BELL"  USING arg1	...
-		**		|	|	|     |		|	
-		**	into:	DISPLAY OMITTED BELL  (delete)	...
-		*/
 		if (1 == argcnt)
 		{
-			edit_token(verb_node->token,"DISPLAY");
-			edit_token(program_node->down->token,"OMITTED");
-			edit_token(using_node->token,"BELL");
-			free_statement(using_node->next);
-			using_node->next = NULL;
+			if (acu_cobol)
+			{
+				write_log("WISP",'I',"NATIVESCREENS","CALL \"BELL\" changed to DISPLAY OMITTED BELL.");
 
-			decontext_statement(the_statement);
+				/*
+				**	Morph:	CALL    "BELL"  USING arg1	...
+				**		|	|	|     |		|	
+				**	into:	DISPLAY OMITTED BELL  (delete)	...
+				*/
 
-			delete_end_call = 1;
+				edit_token(verb_node->token,"DISPLAY");
+				edit_token(program_node->down->token,"OMITTED");
+				edit_token(using_node->token,"BELL");
+				free_statement(using_node->next);
+				using_node->next = NULL;
+
+				decontext_statement(the_statement);
+
+				delete_end_call = 1;
+			}
+			if (mf_cobol)
+			{
+				write_log("WISP",'I',"NATIVESCREENS","CALL \"BELL\" changed to CALL X\"E5\".");
+
+				/*
+				**	Morph:	CALL "BELL" USING arg1	...
+				**		|    |      |
+				**	into:	CALL X"E5"  (delete)	...
+				*/
+				edit_token(program_node->down->token,"X\"E5\"");
+
+				free_statement(program_node->next);
+				program_node->next = NULL;
+
+				decontext_statement(the_statement);
+
+				delete_end_call = 1;
+
+			}
 		}
 		else
 		{
@@ -307,6 +338,8 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 		 0==strcmp(program_name,"\"DAY\"")	)
 	{
 		BYERROR(by_content);
+		BYERROR(by_value);
+
 		/* write_log("WISP",'W',"YEAR2000","Features of %s are not YEAR2000 compliant",program_name); */
 		tput_statement(col,the_statement);
 		the_statement = free_statement(the_statement);
@@ -314,6 +347,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	else if (0==strcmp(program_name,"\"EXTRACT\""))
 	{
 		BYERROR(by_content);
+		BYERROR(by_value);
 		/*
 		** write_log("WISP",'I',"CALL","Call %s proceeded by Call \"SETPROGID\".",program_name);
 		** tput_line_at(col, "CALL \"SETPROGID\" USING WISP-APPLICATION-NAME");
@@ -326,6 +360,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	else if (0==strcmp(program_name,"\"GETPARM\""))
 	{
 		BYERROR(by_content);
+		BYERROR(by_value);
 		/*
 		**	CALL "GETPARM" with more then 128 args need to be split
 		**	into multiple calls to "getparmbuild".
@@ -368,7 +403,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 				{
 					if (temp_node->token && KEYWORD == temp_node->token->type)
 					{
-						/* skip over BY REFERENCE|CONTENT */
+						/* skip over BY REFERENCE|CONTENT|VALUE */
 					}
 					else
 					{
@@ -412,6 +447,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	else if (0==strcmp(program_name,"\"LINK\""))
 	{
 		BYERROR(by_content);
+		BYERROR(by_value);
 		if (mf_cobol)
 		{
 			BYERROR(by_reference);
@@ -444,6 +480,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 				
 				if (eq_token(temp_node->token,KEYWORD,"BY") ||
 				    eq_token(temp_node->token,KEYWORD,"REFERENCE") ||
+				    eq_token(temp_node->token,KEYWORD,"VALUE") ||
 				    eq_token(temp_node->token,KEYWORD,"CONTENT"))
 				{
 					/* skip */
@@ -480,6 +517,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	else if (0==strcmp(program_name,"\"PAUSE\""))
 	{
 		BYERROR(by_content);
+		BYERROR(by_value);
 		/*
 		** write_log("WISP",'I',"CALL","Call %s changed to \"wpause\".",program_name);
 		** edit_token(program_node->down->token,"\"wpause\"");
@@ -490,6 +528,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	else if (0==strcmp(program_name,"\"RENAME\""))
 	{
 		BYERROR(by_content);
+		BYERROR(by_value);
 		/*
 		** write_log("WISP",'I',"CALL","Call %s changed to \"wrename\".",program_name);
 		** edit_token(program_node->down->token,"\"wrename\"");
@@ -512,6 +551,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 		char	ufb_name[80];
 		
 		BYERROR(by_content);
+		BYERROR(by_value);
 		BYERROR(by_reference);
 
 		write_log("WISP",'I',"CALL","Call %s changed to \"SETFILE2\".",program_name);
@@ -556,6 +596,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 		char	buf[80];
 		
 		BYERROR(by_content);
+		BYERROR(by_value);
 		BYERROR(by_reference);
 		write_log("WISP",'W',"CALL","Call %s can be replaced with OPEN SPECIAL-INPUT.",program_name);
 
@@ -580,9 +621,10 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 		 0==strcmp(program_name,"\"W4WAPI\"")     )
 	{
 		BYERROR(by_content);
-		if (acn_cobol)
+		BYERROR(by_value);
+		if (opt_native_screens)		/* CALL WISP SCREEN HANDLER - WARNING */
 		{
-			write_log("WISP",'W',"NATIVE","Call %s uses WISP Screens",program_name);
+			write_log("WISP",'W',"NATIVESCREENS","Call %s uses WISP Screens",program_name);
 		}
 		tput_statement(col,the_statement);
 		the_statement = free_statement(the_statement);
@@ -613,17 +655,18 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 		 using_ufb_test(program_name))
 	{
 		BYERROR(by_content);
+		BYERROR(by_value);
 		write_log("WISP",'I',"CALL","Call %s fixing UFB arguments.",program_name);
 
-		if (acn_cobol)
+		if (opt_native_screens)		/* CALL WISP SCREEN HANDLER - WARNING */
 		{
 			if (0==strcmp(program_name,"\"WSXIO\""))
 			{
-				write_log("WISP",'W',"NATIVE","Call %s uses WISP Screens",program_name);
+				write_log("WISP",'W',"NATIVESCREENS","Call %s uses WISP Screens",program_name);
 			}
 			else if (0==strcmp(program_name,"\"SCREEN\""))
 			{
-				write_log("WISP",'W',"NATIVE","Call %s not supported with Native Screens",program_name);
+				write_log("WISP",'W',"NATIVESCREENS","Call %s not supported with Native Screens",program_name);
 			}
 		}
 
@@ -637,7 +680,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 		{
 			if (temp_node->token && KEYWORD == temp_node->token->type)
 			{
-				/* skip over BY REFERENCE|CONTENT */
+				/* skip over BY REFERENCE|CONTENT|VALUE */
 			}
 			else
 			{
@@ -809,6 +852,27 @@ static void track_call(const char *pname, c_list *tptr)					/* Keep track of the
 /*
 **	History:
 **	$Log: wt_call.c,v $
+**	Revision 1.46  2007/08/03 15:26:19  gsl
+**	The WISP translator was reporting an error if it found a comment
+**	in the middle of a continued literal.
+**	
+**	The WISP translator now recognizes the "BY VALUE" syntax of
+**	arguments in a CALL statement.
+**	
+**	Revision 1.45  2003/09/08 19:43:27  gsl
+**	Change log entries for Native Screens
+**	
+**	Revision 1.44  2003/08/28 16:42:18  gsl
+**	Micro FOcus Native Screens  - fix BELL call
+**	
+**	Revision 1.43  2003/08/15 20:54:28  gsl
+**	Micro Focus Native Screens
+**	
+**	Revision 1.42  2003/08/08 19:52:47  gsl
+**	Add native screens comments
+**	
+**	Revision 1.41  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.40  2003/03/27 21:20:45  gsl
 **	Because of DATE6 don't need to issue YEAR2000 warnings for CALL to DATE, DAY or READFDR
 **	

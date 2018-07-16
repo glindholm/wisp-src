@@ -1,0 +1,96 @@
+#	Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+#	$Id:$
+#
+#
+#	File:	mfn.umf
+#
+#	Function:
+#		The makefile for building Micro Focus Native Screen objects
+#
+#	Instructions:
+#		To build all the targets:
+#			$ make -f mfn.umf
+#
+#	Targets:
+#		When running the make utility you can specify what "targets"
+#		to create.  You specify a target by adding it to the end
+#		of the make command.
+#
+#		Usage:	make -f mfn.umf [targets...]
+#
+#		The following targets are recognized in this makefile.
+#
+#		acu		Build ACULINK.acu and ACUUSING.acu
+#
+#		acn		Build Acucobol Native Screen routines
+#
+#			
+
+MAKEFILE=mfn.umf
+
+#============================================================================
+#
+
+
+COBOL=cob
+COBFLAGS =
+
+.cob.int:
+	$(COBOL) -i -a $(COBFLAGS) $*.cob
+
+.cob.gnt:
+	$(COBOL) -u $(COBFLAGS) $*.cob
+
+.SUFFIXES: .gnt .int .cob
+
+
+#============================================================================
+
+default: all
+
+#============================================================================
+
+$(COBOL):
+	@echo ">>>> ERROR: A MICRO FOUCS configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The MICRO FOCUS file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using COBOL    = $(COBOL)"
+	@echo ">>>>"
+	@exit 1
+#============================================================================
+
+MFN_COBS= \
+	WMFNERROR.cob \
+	WMFNDISPLAY.cob \
+	WMFNGETPFKEY.cob \
+	WMFNHELP.cob \
+	WMFNGETPARM.cob \
+	WMFNFAC2SCREEN.cob \
+	WMFNWSB.cob
+
+
+MFN_INTS= $(MFN_COBS:.cob=.int)
+MFN_GNTS= $(MFN_COBS:.cob=.gnt)
+MFN_IDYS= $(MFN_COBS:.cob=.idy)
+
+#============================================================================
+#
+
+all:	ints
+
+ints:	$(MFN_INTS)
+
+gnts:	$(MFN_GNTS)
+
+
+#============================================================================
+#
+#	clean
+
+clean:
+	rm -f $(MFN_INTS) $(MFN_GNTS) $(MFN_IDYS)
+
+#
+# End of file
+#

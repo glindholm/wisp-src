@@ -588,7 +588,12 @@ static int wtname(char *wang_vol, char *wang_lib, char *wang_file,
 		}
 	}
 
+#ifdef unix
 	fdesc = creat( path, 0666 );							/* Reserve the filespec			*/
+#endif
+#ifdef WIN32
+	fdesc = _creat( path, _S_IREAD | _S_IWRITE );					/* Reserve the filespec			*/
+#endif
 	if ( fdesc != -1 )
 	{
 		close( fdesc );
@@ -653,7 +658,9 @@ static void WL_logworklib( char *worklib )
 	write( fd, worklib, strlen(worklib) );
 	write( fd, "\n", 1 );
 	close( fd );
+#ifdef unix
 	chmod(wf,0666);
+#endif
 }
 
 
@@ -773,6 +780,9 @@ void wisp_mode2fileattr(int4 mode, char *attrstr)
 /*
 **	History:
 **	$Log: wfname.c,v $
+**	Revision 1.49  2009/10/18 20:57:07  gsl
+**	Fix bug with Vista/2008 where creat() was failing because of unsupported mode.
+**	
 **	Revision 1.48  2003/04/03 20:27:53  gsl
 **	WFNAME2()
 **	

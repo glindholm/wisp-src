@@ -50,6 +50,12 @@
 #endif
 #include <time.h>
 
+#if defined(WIN32)
+#define USE_FTIME
+#include <sys/timeb.h>
+#else
+#define USE_GETTIMEOFDAY_BSD
+#endif
 
 #include "idsistd.h"
 #include "werrlog.h"
@@ -841,7 +847,7 @@ static void DATEx(const char* routine, const char* func, char* arg1, char* arg2,
 {
 	int4 rc;
 	date_struct	date1;
-	char mod_func[2];
+	char mod_func[3];  /* 2 + 1 for null with strcpy */
 	struct tm *time_struct;
 	time_t 	time_val;
 	char	buff[20];
@@ -894,16 +900,9 @@ static void DATEx(const char* routine, const char* func, char* arg1, char* arg2,
 		  0==memcmp(func,"EG",2)    )
 	{
 		int hsec;
-
-#if defined(WIN32)
-#define USE_FTIME
-#else
-#define USE_GETTIMEOFDAY_BSD
-#endif
 		
 #if defined(USE_FTIME)
 		{
-			#include <sys/timeb.h>
 			struct timeb sTimeb;
 			ftime(&sTimeb);
 			time_struct = localtime(&sTimeb.time);
@@ -2076,6 +2075,9 @@ int WL_useoldvsdate(void)
 /*
 **	History:
 **	$Log: date.c,v $
+**	Revision 1.38  2009/10/18 20:59:06  gsl
+**	fix windows warnings
+**	
 **	Revision 1.37  2003/03/27 21:37:18  gsl
 **	fix warnings
 **	

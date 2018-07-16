@@ -148,7 +148,7 @@ NODE parse_if(NODE the_statement, NODE the_sentence)
 				}
 				decontext_statement(id_node->down);
 
-				if (acn_cobol)
+				if (opt_native_screens)	/* IF FAC 0F CONDITION - WARNING */
 				{
 					if (0 == memcmp(token_data(id_node->down->token),
 						FAC_OF_PREFIX, strlen(FAC_OF_PREFIX)))
@@ -266,7 +266,7 @@ NODE parse_if(NODE the_statement, NODE the_sentence)
 
 					write_log("WISP",'I',"IFALTERED","Processing IF FAC OF id ALTERED condition");
 
-					if (acn_cobol)
+					if (opt_native_screens)		/* IF FAC OF ALTERED - WARNING */
 					{
 						write_log("WISP",'W',"FACALTERED",
 							  "IF FAC OF field ALTERED not supported with Native Screens");
@@ -423,6 +423,14 @@ NODE parse_if(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_if.c,v $
+**	Revision 1.22  2003/08/11 17:18:18  gsl
+**	MF Native screens
+**	
+**	Revision 1.21  2003/08/08 19:52:46  gsl
+**	Add native screens comments
+**	
+**	Revision 1.20  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.19  2003/02/04 17:33:19  gsl
 **	fix copyright header
 **	

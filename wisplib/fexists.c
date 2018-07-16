@@ -386,11 +386,11 @@ int WL_stat_mode(const char* name, mode_t *mode)
 	return 0;
 }
 
-#ifdef INT8_DEFINED
+#ifdef INT64_DEFINED
 /*
 **	ROUTINE:	WL_stat_size_int8()
 **
-**	FUNCTION:	Get the file size as an INT8 (64-bit)
+**	FUNCTION:	Get the file size as an INT64 (64-bit)
 **
 **	DESCRIPTION:	Use stat() or stat64()
 **
@@ -405,7 +405,7 @@ int WL_stat_mode(const char* name, mode_t *mode)
 **	WARNINGS:	None
 **
 */
-int WL_stat_size_int8(const char* name, INT8 *size)
+int WL_stat_size_int8(const char* name, INT64 *size)
 {
 #ifdef USE_FILE64
 	struct stat64 buf;
@@ -502,6 +502,9 @@ int WL_fcanread(const char* name)
 /*
 **	History:
 **	$Log: fexists.c,v $
+**	Revision 1.25  2007/07/31 16:51:07  gsl
+**	Change INT8 to INT64 to avoid conflicts on WIN32
+**	
 **	Revision 1.24  2003/01/31 17:23:48  gsl
 **	Fix  copyright header
 **	

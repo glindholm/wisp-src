@@ -1,24 +1,7 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** WISP - Wang Interchange Source Processor
-**
 ** $Id:$
-**
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
-** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
+** WISP - Wang Interchange Source Processor
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 */
 
 
@@ -33,6 +16,7 @@
 
 #ifdef WIN32
 #include <direct.h>
+#define chdir _chdir
 #endif
 
 #define EXT extern
@@ -283,11 +267,23 @@ char	*outfile;
 
 int writing_cob_main()
 {
+	/*
+	**	NOTE: This is not accurate because 'curr_cob_context' is updated
+	**	as the INPUT files are opened and closed. 
+	**	The OUTPUT files often lag behind as tokens remain in queues 
+	**	and statements until the statements are written out.
+	*/
 	return(!writing_copybook());
 }
 
 int writing_copybook()
 {
+	/*
+	**	NOTE: This is not accurate because 'curr_cob_context' is updated
+	**	as the INPUT files are opened and closed. 
+	**	The OUTPUT files often lag behind as tokens remain in queues 
+	**	and statements until the statements are written out.
+	*/
 	return(curr_cob_context->outfile->is_copybook);
 }
 
@@ -673,6 +669,12 @@ char	*select_name;
 /*
 **	History:
 **	$Log: wt_files.c,v $
+**	Revision 1.34  2009/10/18 20:22:58  gsl
+**	Copyright
+**	
+**	Revision 1.33  2003/12/03 16:18:48  gsl
+**	Fix so native screen fields and screen sections don't get generated in a copybook file.
+**	
 **	Revision 1.32  2003/03/11 19:25:07  gsl
 **	Move the load_option_file() and oad_key_file() calls to the main()
 **	

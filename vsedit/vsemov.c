@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) 1994-2004, NeoMedia Technologies, Inc. All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
@@ -219,7 +219,7 @@ static int vse_ed_mov_range(int type, int4 start_line, int4 end_line, int4 targe
 {
 	TEXT 	*txt=NULL,*start=NULL,*end=NULL,*target=NULL,*last_txt=NULL;
 	TEXT 	*ostart,*oend;
-	int	num;
+	int	num; /* number of lines to move */
 	int	found_target = 0;
 	int	idx;
 
@@ -233,30 +233,41 @@ static int vse_ed_mov_range(int type, int4 start_line, int4 end_line, int4 targe
 	   greater than or equal to start_line, end should equal the first line
 	   that is less than or equal to end_line, and target should equal the first
 	   line that is closest to target_line. Added by CIS: 07/22/93 AJA */
+	num=0; 
 	for (txt = text_first, num=0;
 	     txt && (!start || !end || !found_target) ;
-	     txt = txt->next, (start && !end)?++num:num)
+	     txt = txt->next)
 	{
-		if ( !end )
+		if ( !start )
 		{
 			if ( txt->lineno > end_line )
 			{
-				if (!start)
-				{
-					return RESP_RANGE;
-				}
+				return RESP_RANGE;
+			}
+
+			if (txt->lineno >= start_line)
+			{
+				start=txt;
+			}
+		}
+
+		if ( start && !end )
+		{
+			num++;
+
+			if ( txt->lineno > end_line )
+			{
 				end = txt->prev;
+
+				/* already counted */
+				num--;
 			}
 			else if (txt->lineno == end_line)
 			{
 				end=txt;
 			}
 		}
-		if ( !start )
-		{
-			if (txt->lineno >= start_line)
-				start=txt;
-		}
+
 		if ( !found_target )
 		{
 			if (txt->lineno == target_line)
@@ -714,7 +725,7 @@ int validate_numincr(char *number_field, int4 *number, char *incr_field, int4 *i
 
 	memcpy(lineno,number_field,6);
 	lineno[6] = (char)0;
-	untrunc(lineno,16);
+	vse_untrunc(lineno,16);
 
 	if (validate_linenum(lineno, number) || *number < 1)
 	{
@@ -723,7 +734,7 @@ int validate_numincr(char *number_field, int4 *number, char *incr_field, int4 *i
 
 	memcpy(lineno,incr_field,6);
 	lineno[6] = (char)0;
-	untrunc(lineno,16);
+	vse_untrunc(lineno,16);
 
 	if (validate_linenum(lineno, incr) || *incr < 1)
 	{
@@ -795,7 +806,7 @@ int vse_xcopy(void)
 	*/
 	for(;;)
 	{
-		untrunc(sysname_field,sizeof(sysname_field)-1);
+		vse_untrunc(sysname_field,sizeof(sysname_field)-1);
 
 		rc = vse_xcopy_gp(file_field, library_field, volume_field, sysname_field, 
 		 		  start_field, end_field, target_field, modcode_field,
@@ -812,8 +823,8 @@ int vse_xcopy(void)
 		message_code = 0;
 		resp = 0;
 
-		trunc(sysname_field);
-		if(!exists(sysname_field))
+		vse_trunc(sysname_field);
+		if(!vse_exists(sysname_field))
 		{
 			strcpy(message_field,"\224SORRY\204- File not found.");
 			message_code = 1;
@@ -995,7 +1006,7 @@ static int vse_xcopy_copy(char *sysname, int4 start_line, int4 end_line, int4 ta
 				/*
 				**	Start the list
 				*/
-				txt->next = txt->next = NULL;
+				txt->next = NULL;
 				list_start = list_end = txt;
 			}
 			else
@@ -1200,6 +1211,22 @@ static int vse_xcopy_copy(char *sysname, int4 start_line, int4 end_line, int4 ta
 /*
 **	History:
 **	$Log: vsemov.c,v $
+**	Revision 1.15  2010/02/10 03:53:17  gsl
+**	fix warnings
+**	
+**	Revision 1.14  2010/01/10 00:36:15  gsl
+**	refactor utils to add vse_ prefix to avoid conflicts with trunc
+**	vse_trunc
+**	
+**	Revision 1.13  2004/04/13 15:59:49  gsl
+**	Change VSEDIT version to 5.01 with Move Single Line Bug fix
+**	
+**	Revision 1.12  2004/04/12 21:34:51  gsl
+**	VSEDIT utility Move or Copy lines command would fail to detect
+**	an error condition of needing a RENUMBER before the insert if
+**	only one line was being moved. The line being moved might then
+**	be lost without warning. This has been fixed.
+**	
 **	Revision 1.11  2003/02/05 21:47:54  gsl
 **	fix -Wall warnings
 **	

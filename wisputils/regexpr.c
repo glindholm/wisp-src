@@ -25,7 +25,7 @@ Free Software Foundation.
 Emacs-specific code and syntax table code is almost directly borrowed
 from GNU regexp.
 
-$Header: /cvsroot/wisp/src/wisputils/regexpr.c,v 1.1 2003/06/23 13:56:06 gsl Exp $
+$Header: /cvsdata/CVSROOT/wisp/src/wisputils/regexpr.c,v 1.2 2010/02/10 03:54:22 gsl Exp $
 
 */
 
@@ -1368,7 +1368,6 @@ regexp_registers_t regs;
 	  /*NOTREACHED*/
 	}
     }
-  abort();
   /*NOTREACHED*/
 
  fail:
@@ -1562,7 +1561,6 @@ static struct re_registers regs;
 
 char *regcmp(char *pat,char *dummy)
 {
-	void *calloc();
 	char *regcmpfastmap;
 	
 	struct re_pattern_buffer *regcmpb;
@@ -1749,6 +1747,9 @@ int main()
 /*
 **	History:
 **	$Log: regexpr.c,v $
+**	Revision 1.2  2010/02/10 03:54:22  gsl
+**	fix warnings for redefined functions
+**	
 **	Revision 1.1  2003/06/23 13:56:06  gsl
 **	move from wisplib
 **	

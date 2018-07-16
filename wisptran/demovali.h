@@ -81,13 +81,14 @@ static int demovalidate() { return(1); }
 #endif
 
 
+
 static demoexit()
 {
 		printf("Your EVALUATION copy of WISP has timed out.\n\n");
 		printf("For assistance contact:\n\n");
 		printf("                       NeoMedia Technologies Incorporated\n");
-		printf("                          2201 Second Street Suite 402,\n");
-		printf("                              Fort Myers FL 33901\n");
+		printf("                          %s,\n", WISP_ADDRESS_STREET);
+		printf("                              %s\n", WISP_ADDRESS_CITY_STATE_ZIP);
 		printf("                            Phone: %s\n", WISP_PHONE_NUMBER);
 
 		exit(0);
@@ -98,6 +99,9 @@ static demoexit()
 /*
 **	History:
 **	$Log: demovali.h,v $
+**	Revision 1.16  2005/07/11 15:10:34  gsl
+**	Moved to Suite 600
+**	
 **	Revision 1.15  2003/02/04 17:33:20  gsl
 **	fix copyright header
 **	

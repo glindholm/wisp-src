@@ -6,7 +6,7 @@
 #
 #
 
-CDEBUG   =
+CDEBUG   = -g
 
 L_WISP  = wisp
 L_VIDEO = video
@@ -14,10 +14,11 @@ L_VIDEO = video
 WC=../wispcommon
 VC=../videolib
 WU=../wisputils
+WL=../wisplib
 
 include $(WISPSRC)/port/make.include
 
-CFLAGS  = $(CFLAGS0) -I $(WC) -I $(VC) -I $(WU)
+CFLAGS  = $(CFLAGS0) -I $(WC) -I $(VC) -I $(WU) -I $(WL)
 
 UTILS_LIBS_LINK = $(WISP_LIBS_LINK) $(MATH_LINK) $(CURSES_LINK)
 

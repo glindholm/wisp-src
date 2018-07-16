@@ -13,22 +13,17 @@
 //
 //	cDialogs::_SCRATCH::Initialize
 //
-cDialogs::_SCRATCH::Initialize ( )
+int cDialogs::_SCRATCH::Initialize ( )
 {
 	HKEY hKey;
 	HWND hDlg = Dialogs.SCRATCH.hSCRATCH;
-	DWORD BufSize = _MAX_PATH, Disp;
+	DWORD BufSize = _MAX_PATH;
 	UCHAR sRegValue[_MAX_PATH];
 	//	If unable to open key
-	if ( RegCreateKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\VSSUBS\\SCRATCH",
-		0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-		NULL, &hKey, &Disp ) == ERROR_SUCCESS ) {
+	if ( CreateRegistryKey (REGKEY_WISP_VSSUBS_SCRATCH,&hKey ) == ERROR_SUCCESS ) {
 		//	Get value for SCRATCHMODE field
 		BufSize = _MAX_PATH;
-		if ( RegQueryValueEx (
-			hKey, "WISPSCRATCHMODE", 0, NULL,
+		if ( RegQueryValueEx ( hKey, REGVAL_SCRATCH_WISPSCRATCHMODE, 0, NULL,
 			sRegValue, &BufSize ) == ERROR_SUCCESS ) {
 			sRegValue[BufSize] = '\0';
 			SetDlgItemText (
@@ -44,10 +39,6 @@ cDialogs::_SCRATCH::Initialize ( )
 	}
 
 	HWND hCtl = GetDlgItem ( hSCRATCH, S05_SCRATCHMODE );
-	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//	***** CHANGED *****
-//	HDC hDC = GetDC ( hCtl );
-	//	***** END CHANGED *****
 	ChkInvalid ( hCtl );
 
 	return 0;
@@ -58,22 +49,18 @@ cDialogs::_SCRATCH::Initialize ( )
 //	cDialogs::_SCRATCH::Save
 //		Saves the data in the SCRATCH dialog to the registry
 //
-cDialogs::_SCRATCH::Save ( )
+int cDialogs::_SCRATCH::Save ( )
 {
 	HWND hDlg;
 	HKEY hKey;
 	UCHAR sRegVal[_MAX_PATH];
 
 	hDlg = Dialogs.SCRATCH.hSCRATCH;
-	RegOpenKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\VSSUBS\\SCRATCH",
-		0, KEY_ALL_ACCESS, &hKey );
+	RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_VSSUBS_SCRATCH, 0, KEY_ALL_ACCESS, &hKey );
 
 	GetDlgItemText (
 		hDlg, S05_SCRATCHMODE, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "WISPSCRATCHMODE", 0, REG_SZ,
+	RegSetValueEx (	hKey, REGVAL_SCRATCH_WISPSCRATCHMODE, 0, REG_SZ,
 		sRegVal, strlen ((char *) sRegVal )+1);
 
 	RegFlushKey ( hKey );

@@ -2,9 +2,7 @@
 REM ########################################################################
 REM #
 REM #               WISP - Wang Interchange Source Pre-processor
-REM #             Copyright (c) 1988,1989,1990,1991,1992,1993,1994
-REM #        An unpublished work of International Digital Scientific Inc.
-REM #                           All rights reserved.
+REM #      Copyright (c) Shell Stream Software LLC, All rights reserved.
 REM #
 REM ########################################################################
 REM #

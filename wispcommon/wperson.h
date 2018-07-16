@@ -184,7 +184,6 @@ void USEHARDLINK(char *laststate);
 int WL_softlink(void);
 
 int wisp_nativescreens(void);
-int wisp_acu_nativescreens(void);
 int WL_pfkeys12(void);
 const char *WL_get_wisp_option(const char *keyword);
 const char *WL_get_wisp_option_env(const char *keyword);
@@ -204,6 +203,9 @@ const char* WL_batchqueue_name();
 /*
 **	History:
 **	$Log: wperson.h,v $
+**	Revision 1.35  2003/08/25 21:10:18  gsl
+**	MF Native Screens
+**	
 **	Revision 1.34  2003/03/20 18:28:45  gsl
 **	Fix logical_id typedef
 **	

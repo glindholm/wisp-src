@@ -56,12 +56,17 @@
 int WL_getmachineid(char* machineid);
 char *WL_computername(char *cname);
 void WL_encodemachid(const char *source, char *target);
+void WL_GetMachineIdFromName(char* machineid, const char* computername, const char* platform_code);
 
 #endif /* machid_H */
 
 /*
 **	History:
 **	$Log: machid.h,v $
+**	Revision 1.5  2004/06/14 15:42:57  gsl
+**	make external the routines to generate MachineId from the Unix Machine Name
+**	Used by Linux and Alpha. Add M function to wauthorize to generate machine id for Window or Linux or Alpha from the machine name.
+**	
 **	Revision 1.4  2003/01/31 19:26:33  gsl
 **	Fix copyright header
 **	

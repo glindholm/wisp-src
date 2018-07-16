@@ -1,30 +1,123 @@
-Copyright (c) 1997-2003 by NeoMedia Technologies Inc. 
-All Rights Reserved.
-
+Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 ====================================================================
 
-Title:          RELEASE NOTES FOR WISP VERSION 5.0
+Title:          RELEASE NOTES FOR WISP VERSION 5.1
 
 Document:       wisp_relnotes.txt
 Last Updated:   $Date:$
 Products:       WISP for UNIX, WISP for Windows (WIN32)
-Versions:       5.0.01
+Versions:       5.1.00
 
 Summary:        Release notes for changes to WISP since version 3.3c.
 
 ====================================================================
 
-        NeoMedia Technologies Inc.
-        2201 Second Street Suite 402
-        Fort Myers FL, 33901
+        Shell Stream Software LLC
+        586 Lakewood Drive
+        Oldsmar, FL 34677
         USA
 
-        Voice (239) 337-3434
-        Fax   (239) 337-1605
-        Web   www.neom.com
-        Email support@neom.com
-        FAQ   http://www.neom.com/support/wisp/faq.jsp
+        Voice (813) 425-6344
+        Fax   (813) 425-6344
+        Web   www.shellstream.com
+        Email wisp@shellstream.com
+        FAQ   http://www.shellstream.com/faq
 
+
+
+CHANGES FOR RELEASE 5.1.00
+==========================
+The following items describe corrections and improvements that have
+been made to the WISP toolkit for release 5.1.00.
+
+The version numbers of utilities that are released with this version
+or WISP are:
+
+    KCSI   v4.2.00
+
+Copyrights have been changed to Shell Stream Software LLC.
+
+Support for Acucobol 8.1 and 7.2 has been added.
+
+Added support for Windows 7.
+
+Fixed a file access security exception on Windows Vista and Windows 
+Server 2008.
+
+Changed VSSUB LINK using linktype='P' to behave like linktype=' ' (space)
+when both the program library and the volume are blank.
+
+Added OPTIONS file option NOTITLE. The NOTITLE option will disable 
+the WTITLE routine. This will prevent calls to WTITLE from changing 
+the Window title in a Co*STAR or Windows environment.
+
+WPROC will now record it's error messages to the wisperr.log file.
+
+WDIAG would incorrectly report $PATH warnings if the $PATH was 
+greater then 1024 bytes long. This has been corrected.
+
+WDIAG now displays the Print configuration files LPMAP, PRMAP 
+and FORMS if present.
+
+WDIAG was broken on Microsoft Vista and was incorrectly reporting 
+most folders and programs as "UNABLE TO ACCESS".
+
+WDIAG has been enhanced to handle variations of the CODE_PREFIX 
+configuration entry in the Acucobol config file. It now understands 
+mixed case and both '-' and '_' seperators. It also understands 
+that the $CODE_PREFIX environment variable can also be used.
+It also understands OS specific path separators (':' on unix 
+and ';' on Windows) and quoted directories with embedded spaces.
+
+VSEDIT utility Move or Copy lines command would fail to detect 
+an error condition of needing a RENUMBER before the insert if 
+only one line was being moved. The line being moved might then
+be lost without warning. This has been fixed.
+
+There was a defect processing configuration files PRMAP, FORMS,
+SCMAP, and CQMAP when the last line in the file was missing 
+the End Of Line character (NL). The last character of the last 
+line was being removed. This has been corrected.
+
+The WCONFIG utility on WIN32 has been enhanced to support 
+the Microsoft Vista operating system.  On Vista the Registry 
+Keys will be written under "HKEY_CURRENT_USER\Software\Classes\
+VirtualStore\MACHINE\SOFTWARE" instead of "HKEY_LOCAL_MACHINE\SOFTWARE"
+where they are in earlier releases of Windows. If you manually 
+import the Registry settings to "HKEY_LOCAL_MACHINE\SOFTWARE" 
+then the WCONFIG utility will not be able to edit them.
+
+The "SAVE Environment" command from Command Processor (WSHELL or 
+HELP) was failing to write PERSONALITY files that contained 
+embedded spaces.  It was terminating the file name at the 
+first space character. This has been corrected.
+
+
+Changes to the WISP Translator:
+
+When translating for NATIVE SCREENS and the last statement in the 
+LINKAGE SECTION is a COPY statement then the translator would 
+incorrectly generate the SCREEN SECTION into the copybook file.
+This has been fixed. 
+
+The WISP translator now defaults to using ".cob" as the file 
+extension for the internally generated copybooks (was wcXXXXXX.cpy).
+It now follows the same rules for filename extensions as with 
+translated copybooks including obeying the #COPYBOOK_EXT_CPY or 
+#COPYBOOK_EXT_LIB options.
+
+The WISP translator was reporting errors for paragraph names that
+consisted of all digits. This has been fixed.
+
+The WISP translator was aborting on an improperly formed OPEN 
+statement that was missing the Open Mode keyword. This has been 
+fixed.
+
+The WISP translator was reporting an error if it found a comment 
+in the middle of a continued literal. 
+
+The WISP translator now recognizes the "BY VALUE" syntax of 
+arguments in a CALL statement.
 
 
 CHANGES FOR RELEASE 5.0.01
@@ -32,8 +125,11 @@ CHANGES FOR RELEASE 5.0.01
 The following items describe corrections and improvements that have
 been made to the WISP toolkit for release 5.0.01.
 
-The WFILECHK3 routine was incorrectly generating ERROR screens instead 
-of passing control to the DECLARATIVES.  This has been corrected.
+The WFILECHK3 routine was incorrectly generating ERROR screens 
+instead of passing control to the DECLARATIVES.  The problem appears 
+to only effect applications that do not code "INVALID KEY" clauses 
+on READ statements etc. and rely on coded DECLARATIVES to handle 
+this type of condition. This has been corrected.
 
 
 CHANGES FOR RELEASE 5.0.00
@@ -88,8 +184,8 @@ $WISPCONFIG directory.
 
 The old WISP UNLIMITED runtime licenses are no longer supported 
 and have been replaced with ENTERPRISE licenses.  If you have 
-an UNLIMITED license please contact your WISP vendor or NeoMedia 
-to have it replaced by an ENTERPRISE license.
+an UNLIMITED license please contact Shell Stream Software to 
+have it replaced by an ENTERPRISE license.
 
 
 Changes to the WISP distribution kit on UNIX:
@@ -2973,6 +3069,7 @@ three part version number.
 
     WISP VERSION      CUTOVER DATE 
     ------------      ------------
+        5.1.00          02/01/10        Shell Stream Software
         5.0.01          11/10/03        5.0 Patch 1
         5.0.00          07/09/03        Major Release
         4.4.07          02/14/03        Unix license file changes

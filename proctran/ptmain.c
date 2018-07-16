@@ -1,19 +1,10 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
 ** $Id:$
-**
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
 ** 
 ** CVS
 ** $Source:$
@@ -89,7 +80,7 @@ char *argv[];
         
         if (argc==2 && argv[1][0]=='-' && (argv[1][1]=='?'||argv[1][1]=='h')) usage(0);
         else
-          fprintf(stderr,"\nPROCTRAN V%s (c) NeoMedia Migrations, Inc. %s - 'proctran -h' for help\n",VERSION,MODDATE);
+          fprintf(stderr,"\nPROCTRAN V%s (c) Shell Stream Software LLC %s - 'proctran -h' for help\n",VERSION,MODDATE);
 
 	for (i = 0; i < argc; i++ ) sargv[i] = argv[i];					/* Save the argv			*/
 	sargv[argc] = 0;								/* Null terminate sargv			*/
@@ -150,7 +141,7 @@ static void wcbname(char* out_name, char* in_name)					/* Generate the output fi
 
 void usage(int prnt)
 {
-	if (!prnt) fprintf(stderr,"PROCTRAN V%s (c)NeoMedia Migrations, Inc. %s\n",VERSION,MODDATE);
+	if (!prnt) fprintf(stderr,"PROCTRAN V%s (c) Shell Stream Software LLC %s\n",VERSION,MODDATE);
 
         fprintf(stderr,"\nusage:  proctran [-flags] filename\n");
 	fprintf(stderr," FLAG   VMS SWITCH     DESCRIPTION\n");
@@ -188,6 +179,9 @@ void handler()
 /*
 **	History:
 **	$Log: ptmain.c,v $
+**	Revision 1.19  2010/01/10 16:04:27  gsl
+**	Shell Stream
+**	
 **	Revision 1.18  2003/02/05 21:15:03  gsl
 **	fix -Wall warnings
 **	

@@ -1,4 +1,4 @@
-	Copyright (c) 1997-2002 by NeoMedia Technologies Inc. 
+	Copyright (c) Shell Stream Software LLC 
 	All Rights Reserved.
 	
 	====================================================================

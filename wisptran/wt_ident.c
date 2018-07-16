@@ -23,6 +23,7 @@
 
 
 #define EXT extern
+#include "wcommon.h"
 #include "wisp.h"
 #include "directiv.h"
 #include "wispfile.h"
@@ -660,8 +661,14 @@ static void init_figcons(void)
 	use_copy = 0;									/* Use a "COPY" statement		*/
 	output_copy = 0;								/* Write the copy code.			*/
 
-	if (opt_symbzero) 	strcpy(COPY_SYMBOLICS,"wc001x05.cpy");
-	else    	strcpy(COPY_SYMBOLICS,"wc001005.cpy");
+	if (opt_symbzero) 	
+	{
+		sprintf(COPY_SYMBOLICS, "wc1x%04d.%s", (int)(WISP_VERSION_NUM), copybookext());
+	}
+	else    	
+	{
+		sprintf(COPY_SYMBOLICS, "wc10%04d.%s", (int)(WISP_VERSION_NUM), copybookext());
+	}
 
 	write_log("WISP",'I',"INITFIGCON","Creating default FIGURATIVE-CONSTANTS.");
 
@@ -675,14 +682,17 @@ static void init_figcons(void)
 		tput_line_at(12, "NUMERIC SIGN IS TRAILING SEPARATE");
 	}
 
-	if ( acn_cobol)
+	if (opt_native_screens)	/* SPECIAL-NAMES. SCREEN CONTROLS */
 	{
 		/*
 		**	Acucobol Native screen controls
 		*/
 		tput_line_at(12, "CURSOR         IS WISP-CURSOR");
 		tput_line_at(12, "CRT STATUS     IS WISP-CRT-STATUS");
-		tput_line_at(12, "SCREEN CONTROL IS WISP-SCREEN-CONTROL");
+		if (acu_cobol)
+		{
+			tput_line_at(12, "SCREEN CONTROL IS WISP-SCREEN-CONTROL");
+		}
 	}
 	
 	if ( writing_cob_main() || !opt_gen_copylib )					/* If not writing to a copybook file	*/
@@ -763,6 +773,22 @@ static void finish_figcons(NODE hold_special)
 /*
 **	History:
 **	$Log: wt_ident.c,v $
+**	Revision 1.34  2003/12/02 21:23:20  gsl
+**	Fix so native screen sections don't get generated in a copybook file.
+**	Change generated copybooks (internal) to use same file extension rules
+**	as translated copybooks. Default to .cob extension.
+**	
+**	Revision 1.33  2003/08/12 20:56:19  gsl
+**	Change cpy to use WISP version number as last 4 digits
+**	
+**	Revision 1.32  2003/08/11 17:18:19  gsl
+**	MF Native screens
+**	
+**	Revision 1.31  2003/08/08 19:52:46  gsl
+**	Add native screens comments
+**	
+**	Revision 1.30  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.29  2003/03/03 22:08:40  gsl
 **	rework the options and OPTION file handling
 **	

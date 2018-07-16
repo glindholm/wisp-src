@@ -1,35 +1,28 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software, LLC. All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software, LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
-** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
+** any means without the written permission is strictly prohibited.
 ******************************************************************************
 */
 
+/*
+ * $Id:$
+ * $Source:$
+ */
 
 /*
 **	File:		wcommon.h
 **
 **	Project:	wisp
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Common defines for all WISP sub-projects
 **
@@ -44,8 +37,8 @@
 
 /*
 	Change WISP_VERSION:
-	- wispcommon/wcommon.h
-	- port/makewisp.umf
+	- wispcommon/wcommon.h		WISP_VERSION
+	- port/makewisp.umf		WISPVER
 	- doc/wisp_packlist.txt
 	- doc/wisp_relnotes.txt
 	- doc/wisp_install_unix.txt
@@ -66,18 +59,23 @@
 	- kcsi/kcsi_relnotes.txt
 	- kcsi/kcsintsetup.txt
 */
-#define WISP_VERSION "V5.0.01"			 		/* WISPTRAN version (char[20])		*/
-#define WISP_LICENSE_VERSION 50
+#define WISP_VERSION		"V5.1.00"	/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION_NUM	5100
+#define WISP_LICENSE_VERSION	51
 
-#define WISP_LIB_VERSION	30				/* WISPLIB version number.		*/
-#define WISP_SCREEN_VERSION	22				/* SCREEN version number.		*/
+#define WISP_SCREEN_VERSION	22		/* SCREEN version number.		*/
 
 /* CHANGE-COPYRIGHT-DATE */
-#define WISP_COPYRIGHT_YEAR_STR	"2003"
-#define WISP_COPYRIGHT_YEAR_INT	2003
-#define WISP_PHONE_NUMBER "(239) 337-3434"
-#define WISP_EMAIL "support@neom.com"
-#define WISP_WEBSITE "www.neom.com"
+#define WISP_OWNER "Shell Stream Software LLC"
+#define WISP_COPYRIGHT_YEAR_STR	"2010"
+#define WISP_COPYRIGHT_YEAR_INT	2010
+#define WISP_PHONE_NUMBER "(813) 425-6344"
+#define WISP_EMAIL "wisp@shellstream.com"
+#define WISP_WEBSITE "www.shellstream.com"
+
+#define WISP_ADDRESS_STREET "586 Lakewood Drive"
+#define WISP_ADDRESS_CITY_STATE_ZIP "Oldsmar, FL 34677"
+#define WISP_ADDRESS_FULL "586 Lakewood Drive, Oldsmar, FL 34677"
 
 /* 
 **	NOTE: Screen version 20 and 21 are still supported.
@@ -166,11 +164,56 @@
 /*
 **	History:
 **	$Log: wcommon.h,v $
-**	Revision 1.73.4.2  2003/11/11 15:42:13  gsl
-**	Add packing_list.txt to list of version numbers
+**	Revision 1.89  2010/01/16 02:04:28  gsl
+**	new release
+**	wisp 5.1.00
+**	kcsi 4.2.00
 **	
-**	Revision 1.73.4.1  2003/11/10 19:26:42  gsl
-**	Release 5.0.01
+**	Revision 1.88  2010/01/10 17:18:28  gsl
+**	Copyright year 2010
+**	
+**	Revision 1.87  2009/10/18 19:23:53  gsl
+**	5.0.90
+**	
+**	Revision 1.86  2009/10/17 15:05:32  gsl
+**	update phone number
+**	
+**	Revision 1.85  2009/07/19 20:53:51  gsl
+**	Shell Stream
+**	
+**	Revision 1.84  2007/08/06 17:48:55  gsl
+**	Version 5.0.54
+**	
+**	Revision 1.83  2007/01/03 14:11:44  gsl
+**	copyright 2007
+**	
+**	Revision 1.82  2005/07/11 15:10:34  gsl
+**	Moved to Suite 600
+**	
+**	Revision 1.81  2005/01/03 19:12:06  gsl
+**	Copyright year 2005
+**	
+**	Revision 1.80  2004/01/05 19:34:14  gsl
+**	2004
+**	5.0.53
+**	
+**	Revision 1.79  2003/12/02 21:21:50  gsl
+**	5.0.52
+**	
+**	Revision 1.78  2003/11/12 14:59:04  gsl
+**	Add W@PRINTFILE with #NATIVE back in for Clerity's use.
+**	
+**	Revision 1.77  2003/11/11 15:41:48  gsl
+**	Merge from V5_0_01
+**	
+**	Revision 1.76  2003/08/13 20:56:33  gsl
+**	WISP 5.0.50 test version
+**	
+**	Revision 1.75  2003/08/11 21:08:15  gsl
+**	Add WISP_VERSION_NUM a 4 digit version number
+**	
+**	Revision 1.74  2003/08/06 18:10:02  gsl
+**	5.0.90
 **	
 **	Revision 1.73  2003/07/08 20:55:24  gsl
 **	WISP 5000

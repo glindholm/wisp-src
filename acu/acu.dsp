@@ -97,6 +97,14 @@ SOURCE=.\sub85_acu60.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\sub85_acu62.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\sub85_acu72.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\wisp_sub85_inc.c
 # End Source File
 # Begin Source File
@@ -210,7 +218,15 @@ SOURCE=.\acu60\build_ede_acu60_rts.txt
 # End Source File
 # Begin Source File
 
+SOURCE=.\acu62\build_ede_acu62_rts.txt
+# End Source File
+# Begin Source File
+
 SOURCE=.\acu60\build_kcsi_acu60_rts.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\acu62\build_kcsi_acu62_rts.txt
 # End Source File
 # Begin Source File
 
@@ -219,6 +235,10 @@ SOURCE=.\acu60\build_wisp_acu60_rts.txt
 # Begin Source File
 
 SOURCE=.\acu60\build_wisp_acu60atm_rts.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\acu62\build_wisp_acu62_rts.txt
 # End Source File
 # End Target
 # End Project

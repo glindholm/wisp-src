@@ -44,6 +44,7 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\etc\wisp_packlist.txt	\
 		$(WISPKIT)\etc\wisp_relnotes.txt	\
 		$(WISPKIT)\etc\aqmwisp.txt	\
+		$(WISPKIT)\etc\wispntdoc.txt	\
 		$(WISPKIT)\config\ACUCONFIG	\
 		$(WISPKIT)\config\CHARMAP	\
 		$(WISPKIT)\config\CQMAP		\
@@ -99,6 +100,23 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\acu\acu60\wrundll.rc			\
 		$(WISPKIT)\acu\acu60\wrundll_wisp_acu60.mak	\
 		$(WISPKIT)\acu\acu60\wrundll_wisp_acu60.dsp	\
+		$(WISPKIT)\acu\acu62\build_wisp_acu62_rts.txt	\
+		$(WISPKIT)\acu\acu62\sub85.c			\
+		$(WISPKIT)\acu\acu62\wisp.rc			\
+		$(WISPKIT)\acu\acu62\wrundll.vcproj		\
+		$(WISPKIT)\acu\acu72\build_wisp_acu72_rts.txt	\
+		$(WISPKIT)\acu\acu72\sub85.c			\
+		$(WISPKIT)\acu\acu72\wisp.rc			\
+		$(WISPKIT)\acu\acu72\wrundll.vcproj		\
+		$(WISPKIT)\acu\acu72\build_wisp_acu72_atm_rts.txt	\
+		$(WISPKIT)\acu\acu72\run32.vcproj		\
+		$(WISPKIT)\acu\acu81\build_wisp_acu81_rts.txt	\
+		$(WISPKIT)\acu\acu81\build_wisp_acu81_atm_rts.txt	\
+		$(WISPKIT)\acu\acu81\run32.vcproj		\
+		$(WISPKIT)\acu\acu81\sub85.c			\
+		$(WISPKIT)\acu\acu81\wisp.rc			\
+		$(WISPKIT)\acu\acu81\wrundll.rc		\
+		$(WISPKIT)\acu\acu81\wrundll.vcproj		\
 		$(WISPKIT)\demo\cursor.wps	\
 		$(WISPKIT)\demo\demo.wps	\
 		$(WISPKIT)\demo\dr.wps		\
@@ -109,7 +127,6 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\demo\screen.wps	\
 		$(WISPKIT)\demo\test.wps	\
 		$(WISPKIT)\demo\video.wps	\
-		$(WISPKIT)\wispntdoc.txt	\
 		$(WISPKIT)\wispntsetup.txt
 
 ede_dist_list=	$(EDEKIT)\good.exe		\
@@ -164,14 +181,23 @@ kcsiacu_dist_list= \
 		$(KCSIACUKIT)\build_kcsi_acu60_rts.txt	\
 		$(KCSIACUKIT)\wrundll_kcsi_acu60.mak	\
 		$(KCSIACUKIT)\wrundll_kcsi_acu60.dsp	\
+		$(KCSIACUKIT)\build_kcsi_acu62_rts.txt	\
+		$(KCSIACUKIT)\acu62\wrundll.vcproj	\
+		$(KCSIACUKIT)\build_kcsi_acu72_rts.txt	\
+		$(KCSIACUKIT)\acu72\wrundll.vcproj	\
 		$(KCSIACUKIT)\kcsi_relnotes.txt	\
 		$(KCSIACUKIT)\kcsi_packlist.txt	\
 		$(KCSIACUKIT)\kcsintsetup.txt	
+
+
 
 #
 #	targets
 #
 default: 	wispshipkit edeshipkit kcsiacushipkit
+
+clean:
+	-rmdir /q /s $(KITDIR)
 
 wispshipkit:	header wispkitdirs configdirs $(wisp_dist_list)
 
@@ -204,6 +230,9 @@ wispkit_dir_list= \
 	$(WISPKIT)\acu\acu51		\
 	$(WISPKIT)\acu\acu52		\
 	$(WISPKIT)\acu\acu60		\
+	$(WISPKIT)\acu\acu62		\
+	$(WISPKIT)\acu\acu72		\
+	$(WISPKIT)\acu\acu81		\
 	$(WISPKIT)\bin			\
 	$(WISPKIT)\config		\
 	$(WISPKIT)\config\videocap	\
@@ -216,16 +245,25 @@ wispkitdirs: $(KITDIR) $(wispkit_dir_list)
 $(wispkit_dir_list):
 	mkdir $@
 
-edekit_dir_list= $(EDEKIT) $(EDEKIT)\demo
+edekit_dir_list= \
+	$(EDEKIT) \
+	$(EDEKIT)\demo \
+	$(EDEKIT)\acu62 \
+	$(EDEKIT)\acu72
 
 edekitdirs: $(KITDIR) $(edekit_dir_list)
 
 $(edekit_dir_list):
 	mkdir $@
 
-kcsiacukitdirs: $(KITDIR) $(KCSIACUKIT)
+kcsiacu_dir_list= \
+	$(KCSIACUKIT) \
+	$(KCSIACUKIT)\acu62 \
+	$(KCSIACUKIT)\acu72
 
-$(KCSIACUKIT):
+kcsiacukitdirs: $(KITDIR) $(kcsiacu_dir_list)
+
+$(kcsiacu_dir_list):
 	mkdir $@
 
 config_dir_list = \
@@ -340,6 +378,9 @@ $(WISPKIT)\etc\wisp_relnotes.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\etc\aqmwisp.txt:	$(BASEDIR)\doc\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\etc\wispntdoc.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\config\ACUCONFIG:	$(BASEDIR)\config\$(@F)
@@ -507,6 +548,61 @@ $(WISPKIT)\acu\acu60\run32_wisp_acu60.mak:	$(BASEDIR)\acu\acu60\$(@F)
 $(WISPKIT)\acu\acu60\run32_wisp_acu60.dsp:	$(BASEDIR)\acu\acu60\$(@F)
 	$(COPY) $** $@
 
+
+
+$(WISPKIT)\acu\acu62\build_wisp_acu62_rts.txt:	$(BASEDIR)\acu\acu62\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu62\sub85.c:			$(BASEDIR)\acu\sub85_acu62.c
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu62\wisp.rc:			$(BASEDIR)\acu\acu62\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu62\wrundll.vcproj:		$(BASEDIR)\acu\acu62\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu72\build_wisp_acu72_rts.txt:	$(BASEDIR)\acu\acu72\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu72\sub85.c:			$(BASEDIR)\acu\sub85_acu72.c
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu72\wisp.rc:			$(BASEDIR)\acu\acu72\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu72\wrundll.vcproj:		$(BASEDIR)\acu\acu72\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu72\build_wisp_acu72_atm_rts.txt:	$(BASEDIR)\acu\acu72\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu72\run32.vcproj:		$(BASEDIR)\acu\acu72\$(@F)
+	$(COPY) $** $@
+
+
+$(WISPKIT)\acu\acu81\build_wisp_acu81_rts.txt:	$(BASEDIR)\acu\acu81\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu81\build_wisp_acu81_atm_rts.txt:	$(BASEDIR)\acu\acu81\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu81\sub85.c:			$(BASEDIR)\acu\sub85_acu81.c
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu81\wisp.rc:			$(BASEDIR)\acu\acu81\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu81\wrundll.rc:		$(BASEDIR)\acu\acu81\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu81\wrundll.vcproj:	$(BASEDIR)\acu\acu81\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu81\run32.vcproj:		$(BASEDIR)\acu\acu81\$(@F)
+	$(COPY) $** $@
+
+
 $(WISPKIT)\demo\cursor.wps:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
@@ -538,9 +634,6 @@ $(WISPKIT)\demo\video.wps:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\demo\qabckgrd.wcb:	$(BASEDIR)\test\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\wispntdoc.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\wispntsetup.txt:	$(BASEDIR)\doc\$(@F)
@@ -579,6 +672,7 @@ $(EDEKIT)\wrundll_ede_acu60.mak:	$(BASEDIR)\acu\acu60\$(@F)
 
 $(EDEKIT)\wrundll_ede_acu60.dsp:	$(BASEDIR)\acu\acu60\$(@F)
 	$(COPY) $** $@
+
 
 $(EDEKIT)\demo\helpmap.dat:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
@@ -707,6 +801,20 @@ $(KCSIACUKIT)\wrundll_kcsi_acu60.mak:		$(BASEDIR)\acu\acu60\$(@F)
 
 $(KCSIACUKIT)\wrundll_kcsi_acu60.dsp:		$(BASEDIR)\acu\acu60\$(@F)
 	$(COPY) $** $@
+
+
+$(KCSIACUKIT)\build_kcsi_acu62_rts.txt:		$(BASEDIR)\acu\acu62\$(@F)
+	$(COPY) $** $@
+
+$(KCSIACUKIT)\acu62\wrundll.vcproj:		$(BASEDIR)\acu\acu62\kcsi\$(@F)
+	$(COPY) $** $@
+
+$(KCSIACUKIT)\build_kcsi_acu72_rts.txt:		$(BASEDIR)\acu\acu72\$(@F)
+	$(COPY) $** $@
+
+$(KCSIACUKIT)\acu72\wrundll.vcproj:		$(BASEDIR)\acu\acu72\kcsi\$(@F)
+	$(COPY) $** $@
+
 
 $(KCSIACUKIT)\kcsintsetup.txt:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@

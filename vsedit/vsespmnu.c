@@ -355,7 +355,7 @@ static int vse_create_file(void)
 	init_special_menu();
 	vwang(&write_func,spc_scr,spc_lines,spc_pfs,spc_pfcode,spc_status);
 
-	trunc(sysname);
+	vse_trunc(sysname);
 	cnt = save_file(sysname,start,end);
 
 	if (cnt < 0)
@@ -826,7 +826,7 @@ static int vse_compile_command(void)
 		vseunscr(vse_compile_flds,spc_scr);
 
 		strcpy(cmd,line1_field);
-		trunc(cmd);
+		vse_trunc(cmd);
 
 		if (!cmd[0])
 		{
@@ -841,20 +841,20 @@ static int vse_compile_command(void)
 			strcat(cmd,line2_field);
 			strcat(cmd,line3_field);
 			strcat(cmd,line4_field);
-			trunc(cmd);
+			vse_trunc(cmd);
 #endif
 #ifdef MSDOS
 			strcpy(cmd,line1_field);
-			trunc(cmd);
+			vse_trunc(cmd);
 			strcat(cmd," ");
 			strcat(cmd,line2_field);
-			trunc(cmd);
+			vse_trunc(cmd);
 			strcat(cmd," ");
 			strcat(cmd,line3_field);
-			trunc(cmd);
+			vse_trunc(cmd);
 			strcat(cmd," ");
 			strcat(cmd,line4_field);
-			trunc(cmd);
+			vse_trunc(cmd);
 #endif
 
 			sprintf(vse_stat_message,"Compilation of %s in progress",vse_sysname);
@@ -990,7 +990,7 @@ static int vse_errors(void)
 	/*
 	**	This may need work for VMS
 	*/
-	if (exists(vse_errfile()))
+	if (vse_exists(vse_errfile()))
 	{
 		vse_display(vse_errfile());
 		vse_stat_message[0] = (char)0;
@@ -1035,11 +1035,11 @@ static int vse_listing(void)
 {
 	char	listfile[256];
 
-	if (vse_sysname && vse_sysname[0])
+	if (vse_sysname[0])
 	{
 		buildfilepath(listfile,splitpath(vse_sysname),splitname(vse_sysname));
 		strcat(listfile,".cob");
-		if (exists(listfile))
+		if (vse_exists(listfile))
 		{
 			vse_display(listfile);
 			vse_stat_message[0] = (char)0;
@@ -1066,6 +1066,13 @@ static int vse_display(char *filename)
 /*
 **	History:
 **	$Log: vsespmnu.c,v $
+**	Revision 1.29  2010/02/10 03:53:17  gsl
+**	fix warnings
+**	
+**	Revision 1.28  2010/01/10 00:36:15  gsl
+**	refactor utils to add vse_ prefix to avoid conflicts with trunc
+**	vse_trunc
+**	
 **	Revision 1.27  2003/08/04 14:43:04  gsl
 **	Cleanup WAC compile stuff.
 **	MSDOS code had been incorrectly changed to WIN32 code. - fixed

@@ -3903,7 +3903,7 @@ int SETFACS(unsigned char *new_table,unsigned char *toupper_table,unsigned char 
 		{
 			user_fac_table[i] = new_table[i];				/* Nulls mean it is not a fac.		*/
 		}
-		else if (( new_table[i] >= 0x80) && (new_table[i] <= 0xFF))		/* Is it in the valid fac range?	*/
+		else if ( new_table[i] >= 0x80)						/* Is it in the valid fac range?	*/
 		{
 			user_fac_table[i] = new_table[i];				/* Possible fac value change.		*/
 		}
@@ -4043,7 +4043,7 @@ fac_t vwang_fac(fac_t pseudo_FAC)
 {
 	fac_t	the_fac;
 
-	if ((pseudo_FAC)>=128 && (pseudo_FAC)<=255)
+	if ((pseudo_FAC)>=128)
 	{
 		the_fac = fac_table[(pseudo_FAC-128)];
 	}
@@ -4118,7 +4118,7 @@ fac_t vwang_unfac(fac_t true_FAC)
 */
 fac_t vwang_fac_pre_filter(fac_t pseudo_FAC)
 {
-	if ((pseudo_FAC)<128 || (pseudo_FAC)>255 || !use_user_fac_table)
+	if ((pseudo_FAC)<128 || !use_user_fac_table)
 	{
 		return pseudo_FAC;
 	}
@@ -4153,7 +4153,7 @@ fac_t vwang_unfac_pre_filter(fac_t true_FAC)
 {
 	register fac_t idx;
 	
-	if ((true_FAC)<128 || (true_FAC)>255 || !use_user_fac_table)
+	if ((true_FAC)<128 || !use_user_fac_table)
 	{
 		return true_FAC;
 	}
@@ -6675,6 +6675,11 @@ const char* vwang_title(const char *the_title)
 {
 	static char* last_title = NULL;
 
+	if (WL_get_wisp_option("NOTITLE"))
+	{
+		return NULL;
+	}
+
 	if (NULL != the_title)
 	{
 		WL_wtrace("WTITLE","SET","Title=[%s]", the_title);
@@ -6997,6 +7002,12 @@ static int mousenonmod(void)
 /*
 **	History:
 **	$Log: vwang.c,v $
+**	Revision 1.138  2010/01/11 04:27:12  gsl
+**	fix warnings: comparing fac_t < 255
+**	
+**	Revision 1.137  2003/12/02 14:30:08  gsl
+**	Added NOTITLE option
+**	
 **	Revision 1.136  2003/06/27 15:54:03  gsl
 **	fix EDE API
 **	

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="acu62_wisp"
+	ProjectGUID="{7FF74D69-804A-4648-8A77-534A4F618333}"
+	Keyword="MakeFileProj"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory=".\acu62_wisp___Win32_Release"
+			IntermediateDirectory=".\acu62_wisp___Win32_Release"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="NMAKE /f acu62_wisp.mak"
+				ReBuildCommandLine="NMAKE /f acu62_wisp.mak /a"
+				CleanCommandLine=""
+				Output="acu62_wisp.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory=".\Debug"
+			IntermediateDirectory=".\Debug"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="nmake /f &quot;acu62_wisp.mak&quot;"
+				ReBuildCommandLine="nmake /f &quot;acu62_wisp.mak&quot; /a"
+				CleanCommandLine=""
+				Output="acu62_wisp.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<File
+			RelativePath="acu62_wisp.bsc"
+			>
+		</File>
+		<File
+			RelativePath="build_wisp_acu62_rts.txt"
+			>
+		</File>
+		<File
+			RelativePath="wisp.rc"
+			>
+		</File>
+		<File
+			RelativePath="wrundll.vcproj"
+			>
+		</File>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

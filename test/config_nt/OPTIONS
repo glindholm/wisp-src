@@ -1,4 +1,4 @@
-VUTIL c:\Acucorp\Acucbl600\AcuGT\bin\vutil32.exe
+VUTIL c:\Acucorp\Acucbl810\AcuGT\bin\vutil32.exe
 UTILSWINDOWS
 COSTARV2
 DISPLAYUTIL notepad.exe
@@ -18,5 +18,7 @@ WISPDEBUG FULL
 #WISPSORTMEM 16
 
 #USEOLDVSDATE
+
+#NOTITLE
 
 

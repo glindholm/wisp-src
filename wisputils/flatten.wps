@@ -1,0 +1,48 @@
+procedure flatten                                                         
+                                                                          
+declare &in_lib, &out_lib string(8) 
+declare &in_vol, &out_vol string(6) 
+declare &in_file string(8) 
+declare &mask_file as string(8) initial "?        "                       
+declare &starter, &counter, &pos integer initial 1                        
+declare &receiver as string(22) 
+declare &filecount, &total, &pfkey integer initial 0                      
+declare &receiver_type as string(1) initial "A"                           
+                                                                          
+extract &in_lib  = INLIB,  &in_vol = INVOL                                
+extract &out_lib = OUTLIB, &out_vol = OUTVOL                              
+                                                                          
+prompt pfkey = &pfkey                                                     
+   center "Shell Stream Software";;;                                      
+   center "FLATTEN will copy and flatten a library";;;                    
+   center "IN  LIB = ", upper &in_lib,  " VOL = ", upper &in_vol; 
+   center "OUT LIB = ", upper &out_lib, " VOL = ", upper &out_vol;;;; 
+   center "Press (16) to exit"                                            
+if &pfkey = 16 then return                                                
+                                                                          
+run find in vssubs on system using                                        
+         &mask_file, &in_lib, &in_vol, &starter, 
+         &counter, &receiver, &filecount, &receiver_type                  
+assign &total = &filecount                                                
+                                                                          
+mainloop: 
+if &pos > &total then goto exitmain                                       
+                                                                          
+assign &counter = 1                                                       
+run find in vssubs on system using                                        
+    &mask_file, &in_lib, &in_vol, &pos, &counter, &receiver               
+assign &in_file = &receiver (15,8) 
+                                                                          
+run  copy                                                                 
+     enter input file=&in_file, library=&in_lib, volume=&in_vol           
+     enter options fileorg=C, length=F, compress=n                        
+     enter output file=&in_file, library=&out_lib, volume=&out_vol        
+     enter pad                                                            
+     enter eoj                                                            
+nextfile: 
+assign &pos = &pos + 1                                                    
+goto mainloop                                                             
+                                                                          
+exitmain: 
+prompt center "FLATTEN copied ", &pos - 1, " files." 
+return                                    

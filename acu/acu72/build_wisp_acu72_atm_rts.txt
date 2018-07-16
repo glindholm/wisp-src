@@ -1,0 +1,73 @@
+Copyright (c) Shell Stream Software LLC
+All Rights Reserved.
+
+====================================================================
+
+Title:          Build WISP for Acucobol 7.2.x ATM Runtime (WIN32)
+
+Document:       build_wisp_acu72_atm_rts.txt
+Last Updated:   2007/08/08 20:13:07
+Products:       WISP/WIN32
+Versions:       5.0.01
+
+Summary:        Instructions to build Acucobol 7.2.x ATM runtime.
+
+====================================================================
+
+Follow these instructions carefully to build a custom Acucobol 
+Alternate Terminal Manager (ATM) runtime that includes the WISP 
+runtime routines.  
+
+In these instructions these macros are used as follows:
+
+${ACUDIR}  - Acucobol-GT 7.2.x directory (C:\Acucorp\acucbl72x\acugt)
+${WISPDIR} - WISP installation directory (C:\WISP5001)
+
+This procedure will rebuild ${ACUDIR}\bin\run32.exe the ATM runtime.
+
+If you wish to preserve the original ${ACUDIR}\bin\run32.exe then 
+you will need to rename it or copy it to a different location.
+
+The build is performed in the ${ACUDIR}\lib folder which is 
+normally C:\acucorp\acucbl72x\lib.  If you do not want to make 
+changes to this folder then you may take a copy of it and work with 
+the copy.  If you have installed Acucobol in a different location 
+then you may need to adjust these instructions.
+
+1) Copy the following WISP files into the ${ACUDIR}\lib folder.
+
+    ${WISPDIR}\lib\wisp.lib
+    ${WISPDIR}\lib\video.lib
+    ${WISPDIR}\acu\wisp_sub85_inc.c
+    ${WISPDIR}\acu\wispicon.ico
+    ${WISPDIR}\acu\acu72\sub85.c
+    ${WISPDIR}\acu\acu72\wisp.rc
+    ${WISPDIR}\acu\acu72\run32.vcproj
+
+2)  Open the file ${ACUDIR}\lib\run32.sln in Microsoft Visual C++ 7.1 
+(Visual Studio .Net 2003).  You should be able to simply double-click 
+on ${ACUDIR}\lib\run32.sln.
+
+3) Select "Release" from the configuration manager, then from 
+the Build menu select "Rebuild Solution".  
+This will build ${ACUDIR}\bin\run32.exe.
+It should complete without errors (there are many warnings).
+
+You should notice that the new run32.exe is larger then the 
+original and has the current date.
+
+4) Edit ${WISPCONFIG}\wrun.cfg and change the path to the runtime.
+The path of the Acucobol runtime is ${ACUDIR}\bin\run32.exe.
+
+   RUNCBL=C:\acucorp\acucbl72x\acugt\bin\run32.exe
+   or 
+   RUNCBL=\\SERVER\ACUDIR\bin\run32.exe
+
+The file run32.exe is supplied by Acucobol and it can not be 
+renamed.  If you wish to move it to a different location then 
+you will also need to move all of the .dll files in the 
+${ACUDIR}\bin folder (or set the PATH correctly). You will 
+also need to move the run32.alc license file.
+
+
+========================= END OF DOCUMENT ==========================
