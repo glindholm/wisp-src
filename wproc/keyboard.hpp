@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 // Derived from IBMKEYS.H, (c) South Mountain Software
 //
 // Module : ibmkeys.hpp
@@ -518,3 +525,53 @@
 #endif /* !(DOS || DOS_HOST) */
 
 #endif
+
+//
+//	History:
+//	$Log: keyboard.hpp,v $
+//	Revision 1.7  1998-08-31 15:13:54-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/keyboard.hpp,v
+//	Working file: keyboard.hpp
+//	head: 1.6
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 6;	selected revisions: 6
+//	description:
+//	----------------------------
+//	revision 1.6
+//	date: 1997-05-02 22:41:57-04;  author: gsl;  state: V4_3_00;  lines: +5 -3
+//	Add KEY_MOUSE_CLICK
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 19:47:03-04;  author: gsl;  state: V3_9_92;  lines: +1 -1
+//	NT
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:02-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:20-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:59-05;  author: gsl;  state: V3_3x12;  lines: +1 -0
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:12-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

@@ -19,6 +19,7 @@ static char rcsid[]="$Id:$";
 */
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef unix
@@ -162,6 +163,15 @@ void tempproc(char *file, char *lib, char *vol, char *filepath)
 /*
 **	History:
 **	$Log: miscsubs.c,v $
+**	Revision 1.18  1998-10-13 15:47:42-04  gsl
+**	Add missing include sys/stat.h
+**
+**	Revision 1.17  1998-08-31 15:33:20-04  gsl
+**	fixed
+**
+**	Revision 1.16  1998-08-31 15:13:57-04  gsl
+**	drcs update
+**
 **	Revision 1.15  1997-06-10 01:51:52-04  scass
 **	corrected wvaset to use wispcommon prototype.
 **

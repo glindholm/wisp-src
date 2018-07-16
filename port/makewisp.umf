@@ -55,16 +55,16 @@ kcsi_mf:	crid_mf create_mf
 amu_all:
 		(cd $(WISP)/src/amu;		$(MAKE) -f amuunix.umf "WISPTRAN=../wisptran/wisp" both)
 
-crid_mf:
-		(cd $(WISP)/src/kcsi/crid;	$(MAKE) -f cridunix.umf WISPDIR=../.. gen_mfx_all)
+crid_mf:	wisptran wisplib videolib
+		(cd $(WISP)/src/kcsi/crid;	$(MAKE) -f cridmake.umf WISPDIR=../.. crid_mf)
 
-crid_acu:
-		(cd $(WISP)/src/kcsi/crid;	$(MAKE) -f cridunix.umf WISPDIR=../.. gen_acu_all)
+crid_acu:	wisptran wisplib videolib
+		(cd $(WISP)/src/kcsi/crid;	$(MAKE) -f cridmake.umf WISPDIR=../.. crid_acu)
 
-create_mf:
+create_mf:	wisplib videolib
 		(cd $(WISP)/src/kcsi/create;	$(MAKE) -f createunix.umf WISPDIR=../.. mfx_all)
 
-create_acu:
+create_acu:	wisplib videolib
 		(cd $(WISP)/src/kcsi/create;	$(MAKE) -f createunix.umf WISPDIR=../.. acu_all)
 
 edelib:	
@@ -126,7 +126,7 @@ clean:
 		(cd $(WISP)/src/ede; 		$(MAKE) -f good.umf     clean)
 		(cd $(WISP)/src/ivslib;		$(MAKE) -f libivs.umf	clean)
 		(cd $(WISP)/src/kcsi/create;	$(MAKE) -f createunix.umf clean)
-		(cd $(WISP)/src/kcsi/crid;	$(MAKE) -f cridunix.umf clean)
+		(cd $(WISP)/src/kcsi/crid;	$(MAKE) -f cridmake.umf clean)
 		rm -f $(WISP)/src/lib/*.a 
 		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf 	clean)
 		(cd $(WISP)/src/proctran;	$(MAKE) -f proctran.umf clean)
@@ -143,6 +143,12 @@ clean:
 #
 # 	History:
 #	$Log: makewisp.umf,v $
+#	Revision 1.20  1998-07-31 10:01:26-04  gsl
+#	Add dependencies for CRID and CREATE
+#
+#	Revision 1.19  1998-07-30 10:47:04-04  gsl
+#	Changed to use new cridmake.umf makefile
+#
 #	Revision 1.18  1997-10-02 11:31:44-04  gsl
 #	update the clean target
 #

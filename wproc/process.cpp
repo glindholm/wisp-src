@@ -1,7 +1,11 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
-*/
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//
 
 // Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
@@ -225,6 +229,12 @@ void process::load_from_env()
 /*
 **	History:
 **	$Log: process.cpp,v $
+**	Revision 1.13  1998-08-31 15:50:36-04  gsl
+**	drcs update
+**
+**	Revision 1.12  1998-08-31 15:14:08-04  gsl
+**	drcs update
+**
 **	Revision 1.11  1998-01-16 09:31:57-05  gsl
 **	Fix set_top_filename to use SLASH_CHAR so it correctly parses
 **	filepaths on windows
@@ -255,3 +265,82 @@ void process::load_from_env()
 **
 **
 */
+
+//
+//	History:
+//	$Log: process.cpp,v $
+//	Revision 1.13  1998-08-31 15:50:36-04  gsl
+//	drcs update
+//
+//	Revision 1.12  1998-08-31 15:14:08-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/process.cpp,v
+//	Working file: process.cpp
+//	head: 1.11
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 11;	selected revisions: 11
+//	description:
+//	----------------------------
+//	revision 1.11
+//	date: 1998-01-16 09:31:57-05;  author: gsl;  state: V4_3_00;  lines: +6 -2
+//	Fix set_top_filename to use SLASH_CHAR so it correctly parses
+//	filepaths on windows
+//	----------------------------
+//	revision 1.10
+//	date: 1997-10-01 09:28:22-04;  author: gsl;  state: V4_2_00;  lines: +7 -4
+//	warnings
+//	----------------------------
+//	revision 1.9
+//	date: 1996-07-25 14:16:01-04;  author: gsl;  state: V4_1_02;  lines: +5 -2
+//	Renamed from process.cc to process.cpp
+//	----------------------------
+//	revision 1.8
+//	date: 1995-10-17 05:52:07-04;  author: gsl;  state: V3_3_19;  lines: +8 -1
+//	add declare of wgetpgrp()
+//	----------------------------
+//	revision 1.7
+//	date: 1995-10-16 09:57:55-04;  author: gsl;  state: Exp;  lines: +38 -20
+//	Added logic to do a "RESET" if the GID is different then the TOPGID
+//	environment variable.  This should only occur if this is the top
+//	proc in a SUBMIT'ed chain.  This also sets TOPGID if needed.
+//	----------------------------
+//	revision 1.6
+//	date: 1995-10-12 12:54:12-04;  author: gsl;  state: Exp;  lines: +39 -2
+//	Add logic to detect and handle RESET.
+//	If RESET=true then clear all the WPROC environment variables.
+//	This fixes the BUG of wproc grabbing the wrong globals file
+//	when it has been submitted.
+//	----------------------------
+//	revision 1.5
+//	date: 1995-10-12 08:18:49-04;  author: gsl;  state: Exp;  lines: +26 -26
+//	moved the env defines to envs.h
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:16-04;  author: gsl;  state: V3_3_18;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:32-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:15-05;  author: gsl;  state: V3_3x12;  lines: +128 -3
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:21-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

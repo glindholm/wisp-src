@@ -30,12 +30,12 @@ static char rcsid[]="$Id:$";
 
 #define ROUTINE		28000
 
-extern	char	LINKPARMFILLER[8];						/* Filler to test bug */
-extern	char	LINKPARMKEY[80];						/* The key to the temp file name.		*/
-extern	char	LINKPARMPRG[80];						/* The PROGNAME to link to.			*/
-extern	int4	LINKPARMCNT;							/* The number of arguments passed (0-32)	*/
-extern	char	*LINKPARMPTR[MAX_LINK_PARMS];					/* The passed arguments				*/
-extern	int4	LINKPARMLEN[MAX_LINK_PARMS];					/* The lengths of the passed arguments		*/
+extern	char	g_link_pfiller[8];						/* Filler to test bug */
+extern	char	g_link_parmfile[80];						/* The key to the temp file name.		*/
+extern	char	g_link_pname[80];						/* The PROGNAME to link to.			*/
+extern	int4	g_link_parmcnt;							/* The number of arguments passed (0-32)	*/
+extern	char	*g_link_parmptr[MAX_LINK_PARMS];				/* The passed arguments				*/
+extern	int4	g_link_parmlen[MAX_LINK_PARMS];					/* The lengths of the passed arguments		*/
 
 void VMSPARGS(void)							/* This routine is call on the way back from a LINK 	*/
 									/* with VMSCOBOL. It writes the LINKAGE parameters	*/
@@ -50,26 +50,26 @@ void VMSPARGS(void)							/* This routine is call on the way back from a LINK 	*
 	if (!first) return;
 	first = 0;
 
-	if ( 0 == access ( LINKPARMKEY, 0 ) )						/* If it already exists;		*/
-		unlink( LINKPARMKEY ) ;						/* Delete it before opening		*/
+	if ( 0 == access ( g_link_parmfile, 0 ) )					/* If it already exists;		*/
+		unlink( g_link_parmfile ) ;						/* Delete it before opening		*/
 
-	fp = fopen(LINKPARMKEY,"w");							/* Open the Parm file			*/
+	fp = fopen(g_link_parmfile,"w");						/* Open the Parm file			*/
 	if ( !fp )
 	{
-		werrlog(ERRORCODE(12),LINKPARMKEY,errno,"VMSPARGS",0,0,0,0,0);
+		werrlog(ERRORCODE(12),g_link_parmfile,errno,"VMSPARGS",0,0,0,0,0);
 		wexit(ERRORCODE(12));
 	}
 
-	size = strlen(LINKPARMPRG);
+	size = strlen(g_link_pname);
 	fwrite( &size, 4, 1, fp );							/* Write the program path		*/
-	fwrite( LINKPARMPRG, (int)size, 1, fp );
+	fwrite( g_link_pname, (int)size, 1, fp );
 
-	fwrite( &LINKPARMCNT, 4, 1, fp );						/* Write the parmcnt			*/
+	fwrite( &g_link_parmcnt, 4, 1, fp );						/* Write the parmcnt			*/
 
-	for ( i=0; i < LINKPARMCNT; i++ )						/* Write the parms			*/
+	for ( i=0; i < g_link_parmcnt; i++ )						/* Write the parms			*/
 	{
-		fwrite( &LINKPARMLEN[i], 4, 1, fp );
-		fwrite( LINKPARMPTR[i],(int)LINKPARMLEN[i],1,fp);
+		fwrite( &g_link_parmlen[i], 4, 1, fp );
+		fwrite( g_link_parmptr[i],(int)g_link_parmlen[i],1,fp);
 	}
 
 	size = -1;
@@ -83,6 +83,9 @@ void VMSPARGS(void)							/* This routine is call on the way back from a LINK 	*
 /*
 **	History:
 **	$Log: vmspargs.c,v $
+**	Revision 1.10  1998-12-09 10:41:56-05  gsl
+**	Update global names
+**
 **	Revision 1.9  1996-08-19 18:33:05-04  gsl
 **	drcs update
 **

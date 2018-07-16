@@ -31,21 +31,24 @@ static field_is_done(CR_FLD *fld)
 	if(fld->type == CFIELD_STRING)
 		return(0);
 	if(fld->type == CFIELD_SEQUENCE)
-		{
+	{
 		if(	(fld->repeat)			||
 			(fld->curval <= fld->endval)	)
-			{
-			return(0);
-			}
-		else
-			{
-			return(1);
-			}
-		}
-	if(fld->type == CFIELD_FILE)
 		{
-		return(file_is_done(fld));
+			return(0);
 		}
+		else
+		{
+			return(1);
+		}
+	}
+	if(fld->type == CFIELD_FILE)
+	{
+		return(file_is_done(fld));
+	}
+
+	/* This should never happen */
+	return 0;
 }
 
 static int file_is_done(CR_FLD *fld)
@@ -96,6 +99,9 @@ int block_is_done(CR_BLK *blk)
 /*
 **	History:
 **	$Log: vscrbchk.c,v $
+**	Revision 1.4  1999-09-13 15:54:38-04  gsl
+**	fix missing return code
+**
 **	Revision 1.3  1996-10-02 12:07:26-04  gsl
 **	Add standard headers
 **	Fix prototypes

@@ -23,17 +23,20 @@
 /*
 **	Structures and Defines
 */
-#define SPN_HIDE_PARENT 1
-#define SPN_HIDE_CHILD 2
-#define SPN_WAIT_FOR_CHILD 4
-#define SPN_DETACH_CHILD 8
-#define SPN_NO_INHERIT 16
+#define SPN_HIDE_PARENT 	0x01
+#define SPN_HIDE_CHILD 		0x02
+#define SPN_WAIT_FOR_CHILD 	0x04
+#define SPN_SUBMIT_CHILD 	0x08
+#define SPN_NO_INHERIT 		0x10
+#define SPN_CAPTURE_OUTPUT	0x20
+#define SPN_STANDALONE_CHILD	0x40
+#define SPN_HIDDEN_CMD		0x80
 
 /*
 **	Function Prototypes
 */
 int win32spawnvp(char *sh_parm[], int Mode);
-int win32spawnlp(char *cmd, char *args, int Mode);
+int win32spawnlp(const char *cmd, const char *args, int Mode);
 void win32SetNewEnv(char *envstr);
 
 #endif /* WIN32SPN_H */
@@ -41,6 +44,15 @@ void win32SetNewEnv(char *envstr);
 /*
 **	History:
 **	$Log: win32spn.h,v $
+**	Revision 1.5  1998-05-05 17:36:22-04  gsl
+**	Add HIDDEN_CMD mode flag
+**
+**	Revision 1.4  1998-05-05 13:53:33-04  gsl
+**	Reworked mode flags
+**
+**	Revision 1.3  1998-03-16 14:14:56-05  gsl
+**	Make args const
+**
 **	Revision 1.2  1997-07-16 21:21:27-04  gsl
 **	Add SPN_NO_INHERIT
 **

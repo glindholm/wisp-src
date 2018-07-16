@@ -262,14 +262,14 @@ RPT_NF *n;
 			{
 			if( nfo->_e._name[0] <= ' ')
 				{
-				nf->_pnew == NULL;
+				nf->_pnew = NULL;
 				break;
 				}
 			}
 /* Illegal operand (location not known)*/
 		if ((nfo->_e._name[0] > ' ') && (nfo->_pnew == NULL))
 			{
-			nf->_pnew == NULL;
+			nf->_pnew = NULL;
 			break;
 			}
 /* If op code is not okay for this type of combine */
@@ -354,16 +354,16 @@ RPT_DL *dl;
 			{
 			if(dlo->_e._name[0] < ' ')
 				{
-				dl->_pnew == NULL;
-				dl->_e._name[0] == 0;
+				dl->_pnew = NULL;
+				dl->_e._name[0] = 0;
 				break;
 				}
 			}
 /* Illegal operand (location not known)*/
 		if ((dlo->_e._name[0] > ' ') && (dlo->_pnew == NULL))
 			{
-			dl->_pnew == NULL;
-			dl->_e._name[0] == 0;
+			dl->_pnew = NULL;
+			dl->_e._name[0] = 0;
 			break;
 			}
 		}
@@ -835,6 +835,9 @@ void tie_rpt()
 /*
 **	History:
 **	$Log: rtie.c,v $
+**	Revision 1.3  1999-09-13 15:52:48-04  gsl
+**	fix "==" vs "="
+**
 **	Revision 1.2  1996-09-17 19:45:50-04  gsl
 **	drcs update
 **

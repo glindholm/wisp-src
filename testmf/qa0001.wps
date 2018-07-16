@@ -3,8 +3,9 @@ procedure qa0001.wps
 declare &lib as string(8)
 extract &lib=proglib
 
-prompt center "QA0001 Will setup QA files";;;
-       center "Using PROGLIB = ", upper &lib
+prompt center "QA0001: Will setup QA files";;;;
+       center "Using PROGLIB = ", upper &lib ;;;;
+       center "Press (ENTER) to continue"
 
 run copy
 	enter INPUT  FILE=SAMPLE,  LIBRARY=&lib,    VOLUME=SOURCE
@@ -22,6 +23,7 @@ run copy
 	enter OUTPUT FILE=XYZ,      LIBRARY=LIBIN,  VOLUME=VOLIN
 	enter EOJ 16
 
-prompt center "QA0001: QA test files have been copied"
+prompt center "QA0001: QA test files have been copied";;;;
+       center "Press (ENTER) to return"
 
 return

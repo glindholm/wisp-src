@@ -944,6 +944,8 @@ static int val_cr_get_count(char *count)
 		blk->count = -1;
 	else
 		blk->count = value;
+
+	return 0;
 }
 
 
@@ -1073,6 +1075,9 @@ static void cr_no_mem_exit(char *type)
 /*
 **	History:
 **	$Log: vscrblk.c,v $
+**	Revision 1.6  1999-09-13 15:54:49-04  gsl
+**	fix missing return code
+**
 **	Revision 1.5  1996-10-02 20:11:15-04  gsl
 **	Fixed pfkey tags for W4W support
 **

@@ -384,7 +384,7 @@ static int is_gr(int row, int col)				/* Routine to see if a position is a line 
 {
 	unsigned char tchar;
 
-	if (vmap_cng[row][col] < 0) return(FALSE);					/* Is it NOT old data?			*/
+	if (VMAP_CNG_OLDDATA == vmap_cng[row][col]) return(FALSE);			/* Is it NOT old data?			*/
 	if (!(vatr_map[row][col] & GRAPHICS)) return(FALSE);				/* And if new, is it a graphics char?	*/
 	tchar = vchr_map[row][col];
 	if (0==strchr(vcapvalue(GRAPHSTR),(char)tchar)) return(FALSE);			/* Is it in the graphics list?		*/
@@ -393,6 +393,9 @@ static int is_gr(int row, int col)				/* Routine to see if a position is a line 
 /*
 **	History:
 **	$Log: vline.c,v $
+**	Revision 1.11  1998-10-13 14:49:53-04  gsl
+**	Change to use VMAP_CNG_OLDDATA
+**
 **	Revision 1.10  1997-07-08 17:12:10-04  gsl
 **	change to using vcapvalue()
 **	use new video.h defines

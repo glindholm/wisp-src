@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		wperson.c
@@ -108,6 +108,7 @@ static char rcsid[]="$Id:$";
 
 /*
 83001	%%WPERSON-I-ENTRY Entry into %s
+
 83002	%%WPERSON-F-PID Missing WISP_PID_ENV
 83003	%%WPERSON-I-LOADING Loading the personality
 83004	%%WPERSON-F-TTY Missing WISP_TTY_ENV
@@ -165,7 +166,7 @@ typedef struct {
 typedef struct	{
 			struct forms_id *next;					/* pointer to the next one		*/
 			int	form_num;					/* the form number			*/
-			char	form_string[80];				/* the string to  insert into the lp cmd*/
+			char	*form_string;					/* the string to  insert into the lp cmd*/
 		} forms_id;
 
 typedef struct	{
@@ -272,7 +273,6 @@ static void validate_defaults(usr_defaults *the_def);
 static void genworklib(char *worklib);
 static int genworkvol(char *workvol);
 static int genspoollib(char *spoollib);
-static void set_opt_pqnp(int flag);
 static void loadpadnull(char *dest, char *src, int size);
 static void getprogvol(char *result);
 static void getproglib(char *result);
@@ -298,7 +298,6 @@ static void load_forms(void);
 static void load_prmap(void);
 static void load_dispfac(void);
 
-static void set_nativescreens(void);
 static void set_pfkeys12(void);
 
 static void add_option(const char *keyword, const char *trailing);
@@ -956,16 +955,6 @@ int opt_linkvectoroff(void)
 	return opt_linkvectoroff_flag;
 }
 
-static int opt_pqnp_flag = 0;
-static void set_opt_pqnp(int flag)
-{ 
-	opt_pqnp_flag = flag; 
-}
-int opt_pqnp(void)
-{ 
-	return opt_pqnp_flag;
-}
-
 /*
 	load_options:		Load the runtime OPTIONS file
 
@@ -1018,12 +1007,16 @@ int opt_pqnp(void)
 */
 int load_options(void)								/* Load the runtime OPTIONS file.		*/
 {
+#define MAX_INLIN	2048
 	static	int	first=1;
 	FILE 	*the_file;
-	char	inlin[512], keyword[80], value[80];
+	char	inlin[MAX_INLIN], keyword[80], value[80];
+	char	continued_inlin[MAX_INLIN];
 	char	*trailing;
 	int	cnt,i;
 	int	len;
+	const char *cptr;
+	int	bDone;
 
 	if (!first) return(0);
 	first=0;
@@ -1031,15 +1024,67 @@ int load_options(void)								/* Load the runtime OPTIONS file.		*/
 
 	if ( !paths_built ) build_config_paths();
 
+	opt_printqueue = PQ_DEFAULT;
+	opt_printqueue_manager = NULL;
+	batchqueue_name = "";
+	batchman_name = "";
+
 	the_file = fopen(options_path,"r");
 	if (the_file)
 	{
-		while(fgets(inlin,sizeof(inlin)-1,the_file))
+		bDone = 0;
+		
+		while(!bDone)
 		{
-			len=strlen(inlin);
-			if (len>0 && inlin[len-1] == '\n') inlin[len-1] = '\0';	/* Null out the newline char		*/
+			int bContinued;
+			
+			/*
+			 * Build up the input line in continued_inlin
+			 */
+			inlin[0] = '\0';
+			continued_inlin[0] = '\0';
+			do
+			{
+				bContinued = 0;
+				if (NULL!=fgets(inlin,sizeof(inlin)-1,the_file))
+				{
+					len=strlen(inlin);
+					if (len>0 && '\n'==inlin[len-1]) 	/* Strip off the newline char */
+					{
+						inlin[--len] = '\0';
+					}
+
+				        /*
+					 *	Check for continued line
+					 */
+					if (len>0 && '\\'==inlin[len-1])
+					{
+						bContinued = 1;
+						inlin[--len] = '\0';
+					}
+
+					/*
+					 *	If we are in a continued line situation then build up
+					 *	continued_inlin and update inlin.
+					 */
+					if (bContinued || '\0' != continued_inlin[0])
+					{
+						strcat(continued_inlin, inlin);
+						strcpy(inlin, continued_inlin);
+					}
+				}
+				else
+				{
+					bDone = 1;
+				}
+				
+			} while(!bDone && bContinued);
+			
+			if ('\0' == inlin[0]) continue;
+			
 			cnt = sscanf(inlin,"%s %s",keyword,value);
 			if ( cnt < 1 ) continue;
+
 			if (keyword[0] == '#') continue;
 			upper_string(keyword);
 
@@ -1097,38 +1142,31 @@ int load_options(void)								/* Load the runtime OPTIONS file.		*/
 			{
 				opt_createvolumeon = 0;
 			}
+#ifdef unix
 			else if (strcmp(keyword,"IDSIPRINTON") == 0)		/* UNIX use the IDSI print spooler		*/
 			{
-				opt_idsiprint = 1;
+				opt_printqueue = PQ_UNIQUE;
 			}
 			else if (strcmp(keyword,"IDSIPRINTOFF") == 0)		/* UNIX use lp, not the IDSI print spooler	*/
 			{
-				opt_idsiprint = 0;
+				opt_printqueue = PQ_LP;
 			}
 			else if (strcmp(keyword,"PQILP") == 0)			/* UNIX use ILP					*/
 			{
-				opt_idsiprint = 1;
-				opt_pqilp = 1;
-				opt_pqunique = 0;
-			}
-			else if (strcmp(keyword,"PQUNIQUE") == 0)		/* UNIX use UNIQUE				*/
-			{
-				opt_idsiprint = 1;
-				opt_pqilp = 0;
-				opt_pqunique = 1;
+				opt_printqueue = PQ_ILP;
 			}
 			else if (strcmp(keyword,"PQNP") == 0)			/* UNIX use NP					*/
 			{
-				opt_idsiprint = 0;
-				opt_pqilp = 0;
-				opt_pqunique = 0;
-				set_opt_pqnp(1);
+				opt_printqueue = PQ_NP;
 			}
 			else if (strcmp(keyword,"PQLP") == 0)			/* UNIX use LP					*/
 			{
-				opt_idsiprint = 0;
-				opt_pqilp = 0;
-				opt_pqunique = 0;
+				opt_printqueue = PQ_LP;
+			}
+#endif
+			else if (strcmp(keyword,"PQUNIQUE") == 0)		/* UNIX or WIN32 use UNIQUE			*/
+			{
+				opt_printqueue = PQ_UNIQUE;
 			}
 			else if (strcmp(keyword,"BATCHQUEUE") == 0)
 			{
@@ -1144,7 +1182,7 @@ int load_options(void)								/* Load the runtime OPTIONS file.		*/
 				else
 				{
 					opt_batchqueue=1;
-					strcpy(batchqueue_name,value);
+					batchqueue_name = wstrdup(value);
 				}
 			}
 			else if (strcmp(keyword,"BATCHMAN") == 0)
@@ -1161,7 +1199,16 @@ int load_options(void)								/* Load the runtime OPTIONS file.		*/
 				else
 				{
 					opt_batchman=1;
-					strcpy(batchman_name,value);
+					cptr = getenv("BATCH_MAN");
+					if (cptr && *cptr)
+					{
+						batchman_name = wstrdup(cptr);
+						wtrace("OPTIONS","BATCHMAN","Overridden by $BATCHMAN = [%s]",batchman_name);
+					}
+					else
+					{
+						batchman_name = wstrdup(value);
+					}
 				}
 			}
 			else if (strcmp(keyword,"BATCHCMD") == 0)
@@ -1325,8 +1372,11 @@ int load_options(void)								/* Load the runtime OPTIONS file.		*/
 			}
 			else if (strcmp(keyword,"NATIVESCREENS") == 0)
 			{
-				/* We are using COBOL native screens */
-				set_nativescreens();
+				/* 
+				   We are using COBOL native screens.
+				   Call nativescreens to force initialization.
+				*/
+				nativescreens();
 			}
 			else if (strcmp(keyword,"PFKEYS12") == 0)
 			{
@@ -1341,6 +1391,59 @@ int load_options(void)								/* Load the runtime OPTIONS file.		*/
 		}
 		fclose(the_file);
 	}
+
+	/*
+	**	Resolve conflicting options
+	*/
+
+	if (get_wisp_option("PQCMD"))
+	{
+		/*
+		**	PQCMD overrides all other PQ options.
+		*/
+		opt_printqueue = PQ_GENERIC;
+	}
+
+#ifdef unix
+	if (PQ_DEFAULT == opt_printqueue)
+	{
+		opt_printqueue = PQ_UNIQUE;
+	}
+
+	opt_printqueue_manager = wstrdup(get_wisp_option("PQMANAGER"));
+	if (NULL == opt_printqueue_manager)
+	{
+		switch(opt_printqueue)
+		{
+		case PQ_UNIQUE:
+			if (getenv("UNIQUE_MAN"))
+			{
+				opt_printqueue_manager = wstrdup(getenv("UNIQUE_MAN"));
+			}
+			else
+			{
+				opt_printqueue_manager = "unique -q -w";
+			}
+			break;
+			
+		case PQ_ILP:
+			opt_printqueue_manager = "ilpman -q -w";
+			break;
+
+		case PQ_LP:
+		case PQ_NP:
+		case PQ_GENERIC:
+		case PQ_DEFAULT:
+			break;
+		}
+
+		if (NULL != opt_printqueue_manager)
+		{
+			wtrace("OPTIONS","PQMANAGER","Print Queue Manager command string is [%s]", opt_printqueue_manager);
+		}
+	}
+#endif /* unix */
+	
 	return(0);
 }
 
@@ -1517,6 +1620,7 @@ int set_defs(int code, void *void_ptr)
 		strcpy(curr_proglib,defaults.proglib);
 		break;
 	case DEFAULTS_PV:
+
 		loadpadnull(defaults.progvol,ptr,6);
 		strcpy(curr_progvol,defaults.progvol);
 		break;
@@ -1576,9 +1680,27 @@ int set_defs(int code, void *void_ptr)
 /*
 	loadpadnull	Load dest with src padding out to size with blanks then null terminate
 */
+/*
+**	ROUTINE:	loadpadnull()
+**
+**	FUNCTION:	Load dest with src padding out to size with blanks then null terminate
+**
+**	DESCRIPTION:	Convert a c str to a COBOL PIC X(size), then place '\0' at the last X.
+**
+**	ARGUMENTS:	(O)	dest
+**			(I)	src
+**			(I)	size
+**
+**	GLOBALS:	None
+**
+**	RETURN:		void
+**
+**	WARNINGS:	none
+**
+*/
 static void loadpadnull(char *dest, char *src, int size)
 {
-	loadpad(dest,src,size);
+	cstr2cobx(dest,src,size);							/* This routine does ASSERT itself	*/
 	dest[size] = '\0';
 }
 
@@ -2044,13 +2166,15 @@ static void load_lpmap(void)
 	char 	*scn_ptr, *prm_ptr;
 #endif
 
-	werrlog(ERRORCODE(1),"load_lpmap",0,0,0,0,0,0,0);
 	if ( !paths_built ) build_config_paths();
 	prt_list = NULL;							/* initialize the list			*/
+
 	the_file = fopen(lpmap_path,"r");					/* now load the printer definitions	*/
 
 	if (the_file)								/* no error opening file		*/
 	{
+		wtrace("LPMAP","ENTRY", "Loading LPMAP file [%s]",lpmap_path);
+
 		while (fgets(inlin,sizeof(inlin),the_file))
 		{
 			if (inlin[0]=='\n')
@@ -2153,6 +2277,7 @@ static void load_lpmap(void)
 			prt_ptr->class = inlin[0];				/* Load the class			*/
 			strcpy( prt_ptr->prt_string, &inlin[2] );		/* Get lp control string		*/
 
+			wtrace("LPMAP","LOAD","[%c] [%s]",prt_ptr->class, prt_ptr->prt_string);
 #endif /* unix */
 
 		}
@@ -2160,9 +2285,17 @@ static void load_lpmap(void)
 		fclose(the_file);						/* close the term file			*/
 	}
 	else
-	{									/* error opening the file		*/
+	{
 #ifdef VMS
 		werrlog(ERRORCODE(20),"load_lpmap",lpmap_path,errno,0,0,0,0,0);
+#else
+		wtrace("LPMAP","ENTRY", "Unable to open LPMAP file [%s]",lpmap_path);
+
+		/* Create a dummy entry */
+		prt_list = (prt_id *)wmalloc(sizeof(prt_id));
+		prt_list->next = NULL;
+		prt_list->class = ' ';
+		prt_list->prt_string[0] = '\0';
 #endif
 	}
 }
@@ -2280,15 +2413,43 @@ static void get_logical_list_item(void)
 	}
 }
 
+/*
+**	ROUTINE:	load_lgmap()
+**
+**	FUNCTION:	Loads the lgmap file
+**
+**	DESCRIPTION:	Loads the lgmap file into memory as a link list.
+**			This link list contains the WANG VOL and its Native Target Logical Volume Translation.
+**			Lines initiated with # are disregarded.
+**			Lines will be scanned for two fields. The first field could be SIZEOF_VOL long, and the
+**                      second field could be MAX_TRANSLATE long. Fields can NOT span lines.
+**			The two fields should be separated by spaces, but single or multiple \t delimiters are
+**			also accepted. Lines should end with \n. The second field may contain embedded blanks!
+**			 			
+**
+**	ARGUMENTS:	void
+**
+**	GLOBALS:	
+**
+**	RETURN:		void
+**
+**	WARNINGS:	Lines that violated the above mentioned rules will be loaded into the memory link list 
+**			as if their fields were "(ERR) " and "(ERROR)"
+**
+*/
+
 static void load_lgmap(void)
 {
 	FILE 	*the_file;							/* a file pointer				*/
 	char	inlin[256];
 	int	config;
 	char	*ptr;
-	int	cnt;
+	char	*pfirst_field;
+	char	*psecond_field;
+	int	len;
 
-	werrlog(ERRORCODE(1),"load_lgmap",0,0,0,0,0,0,0);
+	int lin_cnt = 0;							/* line counter				*/
+
 	if ( !paths_built ) build_config_paths();
 	logical_list = NULL;							/* initialize the list			*/
 	config = 0;								/* CONFIG logical not found.		*/
@@ -2296,25 +2457,114 @@ static void load_lgmap(void)
 
 	if (the_file)								/* no error opening file		*/
 	{
-		char	lgmap_scan[40];
-
-		sprintf(lgmap_scan,"%%6s %%%ds",MAX_TRANSLATE);
+		wtrace("LGMAP","ENTRY", "Loading LGMAP file [%s]",lgmap_path);
 
 		while (fgets(inlin,sizeof(inlin),the_file))
 		{
-			if (strlen(inlin) < 8) continue;
-			if ('#' == inlin[0]) continue;
-			if (0==memcmp(inlin,"      ",6)) continue;
-
-			get_logical_list_item( );				/* Set logical_ptr.			*/
-
-			cnt = sscanf(inlin, lgmap_scan, logical_ptr->logical, logical_ptr->translate );
-
-			if (cnt != 2)
+			lin_cnt++;						
+			
+			/*
+			 *	Trim trailing whitespace (plus other control characters)
+			 */
+			len = strlen(inlin);
+			while(len>0 && 
+			      (' '==inlin[len-1] || 
+			       '\t'==inlin[len-1] ||
+			       '\n'==inlin[len-1] ||
+			       '\v'==inlin[len-1] ||
+			       '\f'==inlin[len-1] ||
+			       '\b'==inlin[len-1] ||
+			       '\a'==inlin[len-1] ||
+			       '\r'==inlin[len-1]))
 			{
-				strcpy(logical_ptr->logical, "(ERR) ");
-				strcpy(logical_ptr->translate, "(ERROR)" );
+				len--;
+				inlin[len] = '\0';
 			}
+
+			/* 
+			 *	Empty line
+			 */
+			if (len < 1)
+			{
+				continue;
+			}
+			
+			/*
+			 *	Comment line
+			 */
+			if ('#' == inlin[0])
+			{
+				continue;
+			}
+
+			/*
+			 *	Short line
+			 */
+			if (len < SIZEOF_VOL+1+1)
+			{
+				wtrace("LGMAP", "LOAD", "Line %d is too short to contain a valid definition [%s]",
+					lin_cnt, inlin);
+				continue;
+			}
+
+			/*
+			 *	Mis-formed definition
+			 */
+			if (' ' != inlin[SIZEOF_VOL])
+			{
+				wtrace("LGMAP", "LOAD", "Line %d is mis-formed, position 7 must be a space [%s]",
+					lin_cnt, inlin);
+				continue;
+			}
+
+			if (' ' == inlin[0])
+			{
+				wtrace("LGMAP", "LOAD", "Line %d is mis-formed, volume can not have leading spaces [%s]",
+					lin_cnt, inlin);
+				continue;
+			}
+			
+
+			/*
+			**	Parse the first field (VOL), and check for acceptable length
+			*/
+			pfirst_field = inlin;
+
+			for(len=SIZEOF_VOL; len>=0 && ' '==inlin[len]; len--)
+			{
+				inlin[len] = '\0';
+			}
+			
+			len = strlen(pfirst_field);
+			if (  len > SIZEOF_VOL || len < 1 )
+			{
+				wtrace("LGMAP", "LOAD", "Line %d,"
+					"the length [%d] of the first field is invalid",
+					lin_cnt, len);
+				continue;
+			}
+			
+			/*
+			**	Parse the second field (native mapping), and check for acceptable length
+			*/
+			psecond_field = &inlin[SIZEOF_VOL+1];
+			for (; *psecond_field == ' '; psecond_field++) {};	/* ignore leading spaces		*/
+
+			len = strlen(psecond_field);				/* get length				*/
+			if ( 0 >= len || MAX_TRANSLATE < len  )			/* bad length?				*/
+			{
+				wtrace("LGMAP", "LOAD", "Line %d,"
+					"the size of the second field is zero or greater than %d",
+					lin_cnt, MAX_TRANSLATE);
+				continue;
+			}
+
+			/*
+			**	Populate the link list with VOL and LOGICAL VOL TRANSALATION
+			*/
+			get_logical_list_item( );				/* Set logical_ptr.			*/
+			strcpy(logical_ptr->logical, pfirst_field);		/* place WANG VOL			*/
+			strcpy(logical_ptr->translate, psecond_field);		/* place LOGICAL VOLUME TRANSLATION	*/
 
 			if ('$' == logical_ptr->translate[0])
 			{
@@ -2329,6 +2579,11 @@ static void load_lgmap(void)
 				}
 			}
 			upper_string( logical_ptr->logical );
+
+			wtrace("LGMAP", "LOAD", "Define volume [%-6s] = [%s]",
+				logical_ptr->logical,
+				logical_ptr->translate);
+
 
 			if ( strcmp( logical_ptr->logical, "CONFIG" ) == 0 ) config = 1; /* CONFIG logical found.		*/
 
@@ -2505,14 +2760,16 @@ static void load_forms(void)
 	FILE 	*the_file;							/* a file pointer				*/
 	char	inlin[256];
 
-	werrlog(ERRORCODE(1),"load_forms",0,0,0,0,0,0,0);
 	if ( !paths_built ) build_config_paths();
+
 	forms_list = NULL;							/* initialize the list				*/
 	the_file = fopen(forms_path,"r");					/* now load the forms	 			*/
 
 	if (the_file)								/* no error opening file			*/
 	{
-		while (fgets(inlin,sizeof(inlin),the_file))
+		wtrace("FORMS","ENTRY", "Loading FORMS file [%s]",forms_path);
+		
+		while (fgets(inlin,sizeof(inlin)-1,the_file))
 		{
 			if (!forms_list)					/* first time?					*/
 			{
@@ -2526,20 +2783,28 @@ static void load_forms(void)
 				forms_ptr = (forms_id *)forms_ptr->next;	/* set pointer				*/
 				forms_ptr->next = NULL;				/* set next pointer to zero		*/
 			}
-			if ( (int)strlen(inlin) > 84 )
-			{
-				werrlog(ERRORCODE(24),WISP_FORMS_FILE,0,0,0,0,0,0,0);
-				werrlog(102,inlin,0,0,0,0,0,0,0);		/* Display the text.			*/
-				wexit(ERRORCODE(24));
-			}
+
 			inlin[strlen(inlin)-1] = '\0';				/* remove trailing NL			*/
 			inlin[3] = '\0';					/* null term after form#		*/
 			forms_ptr->form_num = atoi(inlin);			/* convert formnum to int		*/
-			strcpy( forms_ptr->form_string, &inlin[4] );		/* Get form control string		*/
+			forms_ptr->form_string = wstrdup( &inlin[4] );		/* Get form control string		*/
+
+			wtrace("FORMS","LOAD","[%d] [%s]",forms_ptr->form_num, forms_ptr->form_string);
 		}
 
 		fclose(the_file);						/* close the forms file			*/
 	}
+	else
+	{
+		wtrace("FORMS","ENTRY", "Unable to open FORMS file [%s]",forms_path);
+
+		/* Create a dummy forms_list entry */
+		forms_list = (forms_id *)wmalloc(sizeof(forms_id));
+		forms_list->next = NULL;
+		forms_list->form_num = 0;
+		forms_list->form_string = wstrdup("");
+	}
+	
 }
 #endif /* unix */
 #if defined(unix) || defined(WIN32)
@@ -2553,13 +2818,14 @@ static void load_prmap(void)
 	FILE 	*the_file;							/* a file pointer				*/
 	char	inlin[256];
 
-	werrlog(ERRORCODE(1),"load_prmap",0,0,0,0,0,0,0);
 	if ( !paths_built ) build_config_paths();
 	prmap_list = NULL;							/* initialize the list			*/
 	the_file = fopen(prmap_path,"r");					/* now load the prmap	 		*/
 
 	if (the_file)								/* no error opening file		*/
 	{
+		wtrace("PRMAP","ENTRY", "Loading PRMAP file [%s]",prmap_path);
+
 		while (fgets(inlin,sizeof(inlin),the_file))
 		{
 			if (inlin[0]=='\n')
@@ -2602,10 +2868,22 @@ static void load_prmap(void)
 			}
 			strcpy( prmap_ptr->prmap_string, &inlin[4] );		/* Get printer control string		*/
 			
+			wtrace("PRMAP","LOAD","[%d] [%s]",prmap_ptr->prmap_num, prmap_ptr->prmap_string);
 		}
 
 		fclose(the_file);						/* close the prmap file			*/
 	}
+	else
+	{
+		wtrace("PRMAP","ENTRY", "Unable to open PRMAP file [%s]",prmap_path);
+
+		/* Create a dummy forms_list entry */
+		prmap_list = (prmap_id *)wmalloc(sizeof(prmap_id));
+		prmap_list->next = NULL;
+		prmap_list->prmap_num = 0;
+		prmap_list->prmap_string[0] ='\0';
+	}
+	
 }
 #endif /* unix */
 
@@ -2783,6 +3061,7 @@ const char *wisp_defaults_path(char *path)
 **
 **			Softlinks are much faster and much more efficient then a hard LINK()
 **			which spawns a new RTS.  However, because the program stays within the 
+
 **			same RTS it is possible to get a recursive call which will fail.
 **
 **			A call to USESOFTLINK()/USEHARDLINK() will set the flag only within 
@@ -3013,16 +3292,30 @@ const char* batchrun(void)
 **
 **	nativescreens() returns true if the NATIVESCREENS option is set and
 **	it is called from an Acucobol runtime. (Later may add Micro Focus)
+**
+**	If in background then use WISP screens instead of native screens
+**	because WISP screens knows how to deal with screen IO in background.
 */
-static int nativescreens_options_flag = 0;
-static void set_nativescreens(void)
-{
-	nativescreens_options_flag = 1;
-	set_vsharedscreen_true();
-}
 int nativescreens(void)
 {
-	return (nativescreens_options_flag && acu_cobol);
+	static int flag = -1;
+	
+	if (-1 == flag ) /* first time only */
+	{
+		flag = 0;
+		if (!wbackground() && get_wisp_option("NATIVESCREENS"))
+		{
+			if (acu_cobol)
+			{
+				wtrace("OPTIONS","NATIVESCREENS","Using ACUCOBOL native screens");
+
+				flag = 1;
+				set_vsharedscreen_true();
+			}
+		}
+	}
+
+	return flag;
 }
 
 /*
@@ -3164,6 +3457,36 @@ const char *get_wisp_option(const char *keyword)
 /*
 **	History:
 **	$Log: wperson.c,v $
+**	Revision 1.51  1999-09-15 09:18:56-04  gsl
+**	Enhance load_options() to support backslash continued long-lines.
+**
+**	Revision 1.50  1999-08-18 17:10:45-04  gsl
+**	Re-do Jorge's changes to load_lgmap() he was using strtok() which was
+**	behaving wrong on Solaris 2.6
+**
+**	Revision 1.49  1998-10-23 11:09:07-04  gsl
+**	Add tracing to LPMAP, FORMS, PRMAP
+**
+**	Revision 1.48  1998-10-22 17:20:52-04  gsl
+**	Clean up the batch and print queue options handling.
+**	Add generic print queue support PQCMD.
+**
+**	Revision 1.47  1998-09-11 10:21:49-04  gsl
+**	Change the nativescreens() routine to return FALSE if in background.
+**
+**	Revision 1.46  1998-08-25 13:48:28-04  gsl
+**	Move the LGMAP trace statements to after $env values resolved and re-word text.
+**
+**	Revision 1.45  1998-08-25 10:12:40-04  gsl
+**	Change load_forms() to strdup the form string so not limited to 80
+**
+**	Revision 1.44  1998-08-03 17:23:37-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
+**	Revision 1.43  1998-03-16 11:44:12-05  gsl
+**	Fixed set_nativescreens() to only call set_vsharedscreen() if
+**	called from an Acucobol runtime.
+**
 **	Revision 1.42  1997-12-04 18:11:56-05  gsl
 **	Changed winnt.h to wispnt.h
 **

@@ -1,7 +1,11 @@
-/* 
-	Copyright (c) 1995,1996 DevTech Migrations, All rights reserved.
-	$Id:$
-*/
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//
 // Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : fileinfo.cpp
@@ -415,3 +419,77 @@ char *find_valid_input_file(char *a_name) {
    }
    return NULL;
 }
+
+//
+//	History:
+//	$Log: fileinfo.cpp,v $
+//	Revision 1.13  1998-08-31 15:50:33-04  gsl
+//	drcs update
+//
+//	Revision 1.12  1998-08-31 15:13:49-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/fileinfo.cpp,v
+//	Working file: fileinfo.cpp
+//	head: 1.11
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 11;	selected revisions: 11
+//	description:
+//	----------------------------
+//	revision 1.11
+//	date: 1997-10-02 08:44:49-04;  author: gsl;  state: V4_3_00;  lines: +1 -2
+//	fix warnings
+//	----------------------------
+//	revision 1.10
+//	date: 1997-10-01 09:26:27-04;  author: gsl;  state: Exp;  lines: +2 -2
+//	fix warnings
+//	----------------------------
+//	revision 1.9
+//	date: 1996-10-09 19:36:56-04;  author: gsl;  state: V4_1_02;  lines: +2 -1
+//	Add include wisp_rts.h
+//	----------------------------
+//	revision 1.8
+//	date: 1996-10-09 12:41:14-04;  author: gsl;  state: Exp;  lines: +2 -2
+//	replace getenv() with wispenvpath()
+//	----------------------------
+//	revision 1.7
+//	date: 1996-07-25 19:46:16-04;  author: gsl;  state: Exp;  lines: +25 -13
+//	NT, and fix command line filename handling
+//	----------------------------
+//	revision 1.6
+//	date: 1996-07-25 14:15:11-04;  author: gsl;  state: Exp;  lines: +1 -1
+//	Renamed from fileinfo.cc to fileinfo.cpp
+//	----------------------------
+//	revision 1.5
+//	date: 1996-04-18 12:59:42-04;  author: jockc;  state: Exp;  lines: +7 -1
+//	moved declaration of for loop index from for loop to function
+//	auto decl area
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:57-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:15-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:53-05;  author: gsl;  state: V3_3x12;  lines: +7 -52
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:09-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

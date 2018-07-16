@@ -25,18 +25,16 @@
 #ifndef WT_DISP_H
 #define WT_DISP_H
 
-#ifdef __STDC__
-extern NODE parse_display(NODE the_statement);
-extern NODE parse_display_and_read(NODE the_statement);
-#else
-extern NODE parse_display();
-extern NODE parse_display_and_read();
-#endif
+extern NODE parse_display(NODE the_statement, NODE the_sentence);
+extern NODE parse_display_and_read(NODE the_statement, NODE the_sentence);
 
 #endif /* WT_DISP_H */
 /*
 **	History:
 **	$Log: wt_disp.h,v $
+**	Revision 1.6  1998-03-03 15:36:20-05  gsl
+**	update
+**
 **	Revision 1.5  1996-08-30 21:56:17-04  gsl
 **	drcs update
 **

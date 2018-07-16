@@ -17,12 +17,13 @@
 #			nmake -f sampleacu.mak
 #			
 #
-WISPDIR=C:\WISP
+WISPDIR=d:\WISP4305
 WISPTRAN=$(WISPDIR)\bin\wisp
-WISPFLAGS= -I..\wisputils
+WISPFLAGS= -I..\wisputils -M
 COBOL=ccbl32
 COBFLAGS=-Zd -Da4
 LANG=-VACU
+CFLAGS=-DWIN32 -DMSFS
 
 OS=win32
 
@@ -45,7 +46,7 @@ ALL= 	SAMPLE QAFILEIO QAFILE2 QANETCAP QAPRINT QASCREEN QASCRN2 QASUBS \
 AUTOQA=	WL0000.cbx WL0010.cbx WL0011.cbx WL0012.cbx WL0013.cbx \
 	WL0014.cbx WL0015.cbx WL0016.cbx WL0017.cbx \
 	WL0018.cbx WL0018A.cbx WL0018B.cbx WL0019.cbx WL0020.cbx WL0021.cbx \
-	WL0022.cbx WL0023.cbx WL0024.cbx WL0025.cbx WL0026.cbx
+	WL0022.cbx WL0023.cbx WL0024.cbx WL0025.cbx WL0026.cbx WL0027.cbx
 
 TEST_DIRS= volrun volin
 
@@ -151,9 +152,84 @@ unix_stuff:	prtargs
 
 win32_stuff:	prtargs.exe
 
+WC=config
+VC=$(WC)\videocap
+
+WISPCONFIGFILES= $(WC)\ACUCONFIG \
+	$(WC)\CHARMAP \
+	$(WC)\FORMS \
+	$(WC)\LGMAP \
+	$(WC)\LPMAP \
+	$(WC)\OPTIONS \
+	$(WC)\PRMAP \
+	$(WC)\W4WMAP \
+	$(WC)\wispmsg.dat \
+	$(WC)\wproc.msg \
+	$(WC)\wrun.cfg \
+	$(WC)\wsysconf.cfg
+
+VIDEOCAPFILES= $(VC)\wincon $(VC)\ansi $(VC)\xterm
+
+wispconfigsetup: $(WC) $(WISPCONFIGFILES) $(VC) $(VIDEOCAPFILES)
+
+$(WC) $(VC):
+	mkdir $@
+COPY=copy
+
+$(WC)\ACUCONFIG:		$(WISPDIR)\config\$(@F)
+	$(COPY) $** $@
+
+$(WC)\CHARMAP:			$(WISPDIR)\config\$(@F)
+	$(COPY) $** $@
+
+$(WC)\FORMS:			$(WISPDIR)\config\$(@F)
+	$(COPY) $** $@
+
+$(WC)\LGMAP:			.\LGMAP.NT
+	$(COPY) $** $@
+
+$(WC)\LPMAP:			.\LPMAP.NT
+	$(COPY) $** $@
+
+$(WC)\OPTIONS:			$(WISPDIR)\config\$(@F)
+	$(COPY) $** $@
+
+$(WC)\PRMAP:			$(WISPDIR)\config\$(@F)
+	$(COPY) $** $@
+
+$(WC)\W4WMAP:			$(WISPDIR)\config\$(@F)
+	$(COPY) $** $@
+
+$(WC)\wispmsg.dat:		$(WISPDIR)\config\$(@F)
+	$(COPY) $** $@
+
+$(WC)\wproc.msg:		$(WISPDIR)\config\$(@F)
+	$(COPY) $** $@
+
+$(WC)\wrun.cfg:			$(WISPDIR)\config\$(@F)
+	$(COPY) $** $@
+
+$(WC)\wsysconf.cfg:		$(WISPDIR)\config\$(@F)
+	$(COPY) $** $@
+
+$(VIDEOCAPFILES):		$(WISPDIR)\config\videocap\$(@F)
+	$(COPY) $** $@
+
 #
 #	History:
 #	$Log: sampleacu.mak,v $
+#	Revision 1.7  1999-09-13 15:53:08-04  gsl
+#	Add wispconfigsetup to do the WIN32 setup of the config dir.
+#
+#	Revision 1.6  1998-06-26 11:22:00-04  gsl
+#	Add WL0027 to build
+#
+#	Revision 1.5  1998-06-15 15:07:52-04  gsl
+#	Add manual locking flag
+#
+#	Revision 1.4  1998-01-16 15:22:01-05  gsl
+#	Add CFLAGS to prtargs gets built correctly
+#
 #	Revision 1.3  1998-01-13 09:23:25-05  gsl
 #	Fix makefile
 #

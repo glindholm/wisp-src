@@ -1,6 +1,7 @@
 procedure qa0000.wps
 
-prompt center "QA0001 Will setup the usage constants for QA"
+prompt center "QA0000:  Will setup the usage constants for QA";;;;;
+       center "Press (ENTER) to continue"
 
 set 		INLIB =LIBIN, 	INVOL   =VOLIN, 
 		OUTLIB=LIBOUT,	OUTVOL  =VOLOUT,
@@ -8,6 +9,16 @@ set 		INLIB =LIBIN, 	INVOL   =VOLIN,
 		SPOOLLIB=" ",	SPOOLVOL=VOLSPL,
 				WORKVOL =VOLWRK
 
-prompt center "Usage constants have been set"
+set	PRNTMODE=P,
+	PRTCLASS=A,
+	FORM#="000",
+	PRINTER="000",
+	LINES=55,
+	JOBCLASS=A,
+	JOBQUEUE=R,
+	JOBLIMIT=3600+1380+45
+
+prompt center "QA0000:  Usage constants have been set";;;;
+       center "Press (ENTER) to return"
 
 return

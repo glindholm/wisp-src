@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : report.cpp
 // Author : George Soules
@@ -736,3 +743,49 @@ void report_status(const char *msg1, const char *msg2, const char *msg3) {
       put(msg3);
    put_newline();
 }
+
+//
+//	History:
+//	$Log: report.cpp,v $
+//	Revision 1.6  1998-08-31 15:14:11-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/report.cpp,v
+//	Working file: report.cpp
+//	head: 1.5
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 5;	selected revisions: 5
+//	description:
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:16:09-04;  author: gsl;  state: V4_3_00;  lines: +0 -0
+//	Renamed from report.cc to report.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:19-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:35-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:18-05;  author: gsl;  state: V3_3x12;  lines: +24 -24
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:23-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

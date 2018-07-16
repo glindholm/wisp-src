@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : environ.hpp
 // Author : George Soules
@@ -77,3 +84,67 @@ typedef          long  int_32;
 // (none)
 
 #endif
+
+//
+//	History:
+//	$Log: environ.hpp,v $
+//	Revision 1.10  1998-08-31 15:13:46-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/environ.hpp,v
+//	Working file: environ.hpp
+//	head: 1.9
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 9;	selected revisions: 9
+//	description:
+//	----------------------------
+//	revision 1.9
+//	date: 1997-06-09 15:48:22-04;  author: scass;  state: V4_3_00;  lines: +6 -0
+//	Added typedef for int_32 and usign_32 to be an int
+//	on OSF1_ALPHA platform
+//	----------------------------
+//	revision 1.8
+//	date: 1996-08-13 13:56:27-04;  author: gsl;  state: V3_3_93;  lines: +1 -2
+//	fix where false and true are defined
+//	----------------------------
+//	revision 1.7
+//	date: 1996-08-13 13:49:32-04;  author: gsl;  state: Exp;  lines: +7 -2
+//	Fix the Boolean defines so doesn't use bool, false, or true which are
+//	all reserved
+//	----------------------------
+//	revision 1.6
+//	date: 1996-07-25 19:46:00-04;  author: gsl;  state: Exp;  lines: +1 -1
+//	NT
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-02 09:00:53-04;  author: gsl;  state: V3_3_19;  lines: +10 -1
+//	removed the signed keyword
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:54-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:12-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:51-05;  author: gsl;  state: V3_3x12;  lines: +6 -1
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:07-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

@@ -27,7 +27,7 @@ Free Software Foundation.
 Emacs-specific code and syntax table code is almost directly borrowed
 from GNU regexp.
 
-$Header: /disk1/devtech/RCS/wisp/lib/regexpr.c,v 1.9 1997-07-18 14:50:12-04 gsl V4_2_00 $
+$Header: /disk1/neomedia/RCS/wisp/lib/regexpr.c,v 1.9 1997-07-18 14:50:12-04 gsl V4_3_05 $
 
 */
 

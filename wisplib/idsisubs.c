@@ -14,6 +14,8 @@ static char rcsid[]="$Id:$";
 #include "idsisubs.h"
 #include "paths.h"
 
+#include "assert.h"
+
 #ifndef FALSE
 #define FALSE 0
 #define TRUE !FALSE
@@ -189,6 +191,94 @@ void unloadpad(char *dest, const char *src, int size)
 	*dest = '\0';
 }
 
+
+/*
+**	ROUTINE:	cobx2cstr(char *dest, const char *src, int size)
+**
+**	FUNCTION:	Copy and reformat a COBOL PIC X(nn) field into a C char string. (Honor embedded blanks)
+**
+**	DESCRIPTION:	This routine has been created as a substitute of unloadpad() in order to support user file names
+**			containing possible embedded spaces. The win/nt, win/95 porting triggered this need. 
+**			Copy the src to dest from left to right for the size of size, until reaching '\0' or padding spaces.
+**			Terminate dest with '\0' whenenver '\0' has been found in src or at the very beginning of the padding
+**			spaces, whichever came first.
+**
+**	ARGUMENTS:	Output	*dest, the C char string pointer.
+**			Input	*src, the COBOL PIC X(nn) pointer. The pointed char string containing a COBOL PIX(nn) field
+**				is at most   size   bytes int4, it can be null terminated or space padded.
+**			Input	size, the scanning maximum size.	 
+**	GLOBALS:	None
+**
+**	RETURN:		void
+**
+**	WARNINGS:	1) Please note that the dest field should be nn+1 in size to accomodate all possible characters that
+**			could be found in the src field plus the '\0' terminator.
+**			There is no way for the routine to check that and give one an error!
+**			2) src and dest should not overlap.
+**
+*/
+void cobx2cstr(char *dest, const char *src, int size)
+{
+	int work_size;
+	/*
+	**	ASSERT for null, size and overlapping
+	*/
+	ASSERT(NULL != dest);
+	ASSERT(NULL != src);
+	ASSERT(0 < size);
+	ASSERT(dest > &src[size-1] || src > &dest[size-1]);
+	
+	memcpy(dest, src, size);
+	dest[size] = '\0';
+	work_size = strlen(dest) -1;
+	for(; work_size >= 0 && dest[work_size] == ' '; work_size--)
+	{
+		dest[work_size] = '\0';
+	}
+}
+
+/*
+**	ROUTINE:	cstr2cobx(char *dest, const char *src, int size)
+**
+**	FUNCTION:	Copy and reformat a C char string into COBOL PIC X(nn) field. (Honor embedded blanks)
+**
+**	DESCRIPTION:	This routine has been created as a substitute of loadpad() in order to support user file names
+**			containing possible embedded spaces. The win/nt, win/95 porting triggered this need. 
+**			Copy the src to dest from left to right for the size of size, until reaching '\0'.
+**			Pad dest with spaces until the size of size.
+**
+**	ARGUMENTS:	Output	*dest, the COBOL PIC X(nn) pointer.
+**			Input	*src, the C char string pointer. The pointed char string containing a C char string is at most
+**				size bytes int4, it can be null terminated or space padded.
+**			Input	size, the scanning maximum size.	 
+**	GLOBALS:	None
+**
+**	RETURN:		void
+**
+**	WARNINGS:	1) Please note that the dest field should be at least size-1 to accomodate all possible characters that
+**			could be found in the src field.
+**			There is no way for the routine to check that and give one an error!
+**			2) src and dest should not overlap.
+**
+*/
+void cstr2cobx(char *dest, const char *src, int size)
+{
+	
+	ASSERT(NULL != dest);
+	ASSERT(NULL != src);
+	ASSERT(0 < size);
+	ASSERT(dest >= src + size || src >= dest + size);		/* overlapping ?					*/
+	
+	for(;size>0 && *src;size-- )					/* forward copy until '\0' or size reached		*/
+	{
+		*dest++ = *src++;
+	}
+	
+	for(;size>0;size--)
+	{
+		*dest++ = ' ';						/* padding with ' ' is appropriate			*/				
+	}
+}
 
 
 int strpos(const char *src, const char *srch)				/* search a string for the occurence of another string	*/
@@ -626,9 +716,122 @@ int field2int4(char *str, int len, int4 *num)
 
 	return 0;
 }
+
+
+/*
+**	Routine:	dqw_strcpy( )
+**
+**	Function:	strcpy src into dest, but wrap dest in double quotes if src contain any space. (embedded or not)
+**
+**	Description:	This function has been created to aid the support of long file names with possible embedded blanks.
+**			A Blank is usually an universal delimiter. However, there are times that Blanks need to be treated as
+**			data! A Good example for this behavior is a command line containing a program to be executed along with
+**			its arguments. In this case, Blank is the delimiter between the program to be executed and each one of 
+**			its parameters. However, if the program path or any of its paramters contain any Embedded Blank
+**			then we may need to wrap this program path or this argument into double quotes, otherwise the program may
+**			not be found, or may act as it had received more arguments...
+**
+**	ARGUMENTS:	(O)	dest.
+**			(I)	src, must be a C char null terminated string pointer.
+**
+**	GLOBALS:	None
+**
+**	WARNINGS:	1) Please note that the dest field may need room in order to accomodate	the leading and trailing double
+**			quotes that may be placed into the dest field.
+**			There is no way for the routine to check that and give one an error!
+**			2) src and dest should not overlap.
+**			3) Please note that the user of this function should src pointing to a c str that does NOT
+**			have padding blanks at its end! Otherwise dest would be disnecessarily wrapped in double quotes.
+**			4) if src contains any quotes then the dest will contain a copy of src and will
+**			NOT be wrapped in quotes
+**
+*/
+void dqw_strcpy(char *dest, const char *src)
+{
+	/*
+	**	ASSERT for null
+	*/
+	ASSERT(NULL != dest);
+	ASSERT(NULL != src);
+	
+	
+	/*
+	**	Double Quote wrap src into dest if src contain at least one
+	**	Blank and does not contain any Double Quote
+	*/
+	if ( strchr(src, ' ') && !( strchr(src,'\"') )	)
+	{
+		strcpy(dest, "\"");
+		strcat(dest, src);
+		strcat(dest, "\"");
+	}
+	else
+	{
+		strcpy(dest, src);
+	}
+}
+
+/*
+**	Routine:	dqw_strcat( )
+**
+**	Function:	strcat src into dest, but wrap dest in double quotes if src contain any space. (embedded or not)
+**
+**	Description:	This function has been created to aid the support of long file names with possible embedded blanks.
+**			A Blank is usually an universal delimiter. However, there are times that Blanks need to be treated as
+**			data! A Good example for this behavior is a command line containing a program to be executed along with
+**			its arguments. In this case, Blank is the delimiter between the program to be executed and each one of 
+**			its parameters. However, if the program path or any of its paramters contain any Embedded Blank
+**			then we may need to wrap this program path or this argument into double quotes, otherwise the program may
+**			not be found, or may act as it had received more arguments...
+**
+**	ARGUMENTS:	(O)	dest.
+**			(I)	src, must be a C char null terminated string pointer.
+**
+**	GLOBALS:	None
+**
+**	WARNINGS:	1) Please note that the dest field may need room in order to accomodate	the leading and trailing double
+**			quotes that may be placed into the dest field.
+**			There is no way for the routine to check that and give one an error!
+**			2) src and dest should not overlap.
+**			3) Please note that the user of this function should src pointing to a c str that does NOT
+**			have padding blanks at its end! Otherwise dest would be disnecessarily wrapped in double quotes.
+**			4) if src contains any quotes then the dest will contain a copy of src and will
+**			NOT be wrapped in quotes
+**
+*/
+void dqw_strcat(char *dest, const char *src)
+{
+	/*
+	**	ASSERT for null
+	*/
+	ASSERT(NULL != dest);
+	ASSERT(NULL != src);
+
+	/*
+	**	Double Quote wrap src into dest if src contain at least one
+	**	Blank and does not contain any Double Quote
+	*/
+	if ( strchr(src, ' ') && !( strchr(src, '\"') )    )
+	{
+		strcat(dest, "\"");
+		strcat(dest, src);
+		strcat(dest, "\"");
+	}
+	else
+	{
+		strcat(dest, src);
+	}
+
+}
 /*
 **	History:
 **	$Log: idsisubs.c,v $
+**	Revision 1.15  1998-11-02 15:51:09-05  gsl
+**	Fix assert test so OK by boundschecker
+**
+**	Revision 1.14  1998-08-03 16:49:03-04  jlima
+**	Support Long Volume Translation to long file names containing eventual embedded blanks.
+**
 **	Revision 1.13  1997-08-18 15:52:48-04  gsl
 **	Change prototypes to add const keyword where needed
 **

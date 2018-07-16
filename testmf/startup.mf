@@ -22,7 +22,7 @@ fi
 WISPCONFIG=$QA/config
 COBSW=-F
 COBPATH=:$QA
-PATH=$WISPDIR/bin:$QA/volrun/onpath:$PATH
+PATH=$WISPDIR/bin:$WISPDIR/cridmfx:$WISPDIR/createmfx:$QA/volrun/onpath:$PATH
 export QA WISPCONFIG COBSW COBPATH PATH
 echo
 echo '**** SETTING UP FOR MICRO FOCUS ****'

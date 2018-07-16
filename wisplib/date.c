@@ -1,12 +1,5 @@
 static char copyright[]="Copyright (c) 1995 NeoMedia Technologies, Inc. All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1997		*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 
 /*
@@ -34,6 +27,9 @@ static char rcsid[]="$Id:$";
 #include <stdlib.h>
 #include <sys/types.h>
 #include <ctype.h>
+#ifdef unix
+#include <sys/time.h>
+#endif
 #include <time.h>
 #include <string.h>
 
@@ -64,7 +60,12 @@ static int off_days[2][13] =
 		};
 
 
-void WISPDATE(char* func,char* arg1,char* arg2,char* arg3,char* arg4);
+void WISPDATE(const char* func,char* arg1,char* arg2,char* arg3,char* arg4);
+void DATE(const char* func, char* arg1, char* arg2, char* arg3, char* arg4);
+void DATE2(const char* func, char* arg1, char* arg2, char* arg3, char* arg4);
+void DATE4(const char* func, char* arg1, char* arg2, char* arg3, char* arg4);
+void DATE6(const char* func, char* arg1, char* arg2, char* arg3, char* arg4);
+
 
 static int leap_year(int4 year);
 static int load_date(char type, char* string, date_struct* date);
@@ -134,12 +135,12 @@ static void convert_greg_style(char intype, char outtype, char* indate, char* ou
 **	09/22/92	Written by GSL
 **
 */
-void DATE(char* func,char* arg1,char* arg2,char* arg3,char* arg4)
+void DATE(const char* func,char* arg1,char* arg2,char* arg3,char* arg4)
 {
 	WISPDATE(func, arg1, arg2, arg3, arg4);
 }
 
-void WISPDATE(char* func,char* arg1,char* arg2,char* arg3,char* arg4)
+void WISPDATE(const char* func,char* arg1,char* arg2,char* arg3,char* arg4)
 {
 #define		ROUTINE		11000
 	static char *weekday_string[7] = { "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday" };
@@ -364,6 +365,9 @@ void WISPDATE(char* func,char* arg1,char* arg2,char* arg3,char* arg4)
 **			"ES"	Convert Modified Gregorian date from European style to System style
 **			"SA"	Convert Modified Gregorian date from System style to American style
 **			"SE"	Convert Modified Gregorian date from System style to European style
+**			"GG"	Get system date and time in system format
+**			"AG"	Get system date and time in American format
+**			"EG"	Get system date and time in European format
 **
 **	Arguments:
 **	"HD",receiver
@@ -398,6 +402,9 @@ void WISPDATE(char* func,char* arg1,char* arg2,char* arg3,char* arg4)
 **	"ES",G1,G2
 **	"SA",G1,G2
 **	"SE",G1,G2
+**	"GG",YYYYMMDD,HHMMSSHH
+**	"AG",MMDDYYYY,HHMMSSHH
+**	"EG",DDMMYYYY,HHMMSSHH
 **
 **	Globals:	None
 **
@@ -406,11 +413,14 @@ void WISPDATE(char* func,char* arg1,char* arg2,char* arg3,char* arg4)
 **
 **	Warnings:	None
 **
-**	History:	
-**	05/12/97	Written by SMC
 **
 */
-void DATE2(char* func, char* arg1, char* arg2, char* arg3, char* arg4)
+void DATE4(const char* func, char* arg1, char* arg2, char* arg3, char* arg4)
+{
+	DATE2(func, arg1, arg2, arg3, arg4);
+}
+
+void DATE2(const char* func, char* arg1, char* arg2, char* arg3, char* arg4)
 {
 #undef		ROUTINE
 #define		ROUTINE		11100
@@ -468,6 +478,80 @@ void DATE2(char* func, char* arg1, char* arg2, char* arg3, char* arg4)
 			time_struct->tm_yday+1);
 		memcpy(arg1,buff,7);
 		wtrace("DATE2","RETURN","HJ =  [%7.7s]", arg1);
+	}
+	else if ( 0==memcmp(func,"GG",2) ||					/* Get sustem time and date			*/
+		  0==memcmp(func,"AG",2) ||
+		  0==memcmp(func,"EG",2)    )
+	{
+		int hsec;
+
+#if defined(WIN32)
+#define USE_FTIME
+#else
+#define USE_GETTIMEOFDAY_BSD
+#endif
+		
+#if defined(USE_FTIME)
+		{
+			#include <sys/timeb.h>
+			struct timeb sTimeb;
+			ftime(&sTimeb);
+			time_struct = localtime(&sTimeb.time);
+			hsec = sTimeb.millitm / 10;
+		}
+#elif defined(USE_GETTIMEOFDAY_BSD)
+		{
+			struct timeval sTimeOfDay;
+			struct timezone sTimeZone;
+			
+			gettimeofday(&sTimeOfDay, &sTimeZone);
+			time_struct = localtime(&sTimeOfDay.tv_sec);
+			hsec = sTimeOfDay.tv_usec / 10000;
+		}
+#elif defined(USE_GETTIMEOFDAY_SYSV)
+		{
+			struct timeval sTimeOfDay;
+			
+			gettimeofday(&sTimeOfDay);
+			time_struct = localtime(&sTimeOfDay.tv_sec);
+			hsec = sTimeOfDay.tv_usec / 10000;
+		}
+#else
+#error "TIME-OF-DAY FUNCTION NOT DEFINED"
+#endif
+
+		if ('G' == *func)	/* YYYYMMDD */
+		{
+			sprintf(buff,"%04d%02d%02d", 
+				time_struct->tm_year+1900, 
+				time_struct->tm_mon+1,
+				time_struct->tm_mday);
+		}
+		else if ('A' == *func )	/* MMDDYYYY */
+		{
+			sprintf(buff,"%02d%02d%04d", 
+				time_struct->tm_mon+1,
+				time_struct->tm_mday,
+				time_struct->tm_year+1900);
+		}
+		else			/* DDMMYYYY */
+		{
+			sprintf(buff,"%02d%02d%04d", 
+				time_struct->tm_mday,
+				time_struct->tm_mon+1,
+				time_struct->tm_year+1900);
+		}
+		memcpy(arg1,buff,8);
+		
+		/* HHMMSSHH */
+		sprintf(buff,"%02d%02d%02d%02d",
+			time_struct->tm_hour,
+			time_struct->tm_min,
+			time_struct->tm_sec,
+			hsec);
+		memcpy(arg2,buff,8);
+
+		wtrace("DATE2","RETURN","%2.2s =  [%8.8s] [%8.8s]", func, arg1, arg2);
 	}
 	else if ( 0==memcmp(func,"GJ",2) ||					/* Converting a date in Modified Gregorian	*/
 		  0==memcmp(func,"AJ",2) ||					/*  format to Modified Julian format		*/
@@ -554,6 +638,13 @@ void DATE2(char* func, char* arg1, char* arg2, char* arg3, char* arg4)
 		}
 
 		DATE(mod_func,ldate1,arg2,arg3,arg4);
+
+		if ( func[0] == 'A' || func[0] == 'E' )
+		{
+		        /* Convert the system date back A or E */ 
+			convert_greg_style('S', func[0],arg3,ldate1);
+			memcpy(arg3, ldate1, 8);
+		}
 	}
 	else if ( 0==memcmp(func,"J+",2) )					/* Adding a specified number of days to a 	*/
 	{									/*  Modified Julian date			*/
@@ -601,6 +692,7 @@ void DATE2(char* func, char* arg1, char* arg2, char* arg3, char* arg4)
 			memcpy(ldate1,arg1,8);
 		}
 
+		daystr[0] = ' ';	/* If DATE fails then daystr is un-initialized */
 		DATE(mod_func,ldate1,daystr,arg3,NULL);
 
 		convert_day_to_number(daystr,&dow);
@@ -622,6 +714,7 @@ void DATE2(char* func, char* arg1, char* arg2, char* arg3, char* arg4)
 		int4 dow = 0;
 		char daystr[20];
 
+		daystr[0] = '\0';
 		strcpy(mod_func,"RD");
 		DATE(mod_func,arg1,daystr,arg3,NULL);
 
@@ -1083,6 +1176,32 @@ static void convert_greg_style(char intype, char outtype, char* indate, char* ou
 /*
 **	History:
 **	$Log: date.c,v $
+**	Revision 1.22  1999-09-24 18:58:48-04  gsl
+**	Fix gettimeofday() hsec calc.
+**
+**	Revision 1.21  1999-09-24 09:02:46-04  gsl
+**	Fix the SCO define as it turns out SCO uses the BSD style of gettimeofday()
+**
+**	Revision 1.20  1999-09-13 15:46:09-04  gsl
+**	fix warning on WIN32
+**
+**	Revision 1.19  1999-09-08 16:38:32-04  gsl
+**	Rework the gettimeofday logic to work on WIN32
+**
+**	Revision 1.18  1999-09-08 15:38:39-04  gsl
+**	Add DATE4() as a frontend to DATE2()
+**	Add GG AG and EG functions to return the system date and time
+**
+**	Revision 1.17  1999-01-18 14:10:21-05  gsl
+**	In DATE2 A+ and E+ were returning the date in S format.
+**	Fixed to convert date back to E or A format
+**
+**	Revision 1.16  1998-10-13 10:46:57-04  gsl
+**	Fix warning in J# if invalid date was passed.
+**
+**	Revision 1.15  1998-07-10 11:01:49-04  gsl
+**	In G#, if the call to DATE fails then the daystr was uninitialized.
+**
 **	Revision 1.14  1997-10-29 16:13:41-05  gsl
 **	Add WISPDATE() as a frontend to DATE()
 **	This was done to solve a problem on NT with Acucobol 3.2 which

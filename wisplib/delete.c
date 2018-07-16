@@ -1,20 +1,9 @@
 static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
 static char rcsid[]="$Id:$";
-#include "idsistd.h"
-#ifndef VMS	/* unix or MSDOS */
+#ifdef MSDOS
 
 #include <stdio.h>
 #include <errno.h>
-
-#ifdef unix
-delete( path )
-char *path;
-{
-	return( unlink( path ) );
-}
-#endif	/* unix */
-
-#ifdef MSDOS
 #include <io.h>
 
 delete( path )
@@ -24,11 +13,13 @@ char *path;
 }
 #endif	/* MSDOS*/
 
-#endif	/* unix or MSDOS */
 
 /*
 **	History:
 **	$Log: delete.c,v $
+**	Revision 1.9  1999-01-29 14:30:03-05  gsl
+**	This is obsolete and is MSDOS only
+**
 **	Revision 1.8  1996-08-19 18:32:16-04  gsl
 **	drcs update
 **

@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : debugaid.hpp
 // Author : George Soules
@@ -76,3 +83,53 @@ debug_trace_level_restore()
 #endif
 #endif
 
+
+//
+//	History:
+//	$Log: debugaid.hpp,v $
+//	Revision 1.7  1998-08-31 15:13:40-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/debugaid.hpp,v
+//	Working file: debugaid.hpp
+//	head: 1.6
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 6;	selected revisions: 6
+//	description:
+//	----------------------------
+//	revision 1.6
+//	date: 1997-06-09 17:35:06-04;  author: scass;  state: V4_3_00;  lines: +2 -2
+//	int4 -> int_32
+//	----------------------------
+//	revision 1.5
+//	date: 1997-06-09 16:55:20-04;  author: scass;  state: Exp;  lines: +2 -2
+//	Changed long to int4 for portability.
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:47-04;  author: gsl;  state: V3_3_93;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:03-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:43-05;  author: gsl;  state: V3_3x12;  lines: +20 -15
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:02-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

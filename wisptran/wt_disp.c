@@ -21,6 +21,8 @@ static char rcsid[]="$Id:$";
 **
 */
 
+#include <assert.h>
+
 #define EXT extern
 #include "wisp.h"
 #include "scrn.h"
@@ -30,7 +32,8 @@ static char rcsid[]="$Id:$";
 #include "wt_disp.h"
 #include "reduce.h"
 
-static NODE dnr_pfkeys_clause();
+static NODE dnr_pfkeys_clause(NODE first_node, char* target, int col, int enter_key, int* key_cnt);
+
 
 /*
 **	Routine:	parse_display()
@@ -49,17 +52,15 @@ static NODE dnr_pfkeys_clause();
 **
 **	Warnings:	None
 **
-**	History:	
-**	07/22/94	Updated GSL
-**
 */
 
-NODE parse_display(the_statement)
-NODE the_statement;
+NODE parse_display(NODE the_statement, NODE the_sentence)
 {
-	NODE	curr_node, display_node, period_node;
+	NODE	curr_node, display_node, next_statement, verb_node;
+	NODE	trailing_fluff_node = NULL;
 	int	col;
 
+	verb_node = first_token_node(the_statement);
 	curr_node = the_statement->next;
 
 	if (!eq_token(curr_node->token,VERB,"DISPLAY"))
@@ -67,29 +68,117 @@ NODE the_statement;
 		/*
 		**	NOT a DISPLAY statement, return it.
 		*/
+		write_tlog(curr_node->token,"WISP",'E',"VERB","Expected DISPLAY found [%s].", token_data(curr_node->token));
 		return(the_statement);
 	}
 
-	if (eq_token(curr_node->next->token,KEYWORD,"AND"))
-	{
-		return parse_display_and_read(the_statement);
-	}
-
-	write_log("WISP",'I',"PROCDISP","Processing DISPLAY statement.");
-
 	display_node = curr_node;
 
+	if (eq_token(display_node->next->token,KEYWORD,"AND"))
+	{
+		return parse_display_and_read(the_statement, the_sentence);
+	}
+	
 	if (!proc_display)
 	{
 		write_log("WISP",'I',"SKIPDISP","Skipped processing of DISPLAY statement.");
 		tput_statement(12,the_statement);
 		the_statement = free_statement(the_statement);
-		return(the_statement);
+
+		return the_statement;
 	}
 
+	write_tlog(verb_node->token,"WISP",'I',"VERB","Processing %s Statement.", token_data(verb_node->token));
+
+
+	trailing_fluff_node = unhook_trailing_fluff(the_statement);
+
+	/*
+	**	DISPLAY {identifier|literal}... [UPON WORKSTATION][WITH NO ADVANCING]
+	**
+	**	MOVE SPACES TO WISP-CRT-SCREEN-AREA
+	**	STRING {identifier|literal}... DELIMITED BY SIZE INTO WISP-CRT-SCREEN-AREA
+	**	CALL \"WDISPLAY\" USING WISP-CRT-RECORD
+	*/
+	
+
+	/*
+	**	Scan thru reducing the data-items looking for the end of the list.
+	*/
+	
+	for(curr_node = display_node->next; NODE_END != curr_node->type;curr_node = curr_node->next)
+	{
+		if (curr_node->token)
+		{
+			if (KEYWORD==curr_node->token->type)
+			{
+				break;
+			}
+
+			if (!reduce_data_item(curr_node))
+			{
+				write_log("WISP",'W',"DISPLAY","Error parsing DISPLAY, unrecognized data item.[%s]",
+							token_data(curr_node->token));
+				reduce_one(curr_node);
+			}
+		}
+	}
+
+	if (NODE_END != curr_node->type)
+	{
+		/*
+		**	The phrases [UPON WORKSTAION] [WITH NO ADVANCING] are comments so remove.
+		*/
+		if (eq_token(curr_node->token,KEYWORD,"UPON"))
+		{
+			free_token_from_node(curr_node);
+			curr_node = curr_node->next;
+		}
+		if (curr_node && eq_token(curr_node->token,IDENTIFIER,"WORKSTATION")) /* NOTE: WORKSTATION is an IDENTIFIER */
+		{
+			free_token_from_node(curr_node);
+			curr_node = curr_node->next;
+		}
+		if (curr_node && eq_token(curr_node->token,KEYWORD,"WITH"))
+		{
+			free_token_from_node(curr_node);
+			curr_node = curr_node->next;
+		}
+		if (curr_node && eq_token(curr_node->token,KEYWORD,"NO"))
+		{
+			free_token_from_node(curr_node);
+			curr_node = curr_node->next;
+		}
+		if (curr_node && eq_token(curr_node->token,KEYWORD,"ADVANCING"))
+		{
+			free_token_from_node(curr_node);
+			curr_node = curr_node->next;
+		}
+
+	}
+	
+	if (curr_node && NODE_END != curr_node->type)
+	{
+		write_tlog(curr_node->token, "WISP",'E',"PARSE","Error parsing DISPLAY, found [%s]",
+				   token_data(curr_node->token));
+		next_statement = unhook_sub_tree(the_statement, curr_node);
+	}
+	else
+	{
+		next_statement = NULL;
+	}
+	
+	/*
+	**	Process the DISPLAY
+	*/
 	col = display_node->token->column;
 	if (col < 12) col = 12;
 	else if (col > 24) col = 24;
+
+	edit_token(display_node->token,"STRING");
+	display_node->token->column = col;
+
+	tput_leading_fluff(the_statement);
 
 	if (acn_cobol)
 	{
@@ -99,50 +188,36 @@ NODE the_statement;
 	{
 		tput_line_at(col,"MOVE SPACES TO WISP-CRT-SCREEN-AREA");
 	}
-	
+
 	tput_flush();
-	edit_token(display_node->token,"STRING");
-	display_node->token->column = col;
 
-	curr_node = curr_node->next;
-	for(period_node=NULL; NODE_END != curr_node->type; curr_node=curr_node->next)
-	{
-		if (PERIOD==curr_node->token->type)
-		{
-			period_node = curr_node;
-			free_token_from_node(period_node);
-			break;
-		}
-	}
-
-	tput_statement(12,the_statement);
+	tput_statement(col,the_statement);
 
 	tput_line_at(col+4, "DELIMITED BY SIZE INTO");
 	if (acn_cobol)
 	{
 		tput_clause (col+8, "WISP-DISPLAY-FIELDS-DATA");
-		tput_line_at(col,   "DISPLAY WINDOW ERASE");
-		tput_line_at(col,   "DISPLAY WISP-DISPLAY-SCREEN");
-		tput_line_at(col,   "ACCEPT OMITTED");
+		tput_line_at(col,   "CALL \"WACUDISPLAY\" USING");
+		tput_clause (col+4,     "WISP-APPLICATION-NAME");
+		tput_clause (col+4,     "WISP-DISPLAY-FIELDS-DATA");
+		tput_line_at(col,   "END-CALL");
 	}
 	else
 	{
 		tput_clause (col+8, "WISP-CRT-SCREEN-AREA");
-		tput_line_at(col,   "MOVE \"Press RETURN to proceed.\" TO");
-		tput_clause (col+4, "WISP-SCREEN-LINE(24)");
-		tput_line_at(col,   "MOVE WISP-FULL-SCREEN-ORDER-AREA TO");
-		tput_clause (col+4, "WISP-CRT-ORDER-AREA");
+	/*	tput_line_at(col,   "MOVE \"Press RETURN to proceed.\" TO");	*/
+	/*	tput_clause (col+4, "WISP-SCREEN-LINE(24)");			*/
+	/*	tput_line_at(col,   "MOVE WISP-FULL-SCREEN-ORDER-AREA TO");	*/
+	/*	tput_clause (col+4, "WISP-CRT-ORDER-AREA");			*/
 		tput_line_at(col,   "CALL \"WDISPLAY\" USING WISP-CRT-RECORD");
+		tput_clause (col,   "END-CALL");
 	}
-	
-	if (period_node)
-	{
-		tput_clause(col,".");
-	}
-	tput_flush();
 
+	tput_statement(col, trailing_fluff_node);
+	trailing_fluff_node = free_statement(trailing_fluff_node);
+	
 	the_statement = free_statement(the_statement);
-	return( the_statement );
+	return next_statement;
 }
 
 /*
@@ -200,10 +275,10 @@ Acucobol Native Screens:
 		{no-mod imperative-stmts}
 	END-IF
 */
-NODE parse_display_and_read(the_statement)
-NODE the_statement;
+NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 {
-	NODE	curr_node, temp_node;
+	NODE	curr_node;
+	NODE	trailing_fluff_node = NULL;
 	int	col;
 	char	*record_name, *crt_name;
 	int	enter_key;
@@ -219,23 +294,25 @@ NODE the_statement;
 	**	Get the column of the DISPLAY verb.
 	*/
 	col = the_statement->next->token->column;
+	if (col < 12) col = 12;
+	else if (col > 24) col = 24;
 
 	/*
 	**	Free the DISPLAY AND portion.
 	*/
+	tput_leading_fluff(the_statement);
 	the_statement = free_statement(the_statement);
 
 	/*
 	**	Get the READ ... portion.
 	*/
-	the_statement = get_verb_statement();
+	the_statement = get_statement_from_sentence(the_sentence);
+	trailing_fluff_node = unhook_trailing_fluff(the_statement);
 
 	curr_node = the_statement->next;
 	if (!eq_token(curr_node->token,VERB,"READ"))
 	{
 		write_log("WISP",'E',"DISPANDREAD","Expecting keyword READ found [%s].", token_data(curr_node->token));
-		tput_statement(12,the_statement);
-		the_statement = free_statement(the_statement);
 		return(the_statement);
 	}
 
@@ -243,13 +320,14 @@ NODE the_statement;
 	altered = 0;
 	if (eq_token(curr_node->token,KEYWORD,"ALTERED"))
 	{
-		altered = 1;
-		curr_node = curr_node->next;
-
 		if (acn_cobol)
 		{
-			write_log("WISP",'E',"NATIVE","ALTERED clause on DISPLAY AND READ not supported with Native Screens");
+			write_tlog(curr_node->token, "WISP",'E',"NATIVE",
+				   "ALTERED clause on DISPLAY AND READ not supported with Native Screens");
 		}
+
+		altered = 1;
+		curr_node = curr_node->next;
 	}
 
 	record_name = token_data(curr_node->token);
@@ -278,8 +356,8 @@ NODE the_statement;
 		scrn_flags[scrn_idx] |= SCRN_IN_PROCDIV;				/* Otherwise flag procedure division	*/
 	}
 
-	curr_node = curr_node->next;							/* skip over the ON keyword		*/
-	curr_node = curr_node->next;							/* skip over the ON keyword		*/
+	curr_node = curr_node->next;							/* skip to the ON keyword		*/
+	curr_node = curr_node->next;							/* skip to the file-name node		*/
 
 	crt_name = token_data(curr_node->token);
 
@@ -309,7 +387,7 @@ NODE the_statement;
 		}
 	}
 
-	curr_node = curr_node->next;
+	curr_node = curr_node->next;							/* Point past the file name	*/
 
 	enter_key = 1;
 	if (eq_token(curr_node->token,KEYWORD,"ONLY"))
@@ -351,17 +429,24 @@ NODE the_statement;
 
 	if (eq_token(curr_node->token,KEYWORD,"ON"))
 	{
+		if (acn_cobol)
+		{
+			write_tlog(curr_node->token, "WISP",'W',"NATIVE",
+				   "ON PFKEY(S) clause causes data to be transferred with Native Screens");
+		}
+
 		on_pfkeys = 1;
 		curr_node = curr_node->next;
 		curr_node = curr_node->next;
 		enter_key = 0;
 		curr_node = dnr_pfkeys_clause(curr_node,"WISP-ON-PF-KEYS",col,enter_key,&on_key_cnt);
+
 		/*
 		**	At this point curr_node is the...
 		**		NODE_END	End of statement
-		**		PERIOD		End of statement (almost)
 		**		KEYWORD		Error
 		*/
+
 		if (0 == on_key_cnt)
 		{
 			/*
@@ -370,6 +455,7 @@ NODE the_statement;
 			tput_line_at(col,"MOVE WISP-ALLOWABLE-PF-KEYS TO WISP-ON-PF-KEYS,");
 			on_key_cnt = key_cnt;
 		}
+
 	}
 	else
 	{
@@ -446,57 +532,25 @@ NODE the_statement;
 		{
 			tput_line_at(col, "IF WISP-ON-PF-KEYS(1:1) IS = \"*\" THEN");
 		}
-		tput_line_at(col, "    CONTINUE,");
+		tput_flush();
 
-		if (unhook_sub_tree(the_statement,curr_node))
+		/*
+		**	curr_node should point to the NODE_END token of the first fragment.
+		**	Get the next fragment
+		*/
+
+		if (NODE_END != curr_node->type)
 		{
-			free_statement(the_statement);
-			the_statement = curr_node;
+			write_tlog(curr_node->token, "WISP",'E',"DISPANDREAD","Error parsing ON PFKEY clause, found [%s]",
+				   token_data(curr_node->token));
 		}
 
-		if (!eq_token(curr_node->token,KEYWORD,"NO-MOD"))
-		{
-		    NODE no_mod_node;
-		    no_mod_node = NULL;
+		tput_statement(col, trailing_fluff_node);
+		trailing_fluff_node = free_statement(trailing_fluff_node);
 
-		    for(;;)
-		    {
-			if (eq_token(curr_node->token,KEYWORD,"END-DISPLAY")) break;
-			if (eq_token(curr_node->token,KEYWORD,"ELSE")) break;
-			if (eq_token(curr_node->token,KEYWORD,"WHEN")) break;
+		the_statement = free_statement(the_statement);
 
-			for(temp_node=curr_node; NODE_END != temp_node->type; temp_node=temp_node->next)
-			{
-				if (PERIOD==temp_node->token->type)
-				{
-					period_found = 1;
-					clean_token(temp_node->token);			/* Remove the period			*/
-				}
-
-				if (eq_token(temp_node->token,KEYWORD,"NO-MOD"))
-				{
-					no_mod_node = temp_node;
-					unhook_sub_tree(the_statement,no_mod_node);
-				}
-			}
-
-			the_statement = parse_verb_statement(the_statement);
-
-			if (period_found)
-			{
-				curr_node = NULL;
-				break;
-			}
-			if (no_mod_node)
-			{
-				the_statement = no_mod_node;
-				curr_node = no_mod_node;
-				break;
-			}
-			the_statement = get_verb_statement();
-			curr_node = the_statement->next;
-		    }
-		}
+		the_statement = parse_imperative_statements(the_statement, the_sentence);
 
 		if (acn_cobol)
 		{
@@ -505,13 +559,40 @@ NODE the_statement;
 		else
 		{
 			tput_line_at(col, "ELSE");
+			tput_flush();
 		}
 	}
+	else
+	{
+
+		if (NODE_END != curr_node->type)
+		{
+			write_tlog(curr_node->token, "WISP",'E',"DISPANDREAD","Error parsing DISPLAY AND READ, found [%s]",
+				   token_data(curr_node->token));
+		}
+		
+		the_statement = free_statement(the_statement);
+	}
+
+	/*
+	** 	Next is either NO-MOD or END-DISPLAY
+	**	both are a new fragment.
+	*/
+	if (!the_statement)
+	{
+		the_statement = get_statement_from_sentence(the_sentence);
+	}
+	curr_node = the_statement->next;
 
 	no_mod = 0;
-	if (!period_found && eq_token(curr_node->token,KEYWORD,"NO-MOD"))
+	if (eq_token(curr_node->token,KEYWORD,"NO-MOD"))
 	{
 		no_mod = 1;
+
+		if (on_pfkeys)
+		{
+			col+= 4;
+		}
 
 		if (acn_cobol)
 		{
@@ -531,41 +612,22 @@ NODE the_statement;
 		{
 			tput_line_at(col, "IF %s IS GREATER THAN \"N?\"", crt_status[crt_idx]);
 		}
-		tput_line_at(col, "    CONTINUE,");
 
-		clean_token(curr_node->token);						/* Remove the NO-MOD			*/
+		tput_flush();
 
-		if (unhook_sub_tree(the_statement,curr_node))
+		tput_statement(col, trailing_fluff_node);
+		trailing_fluff_node = free_statement(trailing_fluff_node);
+
+		the_statement = free_statement(the_statement);
+
+		the_statement = parse_imperative_statements(the_statement, the_sentence);
+
+		if (!the_statement)
 		{
-			free_statement(the_statement);
-			the_statement = curr_node;
+			the_statement = get_statement_from_sentence(the_sentence);
 		}
+		curr_node = the_statement->next;
 
-		for(;;)
-		{
-			if (eq_token(curr_node->token,KEYWORD,"END-DISPLAY")) break;
-			if (eq_token(curr_node->token,KEYWORD,"ELSE")) break;
-			if (eq_token(curr_node->token,KEYWORD,"WHEN")) break;
-
-			for(temp_node=curr_node; NODE_END != temp_node->type; temp_node=temp_node->next)
-			{
-				if (PERIOD==temp_node->token->type)
-				{
-					period_found = 1;
-					clean_token(temp_node->token);			/* Remove the period			*/
-				}
-			}
-
-			the_statement = parse_verb_statement(the_statement);
-
-			if (period_found)
-			{
-				curr_node = NULL;
-				break;
-			}
-			the_statement = get_verb_statement();
-			curr_node = the_statement->next;
-		}
 
 		if (acn_cobol)
 		{
@@ -574,6 +636,7 @@ NODE the_statement;
 		else
 		{
 			tput_line_at(col, "ELSE");
+			tput_flush();
 		}
 	}
 
@@ -599,6 +662,11 @@ NODE the_statement;
 		if (no_mod)
 		{
 			tput_line_at(col, "END-IF");
+
+			if (on_pfkeys)
+			{
+				col -= 4;
+			}
 		}
 
 		if (on_pfkeys)
@@ -607,50 +675,29 @@ NODE the_statement;
 		}
 	}
 
-	if (period_found)
+#ifdef OLD
+	if (no_mod || on_pfkeys)
 	{
-		tput_clause(col,".");
 		tput_flush();
 	}
-	else
+#endif /* OLD */
+
+	if (eq_token(curr_node->token,KEYWORD,"END-DISPLAY"))
 	{
-		if (no_mod || on_pfkeys)
-		{
-			tput_flush();
-		}
+		decontext_statement(curr_node);
+		clean_token(curr_node->token);					/* Remove the END-DISPLAY		*/
 
-		if (eq_token(curr_node->token,KEYWORD,"END-DISPLAY"))
-		{
-			decontext_statement(curr_node);
-			clean_token(curr_node->token);					/* Remove the END-DISPLAY		*/
-		}
-		else if (eq_token(curr_node->token,KEYWORD,"ELSE")) {}
-		else if (eq_token(curr_node->token,KEYWORD,"WHEN")) {}
-		else
-		{
-			decontext_statement(curr_node);
-		}
-
-		if (the_statement != curr_node)
-		{
-			if (unhook_sub_tree(the_statement,curr_node))
-			{
-				free_statement(the_statement);
-				the_statement = curr_node;
-			}
-		}
-		the_statement = parse_verb_statement(the_statement);
+		tput_statement(col, the_statement);
+		the_statement = free_statement(the_statement);
 	}
 
-	return(the_statement);
+	tput_statement(col, trailing_fluff_node);
+	trailing_fluff_node = free_statement(trailing_fluff_node);
+
+	return the_statement;
 }
 
-static NODE dnr_pfkeys_clause(first_node,target,col,enter_key,key_cnt)
-NODE 	first_node;
-char 	*target;
-int	col;
-int	enter_key;
-int	*key_cnt;
+static NODE dnr_pfkeys_clause(NODE first_node, char* target, int col, int enter_key, int* key_cnt)
 {
 	char	pfkeys[80];
 	int	pfkeys_cnt;
@@ -677,7 +724,6 @@ int	*key_cnt;
 	{
 		if (!temp_node->token) continue;
 
-		if (PERIOD==temp_node->token->type) break;
 		if (KEYWORD==temp_node->token->type) break;
 
 		if (NUMBER==temp_node->token->type)
@@ -716,21 +762,21 @@ int	*key_cnt;
 		*/
 		/* tput_line("123456*8901234567890123456789012345678901234567890123456789012345678901234567890\n"); */
 
-		boundary=72 - 16;
-		if ((int)strlen(pfkeys) > boundary)					/* Won't fit on one line		*/
+		boundary= 72 - (col+5) + 1;	/* pfkeys string starts at col + strlen("MOVE ")=5 */
+		if ((int)strlen(pfkeys) > boundary)				/* Won't fit on one line		*/
 		{
 			char	savchr;
 			savchr = pfkeys[boundary];				/* save the char			*/
 			pfkeys[boundary] = '\0';
-			tput_line("           MOVE %s",pfkeys);			/* write first part			*/
+			tput_line_at(col,"MOVE %s",pfkeys);			/* write first part			*/
 			pfkeys[boundary] = savchr;
 			tput_line("      -         \"%s",&pfkeys[boundary]);	/* write the rest			*/
 		}
 		else
 		{
-			tput_line("           MOVE %s",pfkeys);			/* write first part			*/
+			tput_line_at(col,"MOVE %s",pfkeys);			/* write first part			*/
 		}
-		tput_clause(col, "TO %s,",target);				/* just finish the MOVE			*/
+		tput_clause(col+4, "TO %s,",target);				/* just finish the MOVE			*/
 	}
 
 	/*
@@ -738,7 +784,6 @@ int	*key_cnt;
 	*/
 	for(temp_node=first_node; nonnumeric_keys && NODE_END != temp_node->type; temp_node=temp_node->next)
 	{
-		if (temp_node->token && PERIOD==temp_node->token->type) break;
 		if (temp_node->token && KEYWORD==temp_node->token->type) break;
 
 		if (temp_node->token && NUMBER==temp_node->token->type)
@@ -784,6 +829,38 @@ int	*key_cnt;
 /*
 **	History:
 **	$Log: wt_disp.c,v $
+**	Revision 1.23  1998-04-03 14:38:45-05  gsl
+**	Changed DISPLAY for ACN to call WACUDISPLAY routines
+**
+**	Revision 1.22  1998-03-23 12:53:22-05  gsl
+**	Change ACN DISPLAY to a PERFORM WISP-DISPLAY-PARA
+**
+**	Revision 1.21  1998-03-23 10:28:31-05  gsl
+**	For ACN DISPLAY verb add END-ACCEPT to ACCEPT OMITTED
+**
+**	Revision 1.20  1998-03-05 16:27:57-05  gsl
+**	Fix the boundary condition for spliting long pfkey strings across
+**	two lines.
+**
+**	Revision 1.19  1998-03-04 12:50:59-05  gsl
+**	Add END-CALL
+**
+**	Revision 1.18  1998-03-03 11:45:29-05  gsl
+**	Rework the next-node logic.
+**	Added fluff handling
+**
+**	Revision 1.17  1998-02-24 18:06:07-05  gsl
+**	Fix leading fluff and flushing
+**
+**	Revision 1.16  1998-02-24 10:55:33-05  gsl
+**	Rewrote to fully handle cobol-85 syntax plus full scope of statement.
+**
+**	Revision 1.15  1998-02-10 15:16:05-05  gsl
+**	Change to use get_statement_fragment()
+**	Add support to handle UPON WORKSTATION WITH NO ADVANCING.
+**	Add support to return any unused tokens which are not part of
+**	this DISPLAY statement.
+**
 **	Revision 1.14  1997-09-15 11:15:54-04  gsl
 **	Add native screens translation for DISPLAY verb
 **

@@ -1,4 +1,4 @@
-000100**   Copyright (c) 1996 DevTech Migrations, All rights reserved.
+000100**   Copyright (c) 1996-1998 NeoMedia Technologies, All rights reserved.
 000200**   $Id:$
 000300**
 000400**   File:       wispplat.wcb
@@ -28,6 +28,7 @@
 002800     88  WISPPLAT-SOLARIS     VALUE "SO".
 002900     88  WISPPLAT-SOLARIS-PC  VALUE "SI".
 003000     88  WISPPLAT-DGUX        VALUE "DG".
+003010     88  WISPPLAT-DGUX-INTEL  VALUE "DI".
 003100     88  WISPPLAT-SCO         VALUE "SC".
 003200     88  WISPPLAT-NCR486      VALUE "NC".
 003300     88  WISPPLAT-NCR32       VALUE "NT".

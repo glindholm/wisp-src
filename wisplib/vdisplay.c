@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		vdisplay.c
@@ -147,7 +147,7 @@ static int nativecharmap = 0;		/* Do CHARMAP substitution (1=Native char set, 0=
 
 static int get_line(register char *lb,int4 *fpos_ptr,int4 *fpoff_ptr,int bufsize,FILE *input_file);
 static void display_buffer(char *lb);							/* Display correct size of buffer.	*/
-static void eof_trailer(char *lb, const char *file_name, int bufsize);			/* Write the start of file header.	*/
+static void eof_trailer(const char *file_name);						/* Write the start of file header.	*/
 static void eop_indicator(char *lb, int bufsize);					/* Write the page break indicator.	*/
 static void str_insert(char *target, const char *source);				/* Insert a string in another string.	*/
 static void show_help(const char *file_name, int options12);				/* Show the help screen.		*/
@@ -208,6 +208,7 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 	int i, retcd;									/* Return code from print routines.	*/
 	int	check_time;
 	int4	def_bgchange, def_bgcolor;
+	int	file_ok;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
@@ -236,13 +237,19 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 	use_costar_flag = use_costar();
 	if (use_costar_flag)
 	{
-		edit_vmode = VMODE_UNDERSCORE;
-		message_vmode = VMODE_BOLD;
-		high_message_vmode = VMODE_BOLD;
+		edit_vmode = costar_edit_vmode();
+		message_vmode = costar_message_vmode();
+		high_message_vmode = costar_high_message_vmode();
 	}
 #endif
 
-	if (check_empty(file_name))							/* Check to see if empty file.		*/
+	/*
+	**	Check if the file exists and is a regular file.
+	*/
+	file_ok = (isafile(file_name) && fcanread(file_name));
+
+
+	if (!file_ok || check_empty(file_name))					/* Check to see if empty file.		*/
 	{
 		HWSB	hWsb;
 		int	pfkey, currow, curcol;
@@ -254,12 +261,23 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 		hWsb = wsb_new();
 
 		wsb_add_text(hWsb,2,26,"Active Subprogram is DISPLAY");
-		wsb_add_field(hWsb,3,21,UNDER_TEXT,ptr="                                      ",strlen(ptr));
-		wsb_add_field(hWsb,6,37,BLINK_TEXT,ptr="SORRY",strlen(ptr));
+		ptr="                                      ";
+		wsb_add_field(hWsb,3,21,UNDER_TEXT,ptr,strlen(ptr));
+		ptr="SORRY";
+		wsb_add_field(hWsb,6,37,BLINK_TEXT,ptr,strlen(ptr));
 		memset(templine,0,sizeof(templine));
 		sprintf(templine,"File:  %s",file_name);
 		wsb_add_text(hWsb,9,20,templine);
-		wsb_add_text(hWsb,11,20,"File specified contains zero records");
+
+		if (!file_ok)
+		{
+			wsb_add_text(hWsb,11,20,"File does not exist or can not be read");
+		}
+		else
+		{
+			wsb_add_text(hWsb,11,20,"File specified contains zero records");
+		}
+		
 		wsb_add_text(hWsb,14,25,"Press (ENTER) to end DISPLAY");
 
 		wsb_display_and_read(hWsb, "00X", &pfkey, &currow, &curcol);
@@ -439,7 +457,7 @@ again:
 		{
 			fpos_tab[i] = -1;						/* Indicate end of file position.	*/
 			fpoff_tab[i] = 0;
-			eof_trailer(lb,file_name,bufsize);				/* Write out the eof banner		*/
+			eof_trailer(file_name);						/* Write out the eof banner		*/
 		}
 
 		for (j = i+1; j < MAX_LINES_PER_SCREEN; j++)				/* Loop through the rest of the lines.	*/
@@ -1344,15 +1362,30 @@ static void display_buffer(char *lb)							/* Display correct size of buffer.	*/
 	vmode(md_save);									/* Put back to what it was.		*/
 }
 
-static void eof_trailer(char *lb, const char *file_name, int bufsize)			/* Write the start of file header.	*/
+static void eof_trailer(const char *file_name)						/* Write the start of file header.	*/
 {
-	int	pos;
-	
-	memset(lb,'-',bufsize);								/* Store spaces across the line.	*/
-	pos = (80 - (strlen(file_name) + 13))/2;
-	pos = (pos < 2) ? 2 : pos;
-	str_insert(&lb[pos],"End of file: ");						/* Insert header message.		*/
-	str_insert(&lb[pos+13],file_name);						/* Insert the file name.		*/
+	unsigned int	pos;
+	unsigned int	size;
+	const char *prefix = "End of file: ";
+	char lb[256];
+
+	memset(lb,'-',vscr_wid);							/* Store spaces across the line.	*/
+	lb[vscr_wid] = '\0';
+
+	size = strlen(file_name) + strlen(prefix);
+	if (size >= (unsigned)vscr_wid)
+	{
+		pos = 2;
+	}
+	else
+	{
+		pos = (vscr_wid - size)/2;
+		pos = (pos < 2) ? 2 : pos;
+	}
+
+	str_insert(&lb[pos],prefix);							/* Insert header message.		*/
+	str_insert(&lb[pos+strlen(prefix)],file_name);					/* Insert the file name.		*/
+	lb[vscr_wid] = '\0';								/* Null terminate the string.		*/
 	vmode(VMODE_CLEAR);								/* Clear the rendition flag.		*/
 	display_buffer(lb);								/* Display the line.			*/
 }
@@ -2075,13 +2108,12 @@ static void adjust_buffers(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int dir
 	if (direction == 1)								/* Move buffers forward one.		*/
 	{
 		tbufa = lbuf[0];							/* Get the address of first buffer.	*/
-		for (i = 0; i < MAX_LINES_PER_SCREEN; i++)				/* Do for each buffer line.		*/
+		for (i = 0; i < MAX_LINES_PER_SCREEN-1; i++)				/* Do for each buffer line.		*/
 		{
 			lbuf[i] = lbuf[i+1];						/* Assign the new address.		*/
 			fpos_tab[i] = fpos_tab[i+1];					/* Assign the file position value.	*/
 			fpoff_tab[i] = fpoff_tab[i+1];
 		}
-		i--;									/* Set so is last buffer on screen.	*/
 	}
 	else if (direction == 2)							/* Move buffers backward one.		*/
 	{
@@ -2447,6 +2479,24 @@ static void display_stat(int dwidth)							/* Display cursor row, col and width.
 /*
 **	History:
 **	$Log: vdisplay.c,v $
+**	Revision 1.43  1998-10-15 11:11:10-04  gsl
+**	The eof_trailer() was signal 11'ing when the filename was longer then the
+**	current record size.  It has been fixed to use the screen size instead of
+**	the record size and it now has a private buffer which is long.
+**
+**	Revision 1.42  1998-07-09 16:40:20-04  gsl
+**	fix adjust_buffers() forward scroll overflow, was doing 0-23 instead of 0-22.
+**
+**	Revision 1.41  1998-06-19 11:01:48-04  gsl
+**	Added a check to see if the file exists and can be read before
+**	testing if empty.
+**
+**	Revision 1.40  1998-05-21 13:26:40-04  gsl
+**	CHange to load costar vmode's dynamically
+**
+**	Revision 1.39  1998-04-22 15:51:37-04  gsl
+**	Fix warnings
+**
 **	Revision 1.38  1998-01-07 13:31:56-05  gsl
 **	Fix non-ascii support so if NATIVECHARMAP is not set then it
 **	will assume Wang character set encoding

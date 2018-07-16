@@ -79,7 +79,7 @@ source_all:
 	cp *.wcb *.umf $$shipdir/$$distdir/source ; \
 	cd $$shipdir ; \
 	find . -type f -exec chmod 444 {} \; ; \
-	find . -type d -exec chmod 755 {} \;
+	find . -type d -exec chmod 775 {} \;
 
 mf_all:
 	@rm -f *.cob
@@ -124,7 +124,7 @@ amuacu.$(VER)$(REL):
 	cp $(ACUDIST) $$shipdir/$$subdir/$$distdir ; \
 	cd $$shipdir ; \
 	find . -type f -exec chmod 666 {} \; ; \
-	find . -type d -exec chmod 755 {} \;
+	find . -type d -exec chmod 775 {} \;
 
 mfdist: $(MFDIST)
 	@if [ $(VER)$(REL) ] ; then \
@@ -146,4 +146,4 @@ amumf.$(VER)$(REL):
 	cp $(MFDIST) $$shipdir/$$subdir/$$distdir ; \
 	cd $$shipdir ; \
 	find . -type f -exec chmod 666 {} \; ; \
-	find . -type d -exec chmod 755 {} \;
+	find . -type d -exec chmod 775 {} \;

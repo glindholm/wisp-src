@@ -1,667 +1,1245 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+**	File:		wt_read.c
+**
+**	Project:	WISP/TRAN
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	READ verb
+**
+*/
 
-/* Routines to process the READ  statements.										*/
+/*
+**	Includes
+*/
 
 #define EXT extern
 #include "wisp.h"
 #include "wispfile.h"
 #include "crt.h"
 #include "cobfiles.h"
+#include "statment.h"
+#include "reduce.h"
+#include "wt_procd.h"
+#include "wt_locks.h"
 
-#define READ_FILE "$WRXXXXXX"
+/*
+**	Structures and Defines
+*/
 
-int	unterminated_if = 0;
+/*
+**	Globals and Externals
+*/
 
-static char rd_str[STRING_BUFFER_SIZE];							/* Buffer for READ statements.		*/
-static char tm_str[STRING_BUFFER_SIZE];							/* Buffer for TIMEOUT statements.	*/
-static int adjcol();
-static void addlockclause();
+/*
+**	Static data
+*/
 
-p_read()
+/*
+**	Static Function Prototypes
+*/
+
+static NODE parse_read_crt(NODE the_statement, NODE the_sentence);
+
+
+/*
+**	READ file [NEXT|PREVIOUS] 
+**                       record [with HOLD ] [INTO record]
+**				[MODIFIABLE]
+**				[ALTERED   ]
+**		[KEY is dataitem]
+**		[timeout_clause]
+**		[fail_clause]
+**		[notfail_clause]
+**		[END-READ]
+**
+**	timeout_clause:	TIMEOUT of {data-item|number}[second|seconds]
+**				[HOLDER-ID in data-item]
+**				{NEXT SENTENCE|statement}
+**
+**	fail_clause:	{INVALID key|at END} statement
+**
+**	notfail_clause:	NOT fail_clause
+**
+**
+**	Translation:
+**
+**     		MOVE "RD" TO WISP-DECLARATIVES-STATUS
+**		MOVE "N" TO WISP-TEST-BYTE
+**		COMPUTE WISP-FILE-TIMEOUT = 100 * (timeout-seconds)
+**		MOVE "file" TO WISP-NEW-LOCK-ID
+**		PERFORM WISP-LOCK-START THRU WISP-LOCK-END
+**		PERFORM WITH TEST AFTER
+**                  UNTIL (file-status IS NOT = "99")
+**                  OR (WISP-FILE-TIMEOUT IS < 1)
+**                 READ file [INTO record] [KEY clause]
+**                    INVALID KEY
+**                      MOVE "Y" TO WISP-TEST-BYTE
+**                 END-READ
+**                 CALL "wfwait" USING file-status WISP-FILE-TIMEOUT
+**		END-PERFORM
+**		IF ( file-status = "99" AND WISP-FILE-TIMEOUT IS < 1)
+**		   MOVE SPACES TO WISP-LOCK-ID
+**		   {timeout-statement}
+**		ELSE
+**		   IF WISP-TEST-BYTE = "Y" THEN
+**		       MOVE SPACES TO WISP-LOCK-ID
+**		       {invalid-statement}
+**		   END-IF
+**		END-IF
+*/
+NODE parse_read(NODE the_statement, NODE the_sentence)
 {
-	int i,j,hold,fnum,invkey_clause,atend_clause,t_out,t_flag,is_crt,did_lockclause,indexed_file;
-	char  	*crt_type;
-	char  	tstr[132],into_rec[40];
-	int	col, savecol, maincol, addnl, savenl;
-	static  int readnum = 0;							/* current paragraph number for READ's	*/
+	NODE	curr_node, verb_node, file_node;
+	NODE	into_node = NULL;
+	NODE	key_node = NULL;
+	NODE	timeout_node = NULL;
+	NODE	frag2_statement = NULL;
+	NODE	frag3_statement = NULL;
+	NODE	frag4_statement = NULL;
+	NODE	last_statement = NULL;
+	NODE	trailing_fluff_node = NULL;
+	char	next_clause[10] = "";
+	int	with_hold = 0;
+	char	*before_into_lock = NULL;
+	char	*after_into_lock = NULL;
+	int	at_end_found = 0;
+	int	not_at_end_found = 0;
+	int	invalid_key_found = 0;
+	int	not_invalid_key_found = 0;
+	int	fnum;
+	int	col;
+	const char *file_status;
+	int	timeout_clause = 0;
+	int	timeout_next_sentence = 0;
+	static int timeout_cnt = 0;
+	cob_file *timeout_file_ptr = NULL;
 
-	char hstr[40];									/* Holder-ID string.			*/
-	char timstr[40];								/* TIMEOUT value string.		*/
+	verb_node = first_token_node(the_statement);
 
-	static FILE	*read_temp_file;
-
-	write_log("WISP",'I',"PROCREAD","Processing Read Statement.");
-
-	ptype = get_param(o_parms[0]);							/* get next parameter (should be READ)	*/
-	col   = 1 + get_ppos();								/* Find out its column location.	*/
-	maincol = col;
-	j = peek_param(o_parms[1]);							/* peek at the file name		*/
-
-	cur_crt = crt_index(o_parms[1]);
-	is_crt = (-1 != cur_crt);
-
-	if (is_crt)									/* is it a crt record?			*/
+	if (!eq_token(verb_node->token,VERB,"READ"))
 	{
-		if (acn_cobol)
+		write_tlog(verb_node->token,"WISP",'E',"VERB","Expected READ found [%s].", token_data(verb_node->token));
+		return(the_statement);
+	}
+
+	tput_leading_fluff(the_statement);
+
+	file_node = verb_node->next;
+
+	write_tlog(verb_node->token,"WISP",'I',"READ","Processing READ %s Statement.", token_data(file_node->token));
+
+	if (-1 != crt_index(token_data(file_node->token)))
+	{
+		return parse_read_crt(the_statement, the_sentence);
+	}
+
+	trailing_fluff_node = unhook_trailing_fluff(the_statement);
+
+	/*
+	**	READ disk-file
+	*/
+	fnum = file_index(token_data(file_node->token));
+
+	if (fnum == -1)								/* no file matched, error		*/
+	{
+		write_log("WISP",'F',"READFNF",
+			"Error -- File %s, referenced by READ statement but not Declared.",token_data(file_node->token));
+		exit_wisp(EXIT_WITH_ERR);
+	}
+	file_status = prog_fstats[fnum];					/* save the status field		*/
+	
+	col = verb_node->token->column;
+	if (col > 36) col = 36;
+	if (col < 12) col = 12;
+
+
+	tput_line_at(col, "MOVE \"RD\" TO WISP-DECLARATIVES-STATUS");
+
+
+	/*
+	**	Step through the tokens gathering info and making changes.
+	*/
+	curr_node = file_node->next;
+
+	if (eq_token(curr_node->token,KEYWORD,"NEXT") ||
+	    eq_token(curr_node->token,KEYWORD,"PREVIOUS"))
+	{
+		strcpy(next_clause, token_data(curr_node->token));
+		curr_node = curr_node->next;
+	}
+	if (eq_token(curr_node->token,KEYWORD,"RECORD"))
+	{
+		curr_node = curr_node->next;
+	}
+	if (eq_token(curr_node->token,KEYWORD,"WITH"))
+	{
+		curr_node = curr_node->next;
+	}
+
+	/*
+	**	HOLD is a verb and will break the fragment.
+	*/
+	if (NODE_END == curr_node->type)
+	{
+		NODE temp_node;
+
+		frag2_statement = get_statement_from_sentence(the_sentence);
+		temp_node = first_token_node(frag2_statement);
+
+		if (eq_token(temp_node->token,VERB,"HOLD"))
 		{
-			write_log("WISP",'W',"NATIVE","Workstation READ %s uses WISP Screens",crt_file[cur_crt]);
+			if (temp_node->next && 
+			    (eq_token(temp_node->next->token,KEYWORD,"LIST") ||
+			     eq_token(temp_node->next->token,KEYWORD,"RECORDS")))
+			{
+				/*
+				**	This is NOT the HOLD clause it is actually
+				**	the next statement which is a HOLD verb.
+				*/
+			}
+			else
+			{
+				/* 
+				**	Found the "with HOLD" clause
+				*/
+				with_hold = 1;
+
+				curr_node = temp_node->next;
+
+				trailing_fluff_node = free_statement(trailing_fluff_node);
+				trailing_fluff_node = unhook_trailing_fluff(frag2_statement);
+			}
+		}
+	}
+
+	/*
+	**	MODIFIABLE or ALTERED should not be specified, but if they are then ignore them.
+	*/
+	if (eq_token(curr_node->token,KEYWORD,"MODIFIABLE"))
+	{
+		curr_node = curr_node->next;
+	}
+	if (eq_token(curr_node->token,KEYWORD,"ALTERED"))
+	{
+		curr_node = curr_node->next;
+	}
+
+	/*
+	**	ACU wants the lock clause before the INTO clause.
+	*/
+	if (acu_cobol)
+	{
+		if (with_hold)
+		{
+			if (manual_locking)
+			{
+				before_into_lock = "WITH LOCK";
+			}
+		}
+		else
+		{
+			before_into_lock = "NO LOCK";
+		}
+	}
+
+	if (eq_token(curr_node->token,KEYWORD,"INTO"))
+	{
+		curr_node = curr_node->next;
+		into_node = reduce_data_item(curr_node);
+
+		if (!into_node)
+		{
+			write_tlog(curr_node->token,"WISP",'E',"READ","Unable to reduce INTO clause, clause will be ignored");
+		}
+		else
+		{
+			delint_statement(into_node);
+			decontext_statement(into_node);
+		}
+
+		curr_node = curr_node->next;
+	}
+
+	/*
+	**	MF & VAX  wants the lock clause after the INTO clause.
+	*/
+	if (mf_cobol)
+	{
+		if (with_hold)
+		{
+			if (manual_locking)
+			{
+				after_into_lock = "WITH KEPT LOCK";
+			}
+		}
+		else
+		{
+			if (prog_ftypes[fnum] & INDEXED_FILE)	/* For indexed files use "IGNORE LOCK" */
+			{
+				after_into_lock = "IGNORE LOCK";
+			}
+			else
+			{
+				after_into_lock = "NO LOCK";
+			}
+		}
+	}
+
+	if (vax_cobol)
+	{
+		if (prog_ftypes[fnum] & AUTOLOCK)
+		{
+			/* If using automatic record locking	*/
+			/* then don't supply an "ALLOWING" 	*/
+			/* clause. 				*/
+		}
+		else if (with_hold)
+		{
+			after_into_lock = "ALLOWING NO OTHERS";
+		}
+		else
+		{
+			after_into_lock = "REGARDLESS OF LOCK";
+		}
+	}
+
+	if (eq_token(curr_node->token,KEYWORD,"KEY"))
+	{
+		curr_node = curr_node->next;
+
+		if (eq_token(curr_node->token,KEYWORD,"IS"))
+		{
+			curr_node = curr_node->next;
 		}
 		
-		write_log("WISP",'I',"FIXREAD","READ of %s repaired.",crt_file[cur_crt]); /* yes, fix it			*/
-		ptype = get_param(o_parms[1]);						/* Really get it now.			*/
+		key_node = reduce_data_item(curr_node);
 
-		crt_type = "VWANG-READ-ALL";						/* Set type of read to READ-ALL.	*/
-		into_rec[0] = 0;
-
-		stredt(linein,"READ","");
-		stredt(linein,o_parms[1],"");
-
-		j = ptype;
-
-		if (ptype != -1)							/* No period means could have INTO.	*/
+		if (!key_node)
 		{
-			ptype = get_param(o_parms[0]);					/* check for INTO.			*/
-
-			if (!strcmp(o_parms[0],"RECORD"))				/* Found a RECORD keyword, remove it.	*/
-			{
-				j = ptype;						/* Remember punctuation.		*/
-				ptype = get_param(o_parms[0]);
-			}
-
-			if (!strcmp(o_parms[0],"MODIFIABLE"))				/* Found a MODIFIABLE keyword, remove it.*/
-			{
-				crt_type = "VWANG-READ-MODIFIABLE";			/* Set type string.			*/
-				j = ptype;						/* Remember punctuation.		*/
-				ptype = get_param(o_parms[0]);
-			}
-
-			if (!strcmp(o_parms[0],"ALTERED"))				/* Found a ALTERED keyword, remove it.	*/
-			{
-				crt_type = "VWANG-READ-ALTERED";
-				j = ptype;						/* Remember punctuation.		*/
-				ptype = get_param(o_parms[0]);
-			}
-
-			if (!strcmp(o_parms[0],"INTO"))					/* Is it?				*/
-			{
-				ptype = get_param(into_rec);				/* Get the field name.			*/
-				j = ptype;						/* Remember the item type.		*/
-			}
-			else hold_line();						/* Otherwise hold on to the line.	*/
+			write_tlog(curr_node->token,"WISP",'E',"READ","Unable to reduce KEY IS clause, clause will be ignored");
+		}
+		else
+		{
+			delint_statement(key_node);
+			decontext_statement(key_node);
 		}
 
-					/*123456789012345678901234567890123456789012345678901234567890123456789012*/
-		tput_blank();
-
-		if (crt_relative[cur_crt][0])						/* Load relative key into order-area	*/
-		{
-			tput_line_at	(12, "CALL \"xx2byte\" USING %s,",crt_relative[cur_crt]);
-			tput_clause  	(16, "%s",crt_record[crt_prime_rec[cur_crt]]);
-		}
-											/* Copy the Order-Area for the read	*/
-		tput_line_at		(12, "MOVE %s TO WISP-CRT-ORDER-AREA\n",crt_record[crt_prime_rec[cur_crt]]);
-											/* Load number of lines			*/
-		tput_line_at		(12, "MOVE DEC-BYTE-%d TO VWANG-LINES,\n",
-									(crt_record_size[crt_prime_rec[cur_crt]]-4)/80);
-		tput_line_at		(12, "MOVE SPACES TO %s,\n",crt_status[cur_crt]);/* Must clear status field	*/
-		tput_line_at  		(12, "MOVE \"A\" TO WISP-ALLOWABLE-PF-KEYS\n");
-		tput_line_at		(12, "CALL \"vwang\" USING %s,",crt_type);
-		tput_clause		(16, "WISP-CRT-RECORD,");
-		tput_clause		(16, "VWANG-LINES,");
-		tput_clause		(16, "WISP-ALLOWABLE-PF-KEYS,");
-		tput_clause		(16, "%s,",crt_pfkey[cur_crt]);
-		tput_clause		(16, "%s",crt_status[cur_crt]);
-		tput_line_at		(12, "MOVE WISP-CRT-RECORD TO %s",crt_record[crt_prime_rec[cur_crt]]);
-
-		if (into_rec[0])							/* Had an INTO phrase.			*/
-		{
-			tput_line_at	(12, "MOVE %s TO",crt_record[crt_prime_rec[cur_crt]]);
-			tput_clause	(16, "%s",into_rec);
-		}
-
-		if (crt_cursor[cur_crt][0])						/* if there is a cursor			*/
-		{
-			tput_line_at  	(12, "CALL \"w2rowcol\" USING WISP-CRT-ORDER-AREA-3,");
-			tput_clause	(16, "%s",crt_cursor[cur_crt]);
-		}
-
-		if (j == -1)								/* has a period in it...		*/
-		{
-			tput_clause(12,".");
-		}
-
-		tput_flush();
-		return(0);								/* exit the FOR loop			*/
+		curr_node = curr_node->next;
 	}
-	else /* Not a CRT read */
+
+	/*
+	**	Anything else should be in the next fragment
+	*/
+	if (NODE_END != curr_node->type)
 	{
-		hstr[0] = '\0';
-		strcpy(timstr,"9999");							/* Default timeout.			*/
+		write_tlog(curr_node->token,"WISP",'E',"READ",
+			   "Error parsing READ, found token [%s]", token_data(curr_node->token));
+	}
+	
+	if (frag2_statement && !with_hold)
+	{
+		last_statement = frag2_statement;
+	}
+	else
+	{
+		frag3_statement = get_statement_from_sentence(the_sentence);
+		last_statement = frag3_statement;
+	}
+	curr_node = first_token_node(last_statement);
 
-		i = 0;
-		o_parms[5][0] = '\0';							/* no status field yet			*/
 
-		fnum = file_index(o_parms[1]);
+	/*
+	**	timeout_clause:	TIMEOUT of {data-item|number}[second|seconds]
+	**				[HOLDER-ID in data-item]
+	**				{NEXT SENTENCE|statement}
+	*/
+	if (eq_token(curr_node->token,KEYWORD,"TIMEOUT"))
+	{
+		trailing_fluff_node = free_statement(trailing_fluff_node);
+		trailing_fluff_node = unhook_trailing_fluff(last_statement);
 
-		if (fnum == -1)								/* no file matched, error		*/
+		if (timeout_cnt > 0)
 		{
-			write_log("WISP",'F',"READFNF",
-			"Error -- File %s, referenced by READ statement but not Declared.",o_parms[1]);
-			exit_wisp(EXIT_WITH_ERR);
+			write_tlog(curr_node->token,"WISP",'E',"READ", "Nested TIMEOUT clauses are not supported.");
+		}
+
+		curr_node = curr_node->next;
+
+		if (eq_token(curr_node->token,KEYWORD,"OF"))
+		{
+			curr_node = curr_node->next;
+		}
+		
+		timeout_node = reduce_data_item(curr_node);
+
+		if (!timeout_node)
+		{
+			write_tlog(curr_node->token,"WISP",'E',"READ",
+				   "Unable to reduce TIMEOUT IS clause, clause will be ignored");
 		}
 		else
 		{
-			write_log("WISP",'I',"HANDLEREAD","Handling READ of %s.",prog_files[fnum]);
-			strcpy(o_parms[5],prog_fstats[fnum]);				/* copy the status field		*/
+			/*
+			**	Unhook timeout count data item
+			*/
+			curr_node->down = NULL;
+			decontext_statement(timeout_node);
+			timeout_clause = 1;
 		}
 
-		strcpy(tm_str,"");							/* Need to init timeout string.		*/
-
-		strcpy(rd_str,"");							/* start a new line			*/
-
-		if (!read_file_ptr)							/* if there has not yet been a file made*/
+		if (!with_hold)
 		{
-			read_file_ptr = open_cob_file(read_fname,FOR_OUTPUT,1);		/* open for write			*/
-			if (!read_file_ptr) exit_with_err();
-			read_temp_file = read_file_ptr->a_file->file;
-			fprintf(read_temp_file,"***********  READ STATEMENTS\n");
-			read_file_ptr->line_count++;
-											/* put a line in it			*/
+			write_log("WISP",'E',"READ","TIMEOUT clause is invalid without HOLD clause");
+			with_hold = 1;
 		}
 
-		hold = 0;								/* no hold yet...			*/
-		invkey_clause = 0;							/* no INVALID KEY yet...		*/
-		atend_clause = 0;							/* no AT END yet...			*/
-		t_out = 0;								/* No TIMEOUT phrase...			*/
-		t_flag = 0;								/* Global flag for timeout phrase.	*/
-		did_lockclause = 0;							/* Wrote the locking clause		*/
-		addnl = 0;
+		curr_node = curr_node->next;
 
-
-		if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))			/* If using automatic record locking	*/
-		{									/* then don't supply an "ALLOWING" 	*/
-			did_lockclause = 1;						/* clause. (Trick it into not writing	*/
-		}									/* the ALLOWING clause.)		*/
-
-		indexed_file = (prog_ftypes[fnum] & INDEXED_FILE);
-
-		do
+		if (eq_token(curr_node->token,KEYWORD,"SECOND") ||
+		    eq_token(curr_node->token,KEYWORD,"SECONDS")  )
 		{
-			if (t_out)							/* If timeout found.			*/
-			{
-				add2buff(tm_str,o_parms[0],col,addnl);
-			}
-			else 								/* Put it in temp string		*/
-			{
-				add2buff(rd_str,o_parms[0],col+4,addnl);
-			}
+			curr_node = curr_node->next;
+		}
 
-			if (o_parms[0][0]) stredt(linein,o_parms[0],"");		/* Remove it from the input line	*/
-			ptype = get_param(o_parms[0]);					/* get a new parm....			*/
-			adjcol(ptype,&col,&addnl);
-
-			if (ptype == 1)							/* first parm on a new line		*/
-			{
-				if (has_cont)						/* Force in the continuation		*/
-				{
-					strcpy(tstr,"\n      -");
-
-					if (t_out)
-					{
-						strcat(tm_str,tstr);			/* start a new line			*/
-					}
-					else
-					{
-						strcat(rd_str,tstr);			/* start a new line			*/
-					}
-					addnl = 0;
-				}
-				else
-				{
-					addnl = 1;
-				}
-			}
-
-			savenl = addnl;
-			savecol = col;
-
-			if (!strcmp(o_parms[0],"WITH") || !strcmp(o_parms[0],"HOLD"))
-			{
-				stredt(linein,o_parms[0],"");
-				o_parms[0][0] = 0;					/* clear it				*/
-				write_log("WISP",'I',"FIXWITHHOLD","Corrected WITH HOLD in READ.");
-				hold = 1;						/* flag it				*/
-			}
-			else if (t_out && !strcmp(o_parms[0],"NEXT"))			/* Handle NEXT SENTENCE in timeout	*/
-			{
-				if (o_parms[0][0]) stredt(linein,o_parms[0],"");	/* Remove it from the input line	*/
-				ptype = get_param(o_parms[0]);				/* get a new parm....			*/
-				adjcol(ptype,&col,&addnl);
-				if ( !strcmp(o_parms[0],"SENTENCE") )
-				{
-					o_parms[0][0] = '\0';
-					add2buff(tm_str,"CONTINUE",col,addnl);
-				}
-				else
-				{
-					add2buff(tm_str,"NEXT",col,addnl);
-					add2buff(tm_str,o_parms[0],col,0);
-					o_parms[0][0] = '\0';
-					write_log("WISP",'E',"READ","Unable to parse keyword NEXT in READ.");
-				}
-				
-			}
-			else if (!strcmp(o_parms[0],"NEXT"))				/* handle NEXT special because		*/
-			{								/* it is in the procedure division	*/
-											/* keyword list and will exit the while.*/
-				stredt(o_parms[0],"N"," N");				/* Just put a space in, it won't match	*/
-											/* the keyword list any more!		*/
-			}
-			else if (!strcmp(o_parms[0],"INTO"))				/* handle INTO special because		*/
-			{								/* it signals a NO LOCK for LPI		*/
-				if (lpi_cobol || acu_cobol)
-				{							/* NO LOCK must precede INTO.		*/
-					addlockclause(&did_lockclause,indexed_file,hold,rd_str,col+8);
-				}
-			}
-			else if (!strcmp(o_parms[0],"INVALID"))				/* INVALID KEY phrase?			*/
-			{
-				addlockclause(&did_lockclause,indexed_file,hold,rd_str,savecol+8);
-
-				stredt(linein," INVALID"," ");				/* remove INVALID			*/
-				if (ptype != -1)
-				{
-					peek_param(o_parms[7]);				/* get "KEY"				*/
-					if (!strcmp(o_parms[7],"KEY"))			/* Was it KEY?				*/
-					{
-						ptype = get_param(o_parms[0]);		/* Get it, and remove it.		*/
-						adjcol(ptype,&col,&addnl);
-						if (addnl) { savenl = 1; savecol = col; }
-						stredt(linein," KEY"," ");		/* remove KEY				*/
-					}
-				}
-
-				if (ptype == -1)					/* Premature period!			*/
-				{
-					write_log("WISP",'I',"BADINVKEY",
-					"Bad READ syntax, INVALID KEY followed by a period.");
-					o_parms[0][0] = '\0';
-				}
-				else
-				{
-					ptype = get_param(o_parms[0]);			/* what to do?				*/
-					adjcol(ptype,&col,&addnl);
-				}
-
-				add2buff(rd_str,"INVALID KEY",savecol+4,savenl);	/* write it out				*/
-
-				if (hold) add2buff(rd_str,"MOVE \"Y\" TO WISP-TEST-BYTE.",maincol+8,1);
-
-				t_out = 0;						/* Clear any TIMEOUT flag.		*/
-				invkey_clause = 1;					/* flag it				*/
-			}
-			else if (!strcmp(o_parms[0],"AT") || !strcmp(o_parms[0],"END")) /* AT END phrase?			*/
-			{
-				addlockclause(&did_lockclause,indexed_file,hold,rd_str,savecol+8);
-
-				if (o_parms[0][0] == 'A')
-				{
-					stredt(linein," AT "," ");			/* remove AT				*/
-					ptype = get_param(o_parms[0]);			/* get "END"				*/
-					adjcol(ptype,&col,&addnl);
-					if (addnl) { savenl = 1; savecol = col; }
-				}
-				stredt(linein," END"," ");				/* remove END				*/
-				if (ptype == -1)					/* Prematur period.			*/
-				{
-					write_log("WISP",'I',"BADATEND",
-					"Bad READ syntax, AT END followed by a period.");
-					o_parms[0][0] = '\0';
-				}
-				else
-				{
-					ptype = get_param(o_parms[0]);			/* what to do?				*/
-					adjcol(ptype,&col,&addnl);
-				}
-
-				add2buff(rd_str,"AT END",savecol+4,savenl);		/* write it out				*/
-
-				if (hold) add2buff(rd_str,"MOVE \"Y\" TO WISP-TEST-BYTE.",maincol+8,1);
-
-				t_out = 0;						/* Clear any TIMEOUT flag.		*/
-				atend_clause = 1;					/* flag it				*/
-			}
-			else if (!strcmp(o_parms[0],"TIMEOUT"))				/* TIMEOUT phrase?			*/
-			{
-				addlockclause(&did_lockclause,indexed_file,hold,rd_str,savecol+8);
-
-				write_log("WISP",'I',"READWTIME","READ with TIMEOUT modified.");
-				stredt(linein," TIMEOUT"," ");				/* remove TIMEOUT			*/
-				ptype = get_param(timstr);				/* Get the timeout value.		*/
-				adjcol(ptype,&col,&addnl);
-				if (!strcmp(timstr,"OF"))
-				{							/* Skip over OF keyword.		*/
-					stredt(linein,"OF","");
-					ptype = get_param(timstr);
-					adjcol(ptype,&col,&addnl);
-				}
-
-				t_out = 1;						/* Flag it.				*/
-				t_flag = 1;
-
-				o_parms[0][0] = '\0';
-
-			}
-			else if (!strcmp(o_parms[0],"HOLDER-ID"))			/* HOLDER-ID phrase?			*/
-			{
-				stredt(linein," HOLDER-ID"," ");			/* remove HOLDER-ID			*/
-				ptype = get_param(hstr);				/* Get the holder field.		*/
-				if (!addnl) adjcol(ptype,&col,&addnl);
-				if (!strcmp(hstr,"IN"))
-				{							/* Skip over IN keyword.		*/
-					stredt(linein,"IN","");
-					ptype = get_param(hstr);
-					if (!addnl) adjcol(ptype,&col,&addnl);
-				}
-				o_parms[0][0] = '\0';
-			}
-			else if (!strcmp(o_parms[0],"SECOND") || !strcmp(o_parms[0],"SECONDS"))
-			{
-				o_parms[0][0] = '\0';					/* Just remove seconds.			*/
-			}
-			else if (!strcmp(o_parms[0],"KEY"))				/* Handle KEY phrase.			*/
-			{
-				addlockclause(&did_lockclause,indexed_file,hold,rd_str,col+8);
-
-				stredt(linein,o_parms[0],"");				/* Remove "KEY" from line		*/
-				ptype = get_param(o_parms[0]);
-				adjcol(ptype,&col,&addnl);
-				if (!strcmp(o_parms[0],"IS"))
-				{
-					if (addnl) { savenl = 1; savecol = col; }
-					stredt(linein,o_parms[0],"");			/* Remove "IS" from line		*/
-					ptype = get_param(o_parms[0]);
-					adjcol(ptype,&col,&addnl);
-				}
-
-				add2buff(rd_str,"KEY IS",savecol+4,savenl);
-
-				key_name(o_parms[0],0);					/* Key name conversion			*/
-
-			}
-		} while ((ptype != -1) && (!proc_keyword(o_parms[0]) || t_out));
-											/* do till we hit a LAST parm or keyword*/
-
-		if (ptype == -1)							/* a LAST parm				*/
+		if (eq_token(curr_node->token,KEYWORD,"HOLDER-ID"))
 		{
-			strcpy(tstr,o_parms[0]);
+			NODE holderid_node;
+			
+			write_tlog(curr_node->token,"WISP",'W',"READ","HOLDER-ID clause not supported, will be ignored");
+
+			curr_node = curr_node->next;
+
+			if (eq_token(curr_node->token,KEYWORD,"IN"))
+			{
+				curr_node = curr_node->next;
+			}
+
+			holderid_node = reduce_data_item(curr_node);
+
+			curr_node = curr_node->next;
+		}
+		
+		if (eq_token(curr_node->token,KEYWORD,"NEXT"))
+		{
+			curr_node = curr_node->next;
+
+			if (eq_token(curr_node->token,KEYWORD,"SENTENCE"))
+			{
+				curr_node = curr_node->next;
+			}
+
+			timeout_next_sentence = 1;
+
+			if (NODE_END != curr_node->type)
+			{
+				write_tlog(curr_node->token,"WISP",'E',"READ","Error parsing TIMEOUT clause");
+			}
+		}
+		else if (NODE_END == curr_node->type)
+		{
+			char	timeout_fname[MAX_FNAME];
+			
+			trailing_fluff_node = free_statement(trailing_fluff_node);
+
+			tput_flush();
+
+			/*
+			**	Next is the TIMEOUT clause imperative-sentence.
+			**
+			**	Were going to need it but not until after we 
+			**	process the INVALID KEY or AT END clauses.
+			**	Redirect the output stream to a temp file while
+			**	it is being processed.
+			**	We will copy it back in and delete the temp file
+			**	when we need it.
+			*/
+			timeout_cnt++;
+			sprintf(timeout_fname, "%s%d", read_fname, timeout_cnt);
+			timeout_file_ptr = open_cob_file(timeout_fname,FOR_OUTPUT,1);
+			override_output_stream(timeout_file_ptr);
+			
+			frag4_statement = parse_imperative_statements(NULL, the_sentence);
+
+			tput_flush();
+			release_output_stream();
+			timeout_cnt--;
 		}
 		else
 		{
-			*tstr = 0;							/* Fake the last parameter		*/
+			/* Parse error */
+			write_tlog(curr_node->token,"WISP",'E',"READ","Error parsing TIMEOUT clause");
+			timeout_next_sentence = 1;
 		}
 
-		if (t_out)								/* If there is a timeout, (also a hold)	*/
+		if (!frag4_statement)
 		{
-			add2buff(tm_str,tstr,col,addnl);
+			frag4_statement = get_statement_from_sentence(the_sentence);
 		}
-		else
-		{	
-			add2buff(rd_str,tstr,col+4,addnl);				/* Put out the last parameter		*/
+		last_statement = frag4_statement;
+		curr_node = first_token_node(last_statement);
+	}
 
-			addlockclause(&did_lockclause,indexed_file,hold,rd_str,col+8);
 
-		}
-
-		if (hold)								/* If going to hold the record,		*/
-		{									/* Wait till no soft/hard lock		*/
-			sprintf(tstr, "CALL \"wfwait\" USING %s",o_parms[5]);
-			add2buff(rd_str,tstr,maincol+4,1);
-			add2buff(rd_str,"WISP-FILE-TIMEOUT",maincol+8,0);
-		}
-
-		strcat(rd_str,"\n");							/* finish this line			*/
-		strcat(tm_str,"\n");							/* finish this line			*/
-
-										 	/* Now write everything out to the file.*/
-
-		tput_line          ("           MOVE \"RD\" TO WISP-DECLARATIVES-STATUS\n");
-
-		if ( hold && (invkey_clause || atend_clause) )
+	/*
+	**	Next clause should be one of
+	**		[NOT] [AT] END
+	**		[NOT] INVALID [KEY]
+	**		END-READ
+	**		(next statement)
+	*/
+	if (eq_token(curr_node->token,KEYWORD,"INVALID"))
+	{
+		curr_node->token->column_fixed = 1;
+		invalid_key_found = 1;
+	}
+	else if (eq_token(curr_node->token,KEYWORD,"AT") ||
+		 eq_token(curr_node->token,KEYWORD,"END"))
+	{
+		curr_node->token->column_fixed = 1;
+		at_end_found = 1;
+	}
+	else if (eq_token(curr_node->token,KEYWORD,"NOT"))
+	{
+		curr_node->token->column_fixed = 1;
+		curr_node = curr_node->next;
+		
+		if (eq_token(curr_node->token,KEYWORD,"INVALID"))
 		{
-			tput_line  ("           MOVE \"N\" TO WISP-TEST-BYTE\n"); 	/* Set up the INVALID KEY flag.		*/
+			not_invalid_key_found = 1;
 		}
-
-		if (t_flag)
+		else if (eq_token(curr_node->token,KEYWORD,"AT") ||
+			 eq_token(curr_node->token,KEYWORD,"END"))
 		{
-			tput_line("           MOVE %s TO WISP-FILE-TIMEOUT\n",timstr); /* Store the TIMEOUT value.		*/
-			tput_line("           MULTIPLY WISP-FILE-TIMEOUT BY 100 GIVING WISP-FILE-TIMEOUT\n");
+			not_at_end_found = 1;
 		}
-		else if (hold)
-		{
-			tput_line("           MOVE 0 TO WISP-FILE-TIMEOUT\n"); 	/* Store the TIMEOUT value.		*/
-		}
+	}
+	
+	
 
+	/*
+	**	Generate results
+	*/
 
+	if ( with_hold && (invalid_key_found || not_invalid_key_found || at_end_found || not_at_end_found))
+	{
+		trailing_fluff_node = free_statement(trailing_fluff_node);
 
+		/* Set up the INVALID KEY flag.		*/
+		tput_line_at(col, "MOVE \"N\" TO WISP-TEST-BYTE\n");
+	}
 
-		if (hold)			/* Insert all the special logic to handle WITH HOLD			*/
+	if (timeout_node)
+	{
+		/* Compute the TIMEOUT value. */
+		tput_line_at(col, "COMPUTE WISP-FILE-TIMEOUT = 100 * (");
+		tput_statement (col+4, timeout_node);
+		tput_clause(col+4, ")");
+	}
+	else if (with_hold)
+	{
+		tput_line_at(col,"MOVE 0 TO WISP-FILE-TIMEOUT");
+	}
+
+	if (with_hold)				/* Insert all the special logic to handle WITH HOLD			*/
 						/*    - if INVALID KEY or AT END then put READ into separate para	*/
 						/*    - keep trying to read until you get the record			*/
 						/*    - handle TIMEOUT logic						*/
 						/*    - add UNLOCK logic						*/
 
-		{								/* Gonna do a hold, free last file.	*/
-			set_lock(fnum,12);					/* Set new lock.			*/
+	{
+		set_lock_holder_id(fnum,col);
+		tput_line_at(col, "PERFORM WITH TEST AFTER");
+		tput_line_at(col+8,   "UNTIL (%s IS NOT = \"%s\")", file_status, hard_lock);
 
-			if (invkey_clause || atend_clause)			/* If HOLD and INVALID KEY or AT END use*/
-			{							/* Paragraph performs.			*/
-				if (copylib && writing_copybook())		/* Are we in a copy lib?		*/
+		if (timeout_clause)
+		{
+			tput_line_at(col+8, "OR (WISP-FILE-TIMEOUT IS < 1)");
+		}
+
+		col += 4;
+	}
+	else
+	{
+		if (!manual_locking)
+		{
+			/*
+			**	Automatic record locking will clear the lock if this file has it.
+			*/
+			if_file_clear_lock_holder_id(fnum, col);
+		}
+	}
+	
+	
+	tput_line_at(col, "READ %s", token_data(file_node->token));
+
+	if (next_clause[0])
+	{
+		tput_clause(col+4, next_clause);
+	}
+
+	if (before_into_lock)
+	{
+		tput_clause(col+4, "%s", before_into_lock);
+	}
+
+	if (into_node)
+	{
+		tput_clause(col+4, "INTO");
+		tput_statement(col+4, into_node);
+	}
+		
+	if (after_into_lock)
+	{
+		tput_clause(col+4, "%s", after_into_lock);
+	}
+
+	if (key_node)
+	{
+		tput_clause(col+4, "KEY");
+		tput_statement(col+4, key_node);
+	}
+
+	if (with_hold)
+	{
+		if (at_end_found || not_at_end_found)
+		{
+			tput_line_at(col+4, "AT END");
+			tput_line_at(col+4, "MOVE \"Y\" TO WISP-TEST-BYTE");
+			tput_line_at(col, "END-READ");
+		}
+
+		if (invalid_key_found || not_invalid_key_found)
+		{
+			tput_line_at(col+4, "INVALID KEY");
+			tput_line_at(col+4, "MOVE \"Y\" TO WISP-TEST-BYTE");
+			tput_line_at(col, "END-READ");
+		}
+
+		tput_line_at(col, "CALL \"wfwait\" USING");
+		tput_clause(col+4,    "%s", file_status);
+		tput_clause(col+4,    "WISP-FILE-TIMEOUT");
+		
+		col -= 4;
+
+		tput_line_at(col, "END-PERFORM");
+
+		if (timeout_clause)
+		{
+			tput_line_at(col,   "IF ( %s = \"%s\" AND", file_status, hard_lock);
+			tput_clause(col+4,      "WISP-FILE-TIMEOUT IS < 1)");
+
+			clear_lock_holder_id(col+4);
+
+			if (timeout_next_sentence)
+			{
+				tput_line_at(col+4, "CONTINUE");
+			}
+			else
+			{
+				/*
+				**	Copy the timeout clause imperative-statement
+				*/
+				tput_flush();
+				close_cob_file(timeout_file_ptr);
+				copy_file(timeout_file_ptr->a_file->name);
+				delete(timeout_file_ptr->a_file->name);
+			}
+			
+			if (invalid_key_found || not_invalid_key_found || at_end_found || not_at_end_found)
+			{
+				tput_line_at(col, "ELSE");
+			}
+		}
+	}
+
+	/*
+	**	Can now delete held statements, except for last_statement which gets moved to the_statement.
+	*/
+	the_statement = free_statement(the_statement);
+	if (frag2_statement)
+	{
+		if (frag2_statement == last_statement)
+		{
+			the_statement = last_statement;
+			last_statement = NULL;
+			frag2_statement = NULL;
+		}
+		else
+		{
+			frag2_statement = free_statement(frag2_statement);
+		}
+	}
+	if (frag3_statement)
+	{
+		if (frag3_statement == last_statement)
+		{
+			the_statement = last_statement;
+			last_statement = NULL;
+			frag3_statement = NULL;
+		}
+		else
+		{
+			frag3_statement = free_statement(frag3_statement);
+		}
+	}
+	if (frag4_statement)
+	{
+		if (frag4_statement == last_statement)
+		{
+			the_statement = last_statement;
+			last_statement = NULL;
+			frag4_statement = NULL;
+		}
+		else
+		{
+			frag4_statement = free_statement(frag4_statement);
+		}
+	}
+	file_node = NULL;
+	into_node = NULL;
+	key_node = NULL;
+	timeout_node = NULL;
+	
+
+	/*
+	**	Handle INVALID/END clauses
+	*/
+	if (invalid_key_found || not_invalid_key_found || at_end_found || not_at_end_found)
+	{
+		if (timeout_clause)
+		{
+			col += 4;
+		}
+		
+		if (with_hold)
+		{
+			tput_line_at(col, "IF WISP-TEST-BYTE = \"Y\" THEN");
+			clear_lock_holder_id(col+4);
+			tput_flush();
+		}
+		else
+		{
+			tput_statement(col, trailing_fluff_node);
+			trailing_fluff_node = free_statement(trailing_fluff_node);
+
+			tput_statement(col, the_statement);
+
+		}
+		the_statement =  free_statement(the_statement);
+
+		if (invalid_key_found || at_end_found)
+		{
+			the_statement = parse_imperative_statements(the_statement, the_sentence);
+		}
+
+		if (not_invalid_key_found || not_at_end_found)
+		{
+			if (with_hold)
+			{
+				tput_line_at(col, "ELSE");
+			}
+
+			tput_flush();
+			the_statement = parse_imperative_statements(the_statement, the_sentence);
+		}
+		else
+		{
+			/*
+			**	Check for NOT INVALID/END clause
+			*/
+			if (!the_statement)
+			{
+				the_statement = get_statement_from_sentence(the_sentence);
+			}
+
+			curr_node = the_statement->next;
+			if (eq_token(curr_node->token,KEYWORD,"NOT"))
+			{
+
+				/*
+				**	Found NOT INVALID/END clasue
+				*/
+				if (with_hold)
 				{
-					tput_line("           PERFORM WISP-READ-%s-%d",cpy_file,cpy_seq);
-					if (!re_copy)				/* Is this a second time?		*/
-					{
-						fprintf(read_temp_file,"\n       WISP-READ-%s-%d.\n",cpy_file,cpy_seq);
-						read_file_ptr->line_count += 2;
-						fprintf(read_temp_file,"%s",rd_str); /* Now write out the whole thing.	*/
-						read_file_ptr->line_count += strchrcnt(rd_str,'\n');
-						fprintf(read_temp_file,"           CONTINUE.\n");
-						read_file_ptr->line_count++;
-					}
-					cpy_seq++;
+					tput_line_at(col, "ELSE");
 				}
 				else
 				{
-					tput_line("           PERFORM WISP-READ-NUMBER-%d",readnum);
-										/* write the paragraph name to the file	*/
-					fprintf(read_temp_file,"\n       WISP-READ-NUMBER-%d.\n",readnum);
-					read_file_ptr->line_count += 2;
-					fprintf(read_temp_file,"%s",rd_str);	/* Now write out the whole thing.	*/
-					read_file_ptr->line_count += strchrcnt(rd_str,'\n');
-					fprintf(read_temp_file,"           CONTINUE.\n");
-					read_file_ptr->line_count++;
-					readnum++;				/* increment the counter		*/
+					curr_node->token->column_fixed = 1;
+					tput_statement(col+4, the_statement);
 				}
-			}
-			else							/* No INVALID KEY, use linein PERFORM.	*/
-			{
-				tput_line  	("           PERFORM WITH");
-			}
+				the_statement =  free_statement(the_statement);
 
-			tput_clause		(16, "TEST AFTER");			/* Wait for hard locks.			*/
-
-			tput_line		("                   UNTIL (%s IS NOT = \"%s\")\n",o_parms[5],hard_lock);
-
-			if (t_flag) tput_line  	("                   OR (WISP-FILE-TIMEOUT IS < 1)\n");
-
-			if (!(invkey_clause || atend_clause))
-			{
-				tput_block(rd_str);					/* Now write out the whole thing.	*/
-				tput_line	("           END-PERFORM\n");
+				tput_flush();
+				the_statement = parse_imperative_statements(the_statement, the_sentence);
 			}
 		}
-		else /* no WITH HOLD */
+
+		if (with_hold)
 		{
-			tput_block(rd_str);						/* Now write out the whole thing.	*/
+			tput_line_at(col, "END-IF");
 		}
-
-		if (t_flag)
+		
+		if (timeout_clause)
 		{
-			tput_line		("           IF ( %s = \"%s\" AND\n",o_parms[5],hard_lock);
-			tput_clause		(16,"WISP-FILE-TIMEOUT < 1)");
-			clear_locking();						/* Add locking logic			*/
-
-			tput_block(tm_str);
-			tput_flush();
+			col -= 4;
 		}
-
-		if (ptype == -1)
-		{
-			if (t_flag)
-			{
-				tput_line  	("           END-IF.\n");
-			}
-			else
-				tput_line	("           CONTINUE.\n");
-		}
-		else
-		{                                                                            
-			if (t_flag)
-			{
-				tput_line  	("           ELSE\n");
-			}
-
-			if ( hold && (invkey_clause || atend_clause) ) 
-			{
-				tput_line  	("           IF WISP-TEST-BYTE = \"Y\" THEN\n");
-				clear_locking();					/* Add locking logic			*/
-				unterminated_if = 1;					/* Weve added an IF statement		*/
-			}
-		}
-
-
-		if (ptype != -1) hold_line();
-
-		if (!vax_cobol && hold && did_lockclause)
-		{
-			write_log("WISP",'F',"READERR","NO LOCK inserted when HOLD was specified, Keywords out of order.");
-		}
-		write_log("WISP",'I',"READDONE","Completed READ analysys");
 	}
 
+	if (timeout_clause)
+	{
+		tput_line_at(col, "END-IF");
+	}
+
+	curr_node = the_statement->next;
+	if (eq_token(curr_node->token,KEYWORD,"END-READ"))
+	{
+		if (!with_hold)
+		{
+			curr_node->token->column_fixed = 1;
+			tput_statement(col, the_statement);
+		}
+		the_statement =  free_statement(the_statement);
+	}
+
+	tput_statement(col, trailing_fluff_node);
+	trailing_fluff_node = free_statement(trailing_fluff_node);
+	
+	return the_statement;
 }
 
 /*
-	add2buff:	Add a string to a buffer keeping track of the last line size (from newline) and spliting the line
-			if it would go over 72.  If the size is less then col it will pad out to col. The addstr does not 
-			need to have spaces surrounding it, they are added automatically.
+**	ROUTINE:	parse_read_crt()
+**
+**	FUNCTION:	Handle a READ of a workstation file.
+**
+**	DESCRIPTION:	
+**
+**	ARGUMENTS:	
+**	the_statement	The READ crt verb-statement.
+**
+**	GLOBALS:	
+**
+**	RETURN:		NULL
+**
+**	WARNINGS:	none
+**
 */
-add2buff(buff,addstr,col,newline)
-char	*buff;							/* The buffer -- it can hold multiple lines.			*/
-char	*addstr;						/* The string to add to buffer.					*/
-int	col;							/* The column to start in if line is split.			*/
-int	newline;						/* Force to a new line.						*/
+static NODE parse_read_crt(NODE the_statement, NODE the_sentence)
 {
-	char	spaces[80];
-	int	size, i, len;
+	NODE	curr_node, verb_node, file_node, into_node;
+	char  	*crt_type;
+	int	col, vwang_lines;
+	int	altered_flag = 0;
+	NODE	frag2_statement = NULL;
+	NODE	next_statement = NULL;
+	NODE	trailing_fluff_node = NULL;
 
-	len = strlen(addstr);
+	int	at_end_found = 0;
+	int	not_at_end_found = 0;
+	int	invalid_key_found = 0;
+	int	not_invalid_key_found = 0;
 
-	if (len < 1) return 0;
-
-	for ( size = 0, i = strlen(buff)-1; i >= 0 && buff[i] != '\n'; size++, i--);
-
-	if ( col + len > 71 )
+	verb_node = first_token_node(the_statement);
+	file_node = verb_node->next;
+	curr_node = file_node->next;
+	into_node = NULL;
+	
+	cur_crt = crt_index(token_data(file_node->token));
+	
+	if (acn_cobol)
 	{
-		col = 12;
+		write_tlog(verb_node->token,"WISP",'W',"NATIVE","Workstation READ %s uses WISP Screens",crt_file[cur_crt]);
 	}
 
-	if ( newline || (size + len + 1 > 71) )
+	trailing_fluff_node = unhook_trailing_fluff(the_statement);
+
+	/*
+	**	Default read type is ALL
+	*/
+	crt_type = "VWANG-READ-ALL";
+
+	/*
+	**	Skip over fluff
+	*/
+	if (eq_token(curr_node->token,KEYWORD,"NEXT"))
 	{
-		strcat(buff,"\n");							/* Start a new line			*/
-		memset(spaces,' ',col-1);
-		spaces[col-1] = '\0';
+		curr_node = curr_node->next;
 	}
-	else if ( size < col-1 )
+	if (eq_token(curr_node->token,KEYWORD,"RECORD"))
 	{
-		i = col - 1 - size;							/* pad out to col			*/
-		memset(spaces, ' ', i);
-		spaces[i] = '\0';
+		curr_node = curr_node->next;
 	}
-	else
+	if (eq_token(curr_node->token,KEYWORD,"WITH"))
 	{
-		strcpy(spaces," ");							/* A one space between tokens		*/
+		curr_node = curr_node->next;
 	}
 
-	strcat(buff,spaces);
+	/*
+	**	HOLD is a verb and will break the fragment.
+	*/
+	if (NODE_END == curr_node->type)
+	{
+		NODE temp_node;
 
-	strcat(buff,addstr);								/* Append the string			*/
-}
+		next_statement = get_statement_from_sentence(the_sentence);
+		temp_node = first_token_node(next_statement);
 
-static adjcol(ptype,col,addnl)
-int	ptype;
-int	*col;
-int	*addnl;
-{
-	if (ptype == 1)
-	{
-		*col = 1 + get_ppos();							/* Find out its column location.	*/
-		*addnl = 1;
-	}
-	else
-	{
-		*addnl = 0;
-	}
-	return 0;
-}
-
-static void addlockclause(did_lockclause,indexed_file,hold,buff,col)
-int	*did_lockclause;
-int	indexed_file;
-int	hold;
-char	*buff;
-int	col;
-{
-	if ( *did_lockclause )
-	{
-		return;
-	}
-
-	if ( vax_cobol )
-	{
-		if ( hold ) add2buff(buff,"ALLOWING NO OTHERS",col,0);
-		else	    add2buff(buff,"REGARDLESS OF LOCK",col,0);
-		*did_lockclause = 1;
-	}
-	else
-	{
-		if (!hold)
+		if (eq_token(temp_node->token,VERB,"HOLD"))
 		{
-			if (mf_cobol && indexed_file)
+			if (temp_node->next && 
+			    (eq_token(temp_node->next->token,KEYWORD,"LIST") ||
+			     eq_token(temp_node->next->token,KEYWORD,"RECORDS")))
 			{
-				add2buff(buff,"IGNORE LOCK",col,0);
-				*did_lockclause = 1;
+				/*
+				**	This is NOT the HOLD clause it is actually
+				**	the next statement which is a HOLD verb.
+				*/
 			}
 			else
 			{
-				add2buff(buff,"NO LOCK",col,0);
-				*did_lockclause = 1;
+				/* 
+				**	Found the "with HOLD" clause
+				*/
+				frag2_statement = next_statement;
+				next_statement = NULL;
+
+				curr_node = temp_node->next;
+
+				trailing_fluff_node = free_statement(trailing_fluff_node);
+				trailing_fluff_node = unhook_trailing_fluff(frag2_statement);
 			}
 		}
 	}
-}
+
+	/*
+	**	If MODIFIABLE or ALTERED then change read type
+	*/
+	if (eq_token(curr_node->token,KEYWORD,"MODIFIABLE"))
+	{
+		crt_type = "VWANG-READ-MODIFIABLE";
+		curr_node = curr_node->next;
+	}
+	if (eq_token(curr_node->token,KEYWORD,"ALTERED"))
+	{
+		altered_flag = 1;
+		
+		crt_type = "VWANG-READ-ALTERED";
+		curr_node = curr_node->next;
+	}
+
+	if (eq_token(curr_node->token,KEYWORD,"INTO"))
+	{
+		curr_node = curr_node->next;
+		into_node = reduce_data_item(curr_node);
+
+		if (!into_node)
+		{
+			write_tlog(curr_node->token,"WISP",'E',"READ","Unable to reduce INTO clause, clause will be ignored");
+		}
+		else
+		{
+			delint_statement(into_node);
+			decontext_statement(into_node);
+		}
+
+		curr_node = curr_node->next;
+	}
+
+
+
+	/*
+	**	We've parsed all the info now start generating the results.
+	**
+	**	READ file-name-1 [NEXT] Record [With HOLD ] [INTO into-record] 
+	**				       [MODIFIABLE]
+	**				       [ALTERED   ]
+	**		[{INVALID Key} imperative-statement-1]
+	**		 {At END     }                       
+	**
+	**		[{NOT INVALID Key} imperative-statement-2]
+	**		 {NOT At END     }       
+	**
+	**
+	**	       [CALL "xx2byte" USING crt-rel-key, crt-record]		- if crt has a relative key
+	**		MOVE crt-record TO WISP-CRT-ORDER-AREA
+	**	       [MOVE WISP-SYMB-xx TO VWANG-LINES]			- if lines not equal 24
+	**		CALL "vwang" USING {VWANG-READ-ALL       },
+	**				   {VWANG-READ-MODIFIABLE}
+	**				   {VWANG-READ-ALTERED   }
+	**			WISP-CRT-RECORD, {VWANG-FULL-SCREEN},
+	**					 {VWANG-LINES      }
+	**			WISP-ALL-PF-KEYS, crt-pfkey, crt-status
+	**		MOVE WISP-CRT-RECORD TO crt-record
+	**	       [MOVE crt-record TO into-record]				- if INTO clause
+	**	       [CALL "w2rowcol" USING WISP-CRT-ORDER-AREA-3 crt-cursor]	- if crt has cursor 
+	**
+	**	       [IF crt-status (1:1) = 'N' THEN
+	**			imperative-statement-1]
+	**	       [ELSE
+	**			imperative-statement-2]
+	**		END-IF]
+	**
+	**	       [IF crt-relkey < 0 OR > 24 THEN
+	**			imperative-statement-1]
+	**	       [ELSE
+	**			imperative-statement-2]
+	**		END-IF]
+	*/
+
+	col = verb_node->token->column;
+	if (col > 36) col = 36;
+	if (col < 12) col = 12;
+
+	/* Load relative key into order-area	*/
+	if (crt_relative[cur_crt][0])
+	{
+		tput_line_at	(col, "CALL \"xx2byte\" USING");
+		tput_clause	(col+4, "%s,",crt_relative[cur_crt]);
+		tput_clause  	(col+4, "%s",crt_record[crt_prime_rec[cur_crt]]);
+	}
+	/* Copy the Order-Area for the read	*/
+	tput_line_at		(col, "MOVE %s",crt_record[crt_prime_rec[cur_crt]]);
+	tput_clause		(col+4, "TO WISP-CRT-ORDER-AREA\n");
+	/* Load number of lines			*/
+	vwang_lines = (crt_record_size[crt_prime_rec[cur_crt]]-4)/80;
+	if (24 != vwang_lines)
+	{
+		tput_line_at	(col, "MOVE WISP-SYMB-%d TO VWANG-LINES,\n", vwang_lines);
+	}
+#ifdef OLD
+	tput_line_at		(col, "MOVE SPACES TO %s,\n",crt_status[cur_crt]);	/* Must clear status field	*/
+#endif
+	tput_line_at		(col, "CALL \"vwang\" USING");
+	tput_clause		(col+4, "%s,",crt_type);
+	tput_clause		(col+4, "WISP-CRT-RECORD,");
+	if (24 == vwang_lines)
+	{
+		tput_clause	(col+4, "VWANG-FULL-SCREEN,");
+	}
+	else
+	{
+		tput_clause	(col+4, "VWANG-LINES,");
+	}
+	tput_clause		(col+4, "WISP-ALL-PF-KEYS,");
+	tput_clause		(col+4, "%s,",crt_pfkey[cur_crt]);
+	tput_clause		(col+4, "%s",crt_status[cur_crt]);
+	tput_line_at		(col, "MOVE WISP-CRT-RECORD TO %s",crt_record[crt_prime_rec[cur_crt]]);
+
+	/* Handle an INTO phrase.			*/
+	if (into_node)
+	{
+		tput_line_at	(col, "MOVE %s TO",crt_record[crt_prime_rec[cur_crt]]);
+		tput_statement	(col+4, into_node);
+	}
+
+	/* If this file has a CURSOR clause */
+	if (crt_cursor[cur_crt][0])
+	{
+		tput_line_at  	(col, "CALL \"w2rowcol\" USING WISP-CRT-ORDER-AREA-3,");
+		tput_clause	(col+4, "%s",crt_cursor[cur_crt]);
+		tput_clause     (col, "END-CALL");
+	}
+
+	/*
+	**	Anything else should be in the next fragment
+	*/
+	if (NODE_END != curr_node->type)
+	{
+		write_tlog(curr_node->token,"WISP",'E',"READ",
+			   "Error parsing READ, found token [%s]", token_data(curr_node->token));
+	}
+
+	/*
+	**	Free up the statements
+	*/
+	the_statement = free_statement(the_statement);
+	if (frag2_statement)
+	{
+		frag2_statement = free_statement(frag2_statement);
+	}
+	
+	if (next_statement)
+	{
+		the_statement = next_statement;
+		next_statement = NULL;
+	}
+	else
+	{
+		the_statement = get_statement_from_sentence(the_sentence);
+	}
+	curr_node = first_token_node(the_statement);
+	
+
+	/*
+	**	Next clause should be one of
+	**		[NOT] [AT] END
+	**		[NOT] INVALID [KEY]
+	**		END-READ
+	**		(next statement)
+	*/
+
+	if (eq_token(curr_node->token,KEYWORD,"INVALID"))
+	{
+		invalid_key_found = 1;
+	}
+	else if (eq_token(curr_node->token,KEYWORD,"AT") ||
+		 eq_token(curr_node->token,KEYWORD,"END"))
+	{
+		at_end_found = 1;
+	}
+	else if (eq_token(curr_node->token,KEYWORD,"NOT"))
+	{
+		curr_node = curr_node->next;
+		
+		if (eq_token(curr_node->token,KEYWORD,"INVALID"))
+		{
+			not_invalid_key_found = 1;
+		}
+		else if (eq_token(curr_node->token,KEYWORD,"AT") ||
+			 eq_token(curr_node->token,KEYWORD,"END"))
+		{
+			not_at_end_found = 1;
+		}
+	}
+
+	if (invalid_key_found || not_invalid_key_found || at_end_found || not_at_end_found)
+	{
+		trailing_fluff_node = free_statement(trailing_fluff_node);
+
+		if (invalid_key_found || not_invalid_key_found)
+		{
+			if (!crt_relative[cur_crt][0])
+			{
+				write_tlog(curr_node->token,"WISP",'E',"READ",
+					   "INVALID KEY cause is invalid without a RELATIVE KEY");
+				strcpy(crt_relative[cur_crt],"UNKNOWN-KEY");
+			}
+		
+			/*
+			**	INVALID KEY clause so check if key is valid (0-24)
+			*/
+			tput_line_at	(col, "IF %s", crt_relative[cur_crt]);
+			tput_clause	(col+4, ">= 0 AND <= 24 THEN");
+		}
+		else if (at_end_found || not_at_end_found)
+		{
+			if (!altered_flag)
+			{
+				write_tlog(curr_node->token,"WISP",'E',"READ",
+					   "AT END clause found with no ALTERED clause.");
+			}
+
+			/*
+			**	If no fields were modified then do AT END logic
+			*/
+			tput_line_at	(col, "IF %s (1:1)",crt_status[cur_crt]); 
+			tput_clause	(col+4, "= 'N' THEN");
+		}
+
+		the_statement =  free_statement(the_statement);
+
+		if (not_invalid_key_found || not_at_end_found)
+		{
+			tput_line_at(col+4, "CONTINUE");
+			tput_line_at(col, "ELSE");
+		}
+		tput_flush();
+		the_statement = parse_imperative_statements(the_statement, the_sentence);
+
+		if (invalid_key_found || at_end_found)
+		{
+			/*
+			**	Look for the NOT clause
+			*/
+			if (!the_statement)
+			{
+				the_statement = get_statement_from_sentence(the_sentence);
+			}
+			curr_node = first_token_node(the_statement);
+
+			if (eq_token(curr_node->token,KEYWORD,"NOT"))
+			{
+				curr_node = curr_node->next;
+		
+				if (eq_token(curr_node->token,KEYWORD,"INVALID"))
+				{
+					not_invalid_key_found = 1;
+
+					if (at_end_found)
+					{
+						write_tlog(curr_node->token,"WISP",'E',"READ",
+							   "AT END - NOT INVALID KEY clause mismatch.");
+					}
+				}
+				else if (eq_token(curr_node->token,KEYWORD,"AT") ||
+					 eq_token(curr_node->token,KEYWORD,"END"))
+				{
+					not_at_end_found = 1;
+
+					if (invalid_key_found)
+					{
+						write_tlog(curr_node->token,"WISP",'E',"READ",
+							   "INVALID KEY - NOT AT END clause mismatch.");
+					}
+				}
+
+				if (not_invalid_key_found || not_at_end_found)
+				{
+					tput_line_at(col, "ELSE");
+					the_statement =  free_statement(the_statement);
+					the_statement = parse_imperative_statements(the_statement, the_sentence);
+				}
+			}
+		}
+		
+		tput_line_at(col, "END-IF");
+		
+		if (!the_statement)
+		{
+			the_statement = get_statement_from_sentence(the_sentence);
+		}
+		curr_node = first_token_node(the_statement);
+	}
+
+	if (eq_token(curr_node->token,KEYWORD,"END-READ"))
+	{
+		the_statement =  free_statement(the_statement);
+	}
+
+	tput_statement(col, trailing_fluff_node);
+	trailing_fluff_node = free_statement(trailing_fluff_node);
+	
+	return the_statement;
+}		
+
 /*
 **	History:
 **	$Log: wt_read.c,v $
+**	Revision 1.20  1998-08-28 10:56:03-04  gsl
+**	Add support for READ PREVIOUS
+**
+**	Revision 1.19  1998-06-09 13:09:29-04  gsl
+**	Add support for manual record locking
+**
+**	Revision 1.18  1998-03-26 14:24:53-05  gsl
+**	Change to use WISP-SYMB-xx
+**
+**	Revision 1.17  1998-03-20 17:37:10-05  gsl
+**	Fix calls to write_tlog() and moved OLD to old.c
+**
+**	Revision 1.16  1998-03-04 12:55:24-05  gsl
+**	Add END-CALL
+**
+**	Revision 1.15  1998-03-03 14:38:27-05  gsl
+**	Add fluff logic
+**
+**	Revision 1.14  1998-02-27 11:55:11-05  gsl
+**	Finixh cobol-85 rewite
+**
 **	Revision 1.13  1997-09-15 13:57:09-04  gsl
 **	fix warning
 **

@@ -62,6 +62,7 @@ static char rcsid[]="$Id:$";
 #include "level.h"
 #include "machid.h"
 #include "wsb.h"
+#include "wispvers.h"
 
 /*
 **	Structures and Defines
@@ -135,8 +136,6 @@ void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
 #define		ROUTINE		24000
 
 	static  int 	already = 0;							/* Have we already done it?		*/
-	time_t	clock;
-	char	datestamp[40];
 
 #ifdef WATCOM
 	init_watcom();
@@ -144,16 +143,15 @@ void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
 
 	werrset();									/* get runtime w_err_flag override.	*/
 
-	clock = time(0);
-	strcpy(datestamp, ctime(&clock));
-	datestamp[strlen(datestamp) - 1] = '\0';					/* Remove the trailing newline 		*/
-
 	if ( *wisp_lib_version != 20 &&							/* Accept 20 (2.0a-2.0f,3x)		*/
 	     *wisp_lib_version != LIBRARY_VERSION )
 	{
 		werrlog(ERRORCODE(6),(int) *wisp_lib_version, LIBRARY_VERSION,0,0,0,0,0,0);
 		wexit(1L);
 	}
+
+	wtrace("INITWISP2","VERSION", "Runtime=[%s] Cobol=[%3.3s] Wisptran=[%20.20s]",
+	       wisp_version(), cobol_type, wisp_tran_version);
 
 	/*=========================================================================*/
 
@@ -167,13 +165,25 @@ void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
 		memcpy(wisprunname,WISPRUNNAME,8);					/* Set the COBOL wisprunname		*/
 		setprogid(wisp_application_name);					/* Set the program id in C.		*/
 
-		wtrace("INITWISP2","ENTRY","APPNAME=[%8.8s] LINKLEVEL=[%d] GID=[%d][0x%08X] TIME=[%s]",
-		       wisp_application_name, linklevel(), wgetpgrp(), wgetpgrp(), datestamp);
+		wtrace("INITWISP2","ENTRY","APPNAME=[%8.8s] LINKLEVEL=[%d] GID=[%d][0x%08X]",
+		       wisp_application_name, linklevel(), wgetpgrp(), wgetpgrp());
 
+		wtrace_timestamp("INITWISP2");
 		return;
 	}
 
 	/*=========================================================================*/
+
+#if defined(DEBUG) || defined(_DEBUG)
+#ifdef WIN32
+	if (getenv("WISPDEBUGBREAK"))
+	{
+		extern void vrawDebugBreak(void);
+
+		vrawDebugBreak();
+	}
+#endif /* WIN32 */
+#endif /* DEBUG */
 
 	already = 1;
 
@@ -182,9 +192,8 @@ void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
 	newlevel();									/* Increment the link-level		*/
 	wgetpgrp();									/* Call to Set the Process Group ID.	*/
 
-	wtrace("INITWISP2","FIRST","APPNAME=[%8.8s] LINKLEVEL=[%d] GID=[%d][0x%08X] TIME=[%s]",
-	       wisp_application_name, linklevel(), wgetpgrp(), wgetpgrp(), datestamp);
-
+	wtrace("INITWISP2","FIRST","APPNAME=[%8.8s] LINKLEVEL=[%d] GID=[%d][0x%08X]",
+	       wisp_application_name, linklevel(), wgetpgrp(), wgetpgrp());
 
 	memcpy(WISPTRANVER,wisp_tran_version,20);					/* Get the translator version		*/
 	WISPTRANVER[20] = NULL_CHAR;
@@ -304,6 +313,7 @@ void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
 	wisp_signal_handler();
 #endif
 
+	wtrace_timestamp("INITWISP2");
 }
 
 
@@ -357,8 +367,9 @@ void license_warning(void)
 	curcol = 0;
 	hWsb = wsb_new();
 
+	/* CHANGE-COPYRIGHT-DATE */
 	wsb_add_text(hWsb,1,0,"****  WISP License Information  ****");
-	wsb_add_text(hWsb,3,0,"Copyright (c) 1988-1997 NeoMedia Technologies Inc.");
+	wsb_add_text(hWsb,3,0,"Copyright (c) 1989-1999 NeoMedia Technologies Inc.");
 	wsb_add_text(hWsb,4,0,"2201 2nd Street Suite 600, Fort Myers FL 33901 (941) 337-3434");
 
 	switch (code)
@@ -406,10 +417,12 @@ void license_warning(void)
 **	Function:	To mark that the license has been checked.
 **			To test if the license has been checked.
 **
-**	Description:	If "set" is true then this routine will set a shell variable WISPLICENSE equal to the Group Id.  This
+**	Description:	If "set" is true then this routine will set a shell 
+**			variable WISPLICENSE equal to a "munged" Group Id.  This
 **			indicates that the license has been checked.
-**			If "set" is false then it will check if the license has been checked by examining the shell var and
-**			seeing if the group id matches.
+**			If "set" is false then it will check if the license has 
+**			been checked by examining the shell var and seeing if the 
+**			munged group id matches.
 **
 **			The MSDOS version uses the Machine Id instead of the GID.
 **
@@ -440,8 +453,54 @@ static int license_checked(int set)
 #if defined(unix) || defined(WIN32)
 	{
 		int	gid;
+		int4	mask;
+		
 		gid = wgetpgrp();	/* get the Process Group ID.			*/
-		sprintf(mid,"%d",gid);
+
+		/*
+		 *	Mung the GID so it isn't recognizable.
+		 *	Create a mask of 9's and subtract the gid.
+		 *	The mask has leading digits based on it's size.
+		 */
+		if (gid < 0)
+		{
+			gid = -gid;
+		}
+
+		if (gid < 1000)
+		{
+			mask = 123456999;
+		}
+		else if (gid < 10000)
+		{
+			mask = 123459999;
+		}
+		else if (gid < 100000)
+		{
+			mask = 123499999;
+		}
+		else if (gid < 1000000)
+		{
+			mask = 123999999;
+		}
+		else if (gid < 10000000)
+		{
+			mask = 129999999;
+		}
+		else if (gid < 100000000)
+		{
+			mask = 199999999;
+		}
+		else
+		{
+			mask = 999999999;
+			while (gid > mask)
+			{
+				gid = gid / 10;
+			}
+		}
+
+		sprintf(mid,"%d",mask-gid);
 	}
 #endif
 #if defined(MSDOS)
@@ -481,6 +540,21 @@ static int license_checked(int set)
 /*
 **	History:
 **	$Log: initwisp.c,v $
+**	Revision 1.27  1999-09-13 15:47:49-04  gsl
+**	update copyright
+**
+**	Revision 1.26  1999-08-23 09:45:26-04  gsl
+**	Fix a potential security problem byt munging the WISPLICENSE variable.
+**
+**	Revision 1.25  1998-05-14 15:04:17-04  gsl
+**	Add version to trace
+**
+**	Revision 1.24  1998-05-12 10:52:51-04  gsl
+**	Change to use wtrace_timestamp()
+**
+**	Revision 1.23  1998-05-08 15:03:53-04  gsl
+**	Add WIN32 debugging break
+**
 **	Revision 1.22  1997-10-29 11:57:09-05  gsl
 **	fix cursor col position
 **

@@ -18,7 +18,8 @@ testc()
 {
 	time_t the_time, end_time;
 
-	end_time = time(NULL) + 30;
+	the_time = time(NULL);
+	end_time = the_time + 30;
 	
 	verase(FULL_SCREEN);
 	vset_cursor_off();

@@ -38,6 +38,7 @@ static char rcsid[]="$Id:$";
 #include "idsistd.h"
 #include "wisplib.h"
 #include "fcopy.h"
+#include "werrlog.h"
 
 /*
 **	Routine:	fcopy()
@@ -75,6 +76,7 @@ int fcopy(char* srcfile, char* dstfile)
 	int	rc,cnt;
 	struct stat statbuf;
 	int	dstexists;
+	int	retcode = 0;
 
 #ifdef O_BINARY
 	src = open(srcfile, O_RDONLY | O_BINARY);				/* Open the source file				*/
@@ -83,7 +85,8 @@ int fcopy(char* srcfile, char* dstfile)
 #endif
 	if (src == -1)
 	{
-		return(errno);
+		retcode = errno;
+		goto fcopy_return;
 	}
 
 	dstexists = fexists(dstfile);						/* Check if dstfile exists			*/
@@ -95,9 +98,9 @@ int fcopy(char* srcfile, char* dstfile)
 #endif
 	if (dst == -1)
 	{
-		rc = errno;
+		retcode = errno;
 		close(src);
-		return(rc);
+		goto fcopy_return;
 	}
 
 	while((rc = read(src,buff,sizeof(buff))) > 0)				/* Read the source file until done		*/
@@ -116,17 +119,18 @@ int fcopy(char* srcfile, char* dstfile)
 
 	if (rc == -1)								/* If error occurred then return errno		*/
 	{
-		rc = errno;
+		retcode = errno;
 		close(src);
 		close(dst);
-		return(rc);
+		goto fcopy_return;
 	}
 
 	close(src);
 	rc = close(dst);							/* Make sure the close of destination succeeds	*/
 	if (rc == -1)
 	{
-		return(errno);
+		retcode = errno;
+		goto fcopy_return;
 	}
 
 	if (!dstexists && 0 == stat(srcfile,&statbuf))				/* If dstfile didn't exist then			*/
@@ -134,7 +138,10 @@ int fcopy(char* srcfile, char* dstfile)
 		chmod(dstfile,statbuf.st_mode);					/* change the mode to match srcfile		*/
 	}
 
-	return 0;
+fcopy_return:
+	wtrace("WISP","FCOPY","srcfile=[%s] dstfile=[%s] rc=[%d]", srcfile, dstfile, retcode);
+
+	return retcode;
 }
 
 #ifdef MAIN
@@ -162,6 +169,9 @@ char *argv[];
 /*
 **	History:
 **	$Log: fcopy.c,v $
+**	Revision 1.8  1998-05-15 17:41:21-04  gsl
+**	Add trace logic
+**
 **	Revision 1.7  1996-08-19 18:32:19-04  gsl
 **	drcs update
 **

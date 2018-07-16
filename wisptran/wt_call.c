@@ -26,6 +26,7 @@ static char rcsid[]="$Id:$";
 #include "reduce.h"
 #include "statment.h"
 #include "input.h"
+#include "wt_procd.h"
 
 /*
 **	Structures and Defines
@@ -67,56 +68,95 @@ static void track_call(const char *pname, c_list *tptr);
 **
 */
 
-NODE parse_call(NODE the_statement)
+NODE parse_call(NODE the_statement, NODE the_sentence)
 {
-	NODE	call_node, program_node, temp_node, using_node, first_node, last_node;
+	NODE	verb_node, program_node, temp_node, using_node, first_node, last_node, curr_node;
 	int	col;
 	char	program_name[80];
 	int	argcnt;
 	int	cnt;
-	int	found_period;
+	NODE	by_content, by_reference;
+	int	delete_end_call = 0;
+	
+#define BYERROR(by_node) {if (by_node){ write_tlog(by_node->token,"WISP",'E',"CALL","Invalid BY %s phrase",token_data(by_node->token));} }	
 
-	call_node = the_statement->next;
+	verb_node = first_token_node(the_statement);
 
-	if (!eq_token(call_node->token,VERB,"CALL"))
+	if (!eq_token(verb_node->token,VERB,"CALL"))
 	{
-		write_log("WISP",'E',"CALL","Not a CALL statement.");
+		write_tlog(verb_node->token,"WISP",'E',"VERB","Expected CALL found [%s].", token_data(verb_node->token));
 		return(the_statement);
 	}
 
-	write_log("WISP",'I',"CALL","Processing CALL %s statement.",token_data(call_node->next->token));
+	write_log("WISP",'I',"CALL","Processing CALL %s statement.",token_data(verb_node->next->token));
 
         add_wvaset = (vax_cobol || acu_cobol) ? 0 : 1;
 
 	/* Get the column of the CALL token */
-	col = call_node->token->column;
+	col = verb_node->token->column;
+	if (col > 36) col = 36;
+	if (col < 12) col = 12;
+
+	/*
+	**	Frag-1:	CALL literal-1 [USING {[by {REFERENCE|CONTENT}] identifier-2 ... } ...]
+	**	Frag-2:	[END-CALL]
+	*/
 
 	/* Point to the program name node */
-	program_node = call_node->next;
+	program_node = verb_node->next;
 
 	/* Reduce the program name, it is usually a literal but can be a data name */
 	reduce_data_item(program_node);
 
 	/* Point to USING node */
 	using_node = program_node->next;
+	curr_node = using_node;
 
 	/* Reduce and count the arguments */
 	argcnt = 0;
-	found_period = 0;
+	by_content = NULL;
+	by_reference = NULL;
 	if ( eq_token(using_node->token,KEYWORD,"USING"))
 	{
 		for(temp_node=using_node->next; 
-		    temp_node && NODE_END != temp_node->type && (temp_node->token && PERIOD != temp_node->token->type); 
+		    temp_node && NODE_END != temp_node->type; 
 		    temp_node=temp_node->next)
 		{
-			reduce_data_item(temp_node);
-			argcnt++;
+			if (temp_node->token)
+			{
+				if (KEYWORD == temp_node->token->type)
+				{
+					if (eq_token(temp_node->token,KEYWORD,"BY"))
+					{
+						temp_node=temp_node->next;
+					}
+					
+					if (eq_token(temp_node->token,KEYWORD,"REFERENCE"))
+					{
+						/* skip over */
+						by_reference = temp_node;
+					}
+					else if (eq_token(temp_node->token,KEYWORD,"CONTENT"))
+					{
+						/* skip over */
+						by_content = temp_node;
+					}
+					else
+					{
+						/* error */
+						write_tlog(temp_node->token,"WISP",'E',"CALL",
+							   "Error parsing CALL statement, found invalid keyword [%s].", 	
+							   token_data(temp_node->token));
+					}
+				}
+				else
+				{
+					reduce_data_item(temp_node);
+					argcnt++;
+				}
+			}
 		}
-
-		if (temp_node && temp_node->token && PERIOD == temp_node->token->type)
-		{
-			found_period = 1;
-		}
+		curr_node = temp_node;
 
 		/* Point to the first argument */
 		first_node = using_node->next;
@@ -131,15 +171,18 @@ NODE parse_call(NODE the_statement)
 		**	know what is being called and it may need it.
 		*/
 		put_wvaset(argcnt,col);
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+
+		/* Setting the name to null will cause logic to drop into the final else condition. */
+		strcpy(program_name,"");
 	}
+	else
+	{
+		/* Get the program name */
+		strcpy(program_name,token_data(program_node->down->token));
 
-	/* Get the program name */
-	strcpy(program_name,token_data(program_node->down->token));
-
-	/* Track it for the cross reference table */
-	track_call(program_name,xref_ptr);
+		/* Track it for the cross reference table */
+		track_call(program_name,xref_ptr);
+	}
 	
 	/*
 	**	Take care of CALLs that need vaset() calls only
@@ -154,8 +197,8 @@ NODE parse_call(NODE the_statement)
 	    0==strcmp(program_name,"\"PUTPARM\"") ||
 	    0==strcmp(program_name,"\"READACP\"") ||
 	    0==strcmp(program_name,"\"READFDR\"") ||
+	    0==strcmp(program_name,"\"READFDR4\"") ||
 	    0==strcmp(program_name,"\"SCRATCH\"") ||
-	    0==strcmp(program_name,"\"SCREEN\"") ||
 	    0==strcmp(program_name,"\"SEARCH\"") ||
 	    0==strcmp(program_name,"\"SET\"") ||
 	    0==strcmp(program_name,"\"SORT\"") ||
@@ -167,13 +210,11 @@ NODE parse_call(NODE the_statement)
 	    0==strcmp(program_name,"\"WSFNM\"") ||
 	    0==strcmp(program_name,"\"WSFNS\""))
 	{
+		BYERROR(by_content);
+		
 		if (acn_cobol)
 		{
-			if (0==strcmp(program_name,"\"SCREEN\""))
-			{
-				write_log("WISP",'W',"NATIVE","Call %s not supported with Native Screens",program_name);
-			}
-			else if (0==strcmp(program_name,"\"MESSAGE\""))
+			if (0==strcmp(program_name,"\"MESSAGE\""))
 			{
 				write_log("WISP",'W',"NATIVE",
 					  "Features of %s are not compatible with Native Screens",program_name);
@@ -191,12 +232,16 @@ NODE parse_call(NODE the_statement)
 		}
 
 		put_wvaset(argcnt,col);
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
 	}
-	else if (0==strcmp(program_name,"\"BELL\"") && acn_cobol)
+	else if (acn_cobol && 0==strcmp(program_name,"\"BELL\""))
 	{
-		write_log("WISP",'W',"NATIVE","Call %s changed to DISPLAY OMITTED BELL.",program_name);
+		/* NATIVE SCREENS */
+
+		BYERROR(by_content);
+
+		write_log("WISP",'I',"NATIVE","Call %s changed to DISPLAY OMITTED BELL.",program_name);
 
 		/*
 		**	Morph:	CALL    "BELL"  USING arg1	...
@@ -205,40 +250,46 @@ NODE parse_call(NODE the_statement)
 		*/
 		if (1 == argcnt)
 		{
-			edit_token(call_node->token,"DISPLAY");
+			edit_token(verb_node->token,"DISPLAY");
 			edit_token(program_node->down->token,"OMITTED");
 			edit_token(using_node->token,"BELL");
-			free_statement(first_node->down);
-			first_node->down = NULL;
+			free_statement(using_node->next);
+			using_node->next = NULL;
 
 			decontext_statement(the_statement);
+
+			delete_end_call = 1;
 		}
 		else
 		{
 			write_log("WISP",'W',"CALL","Call %s invalid argument count (%d).", program_name, argcnt);
 		}
 		
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
+
 	}
 	else if (0==strcmp(program_name,"\"DATE\"") ||
 		 0==strcmp(program_name,"\"DAY\"")	)
 	{
+		BYERROR(by_content);
 		write_log("WISP",'W',"YEAR2000","Features of %s are not YEAR2000 compliant",program_name);
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
 	}
 	else if (0==strcmp(program_name,"\"EXTRACT\""))
 	{
+		BYERROR(by_content);
 		write_log("WISP",'I',"CALL","Call %s proceeded by Call \"setprogid\".",program_name);
 		tput_line_at(col, "CALL \"setprogid\" USING WISP-APPLICATION-NAME");
 		tput_flush();
 		put_wvaset(argcnt,col);
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
 	}
 	else if (0==strcmp(program_name,"\"GETPARM\""))
 	{
+		BYERROR(by_content);
 		/*
 		**	CALL "GETPARM" with more then 62 args need to be split
 		**	into multiple calls to "getparmbuild".
@@ -249,78 +300,92 @@ NODE parse_call(NODE the_statement)
 		if (vax_cobol || argcnt <= MAX_GETPARM_ARGS)
 		{
 			put_wvaset(argcnt,col);
-			tput_statement(12,the_statement);
-			return(free_statement(the_statement));
+			tput_statement(col,the_statement);
+			the_statement = free_statement(the_statement);
 		}
-
-		/*
-		**	Split into multiple calls to "getparmbuild"
-		*/
-		write_log("WISP",'I',"CALL","Call %s split into multiple Call \"getparmbuild\".",program_name);
-
-		/* Point at the first argument */
-		first_node = using_node->next;
-
-		/* Break the statement after the USING node */
-		using_node->next = NULL;
-
-		/* Throw away the beginning of the statement */
-		free_statement(the_statement);
-
-		while(argcnt > 0)
+		else
 		{
 			/*
-			**	Find the first and last args in the chunk.
+			**	Split into multiple calls to "getparmbuild"
 			*/
-			for(temp_node=first_node, cnt=1; 
-			    cnt<argcnt && cnt<MAX_GETPARM_ARGS; 
-			    cnt++, temp_node=temp_node->next) {/* empty */};
+			write_log("WISP",'I',"CALL","Call %s split into multiple Call \"getparmbuild\".",program_name);
+
+			/* Point at the first argument */
+			first_node = using_node->next;
+
+			/* Break the statement after the USING node */
+			using_node->next = NULL;
+
+			/* Throw away the beginning of the statement */
+			the_statement = free_statement(the_statement);
+
+			while(argcnt > 0)
+			{
+				/*
+				**	Find the first and last args in the chunk.
+				*/
+				for(temp_node=first_node, cnt=1; 
+				    cnt<argcnt && cnt<MAX_GETPARM_ARGS; 
+				    temp_node=temp_node->next) 
+				{
+					if (temp_node->token && KEYWORD == temp_node->token->type)
+					{
+						/* skip over BY REFERENCE|CONTENT */
+					}
+					else
+					{
+						cnt++;
+					}
+				}
 			
-			/* last_node now points at the last arg in the chunk */
-			last_node = temp_node;
+				/* last_node now points at the last arg in the chunk */
+				last_node = temp_node;
 
-			/* temp_node points to the first arg in the next chunk */
-			temp_node = last_node->next;
+				/* temp_node points to the first arg in the next chunk */
+				temp_node = last_node->next;
 
-			/* break the statement after the last arg */
-			last_node->next = NULL;
+				/* break the statement after the last arg */
+				last_node->next = NULL;
 
 
-			/* print this chunk */
-			put_wvaset(cnt,col);
-			tput_line_at(col, "CALL \"getparmbuild\" USING");
-			tput_flush();
-			tput_statement(12, first_node);
+				/* print this chunk */
+				put_wvaset(cnt,col);
+				tput_line_at(col, "CALL \"getparmbuild\" USING");
+				tput_flush();
+				tput_statement(col, first_node);
 
-			/* Free this used part of the statement */
+				/* Free this used part of the statement */
+				free_statement(first_node);
+
+				/* Setup for next loop thru */
+				first_node = temp_node;
+				argcnt -= cnt;
+			}
+
+			/* Print the final zero arg call to getparmbuild */
+			put_wvaset(0,col);
+			tput_line_at(col, "CALL \"getparmbuild\"");
+
+			/* Print what left of the statement, possible PERIOD plus fluff tokens */
+			tput_statement(col, first_node);
 			free_statement(first_node);
-
-			/* Setup for next loop thru */
-			first_node = temp_node;
-			argcnt -= cnt;
 		}
-
-		/* Print the final zero arg call to getparmbuild */
-		put_wvaset(0,col);
-		tput_line_at(col, "CALL \"getparmbuild\"");
-
-		/* Print what left of the statement, possible PERIOD plus fluff tokens */
-		tput_statement(12, first_node);
-		return(free_statement(first_node));
 	}
 	else if (0==strcmp(program_name,"\"LINK\""))
 	{
+		BYERROR(by_content);
 		if (vax_cobol && do_dlink)
 		{
 			write_log("WISP",'I',"CALL","Call %s changed to \"LINKDESC\".",program_name);
 
 			edit_token(program_node->down->token,"\"LINKDESC\"");
 			edit_token(using_node->token,"USING BY DESCRIPTOR");
-			tput_statement(12,the_statement);
-			return(free_statement(the_statement));
+			tput_statement(col,the_statement);
+			the_statement = free_statement(the_statement);
 		}
 		else if (aix_cobol || mf_cobol || dmf_cobol)
 		{
+			BYERROR(by_reference);
 			write_log("WISP",'I',"CALL","Call %s changed to \"LINKMF\".",program_name);
 
 			edit_token(program_node->down->token,"\"LINKMF\"");
@@ -333,9 +398,9 @@ NODE parse_call(NODE the_statement)
 			using_node->next = NULL;
 
 			/* Print the first part of the statement */
-			tput_statement(12,the_statement);
+			tput_statement(col,the_statement);
 			
-			free_statement(the_statement);
+			the_statement = free_statement(the_statement);
 
 			/*
 			**	For each argument print:
@@ -345,46 +410,60 @@ NODE parse_call(NODE the_statement)
 			*/
 			for(temp_node = first_node, cnt=0; 
 			    cnt<argcnt; 
-			    cnt++, temp_node=temp_node->next)
+			    temp_node=temp_node->next)
 			{
-				decontext_statement(temp_node->down);
-				delint_statement(temp_node->down);
+				
+				if (eq_token(temp_node->token,KEYWORD,"BY") ||
+				    eq_token(temp_node->token,KEYWORD,"REFERENCE") ||
+				    eq_token(temp_node->token,KEYWORD,"CONTENT"))
+				{
+					/* skip */
+				}
+				else
+				{
+					decontext_statement(temp_node->down);
+					delint_statement(temp_node->down);
 
-				tput_flush();
+					tput_flush();
 
-				tput_clause(col+4, "REFERENCE");
-				tput_statement(col+4, temp_node->down);
+					tput_clause(col+4, "REFERENCE");
+					tput_statement(col+4, temp_node->down);
 
-				tput_clause(col+4, "VALUE LENGTH OF");
-				tput_statement(col+4, temp_node->down);
+					tput_clause(col+4, "VALUE LENGTH OF");
+					tput_statement(col+4, temp_node->down);
+
+					cnt++;
+				}
 			}
 
 			/* Print any trailing stuff */
 			decontext_statement(temp_node);				
 			tput_statement(col+4, temp_node);
-			return(free_statement(first_node));
+			free_statement(first_node);
 		}
 		else
 		{
 			put_wvaset(argcnt,col);
-			tput_statement(12,the_statement);
-			return(free_statement(the_statement));
+			tput_statement(col,the_statement);
+			the_statement = free_statement(the_statement);
 		}
 	}
 	else if (0==strcmp(program_name,"\"PAUSE\""))
 	{
+		BYERROR(by_content);
 		write_log("WISP",'I',"CALL","Call %s changed to \"wpause\".",program_name);
 		edit_token(program_node->down->token,"\"wpause\"");
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
 	}
 	else if (0==strcmp(program_name,"\"RENAME\""))
 	{
+		BYERROR(by_content);
 		write_log("WISP",'I',"CALL","Call %s changed to \"wrename\".",program_name);
 		edit_token(program_node->down->token,"\"wrename\"");
 		put_wvaset(argcnt,col);
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
 	}
 	else if (0==strcmp(program_name,"\"SETFILE\""))
 	{
@@ -398,8 +477,10 @@ NODE parse_call(NODE the_statement)
 		*/
 		int	idx;
 		char	ufb_name[80];
-		char	ufb_vol[80], ufb_lib[80], ufb_file[80], ufb_status[80];
 		
+		BYERROR(by_content);
+		BYERROR(by_reference);
+
 		write_log("WISP",'I',"CALL","Call %s corrected.",program_name);
 
 		/* Point to the first arg - the UFB name */
@@ -412,53 +493,24 @@ NODE parse_call(NODE the_statement)
 			exit_wisp(EXIT_WITH_ERR);
 		}
 
-		if ((prog_vnames[idx][0] == '"') || (!prog_vnames[idx][0]))		/* Volume name is a literal/null 	*/
-		{
-			make_fld(ufb_vol,prog_files[idx],"V-");				/* put the V on				*/
-		}
-		else
-		{
-			strcpy(ufb_vol,prog_vnames[idx]);				/* Use the actual field.		*/
-		}
-
-		if ((prog_lnames[idx][0] == '"') || (!prog_lnames[idx][0]))		/* Library name is a literal/null	 */
-		{
-			make_fld(ufb_lib,prog_files[idx],"L-");				/* put the L on				*/
-		}
-		else
-		{
-			strcpy(ufb_lib,prog_lnames[idx]);				/* Use the actual field.		*/
-		}
-
-		if ((prog_fnames[idx][0] == '"') || (!prog_fnames[idx][0]))		/* file name is a literal/null		*/
-		{
-			make_fld(ufb_file,prog_files[idx],"F-");			/* put the F on				*/
-		}
-		else
-		{
-			strcpy(ufb_file,prog_fnames[idx]);				/* Use the actual field.		*/
-		}
-
-		make_fld(ufb_status,prog_files[idx],"S-");				/* put the S on				*/
-
 		/* We are replacing the first arg with 4 args so add 3 to the argcnt */
 		argcnt += 3;
 		put_wvaset(argcnt,col);
 
 		/* Print out the first part of the statement up to the USING */
 		using_node->next = NULL;
-		tput_statement(12,the_statement);
-		free_statement(the_statement);
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
 		
 		/* Print the 4 generated args */
-		tput_clause(col+4,"%s,", ufb_vol);
-		tput_clause(col+4,"%s,", ufb_lib);
-		tput_clause(col+4,"%s,", ufb_file);
-		tput_clause(col+4,"%s,", ufb_status);
+		tput_clause(col+4,"%s,", get_prog_vname(idx));
+		tput_clause(col+4,"%s,", get_prog_lname(idx));
+		tput_clause(col+4,"%s,", get_prog_fname(idx));
+		tput_clause(col+4,"%s,", get_prog_status(idx));
 
 		/* Print the remaining args after the first one. */
 		tput_statement(col+4,first_node->next);
-		return(free_statement(first_node));
+		free_statement(first_node);
 	}
 	else if (0==strcmp(program_name,"\"SPECLIO\""))
 	{
@@ -469,48 +521,49 @@ NODE parse_call(NODE the_statement)
 		*/
 		char	buf[80];
 		
+		BYERROR(by_content);
+		BYERROR(by_reference);
 		write_log("WISP",'W',"CALL","Call %s can be replaced with OPEN SPECIAL-INPUT.",program_name);
 
 		/* Point to the first arg - the UFB name */
 		first_node = using_node->next;
 
-		memset(buf,' ',12);
-		sprintf(&buf[12], "OPEN SPECIAL-INPUT %s", token_data(first_node->down->token));
-		if (found_period)
-		{
-			strcat(buf,".");
-		}
+		memset(buf,' ',col);
+		sprintf(&buf[col-1], "OPEN SPECIAL-INPUT %s", token_data(first_node->down->token));
 
 		/*
-		**	Hold this line so it can be re-processed
+		**	Parse the new OPEN statement.
 		*/
-		hold_this_line(buf);
-
-		return(free_statement(the_statement));
+		the_statement = free_statement(the_statement);
+		parse_open(make_statement(buf, NULL));
+		
+		delete_end_call = 1;
+		
 	}
 	else if (0==strcmp(program_name,"\"WSCLOSE\"")  ||
 		 0==strcmp(program_name,"\"EDLOAD\"")   ||
 		 0==strcmp(program_name,"\"MENULOAD\"") ||
 		 0==strcmp(program_name,"\"W4WAPI\"")     )
 	{
+		BYERROR(by_content);
 		if (acn_cobol)
 		{
 			write_log("WISP",'W',"NATIVE","Call %s uses WISP Screens",program_name);
 		}
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
 	}
 	else if (0==strcmp(program_name,"\"@WSCLOSE\""))
 	{
 		write_log("WISP",'W',"CALL","@WSCLOSE can be replaced with a CLOSE crt statement.");
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
 	}
 	else if (0==strcmp(program_name,"\"@WSOPEN\""))
 	{
 		write_log("WISP",'W',"CALL","@WSOPEN not required - it can be removed.");
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
 	}
 	else if (0==strcmp(program_name,"\"@WSTIME\"") ||
 		 0==strcmp(program_name,"\"@MSNAME\"") ||
@@ -518,12 +571,14 @@ NODE parse_call(NODE the_statement)
 		 0==strcmp(program_name,"\"@MSVALUE\""))
 	{
 		write_log("WISP",'W',"CALL","Call %s routine not supplied by WISP", program_name);
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
 	}
 	else if (0==strcmp(program_name,"\"WSXIO\"") ||
+		 0==strcmp(program_name,"\"SCREEN\"") ||
 		 using_ufb_test(program_name))
 	{
+		BYERROR(by_content);
 		write_log("WISP",'I',"CALL","Call %s fixing UFB arguments.",program_name);
 
 		if (acn_cobol)
@@ -531,6 +586,10 @@ NODE parse_call(NODE the_statement)
 			if (0==strcmp(program_name,"\"WSXIO\""))
 			{
 				write_log("WISP",'W',"NATIVE","Call %s uses WISP Screens",program_name);
+			}
+			else if (0==strcmp(program_name,"\"SCREEN\""))
+			{
+				write_log("WISP",'W',"NATIVE","Call %s not supported with Native Screens",program_name);
 			}
 		}
 
@@ -540,28 +599,108 @@ NODE parse_call(NODE the_statement)
 		/* Search the args for UFB names and replace */
 		for(temp_node = first_node, cnt=0; 
 		    cnt<argcnt; 
-		    cnt++, temp_node=temp_node->next)
+		    temp_node=temp_node->next)
 		{
-			/*
-			**	Test for CRT and non-CRT files
-			*/
-			if (-1 != crt_index (token_data(temp_node->down->token)) ||
-			    -1 != file_index(token_data(temp_node->down->token))    )
+			if (temp_node->token && KEYWORD == temp_node->token->type)
 			{
-				edit_token(temp_node->down->token,"WISP-SCRATCH-BYTE-1");
+				/* skip over BY REFERENCE|CONTENT */
+			}
+			else
+			{
+				cnt++;
+
+				/*
+				**	Test for CRT and non-CRT files
+				*/
+				if (-1 != crt_index (token_data(temp_node->down->token)) ||
+				    -1 != file_index(token_data(temp_node->down->token))    )
+				{
+					edit_token(temp_node->down->token,"WISP-SCRATCH-BYTE-1");
+				}
 			}
 		}
 		
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		if (0==strcmp(program_name,"\"SCREEN\""))
+		{
+			put_wvaset(argcnt,col);
+		}
+
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
 	}
 	else
 	{
-		tput_statement(12,the_statement);
-		return(free_statement(the_statement));
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
+	}
+	
+	/*
+	**	Check for [NOT] [ON] {EXCEPTION|OVERFLOW} clauses.
+	*/
+	the_statement = get_statement_from_sentence(the_sentence);
+
+	curr_node = the_statement->next;
+	
+	if (eq_token(curr_node->token, KEYWORD, "ON") ||
+	    eq_token(curr_node->token, KEYWORD, "EXCEPTION") ||
+	    eq_token(curr_node->token, KEYWORD, "OVERFLOW")     )
+	{
+		curr_node->token->column_fixed = 1;
+		tput_statement(col, the_statement);
+		the_statement =  free_statement(the_statement);
+
+		the_statement = parse_imperative_statements(the_statement, the_sentence);
+
+		if (!the_statement)
+		{
+			the_statement = get_statement_from_sentence(the_sentence);
+		}
+		curr_node = the_statement->next;
+	}
+
+	if (eq_token(curr_node->token, KEYWORD, "NOT"))
+	{
+		curr_node = curr_node->next;
+
+		if (eq_token(curr_node->token, KEYWORD, "ON"))
+		{
+			curr_node = curr_node->next;
+		}
+		
+		if (eq_token(curr_node->token, KEYWORD, "EXCEPTION") ||
+		    eq_token(curr_node->token, KEYWORD, "OVERFLOW")     )
+		{
+			the_statement->next->token->column_fixed = 1;
+			tput_statement(col, the_statement);
+			the_statement =  free_statement(the_statement);
+
+			the_statement = parse_imperative_statements(the_statement, the_sentence);
+
+			if (!the_statement)
+			{
+				the_statement = get_statement_from_sentence(the_sentence);
+			}
+		}
+
+		curr_node = the_statement->next;
 	}
 	
 	
+	/*
+	**	Check for END-CALL clause.
+	*/
+	if (eq_token(curr_node->token, KEYWORD, "END-CALL"))
+	{
+		if (!delete_end_call)
+		{
+			curr_node->token->column_fixed = 1;
+			tput_statement(col, the_statement);
+		}
+		
+		the_statement =  free_statement(the_statement);
+	}
+	
+	return the_statement;
 }
 
 static void put_wvaset(int argcnt, int col)
@@ -632,6 +771,21 @@ static void track_call(const char *pname, c_list *tptr)					/* Keep track of the
 /*
 **	History:
 **	$Log: wt_call.c,v $
+**	Revision 1.25  1999-09-08 19:59:36-04  gsl
+**	Add READFDR4 to vararg list
+**
+**	Revision 1.24  1998-04-03 15:04:49-05  gsl
+**	Changes the ACN CALL BELL warning into INFORAMTIONAL
+**
+**	Revision 1.23  1998-03-04 13:43:26-05  gsl
+**	Add support for ON eXCEPTION and ON OVERFLOW
+**
+**	Revision 1.22  1998-02-25 17:27:06-05  gsl
+**	Fix "SCREEN" UFB processing, it got broken in 4.2
+**
+**	Revision 1.21  1998-02-23 13:49:43-05  gsl
+**	Full COBOL-85 support
+**
 **	Revision 1.20  1997-09-30 10:56:18-04  gsl
 **	Add headers to fix warnings
 **

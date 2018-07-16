@@ -8,10 +8,13 @@
 #
 # To change the version for CREATE, change it here"
 #
-CREATE_VERSION=31
+CREATE_VERSION=34
 VER=$(CREATE_VERSION)
 
-COBDEBUG=$(CDEBUG)
+CDEBUG=-DNODEBUG
+#CDEBUG= -g -DDEBUG
+#COBDEBUG=$(CDEBUG)  -- this failed because -DNODEBUG is not valid for COBOL
+COBDEBUG=
 LINKFLAGS=-C LINKCOUNT=5000
 KCSI_COBFLAGS=$(COBDEBUG) $(COBFLAGS) $(LINKFLAGS)
 WISPTRAN=../../wisptran/wisp
@@ -254,14 +257,14 @@ $(MFIOL): $(MFIOL)(klpi.o) $(MFIOL)(rlaio.o) $(MFIOL)(seqio.o) $(MFIOL)(brlio.o)
 
 $(MFXIOL): $(MFXIOL)(kmf.o) $(MFXIOL)(rlaio.o) $(MFXIOL)(seqio.o) $(MFXIOL)(brlio.o) \
 	   $(MFXIOL)(assert.o) $(MFXIOL)(kcsimem.o) $(MFXIOL)(kcsit.o) \
-	   $(MFXIOL)(cobextfh.o)
+	   $(MFXIOL)(kcsextfh.o)
 
 vscrglb.o: vscrglb.c vscrglb.h
 
-$(MFXIOL)(cobextfh.o):   ../crid/figs.wcb  ../crid/plktrace.wcb ../crid/wsktrace.wcb  cobextfh.wcb
-	$(WISPTRAN) -VMF -I ../crid cobextfh.wcb
-	cob -xc $(KCSI_COBFLAGS) cobextfh.cob 
-	ar rv $(MFXIOL) cobextfh.o
-	rm -f cobextfh.o
+$(MFXIOL)(kcsextfh.o):   ../crid/figs.wcb  ../crid/plktrace.wcb ../crid/wsktrace.wcb  kcsextfh.wcb
+	$(WISPTRAN) -VMF -I ../crid kcsextfh.wcb
+	cob -xc $(KCSI_COBFLAGS) kcsextfh.cob 
+	ar rv $(MFXIOL) kcsextfh.o
+	rm -f kcsextfh.o
 
 

@@ -248,7 +248,7 @@ va_dcl
 	m_kwdata = NULL;
 	for (idx = 0; idx < keyword_count; idx++)
 	{
-		FMTLIST	*p;
+		static FMTLIST	*p;	/* P must retain it's value from last iteration of this loop */
 		char	*nameptr, *valptr;
 		int4	*lenptr, len;
 
@@ -294,7 +294,7 @@ va_dcl
 		}
 
 		p->len = len;								/* set len 				*/
-		loadpad(p->keyword,nameptr,KEYWORD_SIZE);				/* copy the keyword in (incl. spaces) 	*/
+		cstr2cobx(p->keyword,nameptr,KEYWORD_SIZE);				/* copy the keyword in (incl. spaces) 	*/
 
 		/*
 		**	Special case for FILE, LIBRARY, VOLUME to ensure that if backwards referenced the fields are big enough.
@@ -1144,6 +1144,13 @@ int search_parm_area(char *dest, char *key, int4 maxlen, SHMH *parm_a)
 /*
 **	History:
 **	$Log: putparm.c,v $
+**	Revision 1.14  1998-08-03 17:09:20-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
+**	Revision 1.13  1998-07-10 11:15:43-04  gsl
+**	Make a local variable "p" static so it retains it's value between
+**	iterations of the for loop.
+**
 **	Revision 1.12  1997-04-15 23:09:26-04  gsl
 **	Update to use wtrace() plus remove a lot of unneeded entry logging
 **

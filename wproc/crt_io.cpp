@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1992.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1992.  All rights reserved.
 //
 // Module : crt_io.cpp
 // Author : George Soules
@@ -38,6 +45,9 @@
 #include "utility.hpp"
 #include "process.hpp"
 
+extern "C" {
+#include "costar.h"
+}
 
 #if DOS || DOS_HOST
 // Spontaneous Assembly routines
@@ -74,6 +84,9 @@ static color    foreground_color     = color_white;
 static int      default_attribute    = CLEAR;
 #endif
 #endif
+
+
+w4w_handler global_w4w_handler;  // The global W4W handler object for handling all mouse and costar functions.
 
 
 #if WANG && ! DOS_HOST
@@ -159,13 +172,17 @@ void clear_screen() {
        default_attribute == VMODE_CLEAR)
    {
       verase(FULL_SCREEN);
+      global_w4w_handler.clear_image();
    }
    else {
       char blanks[SCREEN_WIDTH + 1];
       init_string_with_blank_pad(blanks, SCREEN_WIDTH);
       blanks[active_window.right - active_window.left + 1] = '\0';
       for (int i = active_window.top; i <= (int)(active_window.bottom); i++)
+      {
          vtext(default_attribute, i - 1, active_window.left - 1, blanks);
+	 global_w4w_handler.put_text(i-1, active_window.left -1, blanks);
+      }
    }
    vmove(active_window.top - 1, active_window.left - 1);
 #endif
@@ -592,14 +609,7 @@ Boolean key_pressed(int waittime) {
 
 	if (waittime)
 	{
-		vrawtimeout(waittime);
-		if ((c = vgetc())) vpushc(c);
-		if (vrawtimeout_check())
-		{
-			c = 0;
-		}
-		vrawtimeout_clear();
-		vrawtimeout(0);
+		assert(0);  /* Waittime is not used in the WISP implementation */
 	}
 	else
 	{
@@ -666,11 +676,16 @@ void put_text(int column, int row, const char *text, usign_8 attribute) {
       attr |= VMODE_BOLD;
    if (attribute & ATTR_BLINK)
       attr |= VMODE_BLINK;
-   attribute = attribute & 0x7F;
+   attribute = attribute & 0x7F; 				// Remove ATTR_BLINK bit
    if (attribute != ATTR_NORMAL)
-      if (attribute == ATTR_REVERSE || default_attribute == VMODE_REVERSE)
+   {
+      if (((attribute & ATTR_REVERSE) == ATTR_REVERSE) ||	// ATTR_REVERSE is multiple bits, check if all on.
+	  default_attribute == VMODE_REVERSE)
+      {
          attr |= VMODE_REVERSE;
-   attribute = attribute & 0x0F;
+      }
+   }
+   attribute = attribute & 0x0F; 				// Remove ATTR_REVERSE bits
    if (attribute == ATTR_UNDER_DIM || attribute == ATTR_UNDER_BRIGHT)
       attr |= VMODE_UNDERSCORE;
    filtered_vtext(attr, row - 1, column - 1, text);
@@ -742,7 +757,7 @@ void ring_bell() {
    delay(50);
    nosound();
 #else
-   if (using_full_screen_io && isatty(fileno(stdout)))
+   if (using_full_screen_io && isatty(fileno(stdin)))
       vbell();
    else
       write_stdout("\a");
@@ -842,7 +857,7 @@ void write_stdout(const char* s) {
 */
 #else
 #if WANG
-   if (using_full_screen_io && isatty(fileno(stdout))) {
+   if (using_full_screen_io && isatty(fileno(stdin))) {
       int save_verbose = verbose;
       verbose = false;
       vprint((char *) s);
@@ -861,3 +876,332 @@ void write_stdout(const char* s) {
 #endif
 }
 
+//------------------------------------------------------------
+//
+//	w4w_handler methods.
+//
+//------------------------------------------------------------
+w4w_handler::w4w_handler()
+{
+	clear_image();
+
+	/*
+		Note: On DG/UX Intel the global object global_w4w_handler was
+		not being initialized. This is why there is no member variables
+		to store the use_w4w() and use_costar() values.
+	*/
+}
+w4w_handler::~w4w_handler()
+{
+}
+void w4w_handler::clear_image()
+{
+	memset(buff,' ', sizeof(buff));
+}
+
+/*
+**	ROUTINE:	w4w_handler::put_text()
+**
+**	FUNCTION:	Put text into the screen buffer.
+**
+**	DESCRIPTION:	All non-edit field text needs to be added.
+**			This is used to find hotspots.
+**
+**	ARGUMENTS:	
+**	row		The starting row on the screen (0-23)
+**	col		The starting col in the screen (0-79)
+**	text		The text buffer
+**	len		The length of text. (If not supplied then text in null terminated.)
+**
+**	GLOBALS:	none
+**
+**	RETURN:		none
+**
+**	WARNINGS:	Text will wrap to the next line but not back to the top.
+**
+*/
+void w4w_handler::put_text(unsigned int row, unsigned int col, const char* text)
+{
+	put_text(row, col, text, strlen(text));
+}
+void w4w_handler::put_text(unsigned int row, unsigned int col, const char* text, unsigned int len)
+{
+	if (row > (SCREEN_HEIGHT-1)) return;
+	if (col > (SCREEN_WIDTH-1)) return;
+
+	if ( ((row*SCREEN_WIDTH) + col + len ) >= sizeof(buff) )
+	{
+		len = sizeof(buff) - ((row*SCREEN_WIDTH) + col);
+	}
+
+	memcpy(&buff[row][col], text, len);
+}
+
+/*
+**	ROUTINE:	w4w_handler::mark_pfkey_tags()
+**
+**	FUNCTION:	Mark the pfkey tags on the screen by writting them 
+**			with the hotspots attribute.
+**
+**	DESCRIPTION:	Scan the text buffer for pfkey tags and rewrite
+**			the tags with the hotspot attributes.
+**
+**	ARGUMENTS:	none
+**
+**	GLOBALS:	none
+**
+**	RETURN:		
+**	0		No pfkey tags on the screen
+**	1		There are pfkey tags on the screen
+**
+**	WARNINGS:	none
+**
+*/
+int w4w_handler::mark_pfkey_tags()
+{
+	int row, col;
+	int rc = 0;
+	int hotspot_vmode;
+	char the_char[2];
+
+	the_char[1] = '\0';
+	hotspot_vmode = w4w_hotspot_vmode();
+
+	// Loop for each row and check for tags
+	for(row=0; row< SCREEN_HEIGHT; row++)
+	{
+		char the_row[SCREEN_WIDTH+1], the_mask[SCREEN_WIDTH+1];
+
+		memcpy(the_row, buff[row], SCREEN_WIDTH);
+		the_row[SCREEN_WIDTH] = '\0';
+
+		if (w4w_mask_row(the_row, the_mask))
+		{
+			// There is at least one tag on this line
+			rc = 1;
+
+			for(col=0; col < SCREEN_WIDTH; col++)
+			{
+				if ('X' == the_mask[col])
+				{
+					the_char[0] = the_row[col];
+					filtered_vtext(hotspot_vmode, row, col, the_char); 
+				}
+			}
+		}
+	}
+	return rc;
+}
+
+/*
+**	ROUTINE:	w4w_handler::enable_mouse()
+**			w4w_handler::disable_mouse()
+**
+**	FUNCTION:	Enable/disable the mouse. 
+**
+**	DESCRIPTION:	This is required for COSTAR.
+**
+**	ARGUMENTS:	none
+**
+**	GLOBALS:	none
+**
+**	RETURN:		none
+**
+**	WARNINGS:	none
+**
+*/
+void w4w_handler::enable_mouse()
+{
+	if (0!=use_costar())
+	{
+		costar_enable_mouse(1);
+	}
+}
+void w4w_handler::disable_mouse()
+{
+	if (0!=use_costar())
+	{
+		costar_enable_mouse(0);
+	}
+}
+
+/*
+**	ROUTINE:	w4w_handler::get_mouse_position()
+**
+**	FUNCTION:	Get the position on the screen where the mouse was clicked.
+**
+**	DESCRIPTION:	This is called after a KEY_MOUSE_CLICK key is read to retieve 
+**			the position.
+**
+**	ARGUMENTS:	
+**	pRow		The returned row (0-23)
+**	pCol		The returned col (0-79)
+**
+**	GLOBALS:	none
+**
+**	RETURN:		
+**	0		Success
+**	none 0		Failure  (row & col are not set)
+**
+**	WARNINGS:	none
+**
+*/
+int w4w_handler::get_mouse_position(int* pRow, int* pCol)
+{
+	if (use_costar())
+	{
+		return costar_get_mouse_position(pRow, pCol);
+	}
+	else
+	{
+#ifdef WIN32
+		return vrawntcn_get_mouse_position(pRow, pCol);
+#else
+		return 1;
+#endif
+	}
+}
+
+/*
+**	ROUTINE:	w4w_handler::pfkey_tag_at()
+**
+**	FUNCTION:	Check if the mouse clicked onto a on-screen pfkey tag.
+**
+**	DESCRIPTION:	Check the position against the screen buffer and
+**			return the pfkey value of the tag.
+**
+**	ARGUMENTS:	
+**	row		Row where mouse clicked (0-23)
+**	col		Column where mouse clicked (0-79)
+**
+**	GLOBALS:	none
+**
+**	RETURN:		
+**	-1		Not on a tag
+**	0		Enter key tag
+**	1-32		Pfkey 1-32
+**
+**	WARNINGS:	none
+**
+*/
+int w4w_handler::pfkey_tag_at(int row, int col)
+{
+	if (row < 0 || row > SCREEN_HEIGHT-1) 
+	{
+		return -1;
+	}
+	if (col < 0 || col > SCREEN_WIDTH-1)
+	{
+		return -1;
+	}
+	return w4w_click_row(col, buff[row]);
+}
+
+/*
+**	ROUTINE:	w4w_handler::costar()
+**
+**	FUNCTION:	Is COSTAR being used
+**
+**	DESCRIPTION:	Check if costar is being used.
+**
+**	ARGUMENTS:	none
+**
+**	GLOBALS:	none
+**
+**	RETURN:		
+**	0		COSTAR is not being used
+**	1		COSTAR with mapping mode V1
+**	2		COSTAR with mapping mode V2
+**
+**	WARNINGS:	none
+**
+*/
+int w4w_handler::costar()
+{
+	return use_costar();
+}
+
+Boolean w4w_handler::w4w()
+{
+	return (use_w4w() != 0) ? true : false;
+}
+
+//
+//	History:
+//	$Log: crt_io.cpp,v $
+//	Revision 1.19  1999-02-17 15:38:51-05  gsl
+//	Removed the vrawtimeout logic in the key_pressed() because the waittime
+//	option was never used in the wisp world.
+//
+//	Revision 1.18  1998-10-12 12:12:21-04  gsl
+//	Fixed problems on DGUX with the global_w4w_handler not being initialized.
+//
+//	Revision 1.17  1998-10-02 17:00:02-04  gsl
+//	Add W4W (and COSTAR) mouse support using a global w4w_handler object.
+//
+//	Revision 1.16  1998-09-02 17:26:02-04  gsl
+//	Changed write_stdout() logic to use video if possible.
+//	It was checking if stdout was a tty but stdout get redirected
+//	to a file if WPROCDEBUG is set so now check stdin.
+//
+//	Revision 1.15  1998-08-31 15:13:38-04  gsl
+//	drcs update
+//	----------------------------
+//	revision 1.14
+//	date: 1997-12-18 19:53:28-05;  author: gsl;  state: V4_3_00;  lines: +37 -6
+//	Fixed support for CHARMAP
+//	----------------------------
+//	revision 1.13
+//	date: 1997-12-15 17:55:18-05;  author: gsl;  state: Exp;  lines: +25 -26
+//	Add support for CHARMAP
+//	----------------------------
+//	revision 1.12
+//	date: 1997-10-02 08:42:58-04;  author: gsl;  state: Exp;  lines: +0 -3
+//	fix warnings
+//	----------------------------
+//	revision 1.11
+//	date: 1997-10-01 09:04:26-04;  author: gsl;  state: Exp;  lines: +2 -2
+//	fix warnings
+//	----------------------------
+//	revision 1.10
+//	date: 1997-07-08 15:55:09-04;  author: gsl;  state: V4_1_02;  lines: +19 -16
+//	Use new video.h defines
+//	----------------------------
+//	revision 1.9
+//	date: 1996-11-13 17:00:13-05;  author: gsl;  state: V4_0_00;  lines: +4 -4
+//	Change vtimeout to vrawtimeout
+//	----------------------------
+//	revision 1.8
+//	date: 1996-07-25 19:45:38-04;  author: gsl;  state: Exp;  lines: +31 -29
+//	NT
+//	----------------------------
+//	revision 1.7
+//	date: 1996-07-25 14:14:31-04;  author: gsl;  state: Exp;  lines: +0 -0
+//	Renamed from crt_io.cc to crt_io.cpp
+//	----------------------------
+//	revision 1.6
+//	date: 1995-08-28 10:44:24-04;  author: gsl;  state: V3_3_19;  lines: +1 -4
+//	Fix the problem where the screen does not get properly cleared
+//	on a return into a proc from running a cobol program and when
+//	the lowest level proc has no screen IO.
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-02 12:26:08-04;  author: gsl;  state: V3_3_18;  lines: +1 -1
+//	fix warning
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:44-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:01-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:40-05;  author: gsl;  state: V3_3x12;  lines: +59 -22
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:00-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

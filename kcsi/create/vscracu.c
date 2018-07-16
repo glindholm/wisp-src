@@ -1,7 +1,7 @@
 static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
 static char rcsid[]="$Id:$";
 
-
+#ifdef OLD
 #include <stdio.h>
 
 static char sccs_id[]="@(#)vscracu.c	1.1 8/15/93";
@@ -23,11 +23,15 @@ int eprintf(void)
 {
 	return 0;
 }
+#endif
 
 
 /*
 **	History:
 **	$Log: vscracu.c,v $
+**	Revision 1.5  1998-11-05 09:39:36-05  gsl
+**	Not needed anymore
+**
 **	Revision 1.4  1996-10-03 15:07:05-04  gsl
 **	Fixed warning in eprintf()
 **

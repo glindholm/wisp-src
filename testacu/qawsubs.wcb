@@ -229,48 +229,49 @@
            03  FILLER  PIC X(15) ROW 1 COL 60 VALUE
                "WISPSUBS-SCREEN".
            03  FILLER  PIC X(10) ROW 3 COL 2 VALUE
-               " 1) wfname".
+               "(1) wfname".
            03  FILLER  PIC X(25) ROW 5 COL 2 VALUE
-               " 2) NetronCAP subroutines".
+               "(2) NetronCAP subroutines".
            03  FILLER  PIC X(12) ROW 7 COL 2 VALUE
-               " 3) PRNTNAME".
-           03  FILLER  PIC X(04) ROW 9 COL 2 VALUE
-               " 4) ".
+               "(3) PRNTNAME".
+           03  FILLER  PIC X(30) ROW 9 COL 2 VALUE
+               "(4) WTITLE".
            03  FILLER  PIC X(04) ROW 11 COL 2 VALUE
-               " 5) ".
+               "(5) ".
            03  FILLER  PIC X(04) ROW 13 COL 2 VALUE
-               " 6) ".
+               "(6) ".
            03  FILLER  PIC X(04) ROW 15 COL 2 VALUE
-               " 7) ".
+               "(7) ".
            03  FILLER  PIC X(04) ROW 17 COL 2 VALUE
-               " 8) ".
+               "(8) ".
            03  FILLER  PIC X(04) ROW 19 COL 2 VALUE
-               " 9) ".
-           03  FILLER  PIC X(04) ROW 21 COL 2 VALUE
-               "10) ".
-           03  FILLER  PIC X(03) ROW 3 COL 40 VALUE
-               "11)".
-           03  FILLER  PIC X(03) ROW 5 COL 40 VALUE
-               "12)".
-           03  FILLER  PIC X(03) ROW 7 COL 40 VALUE
-               "13)".
-           03  FILLER  PIC X(03) ROW 9 COL 40 VALUE
-               "14)".
-           03  FILLER  PIC X(03) ROW 11 COL 40 VALUE
-               "15)".
-           03  FILLER  PIC X(08) ROW 13 COL 40 VALUE
-               "16) EXIT".
-           03  FILLER  PIC X(03) ROW 15 COL 40 VALUE
-               "17)".
-           03  FILLER  PIC X(03) ROW 17 COL 40 VALUE
-               "18)".
-           03  FILLER  PIC X(03) ROW 19 COL 40 VALUE
-               "19)".
-           03  FILLER  PIC X(03) ROW 21 COL 40 VALUE
-               "20)".
-           03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
-               "PRESS PF KEY 16 TO EXIT".
+               "(9) ".
+           03  FILLER  PIC X(05) ROW 21 COL 2 VALUE
+               "(10) ".
+           03  FILLER  PIC X(04) ROW 3 COL 40 VALUE
+               "(11)".
+           03  FILLER  PIC X(04) ROW 5 COL 40 VALUE
+               "(12)".
+           03  FILLER  PIC X(04) ROW 7 COL 40 VALUE
+               "(13)".
+           03  FILLER  PIC X(04) ROW 9 COL 40 VALUE
+               "(14)".
+           03  FILLER  PIC X(04) ROW 11 COL 40 VALUE
+               "(15)".
+           03  FILLER  PIC X(09) ROW 13 COL 40 VALUE
+               "(16) EXIT".
+           03  FILLER  PIC X(04) ROW 15 COL 40 VALUE
+               "(17)".
+           03  FILLER  PIC X(04) ROW 17 COL 40 VALUE
+               "(18)".
+           03  FILLER  PIC X(04) ROW 19 COL 40 VALUE
+               "(19)".
+           03  FILLER  PIC X(04) ROW 21 COL 40 VALUE
+               "(20)".
+           03  FILLER  PIC X(30) ROW 24 COL 10 VALUE
+               "PRESS (16) TO EXIT".
 
+       01  NEWTITLE PIC X(80) VALUE SPACES.
 
       ******************************************************************
 
@@ -297,6 +298,10 @@
               GO TO WISPSUBS-TESTS
            ELSE IF PF-KEY = "03" THEN
               PERFORM PRNTNAME-CALL
+              GO TO WISPSUBS-TESTS
+           ELSE IF PF-KEY = "04" THEN
+              ACCEPT NEWTITLE
+	      CALL "WTITLE" USING NEWTITLE
               GO TO WISPSUBS-TESTS
            ELSE IF PF-KEY = "16" THEN
               GO TO EXIT-PROGRAM.

@@ -6,7 +6,7 @@
 000600**   Project:    WISP/TEST
 000700**
 000800**   Purpose:    Test DATE VSSUB routine
-000850**               and  DATE2 VSSUB routine 
+000850**               and  DATE2/DATE4 VSSUB routine (DATE2 and DATE4 are the same routines).
 000900**
 001000**   Example:
 001100**
@@ -31,7 +31,7 @@
        01  INPUT-JULIAN-DATE          PIC X(05).
        01  STARTING-JULIAN-DATE       PIC X(05).
        01  ENDING-JULIAN-DATE         PIC X(05).
-       01  DAY-OF-WEEK                PIC X(09).
+       01  DEY-OF-WEEK                PIC X(09).
        01  T-RETURN-CODE.
            03 FILLER                  BINARY   VALUE 0.
            03 RETURN-CODE-BIN         BINARY. 
@@ -41,14 +41,21 @@
        01  ENDING-GREGORIAN-EXT       PIC X(08).
        01  OUTPUT-GREGORIAN-EXT       PIC X(08).
        01  INPUT-GREGORIAN-EXT        PIC X(08).
+       01  HHMMSSHH		      PIC X(08).
        01  STARTING-JULIAN-EXT        PIC X(07).
        01  ENDING-JULIAN-EXT          PIC X(07).
        01  OUTPUT-JULIAN-EXT          PIC X(07).
        01  INPUT-JULIAN-EXT           PIC X(07).
-       01  DAY-OF-WEEK-NUM.
+       01  DEY-OF-WEEK-NUM.
            03  FILLER                 BINARY  VALUE 0.
            03  DOW-BIN                BINARY  VALUE 0.
 
+
+       01  START-TIME		      PIC 9(08).
+       01  LAST-TIME		      PIC 9(08).
+       01  END-TIME		      PIC 9(08).
+       01  LOOP-CNT		      PIC 9(08).
+	   
 001600 Procedure Division.  
 
       *"HL" - function
@@ -100,6 +107,64 @@
                OUTPUT-JULIAN-EXT.
        	   DISPLAY "DATE2(HJ) YYYYDDD IS: " 
        	       OUTPUT-JULIAN-EXT.
+      
+      *"GG" - function
+           MOVE  "GG" TO FUNCTION-TYPE.
+           CALL  "DATE4" USING FUNCTION-TYPE,
+       	       OUTPUT-GREGORIAN-EXT, HHMMSSHH.
+       	   DISPLAY "DATE4(GG) YYYYMMDD IS: " 
+       	       OUTPUT-GREGORIAN-EXT
+	       " HHMMSSHH=" HHMMSSHH.
+      
+      *"AG" - function
+           MOVE  "AG" TO FUNCTION-TYPE.
+           CALL  "DATE4" USING FUNCTION-TYPE,
+       	       OUTPUT-GREGORIAN-EXT, HHMMSSHH.
+       	   DISPLAY "DATE4(AG) MMDDYYYY IS: " 
+       	       OUTPUT-GREGORIAN-EXT
+	       " HHMMSSHH=" HHMMSSHH.
+
+      * Test Hundreds of seconds in "GG"
+	   DISPLAY "TESTING Hundredths-of-seconds using DATE4(GG)".
+           MOVE  "GG" TO FUNCTION-TYPE.
+           CALL  "DATE4" USING FUNCTION-TYPE,
+       	       OUTPUT-GREGORIAN-EXT, START-TIME.
+	   MOVE START-TIME TO LAST-TIME.
+	   PERFORM 100 TIMES
+	       CALL  "DATE4" USING FUNCTION-TYPE,
+		   OUTPUT-GREGORIAN-EXT, END-TIME
+	       IF END-TIME < LAST-TIME THEN
+	           DISPLAY "TIME: " END-TIME
+		           " IS LESS THEN LAST-TIME: "
+			   LAST-TIME
+                   ADD 1 TO COMPLETION-STATUS
+	       END-IF
+	       MOVE END-TIME TO LAST-TIME
+	   END-PERFORM.
+       	   DISPLAY "DATE4(GG) 100 CALLS START TIME: " 
+	       START-TIME " END TIME: " END-TIME.
+
+      * Speed test
+           CALL  "DATE4" USING FUNCTION-TYPE,
+       	       OUTPUT-GREGORIAN-EXT, START-TIME.
+	   ADD 100 TO START-TIME GIVING END-TIME.
+	   MOVE START-TIME TO LAST-TIME.
+	   MOVE 0 TO LOOP-CNT.
+	   PERFORM UNTIL LAST-TIME >= END-TIME
+	       CALL  "DATE4" USING FUNCTION-TYPE,
+		   OUTPUT-GREGORIAN-EXT, LAST-TIME
+	       ADD 1 TO LOOP-CNT
+	   END-PERFORM.
+	   DISPLAY "DATE4(GG) WAS CALLED " LOOP-CNT
+	       " TIMES IN ONE SECOND.".
+      
+      *"EG" - function
+           MOVE  "EG" TO FUNCTION-TYPE.
+           CALL  "DATE4" USING FUNCTION-TYPE,
+       	       OUTPUT-GREGORIAN-EXT, HHMMSSHH.
+       	   DISPLAY "DATE4(EG) DDMMYYYY IS: " 
+       	       OUTPUT-GREGORIAN-EXT
+	       " HHMMSSHH=" HHMMSSHH.
 
       *"GJ" - function.
            MOVE  "GJ" TO FUNCTION-TYPE.
@@ -1306,7 +1371,7 @@
                                DAYS-TO-ADD,
                                ENDING-GREGORIAN-EXT,
                                T-RETURN-CODE.  
-           IF  ENDING-GREGORIAN-EXT NOT = "20000312" OR
+           IF  ENDING-GREGORIAN-EXT NOT = "03122000" OR
                RETURN-CODE-BIN NOT = 0     THEN
                ADD 1           TO COMPLETION-STATUS.           
 
@@ -1322,7 +1387,7 @@
                                DAYS-TO-ADD,
                                ENDING-GREGORIAN-EXT,
                                T-RETURN-CODE.  
-           IF  ENDING-GREGORIAN-EXT NOT = "20010305" OR
+           IF  ENDING-GREGORIAN-EXT NOT = "03052001" OR
                RETURN-CODE-BIN NOT = 0     THEN
                ADD 1           TO COMPLETION-STATUS.           
 
@@ -1354,7 +1419,7 @@
                                DAYS-TO-ADD,
                                ENDING-GREGORIAN-EXT,
                                T-RETURN-CODE.  
-           IF  ENDING-GREGORIAN-EXT NOT = "20010312" OR
+           IF  ENDING-GREGORIAN-EXT NOT = "12032001" OR
                RETURN-CODE-BIN NOT = 0     THEN
                ADD 1           TO COMPLETION-STATUS.           
 
@@ -1370,7 +1435,7 @@
                                DAYS-TO-ADD,
                                ENDING-GREGORIAN-EXT,
                                T-RETURN-CODE.  
-           IF  ENDING-GREGORIAN-EXT NOT = "20000305" OR
+           IF  ENDING-GREGORIAN-EXT NOT = "05032000" OR
                RETURN-CODE-BIN NOT = 0     THEN
                ADD 1           TO COMPLETION-STATUS.           
 
@@ -1392,47 +1457,47 @@
       *"GD" - function
            MOVE  "GD" TO FUNCTION-TYPE.
            MOVE  "961113"      TO STARTING-GREGORIAN-DATE. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
-                              DAY-OF-WEEK,
+                              DEY-OF-WEEK,
                               T-RETURN-CODE.  
-           IF  DAY-OF-WEEK NOT = "WEDNESDAY" OR
+           IF  DEY-OF-WEEK NOT = "WEDNESDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
                ADD 1           TO COMPLETION-STATUS.           
 
            MOVE  "000000"      TO STARTING-GREGORIAN-DATE. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-DATE,
-                              DAY-OF-WEEK,
+                              DEY-OF-WEEK,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
                ADD 1          TO COMPLETION-STATUS.
 
            MOVE  "19961113"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK,
+                               DEY-OF-WEEK,
                                T-RETURN-CODE.  
-           IF  DAY-OF-WEEK NOT = "WEDNESDAY" OR
+           IF  DEY-OF-WEEK NOT = "WEDNESDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
                ADD 1           TO COMPLETION-STATUS.           
 
            MOVE  "20000000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK,
+                               DEY-OF-WEEK,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
                ADD 1          TO COMPLETION-STATUS.
@@ -1441,24 +1506,24 @@
       *"XD" - function
            MOVE  "XD" TO FUNCTION-TYPE.
            MOVE  "19961113"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-EXT,
-                              DAY-OF-WEEK,
+                              DEY-OF-WEEK,
                               T-RETURN-CODE.  
-           IF  DAY-OF-WEEK NOT = "WEDNESDAY" OR
+           IF  DEY-OF-WEEK NOT = "WEDNESDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
                ADD 1           TO COMPLETION-STATUS.           
 
            MOVE  "19000000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-GREGORIAN-EXT,
-                              DAY-OF-WEEK,
+                              DEY-OF-WEEK,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
                ADD 1          TO COMPLETION-STATUS.
@@ -1467,24 +1532,24 @@
       *"AD" - function
            MOVE  "AD" TO FUNCTION-TYPE.
            MOVE  "11131996"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK,
+                               DEY-OF-WEEK,
                                T-RETURN-CODE.  
-           IF  DAY-OF-WEEK NOT = "WEDNESDAY" OR
+           IF  DEY-OF-WEEK NOT = "WEDNESDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
                ADD 1           TO COMPLETION-STATUS.           
 
            MOVE  "00002000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DAY-OF-WEEK.
+           MOVE  SPACES        TO DEY-OF-WEEK.
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK,
+                               DEY-OF-WEEK,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
                ADD 1          TO COMPLETION-STATUS.
@@ -1493,24 +1558,24 @@
       *"ED" - function
            MOVE  "ED" TO FUNCTION-TYPE.
            MOVE  "13111996"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK,
+                               DEY-OF-WEEK,
                                T-RETURN-CODE.  
-           IF  DAY-OF-WEEK NOT = "WEDNESDAY" OR
+           IF  DEY-OF-WEEK NOT = "WEDNESDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
                ADD 1           TO COMPLETION-STATUS.           
 
            MOVE  "00002000"    TO STARTING-GREGORIAN-EXT. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK,
+                               DEY-OF-WEEK,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
                ADD 1          TO COMPLETION-STATUS.
@@ -1519,47 +1584,47 @@
       *"JD" - function
            MOVE  "JD" TO FUNCTION-TYPE.
            MOVE  "96026"      TO STARTING-JULIAN-DATE. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
-                              DAY-OF-WEEK,
+                              DEY-OF-WEEK,
                               T-RETURN-CODE.  
-           IF  DAY-OF-WEEK NOT = "FRIDAY" OR
+           IF  DEY-OF-WEEK NOT = "FRIDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
                ADD 1           TO COMPLETION-STATUS.           
 
            MOVE  "90000"      TO STARTING-JULIAN-DATE. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE" USING FUNCTION-TYPE,
                               STARTING-JULIAN-DATE,
-                              DAY-OF-WEEK,
+                              DEY-OF-WEEK,
                               T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
                ADD 1          TO COMPLETION-STATUS.
 
            MOVE  "1996026"     TO STARTING-JULIAN-EXT. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                               STARTING-JULIAN-EXT,
-                              DAY-OF-WEEK,
+                              DEY-OF-WEEK,
                               T-RETURN-CODE.  
-           IF  DAY-OF-WEEK NOT = "FRIDAY" OR
+           IF  DEY-OF-WEEK NOT = "FRIDAY" OR
                RETURN-CODE-BIN NOT = 0     THEN
                ADD 1           TO COMPLETION-STATUS.           
 
            MOVE  "2000000"     TO STARTING-JULIAN-EXT. 
-           MOVE  SPACES        TO DAY-OF-WEEK. 
+           MOVE  SPACES        TO DEY-OF-WEEK. 
            MOVE  LOW-VALUES    TO T-RETURN-CODE.
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
-                               DAY-OF-WEEK,
+                               DEY-OF-WEEK,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
                ADD 1          TO COMPLETION-STATUS.
@@ -1573,7 +1638,7 @@
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK-NUM,
+                               DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  DOW-BIN NOT = 4 OR
                RETURN-CODE-BIN NOT = 0     THEN
@@ -1585,7 +1650,7 @@
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK-NUM,
+                               DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
                ADD 1          TO COMPLETION-STATUS.
@@ -1599,7 +1664,7 @@
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK-NUM,
+                               DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  DOW-BIN NOT = 4 OR
                RETURN-CODE-BIN NOT = 0     THEN
@@ -1611,7 +1676,7 @@
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK-NUM,
+                               DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
                ADD 1          TO COMPLETION-STATUS.
@@ -1625,7 +1690,7 @@
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK-NUM,
+                               DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  DOW-BIN NOT = 4 OR
                RETURN-CODE-BIN NOT = 0     THEN
@@ -1637,7 +1702,7 @@
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-GREGORIAN-EXT,
-                               DAY-OF-WEEK-NUM,
+                               DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
                ADD 1          TO COMPLETION-STATUS.
@@ -1651,7 +1716,7 @@
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                               STARTING-JULIAN-EXT,
-                              DAY-OF-WEEK-NUM,
+                              DEY-OF-WEEK-NUM,
                               T-RETURN-CODE.  
            IF  DOW-BIN NOT = 6 OR
                RETURN-CODE-BIN NOT = 0     THEN
@@ -1663,7 +1728,7 @@
            MOVE  0             TO RETURN-CODE-BIN.
            CALL  "DATE2" USING FUNCTION-TYPE,
                                STARTING-JULIAN-EXT,
-                               DAY-OF-WEEK-NUM,
+                               DEY-OF-WEEK-NUM,
                                T-RETURN-CODE.  
            IF  RETURN-CODE-BIN NOT = 8     THEN
                ADD 1          TO COMPLETION-STATUS.

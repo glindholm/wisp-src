@@ -56,6 +56,8 @@ void COBLINK(const char *progname);
 #ifndef DATE_C
 void DATE(char* func, ...);
 void DATE2(char* func, ...);
+void DATE4(char* func, ...);
+void DATE6(char* func, ...);
 #endif
 
 /* day.c */
@@ -72,7 +74,7 @@ void err_getparm(char* prname, char* messid, char* issuer,
 		 char* msg5, char* msg6, char* msg7, char* msg8);
 
 /* extract.c */
-void EXTRACT();
+void EXTRACT(const char* first, ...);
 int4 workstation(void);
 
 /* fexists.c */
@@ -91,7 +93,7 @@ void file_getparm2(int4 f_mode, char *file, char *lib, char *vol, char *prname,
 		char *orig_file, char *prtclass, int4 *form, int4* copies);
 
 /* find.c */
-void FIND();
+void FIND(char* the_file, char* the_lib, char* the_vol, int4 *starter, int4 *counter, char* receiver, ...);
 
 /* findexts.c */
 int findexts(char* basename, char* base_ext);
@@ -135,7 +137,7 @@ void readvmslink();
 void VMSGARGS();
 void VMSNARGS();
 void wclink();
-int4 vms_to_wang_codes ( int4 vms_code );					/* Convert VMS return code to WANG LINK return code	*/
+int4 vms_to_wang_codes ( int4 vms_code );				/* Convert VMS return code to WANG LINK return code	*/
 
 void swap_put ( int4* destination, int4 new_value );
 
@@ -166,7 +168,8 @@ char *s_nextfile(char* path, int* first);
 void passwdname(char *name);
 
 /* readfdr.c */
-void READFDR();
+void READFDR(const char* cpFile, const char* cpLib, const char* cpVol, const int4* mode, ...);
+void READFDR4(const char* cpFile, const char* cpLib, const char* cpVol, const int4* mode, ...);
 
 /* rename.c */
 void wrename();
@@ -178,6 +181,7 @@ void setretcode(char* wispreturncode);
 void delete_retcode(void);
 
 /* scratch.c */
+int wisp_unlink(const char *filename);
 void SCRATCH();
 
 /* screen.c */
@@ -223,14 +227,6 @@ int wcmatch(char* pat, char* str, int sex, char	MATCHONE, char MATCHMANY);
 /* wfcisam.c */
 
 int4 cisaminfo( char* path, char* code, void* field );
-
-/* wfiledis.c */
-void wfile_disp(void);
-int use_internal_display(void);
-int link_display(const char* filepath);
-
-/* wfvision.c */
-int4 acuvision( char* path, char* code, void* field );
 
 /* werrpath.c */
 char* werrpath(void);
@@ -287,11 +283,11 @@ void WSPAWN(short *action,char *progname,short *name_len,char *msg,short *msg_le
 void wswap(void *lword);			/* swap the order of the words in a longword item (for WANG routines to use)	*/
 void reversebytes(void *ptr, int len);							/* Reverse the bytes.			*/
 int bytenormal(void);
-int4 get_swap(int4 *src);
+int4 get_swap(const int4 *src);
 void put_swap(int4 *dest, int4 value);
 
 /* wsystem.c */
-int wsystem(char* cmd);
+int wsystem(const char* cmd);
 
 /* wvaset.c */
 void wvaset(int4 *x);
@@ -303,6 +299,27 @@ int va_count();
 /*
 **	History:
 **	$Log: wisplib.h,v $
+**	Revision 1.33  1999-09-08 19:43:20-04  gsl
+**	Add READFDR4() and update READFDR()
+**
+**	Revision 1.32  1999-09-08 12:03:16-04  gsl
+**	Add DATE4() DATE6() and READFDR4() prototypes
+**
+**	Revision 1.31  1999-01-29 15:24:01-05  gsl
+**	Add wisp_unlink()
+**
+**	Revision 1.30  1999-01-04 17:47:37-05  gsl
+**	update prototypes for EXTRACT and FIND
+**
+**	Revision 1.29  1998-11-04 10:15:56-05  gsl
+**	Fix get_swap()
+**
+**	Revision 1.28  1998-05-14 09:50:29-04  gsl
+**	remove wfvision.h and wfiledis.h stuff
+**
+**	Revision 1.27  1998-03-13 14:42:34-05  gsl
+**	Make wsystem() a const
+**
 **	Revision 1.26  1997-10-23 15:23:00-04  gsl
 **	Add use_internal_display() and link_display()
 **	And add "const" where needed

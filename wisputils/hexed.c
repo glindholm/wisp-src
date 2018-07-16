@@ -64,7 +64,7 @@ void ver_status();
 int hexed_status(void);
 void memrcpy(char *dest, char *src, int cnt);
 int getsize(char *p);
-int modbuffer(int data);
+void modbuffer(int data);
 int next_screen(void);
 void gethexpat(char *pat);
 void getascpat(char *pat);
@@ -123,7 +123,7 @@ struct cmd cmds[]=
 	{ GENERIC_PF16+VMBIAS, quit_hexed, "F16\\-Quit" },
 	{ 0,0,0 }
 };
-struct cmd *cmdptr;
+static struct cmd *cmdptr;
 
 #define D_BYTE 0
 #define D_WORD 1
@@ -131,18 +131,18 @@ struct cmd *cmdptr;
 #define N_HIGH 0
 #define N_LOW 1
 
-unsigned long filepos=0;
-unsigned long filesize;
+static unsigned long filepos=0;
+static unsigned long filesize;
 
-unsigned long ofilepos= 999999; /* Start at an arbitrary and unlikely position. */
-int scrx,scry,nib;
-int quitflag=0;
-int verify=1;
-int bufmod=0;
-int hexasc=0;
-int dispmode=D_BYTE;
+static unsigned long ofilepos= 999999; /* Start at an arbitrary and unlikely position. */
+static int scrx,scry,nib;
+static int quitflag=0;
+static int verify=1;
+static int bufmod=0;
+static int hexasc=0;
+static int dispmode=D_BYTE;
 
-int edl,edc;
+static int edl,edc;
 
 #define FOREVER while(1)
 #ifndef FALSE
@@ -352,7 +352,7 @@ end_line(void)
 	scrx=15;
 	return 0;
 }
-int modbuffer(int data)
+void modbuffer(int data)
 {
 	int val;
 
@@ -361,7 +361,7 @@ int modbuffer(int data)
 		data=toupper(data);
 		if (data>='0'&&data<='9') val=data-'0';
 		else if (data>='A'&&data<='F') val=data-'A'+10;
-		else return 0;
+		else return;
 		if (nib==N_HIGH) 
 		{
 			filebuf[scry*16+scrx] &= 0x0f;
@@ -414,10 +414,11 @@ loop:	vprint("Find (F3=repeat, H=Hex, A=ASCII, X=abort) ->");
 		default:
 		  vbell();
 		  goto loop;
-		  return 0;
+
 	}
 	show_cmds();
 	if (havepat) do_find(pat);
+	return 0;
 }
 void do_find(char *pattern)
 {
@@ -425,6 +426,8 @@ void do_find(char *pattern)
 	int sfilepos,sspos,sscry,sscrx;
 	int sedl,sedc;
 	
+ 	spos=scry*16+scrx + 1;
+
 	sfilepos=filepos;
 	sspos=spos;
 	sscry=scry;
@@ -432,12 +435,11 @@ void do_find(char *pattern)
 	sedl=edl;
 	sedc=edc;
 	
- 	spos=scry*16+scrx + 1;
 	while (searching)
 	{
 		while (spos < D_COLS*D_LINES)
 		{
-			if (match(&filebuf[spos],pattern)) 
+			if (match((unsigned char *)&filebuf[spos],(unsigned char *)pattern)) 
 			{
 /*				filepos += spos;*/
 				dopage();
@@ -838,7 +840,7 @@ bldline(int addr, unsigned char *data, unsigned char *buf)
 {
 	int i;
 	
-	memsetnull(buf,' ',199);
+	memsetnull((char *)buf,' ',199);
 	sprintf(tmpbuf,"%08X:",addr);
 	memcpy(buf,tmpbuf,9);
 	sprintf(tmpbuf," %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X  ",
@@ -910,7 +912,7 @@ void title(void)
 	vprint("Verify write:");
 	vmode(CLEAR);
 	
-/*                        1         2         3         4         5         6         7     
+/*                        1         2         3         4         5         6         7         */
 /*              01234567890123456789012345678901234567890123456789012345678901234567890123456789*/
 	show_cmds();
 	ver_status();
@@ -1024,6 +1026,21 @@ int getsize(char *p)
  **  Module: $RCSfile: hexed.c,v $
  ** 
  ** $Log: hexed.c,v $
+ ** Revision 1.18  1999-09-13 15:47:24-04  gsl
+ ** fix modbuffer() return type
+ **
+ ** Revision 1.17  1999-01-19 11:02:40-05  gsl
+ ** fix warnings
+ **
+ ** Revision 1.16  1999-01-19 11:00:26-05  gsl
+ ** fix warning
+ **
+ ** Revision 1.15  1998-10-15 10:06:48-04  gsl
+ ** fix type warnings
+ **
+ ** Revision 1.14  1998-04-22 15:54:16-04  gsl
+ ** fix uninit var warning
+ **
  ** Revision 1.13  1997-12-05 09:44:25-05  gsl
  ** Add support for displaying 8bit characters
  **

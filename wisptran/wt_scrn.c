@@ -55,7 +55,7 @@ static int cur_v1 = 0;									/* the current vertical 1 occurs count	*/
 static int cur_v2 = 0;									/* the current vertical 2 occurs count	*/
 static int cur_h  = 0;									/* the current horizontal occurs count	*/
 
-static int gen_screens22();
+static void gen_screens22(void);
 static int move_source();
 static int move_object();
 static void chk_range(item_record* the_item);
@@ -70,6 +70,9 @@ static void gen_acn_screen_paras(void);
 
 static void calc_occurs_offsets(item_record* the_item);
 char* addsuffix(const char* fld, const char* suff);
+
+static char* make_color(char* the_color, const char* src, const char* suffix);
+static char* make_control(char* the_ctrl, const char* src, const char* suffix);
 
 #define MAX_ITEM_TABLE 400
 
@@ -144,10 +147,32 @@ NODE parse_display_ws_record(NODE next_statement)
 			curr_level_col = level_node->token->column;
 
 			curr_node = curr_node->next;
-			if ( eq_token(curr_node->token, KEYWORD, "FILLER") ||
-			     IDENTIFIER == curr_node->token->type 		)
+			if (!dd_keyword(token_data(curr_node->token)) &&
+			    cobol_keyword(token_data(curr_node->token)))
+			{
+				/*
+				**	Found an invalid cobol keyword.
+				**	Assume that this was not a keyword in COBOL-74
+				**	and was used as a data name.
+				**	Add to reserved keywords list.
+				*/
+					
+				write_tlog(curr_node->token,"WISP",'W',"KEYWORD", 
+					   "Keyword [%s] being used as a data name, adding to keyword list",
+					   token_data(curr_node->token));
+				add_change_word(token_data(curr_node->token));
+				do_change_word_token(curr_node->token);
+			}
+
+			if ( eq_token(curr_node->token, KEYWORD, "FILLER") )
 			{
 				data_name_node = curr_node;
+				curr_node = curr_node->next;
+			}
+			else if ( IDENTIFIER == curr_node->token->type )
+			{
+				data_name_node = curr_node;
+				add_user_symbol(token_data(data_name_node->token));
 				curr_node = curr_node->next;
 			}
 		}
@@ -357,12 +382,19 @@ NODE parse_display_ws_record(NODE next_statement)
 				{
 					int	num;
 					sscanf(temp_node->token->data,"%d",&num);
+
+					if (num < 1 || num > 24)
+					{
+						write_tlog(temp_node->token,"WISP",'E',"ROW", "Invalid row value [%d]",num);
+						num = 1;
+					}
+					
 					this_item->row   = num;
 					this_item->x_row = num;
 				}
 				else
 				{
-					write_log("WISP",'E',"Error parsing ROW number, using previous value");
+					write_log("WISP",'E',"NOROW","Error parsing ROW number, using previous value");
 				}
 			}
 
@@ -377,12 +409,19 @@ NODE parse_display_ws_record(NODE next_statement)
 				{
 					int	num;
 					sscanf(temp_node->token->data,"%d",&num);
+
+					if (num < 1 || num > 80)
+					{
+						write_tlog(temp_node->token,"WISP",'E',"COLUMN", "Invalid column value [%d]",num);
+						num = 2;
+					}
+
 					this_item->col   = num;
 					this_item->x_col = num;
 				}
 				else
 				{
-					write_log("WISP",'E',"Error parsing COLUMN number, using previous value");
+					write_log("WISP",'E',"NOCOL","Error parsing COLUMN number, using previous value");
 				}
 			}
 
@@ -471,7 +510,7 @@ NODE parse_display_ws_record(NODE next_statement)
 
 			/*
 			**	If it is a filler  convert it into a variable of the	
-			**	form SCREEN-FILLER-NNNN if the following is true:   
+			**	form WISP-SCREEN-FILLER-NNNN if the following is true:   
 			**	It has an OBJECT, or it has a non-literal source
 			**	(This is not needed for native screens unless there is a range clause)
 			*/
@@ -486,14 +525,14 @@ NODE parse_display_ws_record(NODE next_statement)
 						**	the fac, color, and control get generated so the field
 						**	can be marked as an error if the range is invalid.
 						*/
-						sprintf(this_item->name,"RANGE-FILLER-%d",fillernum++);
+						sprintf(this_item->name,"WISP-RANGE-FILLER-%d",fillernum++);
 						write_log("WISP",'I',"CONVFILLER","Converted FILLER to %s.",this_item->name);
 					}
 				}
 				else if ( object_node || 
 					 (this_item->source_clause && LITERAL != this_item->source_clause->token->type))
 				{
-					sprintf(this_item->name,"SCREEN-FILLER-%d",fillernum++);
+					sprintf(this_item->name,"WISP-SCREEN-FILLER-%d",fillernum++);
 					write_log("WISP",'I',"CONVFILLER","Converted FILLER to %s.",this_item->name);
 				}
 			}
@@ -595,15 +634,15 @@ int gen_screens(void)
 	return(0);
 }
 
-static gen_screens22()
+static void gen_screens22(void)
 {
 	int 	i;
 	char	s_level[5], s_occurs[5], s_row[5], s_col[5], s_pic[50], s_value[80]; 
 
 
-	if (scrns_done) return(0);							/* already did it			*/
+	if (scrns_done) return;							/* already did it			*/
 	scrns_done = 1;
-	if (!num_screens) return(0);							/* no screens.				*/
+	if (!num_screens) return;							/* no screens.				*/
 
 	write_log("WISP",'I',"BEGINSCRN","Begin generation of screen records.");
 
@@ -616,22 +655,22 @@ static gen_screens22()
 
 		make_oa(templine,scrn_name[i]);
 		tput_line_at(8,  "01  %s.",templine);
-		tput_line_at(12, "05  FILLER         PIC X(1) VALUE DEC-BYTE-1.");
+		tput_line_at(12, "05  FILLER         PIC X(1) VALUE WISP-SYMB-1.");
 		tput_line_at(12, "05  FILLER         PIC X(1) VALUE WISP-SCWCC.");
-		tput_line_at(12, "05  FILLER         PIC X(1) VALUE DEC-BYTE-0.");
-		tput_line_at(12, "05  FILLER         PIC X(1) VALUE DEC-BYTE-0.");
+		tput_line_at(12, "05  FILLER         PIC X(1) VALUE WISP-SYMB-0.");
+		tput_line_at(12, "05  FILLER         PIC X(1) VALUE WISP-SYMB-0.");
 
 											/* Now the structure describing it	*/
 		tput_line_at(8,  "01  %s.",scrn_name[i]);				/* output the screen name		*/
 
 
-		tput_line_at(12,"05  WISP-SCREEN-VERSION PIC X VALUE DEC-BYTE-%d.",SCREEN_VERSION);
-		tput_line_at(12,"05  FILLER PIC X(8)  VALUE \"%-8s\".",prog_id);
+		tput_line_at(12,"05  WISP-SCREEN-VERSION PIC X VALUE WISP-SYMB-%d.",SCREEN_VERSION);
+		tput_line_at(12,"05  FILLER PIC X(8)  VALUE \"%-8.8s\".",prog_id);
 		tput_line_at(12,"05  FILLER PIC X(32) VALUE");
 		tput_line_at(33,"\"%-32s\".",scrn_name[i]);
-		tput_line_at(12,"05  STATIC-DYNAMIC PIC X     VALUE \"S\".");
-		tput_line_at(12,"05  DECIMAL-IS     PIC X     VALUE \"%c\".",decimal_is);
-		tput_line_at(12,"05  RESERVED-SPACE PIC X(9)  VALUE SPACES.");
+		tput_line_at(12,"05  WISP-SCREEN-STATIC-DYNAMIC PIC X     VALUE \"S\".");
+		tput_line_at(12,"05  WISP-SCREEN-DECIMAL-IS     PIC X     VALUE \"%c\".",decimal_is);
+		tput_line_at(12,"05  WISP-SCREEN-RESERVED-SPACE PIC X(9)  VALUE SPACES.");
 
 		this_item = screen_item[i];						/* Get ptr to first item		*/
 		last_item = this_item;
@@ -665,19 +704,19 @@ static gen_screens22()
 			else								/* Otherwise, be verbose.		*/
 			{
 				tput_line_at        (12, "05  FILLER.");
-				tput_line_at        (16, "10  DISP-LEVEL  PIC X(%d) VALUE \"%s\".",strlen(s_level),s_level);
+				tput_line_at        (16, "10  WISP-DISP-LEVEL  PIC X(%d) VALUE \"%s\".",strlen(s_level),s_level);
 				if ( this_item->x_row    )
-					tput_line_at(16, "10  DISP-ROW    PIC X(%d) VALUE \"%s\".",strlen(s_row),s_row);
+					tput_line_at(16, "10  WISP-DISP-ROW    PIC X(%d) VALUE \"%s\".",strlen(s_row),s_row);
 				if ( this_item->x_col    )
-					tput_line_at(16, "10  DISP-COL    PIC X(%d) VALUE \"%s\".",strlen(s_col),s_col);
+					tput_line_at(16, "10  WISP-DISP-COL    PIC X(%d) VALUE \"%s\".",strlen(s_col),s_col);
 				if ( this_item->x_occurs )
-					tput_line_at(16, "10  DISP-OCCURS PIC X(%d) VALUE \"%s\".",strlen(s_occurs),s_occurs);
+					tput_line_at(16, "10  WISP-DISP-OCCURS PIC X(%d) VALUE \"%s\".",strlen(s_occurs),s_occurs);
 				if ( this_item->pic[0]   )
 				{
-					tput_line_at(16, "10  DISP-PIC    PIC X(%d)",strlen(s_pic));
+					tput_line_at(16, "10  WISP-DISP-PIC    PIC X(%d)",strlen(s_pic));
 					tput_clause (20, "VALUE \"%s\".",s_pic);
 				}
-				tput_line_at        (16, "10  DISP-END    PIC X    VALUE \";\"."); 
+				tput_line_at        (16, "10  WISP-DISP-END    PIC X    VALUE \";\"."); 
 
 			}
 
@@ -692,7 +731,7 @@ static gen_screens22()
 
 /* -----------------------------	Write a hex FF to signal this is the last item		------------------------------	*/
 
-		tput_line_at  (12, "05  DISP-END-SCREEN PIC X VALUE \".\".");
+		tput_line_at  (12, "05  WISP-DISP-END-SCREEN PIC X VALUE \".\".");
 	}
 	write_log("WISP",'I',"SCREENDONE","Finished generating screen records.");
 }
@@ -700,8 +739,8 @@ static gen_screens22()
 
 /* ------------------------ 		Write the FAC for this item into the record		-------------------------------	*/
 
-static char *fac_name[] = { 	"WFAC-PROTECT",
-				"WFAC-MODIFY"   };
+static char *fac_name[] = { 	"WISP-FAC-PROT",
+				"WISP-FAC-MOD"   };
 static item_fac()
 {
 	int k,m;
@@ -737,7 +776,7 @@ static item_fac()
 		m *= (this_item->horiz  == 0) ? 1 : this_item->horiz;		/* times the horizontal count			*/
 
 										/* now write the fac memory and the item memory	*/
-		tput_line_at(12, "05  FAC-NUMBER-%d.",facnum);
+		tput_line_at(12, "05  WISP-FAC-N-%d.",facnum);
 
 		tput_line_at(16, "10  FILLER PIC X(%d) VALUE ALL %s.",m,fac_name[fac_idx]);
 		tput_line_at(16, "10  FILLER PIC X(%d).",m * pic_size(this_item->pic));
@@ -745,7 +784,7 @@ static item_fac()
 		if (this_item->vert_1)						/* has a vertical dimension			*/
 		{
 
-			tput_line                       ("           05  FILLER REDEFINES FAC-NUMBER-%d.\n",facnum);
+			tput_line                       ("           05  FILLER REDEFINES WISP-FAC-N-%d.\n",facnum);
 											/* write the first vertical dimension	*/
 			sprintf(templine,                "             07  FILLER OCCURS %d TIMES.\n", this_item->vert_1);
 			tput_line("%s", templine);
@@ -784,7 +823,7 @@ static item_fac()
 		else
 		{									/* horizontal dimension only		*/
 
-			tput_line(       "           05  FILLER REDEFINES FAC-NUMBER-%d.\n",facnum);
+			tput_line(       "           05  FILLER REDEFINES WISP-FAC-N-%d.\n",facnum);
 											/* write the horizontal dimension	*/
 			sprintf(templine,"           07  FILLER OCCURS %d TIMES.\n", this_item->horiz);
 			tput_line("%s", templine);
@@ -886,8 +925,10 @@ extern int mwconv_flag;
 
 	if (mwconv_flag) 
 	{
+		write_log("WISP",'I',"END","Generating MOVE WITH CONVERSION procedures");
+
 		tput_blank();
-		tput_line_at( 8, "CONVERT-ALPHA-VALUE-TO-NUMERIC.");			/* procedure to do MOVE WITH CONVERSION	*/
+		tput_line_at( 8, "WISP-MOVE-WITH-CONVERSION.");				/* procedure to do MOVE WITH CONVERSION	*/
 		tput_line_at(12, "CALL \"mwconv\" USING");				/* first let mwconv do it		*/
 		tput_line_at(16, "WISP-ALPHA-CONVERSION-FIELD,");
 		tput_line_at(16, "WISP-CONVERTED-INTEGER-FIELD,");
@@ -905,6 +946,8 @@ extern int mwconv_flag;
 
 void gen_endstuff(void)
 {
+	write_log("WISP",'I',"END","Generating ending procedures");
+	
 	tput_blank();
 	tput_scomment("****** The following paragraphs were insert by WISP ******");
 	tput_blank();
@@ -1122,6 +1165,17 @@ static void gen_acn_screen_paras(void)
 		{
 			tput_blank();
 			tput_line_at(8,  "%s.", range_para);
+
+			if (has_fac_fields)
+			{
+				/*
+				**	This will clear any error fields from previous range checks.
+				*/
+				tput_blank();
+				tput_scomment("*    RESET THE FAC ATTRIBUTES");
+				tput_line_at(12, "PERFORM %s.", fac_para);
+			}
+			
 			chk_range(screen_item[scrnum]);
 		}
 
@@ -1152,13 +1206,13 @@ static void gen_acn_screen_paras(void)
 			tput_blank();
 
 			make_fac(the_fac,this_item->name);
-			make_color(the_color,this_item->name);
-			make_control(the_control,this_item->name);
+			make_color(the_color,this_item->name,NULL);
+			make_control(the_control,this_item->name,NULL);
 			
 			/*
-			**	PERFORM VARYING WIDX-1 FROM 1 BY 1 UNTIL WIDX-1 > i1
-			**	 PERFORM VARYING WIDX-2 FROM 1 BY 1 UNTIL WIDX-2 > i2
-			**	  PERFORM VARYING WIDX-3 FROM 1 BY 1 UNTIL WIDX-3 > i3
+			**	PERFORM VARYING WISPX1 FROM 1 BY 1 UNTIL WISPX1 > i1
+			**	 PERFORM VARYING WISPX2 FROM 1 BY 1 UNTIL WISPX2 > i2
+			**	  PERFORM VARYING WISPX3 FROM 1 BY 1 UNTIL WISPX3 > i3
 			**	   CALL "WACUFAC2SCREEN" fac( x x x), color(x x x), control(x x x)
 			**	  END-PERFORM
 			**	 END-PERFORM
@@ -1197,24 +1251,24 @@ static void gen_acn_screen_paras(void)
 
 				if (i3) 
 				{
-					strcpy(index,"(WIDX-1 WIDX-2 WIDX-3)");
+					strcpy(index,"(WISPX1 WISPX2 WISPX3)");
 				}
 				else if (i2) 
 				{
-					strcpy(index,"(WIDX-1 WIDX-2)");
+					strcpy(index,"(WISPX1 WISPX2)");
 				}
 				else
 				{
-					strcpy(index,"(WIDX-1)");
+					strcpy(index,"(WISPX1)");
 				}
 
-				tput_line_at(12, "PERFORM VARYING WIDX-1 FROM 1 BY 1 UNTIL WIDX-1 > %d",i1);
+				tput_line_at(12, "PERFORM VARYING WISPX1 FROM 1 BY 1 UNTIL WISPX1 > %d",i1);
 				if (i2)
 				{
-					tput_line_at(13, "PERFORM VARYING WIDX-2 FROM 1 BY 1 UNTIL WIDX-2 > %d",i2);
+					tput_line_at(13, "PERFORM VARYING WISPX2 FROM 1 BY 1 UNTIL WISPX2 > %d",i2);
 					if (i3)
 					{
-						tput_line_at(14, "PERFORM VARYING WIDX-3 FROM 1 BY 1 UNTIL WIDX-3 > %d",i3);
+						tput_line_at(14, "PERFORM VARYING WISPX3 FROM 1 BY 1 UNTIL WISPX3 > %d",i3);
 					}
 				}
 				tput_line_at(16, "CALL \"WACUFAC2SCREEN\" USING");
@@ -1311,19 +1365,19 @@ static void gen_acn_screen_paras(void)
 	tput_line_at(12, "IF WISP-PFKEY-HELP THEN");
 	tput_line_at(12, "    CALL \"WACUHELP\"");
 	tput_line_at(12, "ELSE IF NOT WISP-PFKEY-INVALID THEN");
-	tput_line_at(12, "    PERFORM VARYING WIDX-1 FROM 1 BY 1 UNTIL WISP-DNR-DONE");
-	tput_line_at(12, "        OR WIDX-1 > WISP-ALLOWABLE-PF-KEYS-CNT");
-	tput_line_at(12, "        IF WISP-PFKEY = WISP-ALLOWABLE-PF-KEYS-SUB(WIDX-1)");
+	tput_line_at(12, "    PERFORM VARYING WISPX1 FROM 1 BY 1 UNTIL WISP-DNR-DONE");
+	tput_line_at(12, "        OR WISPX1 > WISP-ALLOWABLE-PF-KEYS-CNT");
+	tput_line_at(12, "        IF WISP-PFKEY = WISP-ALLOWABLE-PF-KEYS-SUB(WISPX1)");
 	tput_line_at(12, "            MOVE \"Y\" TO WISP-DNR-DONE-FLAG");
 	tput_line_at(12, "        END-IF");
 	tput_line_at(12, "    END-PERFORM");
 	tput_blank();
 	tput_line_at(12, "    MOVE \"N\" TO WISP-DNR-ON-PFKEY");
-	tput_line_at(12, "    PERFORM VARYING WIDX-1 FROM 1 BY 1 UNTIL");
-	tput_line_at(12, "        WIDX-1 > WISP-ON-PF-KEYS-CNT");
+	tput_line_at(12, "    PERFORM VARYING WISPX1 FROM 1 BY 1 UNTIL");
+	tput_line_at(12, "        WISPX1 > WISP-ON-PF-KEYS-CNT");
 	tput_line_at(12, "        OR WISP-DNR-DONE-FLAG = \"N\"");
 	tput_line_at(12, "        OR WISP-DNR-ON-PFKEY = \"Y\"");
-	tput_line_at(12, "        IF WISP-PFKEY = WISP-ON-PF-KEYS-SUB(WIDX-1) THEN");
+	tput_line_at(12, "        IF WISP-PFKEY = WISP-ON-PF-KEYS-SUB(WISPX1) THEN");
 	tput_line_at(12, "            MOVE \"Y\" TO WISP-DNR-ON-PFKEY");
 	tput_line_at(12, "        END-IF");
 	tput_line_at(12, "    END-PERFORM");
@@ -1576,24 +1630,24 @@ int	num,i1,i2,i3;
 	{
 		if (i3) 
 		{
-			strcpy(index,"(WIDX-1 WIDX-2 WIDX-3)");
+			strcpy(index,"(WISPX1 WISPX2 WISPX3)");
 		}
 		else if (i2) 
 		{
-			strcpy(index,"(WIDX-1 WIDX-2)");
+			strcpy(index,"(WISPX1 WISPX2)");
 		}
 		else if (i1) 
 		{
-			strcpy(index,"(WIDX-1)");
+			strcpy(index,"(WISPX1)");
 		}
 
-		tput_line_at(12, "PERFORM VARYING WIDX-1 FROM 1 BY 1 UNTIL WIDX-1 > %d",i1);
+		tput_line_at(12, "PERFORM VARYING WISPX1 FROM 1 BY 1 UNTIL WISPX1 > %d",i1);
 		if (i2)
 		{
-			tput_line_at(13, "PERFORM VARYING WIDX-2 FROM 1 BY 1 UNTIL WIDX-2 > %d",i2);
+			tput_line_at(13, "PERFORM VARYING WISPX2 FROM 1 BY 1 UNTIL WISPX2 > %d",i2);
 			if (i3)
 			{
-				tput_line_at(14, "PERFORM VARYING WIDX-3 FROM 1 BY 1 UNTIL WIDX-3 > %d",i3);
+				tput_line_at(14, "PERFORM VARYING WISPX3 FROM 1 BY 1 UNTIL WISPX3 > %d",i3);
 			}
 		}
 
@@ -1687,15 +1741,15 @@ static void gen_range(item_record* the_item, int i1, int i2, int i3)
 
 	if (i3) 
 	{
-		strcpy(index,"(WIDX-1 WIDX-2 WIDX-3)");
+		strcpy(index,"(WISPX1 WISPX2 WISPX3)");
 	}
 	else if (i2) 
 	{
-		strcpy(index,"(WIDX-1 WIDX-2)");
+		strcpy(index,"(WISPX1 WISPX2)");
 	}
 	else if (i1) 
 	{
-		strcpy(index,"(WIDX-1)");
+		strcpy(index,"(WISPX1)");
 	}
 	else 
 	{
@@ -1709,19 +1763,19 @@ static void gen_range(item_record* the_item, int i1, int i2, int i3)
 
 		if (i1)
 		{
-			tput_line_at(12, "MOVE 1 TO WIDX-1.");
+			tput_line_at(12, "MOVE 1 TO WISPX1.");
 			gen_label(label1);
 			tput_line_at(8,  "%s.",label1);
 		}
 		if (i2)
 		{
-			tput_line_at(12, "MOVE 1 TO WIDX-2.");
+			tput_line_at(12, "MOVE 1 TO WISPX2.");
 			gen_label(label2);
 			tput_line_at(8,  "%s.",label2);
 		}
 		if (i3)
 		{
-			tput_line_at(12, "MOVE 1 TO WIDX-3.");
+			tput_line_at(12, "MOVE 1 TO WISPX3.");
 			gen_label(label3);
 			tput_line_at(8,  "%s.",label3);
 		}
@@ -1765,20 +1819,20 @@ static void gen_range(item_record* the_item, int i1, int i2, int i3)
 
 		if (i3)
 		{
-			tput_line_at(12, "ADD 1 TO WIDX-3.");
-			tput_line_at(12, "IF WIDX-3 <= %d THEN",i3);
+			tput_line_at(12, "ADD 1 TO WISPX3.");
+			tput_line_at(12, "IF WISPX3 <= %d THEN",i3);
 			tput_clause (16, "GO TO %s.",label3);
 		}
 		if (i2)
 		{
-			tput_line_at(12, "ADD 1 TO WIDX-2.");
-			tput_line_at(12, "IF WIDX-2 <= %d THEN",i2);
+			tput_line_at(12, "ADD 1 TO WISPX2.");
+			tput_line_at(12, "IF WISPX2 <= %d THEN",i2);
 			tput_clause (16, "GO TO %s.",label2);
 		}
 		if (i1)
 		{
-			tput_line_at(12, "ADD 1 TO WIDX-1.");
-			tput_line_at(12, "IF WIDX-1 <= %d THEN",i1);
+			tput_line_at(12, "ADD 1 TO WISPX1.");
+			tput_line_at(12, "IF WISPX1 <= %d THEN",i1);
 			tput_clause (16, "GO TO %s.",label1);
 		}
 	}										/* type 2, constant phrase		*/
@@ -1810,19 +1864,19 @@ static void gen_range(item_record* the_item, int i1, int i2, int i3)
 
 		if (i1)
 		{
-			tput_line_at(12, "MOVE 1 TO WIDX-1.");
+			tput_line_at(12, "MOVE 1 TO WISPX1.");
 			gen_label(label1);
 			tput_line_at(8,  "%s.",label1);
 		}
 		if (i2)
 		{
-			tput_line_at(12, "MOVE 1 TO WIDX-2.");
+			tput_line_at(12, "MOVE 1 TO WISPX2.");
 			gen_label(label2);
 			tput_line_at(8,  "%s.",label2);
 		}
 		if (i3)
 		{
-			tput_line_at(12, "MOVE 1 TO WIDX-3.");
+			tput_line_at(12, "MOVE 1 TO WISPX3.");
 			gen_label(label3);
 			tput_line_at(8,  "%s.",label3);
 		}
@@ -1848,18 +1902,18 @@ static void gen_range(item_record* the_item, int i1, int i2, int i3)
 		tput_statement(20, the_item->object_clause->next);
 		tput_clause   (20, ".");
 
-		tput_line_at  (12, "MOVE 1 TO WIDX-4.");
+		tput_line_at  (12, "MOVE 1 TO WISPX4.");
 /* LABEL4 */	tput_line_at  (8,  "%s.", label4);
 
 		tput_line_at  (12, "IF %s", token_data(the_item->object_clause->token));
 		tput_clause   (16, index);
 		tput_statement(16, the_item->object_clause->next);
-		tput_clause   (16, "IS = %s(WIDX-4)", token_data(the_item->lo_range_clause->token));
+		tput_clause   (16, "IS = %s(WISPX4)", token_data(the_item->lo_range_clause->token));
 		tput_clause   (16, "THEN");
 		tput_clause   (16, "GO TO %s.", label5);
 
-		tput_line_at  (12, "ADD 1 TO WIDX-4.");
-		tput_line_at  (12, "IF WIDX-4 <= %s THEN",table_occurs_count);
+		tput_line_at  (12, "ADD 1 TO WISPX4.");
+		tput_line_at  (12, "IF WISPX4 <= %s THEN",table_occurs_count);
 		tput_clause   (16, "GO TO %s.",label4);
 
 		tput_line_at  (12, "MOVE \"E\" TO %s.",crt_status[cur_crt]);
@@ -1872,20 +1926,20 @@ static void gen_range(item_record* the_item, int i1, int i2, int i3)
 
 		if (i3)
 		{
-			tput_line_at(12, "ADD 1 TO WIDX-3.\n");
-			tput_line_at(12, "IF WIDX-3 <= %d THEN",i3);
+			tput_line_at(12, "ADD 1 TO WISPX3.\n");
+			tput_line_at(12, "IF WISPX3 <= %d THEN",i3);
 			tput_clause (16, "GO TO %s.\n",label3);
 		}
 		if (i2)
 		{
-			tput_line_at(12, "ADD 1 TO WIDX-2.\n");
-			tput_line_at(12, "IF WIDX-2 <= %d THEN",i2);
+			tput_line_at(12, "ADD 1 TO WISPX2.\n");
+			tput_line_at(12, "IF WISPX2 <= %d THEN",i2);
 			tput_clause (16, "GO TO %s.\n",label2);
 		}
 		if (i1)
 		{
-			tput_line_at(12, "ADD 1 TO WIDX-1.\n");
-			tput_line_at(12, "IF WIDX-1 <= %d THEN",i1);
+			tput_line_at(12, "ADD 1 TO WISPX1.\n");
+			tput_line_at(12, "IF WISPX1 <= %d THEN",i1);
 			tput_clause (16, "GO TO %s.\n",label1);
 		}
 	}
@@ -1904,22 +1958,22 @@ static void gen_acn_range(item_record* the_item, int i1, int i2, int i3)
 
 	if (i3) 
 	{
-		strcpy(index,"(WIDX-1 WIDX-2 WIDX-3)");
+		strcpy(index,"(WISPX1 WISPX2 WISPX3)");
 	}
 	else if (i2) 
 	{
-		strcpy(index,"(WIDX-1 WIDX-2)");
+		strcpy(index,"(WISPX1 WISPX2)");
 	}
 	else if (i1) 
 	{
-		strcpy(index,"(WIDX-1)");
+		strcpy(index,"(WISPX1)");
 	}
 	else 
 	{
 		index[0] = (char)0;
 	}
 
-	make_color(the_color,the_item->name);
+	make_color(the_color,the_item->name,NULL);
 
 	/*
 	**	Three types of range clause:
@@ -1927,9 +1981,9 @@ static void gen_acn_range(item_record* the_item, int i1, int i2, int i3)
 	**	2) NEGATIVE|POSITIVE
 	**	3) in table
 	**
-	**	PERFORM VARYING WIDX-1 FROM 1 BY 1 UNTIL WIDX-1 > i1
-	**	 PERFORM VARYING WIDX-2 FROM 1 BY 1 UNTIL WIDX-2 > i2
-	**	  PERFORM VARYING WIDX-3 FROM 1 BY 1 UNTIL WIDX-3 > i3
+	**	PERFORM VARYING WISPX1 FROM 1 BY 1 UNTIL WISPX1 > i1
+	**	 PERFORM VARYING WISPX2 FROM 1 BY 1 UNTIL WISPX2 > i2
+	**	  PERFORM VARYING WISPX3 FROM 1 BY 1 UNTIL WISPX3 > i3
 	**
 	** 1)	   IF object-field IS < low OR IS > high THEN error
 	**	   
@@ -1938,13 +1992,13 @@ static void gen_acn_range(item_record* the_item, int i1, int i2, int i3)
 	** 	   IF object-field >= 0 THEN error   (NEGATIVE)
 	**
 	** 3)	   assume error
-	**	   PERFORM VARYING WIDX-4 FROM 1 BY 1 UNTIL WIDX-4 > tablesize OR DONE
-	**             IF object-fiels = table(WIDX-4) THEN not-error & DONE
+	**	   PERFORM VARYING WISPX4 FROM 1 BY 1 UNTIL WISPX4 > tablesize OR DONE
+	**             IF object-fiels = table(WISPX4) THEN not-error & DONE
 	**	   END-PERFORM
 	**
 	**	   IF error THEN
 	**		MOVE "N" TO WISP-DNR-DONE-FLAG
-	**		MOVE WCLR-ERROR TO color-field
+	**		MOVE WISP-CLR-ERROR TO color-field
 	**	   END-IF
 	**
 	**	  END-PERFORM
@@ -1995,13 +2049,13 @@ static void gen_acn_range(item_record* the_item, int i1, int i2, int i3)
 	{
 		col = 16;
 		
-		tput_line_at(12, "PERFORM VARYING WIDX-1 FROM 1 BY 1 UNTIL WIDX-1 > %d",i1);
+		tput_line_at(12, "PERFORM VARYING WISPX1 FROM 1 BY 1 UNTIL WISPX1 > %d",i1);
 		if (i2)
 		{
-			tput_line_at(13, "PERFORM VARYING WIDX-2 FROM 1 BY 1 UNTIL WIDX-2 > %d",i2);
+			tput_line_at(13, "PERFORM VARYING WISPX2 FROM 1 BY 1 UNTIL WISPX2 > %d",i2);
 			if (i3)
 			{
-				tput_line_at(14, "PERFORM VARYING WIDX-3 FROM 1 BY 1 UNTIL WIDX-3 > %d",i3);
+				tput_line_at(14, "PERFORM VARYING WISPX3 FROM 1 BY 1 UNTIL WISPX3 > %d",i3);
 			}
 		}
 	}
@@ -2025,7 +2079,8 @@ static void gen_acn_range(item_record* the_item, int i1, int i2, int i3)
 		tput_clause   (col+4, "THEN");
 
 		tput_line_at  (col+4, "MOVE \"N\" TO WISP-DNR-DONE-FLAG");
-		tput_line_at  (col+4, "MOVE WCLR-ERROR TO %s", addsuffix(the_color,index));
+		tput_line_at  (col+4, "MOVE WISP-CLR-ERROR TO");
+		tput_clause   (col+8,     "%s%s", the_color, index);
 
 		tput_line_at  (col,   "END-IF");
 
@@ -2039,7 +2094,8 @@ static void gen_acn_range(item_record* the_item, int i1, int i2, int i3)
 		tput_clause   (col+4, "THEN");
 
 		tput_line_at  (col+4, "MOVE \"N\" TO WISP-DNR-DONE-FLAG");
-		tput_line_at  (col+4, "MOVE WCLR-ERROR TO %s", addsuffix(the_color,index));
+		tput_line_at  (col+4, "MOVE WISP-CLR-ERROR TO");
+		tput_clause   (col+8,     "%s%s", the_color, index);
 
 		tput_line_at  (col, "END-IF");
 	}
@@ -2052,20 +2108,21 @@ static void gen_acn_range(item_record* the_item, int i1, int i2, int i3)
 		tput_clause   (col+4, "THEN");
 
 		tput_line_at  (col+4, "MOVE \"N\" TO WISP-DNR-DONE-FLAG");
-		tput_line_at  (col+4, "MOVE WCLR-ERROR TO %s", addsuffix(the_color,index));
+		tput_line_at  (col+4, "MOVE WISP-CLR-ERROR TO");
+		tput_clause   (col+8,     "%s%s", the_color, index);
 
 		tput_line_at  (col, "END-IF");
 	}
 	else										/* has to be type 3, array check	*/
 	{
 		tput_line_at  (col,   "MOVE \"Y\" TO WISP-DNR-RANGE-ERROR");
-		tput_line_at  (col,   "PERFORM VARYING WIDX-4 FROM 1 BY 1 UNTIL WIDX-4 > %s",table_occurs_count);
+		tput_line_at  (col,   "PERFORM VARYING WISPX4 FROM 1 BY 1 UNTIL WISPX4 > %s",table_occurs_count);
 		tput_line_at  (col,   "    OR WISP-DNR-RANGE-ERROR = \"N\"");
 
 		tput_line_at  (col+4, "IF %s", token_data(the_item->object_clause->token));
 		tput_clause   (col+8, index);
 		tput_statement(col+8, the_item->object_clause->next);
-		tput_clause   (col+8, "IS = %s(WIDX-4)", token_data(the_item->lo_range_clause->token));
+		tput_clause   (col+8, "IS = %s(WISPX4)", token_data(the_item->lo_range_clause->token));
 		tput_clause   (col+8, "THEN");
 
 		tput_line_at  (col+4, "    MOVE \"N\" TO WISP-DNR-RANGE-ERROR");
@@ -2074,8 +2131,9 @@ static void gen_acn_range(item_record* the_item, int i1, int i2, int i3)
 		tput_line_at  (col,   "END-PERFORM");
 
 		tput_line_at  (col,  "IF WISP-DNR-RANGE-ERROR = \"Y\" THEN");
-		tput_line_at  (col,  "    MOVE \"N\" TO WISP-DNR-DONE-FLAG");
-		tput_line_at  (col,  "    MOVE WCLR-ERROR TO %s", addsuffix(the_color,index));
+		tput_line_at  (col+4,   "MOVE \"N\" TO WISP-DNR-DONE-FLAG");
+		tput_line_at  (col+4,   "MOVE WISP-CLR-ERROR TO");
+		tput_clause   (col+8,       "%s%s", the_color, index);
 		tput_line_at  (col,  "END-IF");
 
 	}
@@ -2273,6 +2331,8 @@ int gen_acn_screens(void)
 	if (scrns_done) return(0);							/* already did it			*/
 	scrns_done = 1;
 
+	if (num_screens < 1) return(0);
+
 	write_log("WISP",'I',"SCREEN","Generating SCREEN SECTION.");
 
 	tput_blank();
@@ -2282,25 +2342,19 @@ int gen_acn_screens(void)
 	/*
 	**	Canned screens
 	*/
-	tput_blank();
-	tput_scomment("*    Native translation of DISPLAY verb.");
-	/*       123456789012345678901234567890123456789012345678901234567890123456789012 */
-	tput_line_at(8,"01  WISP-DISPLAY-SCREEN.");
-	tput_line_at(8,"    05  COL 2 LINE 1 VALUE \"DISPLAY FROM PROGRAM %-8.8s\".",prog_id);
-	tput_line_at(8,"    05  LINE 7.");
-	tput_line_at(8,"        10  COL 2 LINE PLUS 1 PIC X(79) OCCURS 15");
-	tput_line_at(8,"            FROM WISP-DISPLAY-FIELDS.");
-	tput_line_at(8,"    05  COL 2 LINE 24 VALUE \"PRESS (ENTER) TO CONTINUE PROGRAM.\".");
 
-	tput_blank();
-	tput_scomment("*    Invalid CRT status.");
-	tput_line_at(8,"01  WISP-INVALID-CRT-STATUS-SCREEN.");
-	tput_line_at(8,"    05  LINE 12 COL 30  VALUE \"INVALID CRT STATUS\" BOLD.");
-	tput_line_at(8,"    05  LINE + 2 PIC X   FROM WISP-CRT-KEY-1 BOLD.");
-	tput_line_at(8,"    05  LINE + 2 PIC 999 FROM WISP-CRT-KEY-EXCEPTION BOLD.");
-	tput_line_at(8,"    05  LINE + 2 PIC 999 FROM WISP-CRT-KEY-3 BOLD.");
-	tput_line_at(8,"    05  LINE 24 COL 25 VALUE \"PRESS (ENTER) TO CONTINUE.\" BOLD.");
-	/*       123456789012345678901234567890123456789012345678901234567890123456789012 */
+	if (num_screens > 0)
+	{
+		tput_blank();
+		tput_scomment("*    Invalid CRT status.");
+		tput_line_at(8,"01  WISP-INVALID-CRT-STATUS-SCREEN.");
+		tput_line_at(8,"    05  LINE 12 COL 30  VALUE \"INVALID CRT STATUS\" BOLD.");
+		tput_line_at(8,"    05  LINE + 2 PIC X   FROM WISP-CRT-KEY-1 BOLD.");
+		tput_line_at(8,"    05  LINE + 2 PIC 999 FROM WISP-CRT-KEY-EXCEPTION BOLD.");
+		tput_line_at(8,"    05  LINE + 2 PIC 999 FROM WISP-CRT-KEY-3 BOLD.");
+		tput_line_at(8,"    05  LINE 24 COL 25 VALUE \"PRESS (ENTER) TO CONTINUE.\" BOLD.");
+		/*       123456789012345678901234567890123456789012345678901234567890123456789012 */
+	}
 
 	/*
 	**	Loop for each screen 
@@ -2562,8 +2616,6 @@ int gen_acn_screens(void)
 					**	to replace FAC OF logic
 					*/
 					need_clr = 1;
-					make_color(color_clause,this_item->name);
-					make_control(ctrl_clause,this_item->name);
 				}
 			}
 
@@ -2665,8 +2717,10 @@ int gen_acn_screens(void)
 			*/
 			if (need_clr)
 			{
-				tput_line_at (16, "COLOR   IS %s", addsuffix(color_clause, cindex));
-				tput_line_at (16, "CONTROL IS %s", addsuffix(ctrl_clause, cindex));
+				tput_line_at (16, "COLOR   IS");
+				tput_clause  (20, "%s", make_color(color_clause, this_item->name, cindex));
+				tput_line_at (16, "CONTROL IS");
+				tput_clause  (20, "%s", make_control(ctrl_clause, this_item->name, cindex));
 			}
 			else
 			{
@@ -2795,8 +2849,6 @@ int gen_acn_screens(void)
 						**	to replace FAC OF logic
 						*/
 						need_clr = 1;
-						make_color(color_clause,this_item->name);
-						make_control(ctrl_clause,this_item->name);
 					}
 				}
 			
@@ -2887,8 +2939,10 @@ int gen_acn_screens(void)
 				{
 					if (need_clr)
 					{
-						tput_line_at (scol+4, "COLOR   IS %s", addsuffix(color_clause, cindex));
-						tput_line_at (scol+4, "CONTROL IS %s", addsuffix(ctrl_clause, cindex));
+						tput_line_at (scol+4, "COLOR   IS %s", 
+							      make_color(color_clause, this_item->name, cindex));
+						tput_line_at (scol+4, "CONTROL IS %s", 
+							      make_control(ctrl_clause, this_item->name, cindex));
 					}
 					else
 					{
@@ -2920,13 +2974,12 @@ int gen_acn_screens(void)
 **	Sub 0 is default for protected fields
 **	Sub 1 is default for modifiable fields
 */
-static char *acu_color_name[]   = { "WCLR-PROTECT", "WCLR-BRIGHT" };
+static char *acu_color_name[]   = { "WISP-CLR-PROTECT", "WISP-CLR-BRIGHT" };
 static char *acu_control_name[] = { "SPACES",       "\"UPPER,AUTO\"" };
 
 
 /*
 **	Generate the WORKING-STORAGE screen control fields.
-**	This includes some canned fields plus the FAC, COLOR, and CONTROL fields.
 */
 int gen_acn_facs(void)
 {
@@ -2943,6 +2996,10 @@ int gen_acn_facs(void)
 	int	dim;
 	char	index[40];
 
+	if (num_screens < 1)
+	{
+		return(0);
+	}
 
 	write_log("WISP",'I',"SCREENFAC","Generating SCREEN FACs.");
 
@@ -2950,91 +3007,8 @@ int gen_acn_facs(void)
 	tput_scomment("*******");
 	tput_scomment("******* WISP generated screen control fields.");
 	tput_scomment("*******");
-
 	tput_blank();
-	tput_scomment( "*    Special-names CURSOR clause.");
-	tput_line_at(8, "01  WISP-CURSOR.");
-	tput_line_at(8, "    05  WISP-CURSOR-LINE    PIC 999 VALUE 1.");
-	tput_line_at(8, "    05  WISP-CURSOR-COL     PIC 999 VALUE 1.");
 
-	tput_blank();
-	tput_scomment( "*    Special-names CRT STATUS clause.");
-	tput_line_at(8, "01  WISP-CRT-STATUS.");
-	tput_line_at(8, "    05  WISP-CRT-KEY-1               PIC X.");
-	tput_line_at(8, "        88  WISP-CRT-STATUS-TERMINATED  VALUE '0'.");
-	tput_line_at(8, "        88  WISP-CRT-STATUS-EXCEPTION   VALUE '1'.");
-	tput_line_at(8, "        88  WISP-CRT-STATUS-EOF         VALUE '2'.");
-	tput_line_at(8, "        88  WISP-CRT-STATUS-TIMEOUT     VALUE '3'.");
-	tput_line_at(8, "        88  WISP-CRT-STATUS-NOITEM      VALUE '9'.");
-	tput_line_at(8, "    05  WISP-CRT-KEY-EXCEPTION       PIC X COMP-X.");
-	tput_line_at(8, "        88  WISP-CRT-EX-HELP            VALUE 33.");
-	tput_line_at(8, "        88  WISP-CRT-EX-GETKEY          VALUE 34.");
-	tput_line_at(8, "        88  WISP-CRT-KEY-AUTOSKIP       VALUE 49.");
-	tput_line_at(8, "    05  WISP-CRT-KEY-3               PIC X COMP-X.");		       
-	tput_line_at(8, "        88  WISP-CRT-KEY-TAB            VALUE  9.");
-	tput_line_at(8, "        88  WISP-CRT-KEY-ENTER          VALUE 13.");
-
-	tput_blank();
-	tput_scomment( "*    Special-names SCREEN CONTROL clause.");
-	tput_line_at(8, "01  WISP-SCREEN-CONTROL.");
-	tput_line_at(8, "    05  WISP-ACCEPT-CONTROL     PIC 9   VALUE 0.");
-	tput_line_at(8, "    05  WISP-CONTROL-VALUE      PIC 999 VALUE 1.");
-	tput_line_at(8, "    05  WISP-CONTROL-HANDLE     USAGE HANDLE.");
-	tput_line_at(8, "    05  WISP-CONTROL-ID         PIC XX COMP-X.");
-
-	tput_blank();
-	tput_scomment( "*    Fields for DISPLAY statements.");
-	tput_line_at(8, "01  WISP-DISPLAY-FIELDS-DATA PIC X(1185).");
-	tput_line_at(8, "01  FILLER REDEFINES WISP-DISPLAY-FIELDS-DATA.");
-	tput_line_at(8, "    05  WISP-DISPLAY-FIELDS OCCURS 15 PIC X(79).");
-
-	if (num_screens < 1)
-	{
-		return(0);
-	}
-
-	tput_blank();
-	tput_scomment( "*    Screen items COLOR phrase values.");
-	tput_line_at(8, "78  WCLR-REVERSE     VALUE  1024.");
-	tput_line_at(8, "78  WCLR-BRIGHT      VALUE  4096.");
-	tput_line_at(8, "78  WCLR-UNDERLINE   VALUE  8192.");
-	tput_line_at(8, "78  WCLR-BLINK       VALUE 16384.");
-	tput_line_at(8, "78  WCLR-PROTECT     VALUE 32768.");
-	tput_line_at(8, "78  WCLR-ERROR       VALUE 17408.");
-
-	tput_blank();
-	tput_scomment( "*    WISP workstation working items.");
-	tput_line_at(8, "01  WISP-PFKEY                 PIC 99.");
-	tput_line_at(8, "    88  WISP-PFKEY-ENTER       VALUE  0.");
-	tput_line_at(8, "    88  WISP-PFKEY-HELP        VALUE 33.");
-	tput_line_at(8, "    88  WISP-PFKEY-INVALID     VALUE 99.");
-	tput_line_at(8, "01  WISP-CURSOR-POSITION.");
-	tput_line_at(8, "    05  WISP-CURSOR-POSITION-COL COMP-1 PIC S9(4).");
-	tput_line_at(8, "    05  WISP-CURSOR-POSITION-ROW COMP-1 PIC S9(4).");
-
-	tput_blank();
-	tput_scomment( "*    WISP DISPLAY AND READ working items.");
-	tput_line_at(8, "01  WISP-ALLOWABLE-PF-KEYS-CNT PIC 99.");
-	tput_line_at(8, "01  WISP-ON-PF-KEYS-CNT        PIC 99.");
-	tput_line_at(8, "01  WISP-DNR-ON-PFKEY          PIC X VALUE \"N\".");
-	tput_line_at(8, "01  WISP-DNR-NO-MOD            PIC X VALUE \"N\".");
-	tput_line_at(8, "01  WISP-DNR-RANGE-ERROR       PIC X VALUE \"N\".");
-
-	tput_line_at(8, "01  WISP-DNR-ORDER-AREA.");
-	tput_line_at(8, "    05  WISP-DNR-ROW         PIC X COMP-X VALUE 1.");
-	tput_line_at(8, "    05  WISP-DNR-WCC         PIC X COMP-X VALUE 160.");
-	tput_line_at(8, "        88  WISP-DNR-WCC-UNLOCK-KEYBOARD  VALUES");
-	tput_line_at(8, "            128 THRU 255.");
-	tput_line_at(8, "        88  WISP-DNR-WCC-SOUND-ALARM      VALUES ");
-	tput_line_at(8, "             64 THRU 127, 192 THRU 255.");
-	tput_line_at(8, "        88  WISP-DNR-WCC-POSITION-CURSOR  VALUES");
-	tput_line_at(8, "             32 THRU  63,  96 THRU 127,");
-	tput_line_at(8, "            160 THRU 171, 224 THRU 255.");
-	tput_line_at(8, "    05  WISP-DNR-CURSOR-COL  PIC X COMP-X VALUE 0.");
-	tput_line_at(8, "    05  WISP-DNR-CURSOR-ROW  PIC X COMP-X VALUE 0.");
-
-	tput_line_at(8, "01  WISP-DNR-WCC-CURSOR-BIT  PIC X VALUE X\"20\".");
-	tput_line_at(8, "01  WISP-DNR-WCC-ALARM-BIT   PIC X VALUE X\"40\".");
 
 	/*
 	**	Loop for each screen 
@@ -3050,10 +3024,10 @@ int gen_acn_facs(void)
 
 		make_oa(the_orderarea,scrn_name[i]);
 		tput_line_at(8,  "01  %s.",the_orderarea);
-		tput_line_at(12, "05  FILLER         PIC X  VALUE DEC-BYTE-1.");
+		tput_line_at(12, "05  FILLER         PIC X  VALUE WISP-SYMB-1.");
 		tput_line_at(12, "05  FILLER         PIC X  VALUE WISP-SCWCC.");
-		tput_line_at(12, "05  FILLER         PIC X  VALUE DEC-BYTE-0.");
-		tput_line_at(12, "05  FILLER         PIC X  VALUE DEC-BYTE-0.");
+		tput_line_at(12, "05  FILLER         PIC X  VALUE WISP-SYMB-0.");
+		tput_line_at(12, "05  FILLER         PIC X  VALUE WISP-SYMB-0.");
 
 		last_item = this_item;
 
@@ -3076,9 +3050,7 @@ int gen_acn_facs(void)
 			tput_blank();
 
 			make_fac(the_fac,this_item->name);
-			make_color(the_color,this_item->name);
-			make_control(the_control,this_item->name);
-
+			
 			if (this_item->object_clause)
 			{
 				fac_idx = 1;
@@ -3109,7 +3081,7 @@ int gen_acn_facs(void)
 			
 			/*
 			**
-			**	01  FAC-OF-XXX  PIC X(v1*v2*h) ALL WFAC-MODIFY.
+			**	01  FAC-OF-XXX  PIC X(v1*v2*h) ALL WISP-FAC-MOD.
 			**	01  REDEFINES FAC-OF-XXX.
 			**	    05  OCCURS v1.
 			**		10  OCCURS v2.
@@ -3127,8 +3099,8 @@ int gen_acn_facs(void)
 				/*
 				**	Generate FAC fields
 				*/
-				tput_line_at(8, "01  FAC-NUMBER-%d PIC X(%d) VALUE ALL %s.",facnum,m,fac_name[fac_idx]);
-				tput_line_at(8, "01  FILLER REDEFINES FAC-NUMBER-%d.",facnum);
+				tput_line_at(8, "01  WISP-FAC-N-%d PIC X(%d) VALUE ALL %s.",facnum,m,fac_name[fac_idx]);
+				tput_line_at(8, "01  FILLER REDEFINES WISP-FAC-N-%d.",facnum);
 
 				col = 12;
 				level = 5;
@@ -3161,7 +3133,7 @@ int gen_acn_facs(void)
 				**	Generate COLOR fields
 				*/
 
-				tput_line_at(8, "01  W-COLOR-NUMBER-%d.", facnum);
+				tput_line_at(8, "01  WISP-COLOR-N-%d.", facnum);
 
 				for( ov1x=1; ov1x<=ov1; ov1x++)
 				{
@@ -3198,13 +3170,14 @@ int gen_acn_facs(void)
 								sprintf(index, "-%d-%d-%d", ov1x, ov2x, ohx);
 								break;
 							}
-							tput_line_at(12, "05  %s PIC 9(5)", addsuffix(the_color, index));
+							tput_line_at(12, "05  %s PIC 9(5)", 
+								     make_color(the_color,this_item->name,index));
 							tput_clause(16,  "VALUE %s.", acu_color_name[fac_idx]);
 						}
 					}
 				}
 				
-				tput_line_at(8, "01  FILLER REDEFINES W-COLOR-NUMBER-%d.", facnum);
+				tput_line_at(8, "01  FILLER REDEFINES WISP-COLOR-N-%d.", facnum);
 
 				col = 12;
 				level = 5;
@@ -3230,13 +3203,13 @@ int gen_acn_facs(void)
 					level += 5;
 				}
 
-				tput_line_at(col, "%02d  %s PIC 9(5).", level, the_color);
+				tput_line_at(col, "%02d  %s PIC 9(5).", level, make_color(the_color,this_item->name,NULL));
 
 
 				/*
 				**	Generate CONTROL fields
 				*/
-				tput_line_at(8, "01  W-CONTROL-NUMBER-%d.", facnum);
+				tput_line_at(8, "01  WISP-CONTROL-N-%d.", facnum);
 				for( ov1x=1; ov1x<=ov1; ov1x++)
 				{
 					for( ov2x=1; ov2x<=ov2; ov2x++)
@@ -3272,12 +3245,13 @@ int gen_acn_facs(void)
 								sprintf(index, "-%d-%d-%d", ov1x, ov2x, ohx);
 								break;
 							}
-							tput_line_at(12, "05  %s PIC X(20)", addsuffix(the_control, index));
+							tput_line_at(12, "05  %s PIC X(20)", 
+								     make_control(the_control,this_item->name,index));
 							tput_clause( 16, "VALUE %s.", acu_control_name[fac_idx]);
 						}
 					}
 				}
-				tput_line_at(8, "01  FILLER REDEFINES W-CONTROL-NUMBER-%d.", facnum);
+				tput_line_at(8, "01  FILLER REDEFINES WISP-CONTROL-N-%d.", facnum);
 
 				col = 12;
 				level = 5;
@@ -3303,15 +3277,17 @@ int gen_acn_facs(void)
 					level += 5;
 				}
 
-				tput_line_at(col, "%02d  %s PIC X(20).", level, the_control);
-
+				tput_line_at(col, "%02d  %s PIC X(20).", level, make_control(the_control,this_item->name,NULL));
 
 			}
 			else
 			{
-				tput_line_at(8, "01  %-20s PIC X     VALUE %s.", the_fac,     fac_name[fac_idx]);
-				tput_line_at(8, "01  %-20s PIC 9(5)  VALUE %s.", the_color,   acu_color_name[fac_idx]);
-				tput_line_at(8, "01  %-20s PIC X(20) VALUE %s.", the_control, acu_control_name[fac_idx]);
+				tput_line_at(8, "01  %-20s PIC X     VALUE", the_fac);
+				tput_clause(16,           "%s.", fac_name[fac_idx]);
+				tput_line_at(8, "01  %-20s PIC 9(5)  VALUE", make_color(the_color,this_item->name,NULL));
+				tput_clause(16,           "%s.", acu_color_name[fac_idx]);
+				tput_line_at(8, "01  %-20s PIC X(20) VALUE", make_control(the_control,this_item->name,NULL));
+				tput_clause(16,           "%s.", acu_control_name[fac_idx]);
 			}
 
 			last_item = this_item;
@@ -3324,14 +3300,14 @@ int gen_acn_facs(void)
 	return 0;
 }
 
-void make_color(char* the_color, char* src)
+static char* make_color(char* the_color, const char* src, const char* suffix)
 {
-	make_fld(the_color,src,"WCLR-");
+	return gen_data_name(the_color, "WCLR-", src, suffix);
 }
 
-void make_control(char* the_ctrl, char* src)
+static char* make_control(char* the_ctrl, const char* src, const char* suffix)
 {
-	make_fld(the_ctrl,src,"WCTR-");
+	return gen_data_name(the_ctrl, "WCTR-", src, suffix);
 }
 
 /*---*/
@@ -3563,6 +3539,45 @@ char* addsuffix(const char* fld, const char* suff)
 /*
 **	History:
 **	$Log: wt_scrn.c,v $
+**	Revision 1.28  1999-09-07 10:41:53-04  gsl
+**	Fix prototypes and return codes
+**
+**	Revision 1.27  1998-04-13 10:53:04-04  gsl
+**	Test for invalid row and column values
+**
+**	Revision 1.26  1998-04-10 13:39:52-04  gsl
+**	For ACN RANGE clauses, clear the any previous error fields as the first
+**	step of the range checking
+**
+**	Revision 1.25  1998-04-03 14:40:22-05  gsl
+**	Remove the DISPLAY verb stuff for ACN, moved to WACUDISPLAY.
+**	Only generate the canned SCREEN SECTION if there are screens.
+**
+**	Revision 1.24  1998-03-27 10:37:10-05  gsl
+**	change_words
+**
+**	Revision 1.23  1998-03-26 14:51:24-05  gsl
+**	Rename the SCREEN and RANGE FILLER's with WISP- prefix
+**
+**	Revision 1.22  1998-03-26 14:28:09-05  gsl
+**	Change to use WISP-SYMB-xx and all unique WISP prefixed variables
+**	for generated names
+**
+**	Revision 1.21  1998-03-23 13:43:46-05  gsl
+**	Change make_color() and make_control() to use gen_data_name()
+**	Add WISP-DISPLAY-PARA for ACN.
+**	Add data description names to symbol table
+**	Fix calls to write_log()
+**
+**	Revision 1.20  1998-03-17 14:57:07-05  gsl
+**	Move the hardcoded working storage items to wt_wsdat
+**
+**	Revision 1.19  1998-03-04 15:57:41-05  gsl
+**	Truncate prog_id to 8 characters
+**
+**	Revision 1.18  1998-03-04 13:35:08-05  gsl
+**	Add logging
+**
 **	Revision 1.17  1997-09-30 10:56:38-04  gsl
 **	Fix warnings
 **

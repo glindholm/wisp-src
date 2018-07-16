@@ -1,26 +1,60 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+**	File:		wt_opcls.c
+**
+**	Project:	WISP/TRAN
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	OPEN and CLOSE verbs
+**
+*/
+
+/*
+**	Includes
+*/
 
 #define EXT extern
 #include "wisp.h"
 #include "crt.h"
 #include "cobfiles.h"
 #include "directiv.h"
-
 #include "wcommon.h"
-
-			/* Process OPEN statements for possible multiple file names amd CRT file opens	*/
+#include "statment.h"
+#include "reduce.h"
+#include "wt_procd.h"
+#include "wt_locks.h"
 
 /*
-	OPEN { INPUT         } filename-1 [filename-2 ...]  ....
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
+
+
+static char *open_mode_name[] = { "",	"WFOPEN-INPUT",
+					"WFOPEN-SHARED",
+					"WFOPEN-OUTPUT",
+					"WFOPEN-EXTEND",
+					"WFOPEN-SPECIAL-INPUT",
+					"WFOPEN-I-O",
+					"WFOPEN-SORT"};
+
+/*
+**	Static Function Prototypes
+*/
+
+
+
+/*
+	OPEN { INPUT         } filename-1 [with NO REWIND] [filename-2 ...]  ....
 	     { OUTPUT        }
 	     { I-O           }
 	     { SHARED        }
@@ -34,465 +68,656 @@ static char rcsid[]="$Id:$";
              OUTPUT D, E.
 */
 
-
-static char *open_mode_name[] = { "",	"WFOPEN-INPUT",
-					"WFOPEN-SHARED",
-					"WFOPEN-OUTPUT",
-					"WFOPEN-EXTEND",
-					"WFOPEN-SPECIAL-INPUT",
-					"WFOPEN-I-O",
-					"WFOPEN-SORT"};
-
-p_open()
+NODE parse_open(NODE the_statement)
 {
-	char o_fnames[MAX_FILES][40];							/* a place to save the file names	*/
-	char o_fmode[MAX_FILES][40];							/* And the open mode for the file.	*/
-	char o_allow[MAX_FILES][40];							/* Also if ALLOWING needed.		*/
-	int  o_fref[MAX_FILES];								/* ref nums of the files		*/
-	int  o_write[MAX_FILES];							/* Allow writers.			*/
-	int  o_omode[MAX_FILES];
-	int  o_count;									/* a count of the file names saved	*/
-	int i,done,is_crt,allow_write;
-	int open_mode,syntax_ok;
+	NODE	curr_node, open_node, file_node, access_node;
+	NODE	trailing_fluff_node = NULL;
+	int	col, fnum;
+	int	is_crt;
+	int	found_crt = 0;
+	int	file_cnt = 0;
+	int	with_no_rewind = 0;
+	int	open_mode;
 
-	allow_write = 0;								/* No writers allowed.			*/
-	o_count = 0;									/* no files yet				*/
-	done = 0;									/* not done yet				*/
-	open_mode = 0;
-	syntax_ok = 0;									/* Not sure if the syntax is ok yet.	*/
+	curr_node = first_token_node(the_statement);
 
-	ptype = get_param(o_parms[0]);							/* skip the OPEN verb			*/
-	stredt(linein,o_parms[0],"");							/* Remove the word.			*/
-
-	o_parms[5][0] = '\0';								/* Clear the OPEN MODE string		*/
-	o_parms[6][0] = '\0';								/* And the trailing MODE string		*/
-
-	do
+	if (!eq_token(curr_node->token,VERB,"OPEN"))
 	{
-		ptype = get_param(o_parms[0]);						/* get a word				*/
+		write_tlog(curr_node->token,"WISP",'E',"VERB","Expected OPEN found [%s].", token_data(curr_node->token));
+		return(the_statement);
+	}
 
-		is_crt = 0;
-		if ((cur_crt = crt_index(o_parms[0])) != -1) 
+	open_node = curr_node;
+	write_tlog(open_node->token,"WISP",'I',"OPEN","Processing OPEN Statement.");
+
+	col = open_node->token->column;
+	if (col > 36) col = 36;
+	if (col < 12) col = 12;
+
+	tput_leading_fluff(the_statement);
+	trailing_fluff_node = unhook_trailing_fluff(the_statement);
+
+	curr_node = open_node->next;
+	for(;;)
+	{
+		/*
+		**	Check for end conditions.
+		*/
+		if (!curr_node)
 		{
-			is_crt = 1;
-			syntax_ok = 1;
+			break;
+		}
+		if (NODE_END == curr_node->type)
+		{
+			break;
+		}
+		if (!curr_node->token)
+		{
+			curr_node = curr_node->next;
+			continue;
 		}
 
-		i = 0;									/* It's not a file name yet		*/
-		if (!strcmp(o_parms[0],"SHARED"))					/* handle SHARED phrase	    		*/
-		{
-			allow_write = 1;						/* Allow writers.			*/
-			open_mode = OPEN_SHARED;
-		}									/* Handle other modes			*/
-		else if (!strcmp(o_parms[0],"SPECIAL-INPUT"))				/* handle SPECIAL-INPUT phrase		*/
-		{
-			allow_write = 1;						/* Allow writers.			*/
-			open_mode = OPEN_SPECIAL_INPUT;
-		}									/* Handle other modes			*/
-		else if (!strcmp(o_parms[0],"I-O"))					/* handle I-O phrase			*/
-		{
-			allow_write = 0;						/* Disallow writers.			*/
-			open_mode = OPEN_I_O;
-		}									/* Handle other modes			*/
-		else if (!strcmp(o_parms[0],"INPUT"))
-		{
-			allow_write = 0;						/* Disallow writers.			*/
-			open_mode = OPEN_INPUT;
-		}
-		else if (!strcmp(o_parms[0],"OUTPUT"))
-		{
-			allow_write = 0;						/* Disallow writers.			*/
-			open_mode = OPEN_OUTPUT;
-		}
-		else if (!strcmp(o_parms[0],"EXTEND"))
-		{
-			allow_write = 0;						/* Allow writers.			*/
-			open_mode = OPEN_EXTEND;
-		}
-		else if (is_crt)							/* delete CRT file opens		*/
-		{
-			write_log("WISP",'I',"DELCRTOPEN","Removed OPEN of crt file, %s.",crt_file[cur_crt]);
-		}
-		else									/* see if it is a file name		*/
-		{
-			i = file_index(o_parms[0]);
+		fnum = -1;
 
-			if (i != -1)
+		/*
+		**	Check if next token is the open mode.
+		*/
+
+		if (KEYWORD == curr_node->token->type)
+		{
+			access_node = curr_node;
+			
+			if (eq_token(curr_node->token, KEYWORD,"SHARED"))
 			{
-				syntax_ok = 1;						/* Syntax is ok, there was a file.	*/
-				if (o_count > MAX_FILES)				/* Exceeded file buffer.		*/
+				open_mode = OPEN_SHARED;
+			}
+			else if (eq_token(curr_node->token, KEYWORD,"SPECIAL-INPUT"))
+			{
+				open_mode = OPEN_SPECIAL_INPUT;
+			}
+			else if (eq_token(curr_node->token, KEYWORD,"I-O"))
+			{
+				open_mode = OPEN_I_O;
+			}
+			else if (eq_token(curr_node->token, KEYWORD,"INPUT"))
+			{
+				open_mode = OPEN_INPUT;
+			}
+			else if (eq_token(curr_node->token, KEYWORD,"OUTPUT"))
+			{
+				open_mode = OPEN_OUTPUT;
+			}
+			else if (eq_token(curr_node->token, KEYWORD,"EXTEND"))
+			{
+				open_mode = OPEN_EXTEND;
+			}
+			else
+			{
+				write_tlog(curr_node->token,"WISP",'F',"PARSE",
+					   "Error parsing OPEN statement. Expecting open mode found [%s]",
+					   token_data(curr_node->token));
+
+				tput_statement(12, the_statement);
+				return(free_statement(the_statement));
+			}
+
+			curr_node = curr_node->next;
+
+		}
+		else if (IDENTIFIER == curr_node->token->type)
+		{
+			/*
+			**	Next token should be a file name(s).
+			*/
+
+			file_node = curr_node;
+			is_crt = 0;
+		
+			if (-1 != crt_index(token_data(file_node->token)))
+			{
+				is_crt = 1;
+				found_crt = 1;
+
+				tput_line_at(col,"CONTINUE");
+			}
+			else if (-1 != (fnum = file_index(token_data(file_node->token))))
+			{
+				prog_ref[fnum]++;					/* Say it was used.			*/
+				file_cnt++;
+			}
+			else
+			{
+				file_cnt++;
+
+				write_log("WISP",'E',"NOTFOUND",
+				  "Error -- File %s, referenced by OPEN statement but not Declared.",
+				  token_data(file_node->token));
+			}
+
+			curr_node = file_node->next;
+
+			/*
+			**	Step thru optonal keywords.
+			*/
+			with_no_rewind = 0;
+			if (curr_node && eq_token(curr_node->token, KEYWORD, "WITH"))
+			{
+				curr_node = curr_node->next;
+			}
+			if (curr_node && eq_token(curr_node->token, KEYWORD, "NO"))
+			{
+				curr_node = curr_node->next;
+			}
+			if (curr_node && eq_token(curr_node->token, KEYWORD, "REWIND"))
+			{
+				curr_node = curr_node->next;
+				with_no_rewind = 1;
+			}
+
+
+		}
+		else
+		{
+			write_tlog(curr_node->token,"WISP",'E',"PARSE","Error parsing OPEN statement [%s].", 
+				   token_data(curr_node->token));
+		}
+		
+		/*
+		**	Generate the OPEN logic.
+		*/
+		if (-1 != fnum)
+		{
+			char 	*open_access;
+			char	*open_lock;
+
+			open_access = "UNKNOWN";
+			open_lock = "";
+			
+			switch(open_mode)
+			{
+			case OPEN_SHARED:
+				if (prog_ftypes[fnum] & (SEQ_DYN + SEQ_FILE))
 				{
-					write_log("WISP",'F',"EXCFILECNT","Exceeded FILE count in OPEN statement.");
-					exit_wisp(EXIT_WITH_ERR);
+					open_access = "EXTEND";
+				}
+				else
+				{
+					open_access = "I-O";
 				}
 
-				o_omode[o_count] = open_mode;
-				o_fref[o_count] = i;					/* remember which one it is		*/
-				prog_ref[i]++;						/* Say it was used.			*/
-
-				o_write[o_count] = allow_write;				/* Save writers flag.			*/
-
-				if (open_mode == OPEN_SHARED)				/* handle SHARED phrase	    		*/
-				{							/* If Sequential, change to EXTEND	*/
-					if (prog_ftypes[i] & (SEQ_DYN + SEQ_FILE))
-					{
-						strcpy(o_fmode[o_count],"EXTEND");	/* Make it EXTEND.			*/
-					}
-					else
-					{
-						strcpy(o_fmode[o_count],"I-O");		/* Change to I-O			*/
-					}
-
-					if (lpi_cobol||mf_aix)
-						o_allow[o_count][0] = '\0';		/* LPI don't work like this.		*/
-					else
-						strcpy(o_allow[o_count]," ALLOWING ALL");	/* And the trailing mode	*/
-
-					if (vax_cobol && (prog_ftypes[i] & AUTOLOCK))
-					{
-						write_log("WISP",'W',"AUTOLOCK","File %s OPEN SHARED using AUTOLOCK.",o_parms[0]);
-					}
-
-				}							/* Handle other modes			*/
-				else if (open_mode == OPEN_SPECIAL_INPUT)		/* handle SPECIAL-INPUT phrase		*/
+				if (lpi_cobol||mf_aix)
 				{
-					strcpy(o_fmode[o_count],"INPUT");		/* CHANGE IT				*/
-					if (lpi_cobol||mf_aix)
-						o_allow[o_count][0] = '\0';		/* LPI don't work like this.		*/
-					else if (vax_cobol && (prog_ftypes[i] & AUTOLOCK))
-						strcpy(o_allow[o_count]," ");		/* Automatic record locking.		*/
-					else
-						strcpy(o_allow[o_count]," ALLOWING ALL");	/* And the trailing mode	*/
-				}							/* Handle other modes			*/
-				else if (open_mode == OPEN_I_O)				/* handle I-O phrase			*/
-				{
-					strcpy(o_fmode[o_count],"I-O");			/* Set to I-O				*/
-
-					if (lpi_cobol||mf_aix)
-						strcpy(o_allow[o_count]," WITH LOCK");	/* LPI needs it locked.			*/
-					else if ((vax_cobol || acu_cobol) && (prog_ftypes[i] & OPENIOX_FILE))
-						strcpy(o_allow[o_count]," ALLOWING NO OTHERS");	/* OPEN I-O exclusive		*/
-					else if (vax_cobol && (prog_ftypes[i] & AUTOLOCK))
-						strcpy(o_allow[o_count]," ");		/* Automatic record locking.		*/
-					else
-						strcpy(o_allow[o_count]," ALLOWING READERS");	/* Manual record locking	*/
-											/* Vax needs readers - READFDR		*/
-				}							/* Handle other modes			*/
-				else if (open_mode == OPEN_INPUT)
-				{
-					strcpy(o_fmode[o_count],"INPUT");		/* save the mode			*/
-					o_allow[o_count][0] = 0;			/* Wang/VAX/LPI allow other readers	*/
-					if (vax_cobol && (prog_ftypes[i] & AUTOLOCK))
-						strcpy(o_allow[o_count]," ");		/* Automatic record locking.		*/
-					else if (vax_cobol || acu_cobol)		/* Manual record locking		*/
-						strcpy(o_allow[o_count], " ALLOWING READERS");
+					open_lock = "";
 				}
-				else if (open_mode == OPEN_OUTPUT)
+				else
 				{
-					strcpy(o_fmode[o_count],"OUTPUT");		/* save the mode			*/
-					strcpy(o_allow[o_count]," ");			/* Automatic record locking.		*/
-					if (lpi_cobol||mf_aix)
-						strcpy(o_allow[o_count]," WITH LOCK");	/* LPI needs it locked.			*/
-					else if (vax_cobol && (prog_ftypes[i] & AUTOLOCK))
-						strcpy(o_allow[o_count]," ");		/* Automatic record locking.		*/
-					else
-						strcpy(o_allow[o_count]," ALLOWING NO OTHERS");	/* Manual record locking.	*/
+					open_lock = "ALLOWING ALL";
+				}
+
+				if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
+				{
+					write_log("WISP",'W',"AUTOLOCK","File %s OPEN SHARED using AUTOLOCK.",
+						  token_data(file_node->token));
+				}
+				break;
+				
+			case OPEN_SPECIAL_INPUT:
+				open_access = "INPUT";
+
+				if (lpi_cobol||mf_aix)
+				{
+					open_lock = "";
+				}
+				else if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
+				{
+					open_lock = "";
+				}
+				else
+				{
+					open_lock = "ALLOWING ALL";
+				}
+				break;
+				
+			case OPEN_I_O:
+				open_access = "I-O";
+
+				if (lpi_cobol||mf_aix)
+					open_lock = "WITH LOCK";
+				else if ((vax_cobol || acu_cobol) && (prog_ftypes[fnum] & OPENIOX_FILE))
+					open_lock = "ALLOWING NO OTHERS";	/* OPEN I-O exclusive		*/
+				else if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
+					open_lock = "";
+				else
+					open_lock = "ALLOWING READERS";		/* Manual record locking	*/
+										/* Vax needs readers - READFDR	*/
+				break;
+				
+			case OPEN_INPUT:
+				open_access = "INPUT";
+
+				if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
+					open_lock = "";
+				else if (vax_cobol || acu_cobol)		/* Manual record locking	*/
+					open_lock = "ALLOWING READERS";
+				break;
+				
+			case OPEN_OUTPUT:
+				open_access = "OUTPUT";
+
+				if (lpi_cobol||mf_aix)
+					open_lock = "WITH LOCK";
+				else if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
+					open_lock = "";
+				else
+					open_lock = "ALLOWING NO OTHERS";
 #ifdef OLD
 					/*
 					**	The "ALLOWING READERS" clause on the VAX was causing
 					**	it to be very slow.  On the Wang an OPEN OUTPUT is exclusive,
 					**	so the only reason for this must have been the "READFDR" problem.
 					*/
-					else
-						strcpy(o_allow[o_count]," ALLOWING READERS");	/* Manual record locking.	*/
+				else
+					open_lock = "ALLOWING READERS";
 #endif
-				}
-				else if (open_mode == OPEN_EXTEND)
-				{
-					strcpy(o_fmode[o_count],"EXTEND");		/* save the mode			*/
-					if (lpi_cobol||mf_aix)
-						strcpy(o_allow[o_count]," WITH LOCK");	/* LPI needs it locked.			*/
-					else if (vax_cobol && (prog_ftypes[i] & AUTOLOCK))
-						strcpy(o_allow[o_count]," ");		/* Automatic record locking.		*/
-					else
-						strcpy(o_allow[o_count]," ALLOWING READERS");	/* Manual record locking.	*/
-				}
+				break;
+				
+			case OPEN_EXTEND:
+				open_access = "EXTEND";
 
-				strcpy(o_fnames[o_count],o_parms[0]);			/* save it				*/
-				o_count++;
+				if (lpi_cobol||mf_aix)
+					open_lock = "WITH LOCK";
+				else if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
+					open_lock = "";
+				else
+					open_lock = "ALLOWING READERS";
+				break;
+				
+			default:
+				write_log("WISP",'F',"OPEN","Invalid OPEN mode %d for file %s",open_mode,
+					  token_data(file_node->token));
+				break;
 			}
-		}									/* not found, i = prog_cnt		*/
-		if ((ptype == -1) || (i == -1)) done = 1;				/* period or no file name means done.	*/
-		if (!done) stredt(linein,o_parms[0],"");				/* Remove the last word.		*/
-	} while (!done);								/* continue till done			*/
-											/* If we ended on a keyword, then we set*/
-	if (i == -1) ptype = 1;								/* up as if we ended on a new line.	*/
 
-	if (o_count)									/* output the open statements		*/
-	{
-		for (i=0; i<o_count; i++)
-		{
-			int	gen_bitset;
-
-			if (isaproc)
+			if (isaproc)							/* Was the procedure flag set?		*/
 			{
-				gen_bitset = 1;
-			}
-			else
-			{
-				gen_bitset = 0;
+				tput_line_at(col, "MOVE ZERO      TO WISP-BIT-CLEAR");
+				tput_line_at(col, "MOVE WISP-PROC TO WISP-BIT-SET");
+				tput_line_at(col, "CALL \"wsetstat\" USING WISP-BIT-SET,");
+				tput_clause(col+4, "WISP-BIT-CLEAR, %s",get_prog_status(fnum));
 			}
 
-			if (gen_bitset)
+			if (prog_ftypes[fnum] & PRINTER_FILE)
 			{
-				make_fld(o_parms[9],o_fnames[i],"S-");			/* create the status byte		*/
-				tput_line          ("           MOVE ZERO TO WISP-BIT-CLEAR, WISP-BIT-SET\n");
-
-				if (isaproc)						/* Was the procedure flag set?		*/
+				if (!prog_fnames[fnum][0])			/* If no FD FILENAME given then...		*/
 				{
-					tput_line  ("           ADD WISP-PROC    TO WISP-BIT-SET,\n");
+					tput_line_at(col, "MOVE SPACES TO %s",get_prog_fname(fnum));
 				}
-				tput_line  	   ("           CALL \"wsetstat\" USING WISP-BIT-SET, WISP-BIT-CLEAR,\n");
-				tput_line          ("                                 %s\n",o_parms[9]);
-			}
-
-			if (prog_ftypes[o_fref[i]] & PRINTER_FILE)
-			{
-				if (!prog_fnames[o_fref[i]][0])			/* If no FD FILENAME given then...		*/
+				else if (prog_fnames[fnum][0] == '\"')		/* If FD FILENAME is literal then...		*/
 				{
-					make_fld(o_parms[9],o_fnames[i],"F-");
-					tput_line("           MOVE SPACES TO %s,\n",o_parms[9]);
-				}
-				else if (prog_fnames[o_fref[i]][0] == '\"')	/* If FD FILENAME is literal then...		*/
-				{
-					make_fld(o_parms[9],o_fnames[i],"F-");
-					tput_line("           MOVE %s TO %s,\n",prog_fnames[o_fref[i]],o_parms[9]);
+					tput_line_at(col, "MOVE %s TO %s", prog_fnames[fnum], get_prog_fname(fnum));
 				}
 			}
 
-			if (!(prog_ftypes[o_fref[i]] & NORESPECIFY))				/* Was the NORESPECIFY flag set?*/
+			if (!(prog_ftypes[fnum] & NORESPECIFY))					/* Was the NORESPECIFY flag set?*/
 			{									/* If RESPECIFY, then PERFORM it.*/
-				tput_line("           PERFORM WITH TEST AFTER UNTIL\n");
-				tput_line("               %s < \"10\"\n",prog_fstats[o_fref[i]]);
+				tput_line_at(col, "PERFORM WITH TEST AFTER UNTIL");
+				tput_clause(col+4, "%s < \"10\"", prog_fstats[fnum]);
+				col += 4;
 			}
 
-			make_fld(o_parms[9],o_fnames[i],"S-");				/* create the status byte		*/
-			tput_line_at(16, "MOVE \"OP\" TO WISP-DECLARATIVES-STATUS\n");	/* Signal an open.		*/
+			tput_line_at(col, "MOVE \"OP\" TO WISP-DECLARATIVES-STATUS");
 
-			if (x4dbfile && prog_ftypes[o_fref[i]] & INDEXED_FILE)
+			if (x4dbfile && (prog_ftypes[fnum] & INDEXED_FILE))
 			{
 				/*
-				**	If an INDEXED file and the x4dbfile flag set then
+				**	If an INDEXED  file and the x4dbfile flag set then
 				**	add runtime logic to set the IS_DBFILE flag.
 				*/
-				tput_line_at(16, "CALL \"x4dbfile\" USING \"%s\",",o_fnames[i]);
-				tput_clause (20, "%s", o_parms[9]);
+				tput_line_at(col, "CALL \"x4dbfile\" USING");
+				tput_clause(col+4, "\"%s\",", token_data(file_node->token));
+				tput_clause(col+4, "%s", get_prog_status(fnum));
 			}
 
-			tput_line_at(16, "CALL \"wfopen3\" USING %s,\n",o_parms[9]);	/* start with the status byte	*/
+			tput_line_at(col, "CALL \"wfopen3\" USING");
+			tput_clause(col+4,  "%s,", get_prog_status(fnum));	/* STATUS	*/
+			tput_clause(col+4,  "%s,", get_prog_vname(fnum));	/* VOLUME	*/
+			tput_clause(col+4,  "%s,", get_prog_lname(fnum));	/* LIBRARY	*/
+			tput_clause(col+4,  "%s,", get_prog_fname(fnum));	/* FILE		*/
+			tput_clause(col+4,  "%s,", get_prog_nname(fnum));	/* NATIVE	*/
+			tput_clause(col+4,  "WISP-APPLICATION-NAME,");		/* Application	*/
+			tput_clause(col+4,  "%s,", get_prog_prname(fnum));	/* PRNAME	*/
+			tput_clause(col+4,  "%s", open_mode_name[open_mode]);	/* open mode	*/
 
-									/* literal or null volume, pass the created field */
-			if ((prog_vnames[o_fref[i]][0] == '\"') || (!prog_vnames[o_fref[i]][0]))
+			tput_line_at(col, "OPEN %s", open_access);
+			tput_clause(col+4,  "%s", token_data(file_node->token));
+
+			if (with_no_rewind)
 			{
-				make_fld(o_parms[9],o_fnames[i],"V-");
-				tput_clause(20, "%s,",o_parms[9]);
-			}
-			else
-			{								/* use the programs own field		*/
-				tput_clause(20, "%s,",prog_vnames[o_fref[i]]);
-			}
-
-										/* literal or null lib, pass the created field */
-			if ((prog_lnames[o_fref[i]][0] == '\"') || (!prog_lnames[o_fref[i]][0]))
-			{
-				make_fld(o_parms[9],o_fnames[i],"L-");
-				tput_clause(20, "%s,",o_parms[9]);
-			}
-			else
-			{								/* use the programs own field		*/
-				tput_clause(20, "%s,",prog_lnames[o_fref[i]]);
+				if (mf_cobol && strlen(open_lock)>0)
+				{
+					/* MF doesn't allow both a LOCK and NO REWIND clause, NO REWIND is commentary */
+					write_log("WISP",'W',"OPEN","NO REWIND clause has been removed from OPEN %s",
+						  token_data(file_node->token));
+				}
+				else
+				{
+					tput_clause(col+4,  "WITH NO REWIND");
+				}
 			}
 
-										/* literal or null name, pass the created field */
-			if ((prog_fnames[o_fref[i]][0] == '\"') || (!prog_fnames[o_fref[i]][0]))
-			{
-				make_fld(o_parms[9],o_fnames[i],"F-");
-				tput_clause(20, "%s,",o_parms[9]);
-			}
-			else
-			{								/* use the programs own field		*/
-				tput_clause(20, "%s,",prog_fnames[o_fref[i]]);
-			}
+			tput_clause(col+4,  "%s", open_lock);
 
-											/* always pass the created name		*/
-			make_fld(o_parms[9],o_fnames[i],"N-");
-			tput_clause(20, "%s,",o_parms[9]);
-			tput_clause(20, "WISP-APPLICATION-NAME,");
-			make_fld(o_parms[9],o_fnames[i],"PR-");
-			tput_clause(20, "%s,",o_parms[9]);
-
-			tput_clause(20, "%s,",open_mode_name[o_omode[i]]);
-
-			tput_line_at(16, "OPEN %s %s",o_fmode[i],o_fnames[i]);
-			tput_clause (20, "%s",o_allow[i]);
 			if (vax_cobol)
 			{
-				make_fld(o_parms[9],o_fnames[i],"S-");			/* create the status byte		*/
-				tput_line("               CALL \"wdellock\" USING %s,\n",o_parms[9]);
-				make_fld(o_parms[9],o_fnames[i],"N-");
-	                        tput_line("                                     %s\n",o_parms[9]);
+				tput_line_at(col, "CALL \"wdellock\" USING");
+				tput_clause(col+4,  "%s", get_prog_status(fnum));	/* STATUS	*/
+				tput_clause(col+4,  "%s", get_prog_nname(fnum));	/* NATIVE	*/
 			}
-			tput_line  ("               MOVE SPACES TO WISP-DECLARATIVES-STATUS");	/* Signal an open.		*/
 
-			if (!(prog_ftypes[o_fref[i]] & NORESPECIFY))			/* Was the NORESPECIFY flag set?	*/
+			tput_line_at(col, "MOVE SPACES TO WISP-DECLARATIVES-STATUS");
+
+			if (!(prog_ftypes[fnum] & NORESPECIFY))				/* Was the NORESPECIFY flag set?	*/
 			{
-				tput_line("           END-PERFORM");			/* No, End of the perform.		*/
+				col -= 4;
+				tput_line_at(col,"END-PERFORM");			/* No, End of the perform.		*/
 			}
-
-			if ((i == o_count-1) && (ptype == -1)) tput_clause(12, ".");	/* Last file name needs a period?	*/
-			else				       tput_clause(12, ",");
-
-
+			
 		}
-		isaproc = 0;								/* Clear the proc flag if needed.	*/
+		
 	}
-	else										/* There were no files, must have been	*/
-	{										/* a CRT file only. write a place holder*/
-		if (ptype == -1)
-			tput_line("           CONTINUE.\n");
-		else
-			tput_line("           CONTINUE,\n");
-	}
-	if (ptype == 1) hold_line();							/* ended on a new line, hold it		*/
 
-	if (!syntax_ok)
-	{
-		write_log("WISP",'F',"OPNSYN","Syntax Error in OPEN statement, No file name.\n%s",linein);
-		exit_wisp(EXIT_WITH_ERR);
-	}
-	return 0;
+	isaproc = 0;									/* Clear the proc flag if needed.	*/
+
+	the_statement = free_statement(the_statement);
+
+	tput_statement(col, trailing_fluff_node);
+	trailing_fluff_node = free_statement(trailing_fluff_node);
+	
+	return NULL;
 }
 
-			/* Process CLOSE statements for possible multiple file names amd CRT file closes	*/
-
-p_close()
+/*
+**	Seqential files:
+**	CLOSE {filename [{REEL|UNIT} [for REMOVAL] with {NO REWIND|LOCK}]}...
+**
+**	Indexed and Relative files:
+**	CLOSE {filename [with LOCK]} ...
+**
+*/
+NODE parse_close(NODE the_statement)
 {
-	char c_fnames[MAX_FILES][40];							/* a place to save the file names	*/
-	char c_flags[MAX_FILES];							/* Remember their types too.		*/
-	int  c_count;									/* a count of the file names saved	*/
-	int i,done,is_crt;
+	NODE	curr_node, close_node, file_node;
+	NODE	printer_list = NULL;
+	NODE	trailing_fluff_node = NULL;
+	int	col, fnum;
+	int	is_crt;
+	int	found_crt = 0;
+	int	file_cnt = 0;
 
-	c_count = 0;									/* no files yet				*/
-	done = 0;									/* not done yet				*/
+	curr_node = first_token_node(the_statement);
 
-	ptype = get_param(o_parms[0]);							/* skip the CLOSE verb		*/
-	stredt(&linein[7],o_parms[0],"");
-
-	do
+	if (!eq_token(curr_node->token,VERB,"CLOSE"))
 	{
-		ptype = get_param(o_parms[0]);						/* get a word				*/
+		write_tlog(curr_node->token,"WISP",'E',"VERB","Expected CLOSE found [%s].", token_data(curr_node->token));
+		return(the_statement);
+	}
 
-		is_crt = 0;
-		if ((cur_crt = crt_index(o_parms[0])) != -1) 
+	close_node = curr_node;
+	write_tlog(close_node->token,"WISP",'I',"CLOSE","Processing CLOSE Statement.");
+
+	col = close_node->token->column;
+	if (col > 36) col = 36;
+	if (col < 12) col = 12;
+
+	tput_leading_fluff(the_statement);
+	trailing_fluff_node = unhook_trailing_fluff(the_statement);
+
+	curr_node = close_node->next;
+	for(;;)
+	{
+		/*
+		**	Check for end conditions.
+		*/
+		if (!curr_node)
 		{
-			is_crt = 1; 
+			break;
+		}
+		if (NODE_END == curr_node->type)
+		{
+			break;
+		}
+		if (!curr_node->token)
+		{
+			continue;
 		}
 
-		if (is_crt)								/* delete CRT file closes		*/
+		/*
+		**	Next token should be a file name.
+		*/
+		file_node = curr_node;
+		is_crt = 0;
+		
+		if (-1 != crt_index(token_data(file_node->token)))
 		{
-			write_log("WISP",'I',"DELCRTCLOSE","Fixed CLOSE of crt file, %s.",crt_file[cur_crt]);
+			is_crt = 1;
+
 			if (acn_cobol)
 			{
-				write_log("WISP",'W',"NATIVE","Workstation CLOSE %s removed for Native Screens",
-					  crt_file[cur_crt]);
-				tput_scomment("*>>> Workstation CLOSE removed for Native Screens.");
-				tput_scomment("*    CLOSE %s\n",crt_file[cur_crt]);
+				write_log("WISP",'I',"NATIVE","Workstation CLOSE %s removed for Native Screens",
+					  token_data(file_node->token));
+				tput_line_at(col, "CONTINUE");
 			}
 			else
 			{
-				tput_line_at(16,"CALL \"vwang\" USING VWANG-CLOSE-WS,\n");
+				found_crt = 1;
 			}
+
+			free_token_from_node(file_node);
 		}
-		else									/* see if it is a file name		*/
+		else if (-1 != (fnum = file_index(token_data(file_node->token))))
 		{
-			i = file_index(o_parms[0]);
+			file_cnt++;
+			
+			if (PRINTER_FILE & prog_ftypes[fnum])
+			{
+				printer_list = makenode(NODE_STATEMENT, file_node, printer_list, NULL);
+			}
 
-			if (i != -1)							/* Found the file.			*/
-			{
-				if (c_count > MAX_FILES)				/* Exceeded file buffer.		*/
-				{
-					write_log("WISP",'F',"EXCFILECNT","Exceeded FILE count in CLOSE statement.");
-					exit_wisp(EXIT_WITH_ERR);
-				}
-				c_flags[c_count] = prog_ftypes[i];			/* Remember the file type.		*/
-				strcpy(c_fnames[c_count++],o_parms[0]);			/* save it				*/
-				preclose_locking(i);					/* Add DMS locking logic		*/
-			}
-			else
-			{
-				done = 1;						/* Not a file name -- next statement	*/
-			}
+			if_file_clear_lock_holder_id(fnum,col);				/* Add DMS locking logic		*/
+
 		}
-
-		if (!done) 
+		else if (IDENTIFIER == file_node->token->type)
 		{
-			stredt(&linein[7],o_parms[0],"");
+			file_cnt++;
+
+			write_tlog(file_node->token, "WISP",'E',"NOTFOUND",
+				  "Error -- File %s, referenced by CLOSE statement but not Declared.",
+				  token_data(file_node->token));
 		}
-
-		if (ptype == -1) 
-		{
-			stredt(&linein[7],".","");
-			done = 1;
-		}
-
-	} while (!done);								/* continue till done			*/
-
-	if (c_count)									/* output the open statements		*/
-	{
-		tput_line("           MOVE \"CL\" TO WISP-DECLARATIVES-STATUS\n");
-
-		for (i=0; i<c_count; i++)
-		{
-			tput_line("           CLOSE %s",c_fnames[i]);
-			if ((i == c_count-1) && (ptype == -1))				/* handle last file, with a period.	*/
-			{
-				if (c_flags[i] & PRINTER_FILE)				/* If it is a printer file, call wfclose*/
-				{
-					tput_line("           CALL \"wfclose\" USING N-%s.\n",c_fnames[i]);
-				}
-				else
-				{
-					tput_clause(12, ".");
-				}
-			}
-			else
-			{
-				if (c_flags[i] & PRINTER_FILE)				/* If it is a printer file, call wfclose*/
-				{
-					tput_line("           CALL \"wfclose\" USING N-%s\n",c_fnames[i]);
-				}
-				else
-				{
-					tput_clause(12, ",");
-				}
-			}
-		}
-	}
-	else										/* There were no files, must have been	*/
-	{										/* a CRT file only. write a place holder*/
-		if (ptype == -1)
-			tput_line("           CONTINUE.\n");
 		else
-			tput_line("           CONTINUE,\n");
+		{
+			write_tlog(file_node->token,"WISP",'F',"PARSE",
+				   "Error parsing CLOSE statement. Expecting file name found [%s]",
+				   token_data(file_node->token));
+
+			tput_statement(12, the_statement);
+			return(free_statement(the_statement));
+		}
+
+		curr_node = file_node->next;
+
+		/*
+		**	Step thru optonal keywords.
+		**
+		**	Acucobol doesn't support "FOR REMOVAL" so remove.
+		**	Remove all keywords for CRT's.
+		*/
+		if (curr_node && eq_token(curr_node->token, KEYWORD, "REEL"))
+		{
+			if (is_crt)
+			{
+				free_token_from_node(curr_node);
+			}
+			
+			curr_node = curr_node->next;
+		}
+		if (curr_node && eq_token(curr_node->token, KEYWORD, "UNIT"))
+		{
+			if (is_crt)
+			{
+				free_token_from_node(curr_node);
+			}
+			curr_node = curr_node->next;
+		}
+		if (curr_node && eq_token(curr_node->token, KEYWORD, "FOR"))
+		{
+			if (is_crt || acu_cobol)
+			{
+				free_token_from_node(curr_node);
+			}
+			curr_node = curr_node->next;
+		}
+		if (curr_node && eq_token(curr_node->token, KEYWORD, "REMOVAL"))
+		{
+			if (is_crt)
+			{
+				free_token_from_node(curr_node);
+			}
+			else if (acu_cobol)
+			{
+				write_tlog(curr_node->token,"WISP",'W',"CLOSE","FOR REMOVAL clause removed.");
+				free_token_from_node(curr_node);
+			}
+			
+			curr_node = curr_node->next;
+		}
+		if (curr_node && eq_token(curr_node->token, KEYWORD, "WITH"))
+		{
+			if (is_crt)
+			{
+				free_token_from_node(curr_node);
+			}
+			curr_node = curr_node->next;
+		}
+		if (curr_node && eq_token(curr_node->token, KEYWORD, "NO"))
+		{
+			if (is_crt)
+			{
+				free_token_from_node(curr_node);
+			}
+			curr_node = curr_node->next;
+		}
+		if (curr_node && eq_token(curr_node->token, KEYWORD, "REWIND"))
+		{
+			if (is_crt)
+			{
+				free_token_from_node(curr_node);
+			}
+			curr_node = curr_node->next;
+		}
+		if (curr_node && eq_token(curr_node->token, KEYWORD, "LOCK"))
+		{
+			if (is_crt)
+			{
+				free_token_from_node(curr_node);
+			}
+			curr_node = curr_node->next;
+		}
+
 	}
 
-	hold_line();
-	return 0;
+	if (file_cnt)
+	{
+		tput_line_at(col,"MOVE \"CL\" TO WISP-DECLARATIVES-STATUS");
+	}
+	else
+	{
+		/*
+		**	No files. Must have been a CRT.
+		**	Remove the CLOSE verb.
+		*/
+		free_token_from_node(close_node);
+	}
+	
+	/*
+	**	Print the statement
+	*/
+	tput_statement(col,the_statement);
+
+	if (found_crt)
+	{
+		tput_line_at(col,"CALL \"vwang\" USING VWANG-CLOSE-WS");
+		tput_clause(col, "END-CALL");
+	}
+
+	/*
+	**	Add wfclose calls for each printer file.
+	*/
+	while(printer_list)
+	{
+		NODE temp_node;
+
+		/*
+		**	NOTE: printer_list points to nodes in "the_statement"
+		*/
+
+		fnum = file_index(token_data(printer_list->down->token));
+		if (-1 != fnum)
+		{
+			tput_line_at(col, "CALL \"wfclose\" USING %s", get_prog_nname(fnum));
+			tput_clause(col,  "END-CALL");
+		}
+		else
+		{
+			write_tlog(printer_list->down->token,"WISP",'E',"CLOSE", "Printer file number not found [%s]",
+				   token_data(printer_list->down->token));
+		}
+
+		temp_node = printer_list;
+
+		printer_list = printer_list->next;
+
+		wfree(temp_node);
+	}
+
+	the_statement = free_statement(the_statement);
+
+	tput_statement(col, trailing_fluff_node);
+	trailing_fluff_node = free_statement(trailing_fluff_node);
+	
+	return NULL;
+	
 }
 
 /*
 **	History:
 **	$Log: wt_opcls.c,v $
+**	Revision 1.21  1998-06-09 13:10:20-04  gsl
+**	Fix header and rename record locking function for manual locking
+**
+**	Revision 1.20  1998-03-20 17:41:08-05  gsl
+**	change to use get_prog_nname()
+**	moved OLD to old
+**	.c
+**
+**	Revision 1.19  1998-03-17 14:53:44-05  gsl
+**	For ACN when we remove the CLOSE workstation replace it with a CONTINUE
+**
+**	Revision 1.18  1998-03-04 12:47:17-05  gsl
+**	Add needed END-CALL's to generated code
+**
+**	Revision 1.17  1998-03-03 16:24:14-05  gsl
+**	fix warnings
+**
+**	Revision 1.16  1998-03-03 10:17:14-05  gsl
+**	remove flushes and add trailing fluff logic
+**
+**	Revision 1.15  1998-02-20 17:46:32-05  gsl
+**	Fix period handling
+**
+**	Revision 1.14  1998-02-10 14:48:01-05  gsl
+**	Re-write OPEN and CLOSE logic to use new-style.
+**
 **	Revision 1.13  1997-09-15 11:36:54-04  gsl
 **	Removed CLOSE workstation for native screens
 **

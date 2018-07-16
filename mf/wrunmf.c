@@ -1,11 +1,7 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1994	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/* 
+	Copyright (c) 1996 NeoMedia Technologies, All rights reserved.
+	$Id:$
+*/
 
 /*
 	wrunmf:		This routine is used to build a Micro Focus COBOL/2 
@@ -50,35 +46,36 @@ wrunmf()
 	and add a reference to the routine.
 */
 
-	LINKGARG();
 	ACUGARGS();
 	ACUNARGS();
 	ACUPARGS();
 	BELL();
 	BITPACK();
 	BITUNPK();
-	COBLINK();
 	CANCEL();
 	CEXIT();
+	COBLINK();
 	DATE();
+	DATE2();
 	DAY();
 	EXTRACT();
 	FILECOPY();
 	FIND();
-	findlong();
 	FXZONE();
 	GETPARM();
 	getparmbuild();
-	PUTPARM();
 	HEXPACK();
 	HEXUNPK();
 	LINK();
+	LINKGARG();
+	LINKMF();
 	LINKPROC();
 	LOGOFF();
 	MESSAGE();
 	NOHELP();
 	ONHELP();
 	PRINT();
+	PUTPARM();
 	RETCODE();
 	READFDR();
 	READVTOC();
@@ -89,6 +86,7 @@ wrunmf()
 	SETFILE();
 	SETSUBMIT();
 	SETTRIGPROG();
+	SET8BIT();
 	SORT();
 	SORTCALL();
 	SORTINFO();
@@ -107,6 +105,7 @@ wrunmf()
 	WISPSHUT();
 	WISPSYNC();
 	WISPSORT();
+	WSTOP();
 	WSXIO();
 	wrename();
 	w2rowcol();
@@ -119,13 +118,12 @@ wrunmf()
 	lbit_on();
 	lbit_off();
 	bit_test();
+	lbit_test();
 	wfname();
 	wfopen();
 	wfopen2();
 	wfopen3();
 	wfclose();
-/*	wdinit();	*/
-/*	wdfinish();	*/
 	wfwait();
 	wfswait();
 	wmemcpy();
@@ -136,8 +134,8 @@ wrunmf()
 	wexith();
 	vexit();
 	wfilechk();
+	wfilechk2();
 	vwang();
-	greclen();
 	setrunname();
 	setwispfilext();
 	setprogid();
@@ -149,6 +147,7 @@ wrunmf()
 
 	WANSI2WANG();
 	WWANG2ANSI();
+	WTITLE();
 	
 /*
 ** The following routines are ACP routines
@@ -175,16 +174,6 @@ wrunmf()
 	WSFNS();
 #endif
 	
-/*
-** The following are WISPTEST routines
-*/
-
-#ifdef WISPTEST
-	MESSUP();
-	QASCROLL();
-	QATSTLST();
-	QAGP255();
-#endif
 
 /*
 ** The following are EDE routines

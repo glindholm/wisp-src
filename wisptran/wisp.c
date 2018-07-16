@@ -1,13 +1,20 @@
-static char copyright[]="Copyright (c) 1987-1997 NeoMedia Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+**	File:		wisp.c
+**
+**	Project:	WISP/TRAN
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Main
+**
+*/
+
+/*
+**	Includes
+*/
+
 
 #include <stdio.h>
 
@@ -37,27 +44,43 @@ static char rcsid[]="$Id:$";
 #include "ring.h"
 #include "statment.h"
 #include "wt_procd.h"
+#include "wt_datad.h"
+#include "wt_locks.h"
 
 #include "wcommon.h"
 #include "wispcfg.h"
+
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
 
 static struct tbuffer { int cpu; int x,y,z; } time_now;					/* Time reference structure.		*/
 static int cpu_time;									/* Initial CPU time.			*/
 static char *sargv[50];									/* Save the argv			*/
 static char *targv[50];									/* argv after response file processing	*/
 static int targc;									/* argc to match targv			*/
-static int run_wisp();
-static int initialize1();
-static int initialize2();
-static int response_file();
+
+/*
+**	Static Function Prototypes
+*/
+static int run_wisp(void);
+static int initialize1(int argc, char *argv[]);
+static int initialize2(void);
+static int response_file(int argc, char* argv[]);
 
 static void wisp(void);
 static void gen_txt_file(void);
-static void wisp_exit_code(char *prefix);
+static void wisp_exit_code(const char *prefix);
 
-main(argc, argv)
-int	argc;
-char	*argv[];
+int main(int argc, char *argv[])
 {
 
 #ifdef DEMO
@@ -91,7 +114,7 @@ char	*argv[];
 	return 0;
 }
 
-static void gen_txt_file()
+static void gen_txt_file(void)
 {
 	int	lstat;
 	char	tstr[10];
@@ -145,8 +168,7 @@ static void wisp(void)
 static int need_to_rerun_flag = 0;
 static char *need_to_rerun_reason;
 
-need_to_rerun(reason)
-char	*reason;
+void need_to_rerun(const char* reason)
 {
 	if (!need_to_rerun_flag)
 	{
@@ -162,35 +184,44 @@ char	*reason;
 		need_to_rerun_reason = ptr;
 	}
 	need_to_rerun_flag = 1;
-	return 0;
 }
 
 static int delayed_error = 0;
 
-delayed_exit_with_err()
+void delayed_exit_with_err(void)
 {
 	delayed_error = 1;
-	return 0;
 }
 
-exit_with_err()
+void exit_with_err(void)
 {
 	exit_wisp(EXIT_WITH_ERR);
-	return 0;
 }
 
-exit_wisp(err)										/* exit WISP, clean up 			*/
-int err;
+int exit_wisp(int err)									/* exit WISP, clean up 			*/
 {
 	int i,j,k,a,rc;
 	c_list *tptr;									/* if not an error-exit			*/
+	char	*exit_mess;
+	
+	switch(err)
+	{
+	case EXIT_OK: 		exit_mess = "OK";	break;
+	case EXIT_WITH_ERR: 	exit_mess = "ERROR";	break;
+	case EXIT_FAST: 	exit_mess = "FAST";	break;
+	case EXIT_AND_RUN: 	exit_mess = "RERUN";	break;
+	default: 		exit_mess = "UNKNOWN";	break;
+	}
 
-	if (err == EXIT_FAST) goto exit_fast;
-
-	if (delayed_error) 
+	if (delayed_error && err != EXIT_FAST)
 	{
 		err = EXIT_WITH_ERR;
+		exit_mess = "DELAYED ERROR";
 	}
+		
+	write_log("WISP",'I',"EXIT","Exiting with code %s [%d]", exit_mess, err);
+
+	if (err == EXIT_FAST) goto exit_fast;
 
 	if (!err && !copy_only && !data_conv) 
 	{
@@ -202,6 +233,7 @@ int err;
 		gen_unlocks();								/* Since there were files, write UNLOCKs*/
 	}
 
+#ifdef OLD
 	if (read_file_ptr)								/* was a file for read's created?	*/
 	{
 		close_cob_file(read_file_ptr);						/* close the file with READ's in it	*/
@@ -211,8 +243,13 @@ int err;
 		}
 		delete(read_fname);							/* and delete it...			*/
 	}
+#endif /* OLD */
 
-	if (dcl_file_ptr) close_cob_file(dcl_file_ptr);					/* close the paragraph file.		*/
+	if (dcl_file_ptr) 
+	{
+		close_cob_file(dcl_file_ptr);						/* close the paragraph file.		*/
+	}
+	
 	if (dtp_file_ptr)
 	{
 		close_cob_file(dtp_file_ptr);						/* close the paragraph file.		*/
@@ -350,8 +387,7 @@ exit_fast:
 	return 0;
 }
 
-static void wisp_exit_code(prefix)
-char *prefix;
+static void wisp_exit_code(const char* prefix)
 {
 	int	stoprun;
 
@@ -408,9 +444,9 @@ int wisp_exit_para(void)
 	return 0;
 }
 
-d_wisp_exit_para()
+void d_wisp_exit_para(void)
 {
-	if (!decl_stop_exit) return(0);
+	if (!decl_stop_exit) return;
 
 	wisp_exit_code("D-");
 }
@@ -420,7 +456,7 @@ static char the_com[256];
 static $DESCRIPTOR(com_desc,the_com);
 #endif
 
-static run_wisp()									/* Execute the WISP command again	*/
+static int run_wisp(void)								/* Execute the WISP command again	*/
 {
 	int i;
 
@@ -502,8 +538,7 @@ static run_wisp()									/* Execute the WISP command again	*/
 **
 */
 #ifdef NOEXEC
-int special_noexec_exec(command)
-char	*command;
+int special_noexec_exec(char* command)
 {
 #define NOEXEC_STUB	"NOEXEC_STUB"
 #define NOEXEC_RERUN	127
@@ -542,16 +577,13 @@ char	*command;
 #endif
 
 #ifndef VMS
-delete( path )
-char *path;
+int delete(const char* path )
 {
 	return( unlink( path ) );
 }
 #endif
 
-static initialize1(argc,argv)								/* Perform all generic initialization 	*/
-int	argc;
-char	*argv[];
+static int initialize1(int argc, char* argv[])						/* Perform all generic initialization 	*/
 {
 	int	i;
 
@@ -576,7 +608,7 @@ char	*argv[];
 	return 0;
 }
 
-static initialize2()									/* Perform switch specific initialize	*/
+static int initialize2(void)								/* Perform switch specific initialize	*/
 {
 	if (vax_cobol)
 	{
@@ -642,7 +674,7 @@ static initialize2()									/* Perform switch specific initialize	*/
 	return 0;
 }
 
-char *packed_decimal()
+char *packed_decimal(void)
 {
 	return(packdec);
 }
@@ -674,9 +706,7 @@ char *packed_decimal()
 **	01/22/93	Written by GSL
 **
 */
-static response_file(argc,argv)
-int	argc;
-char	*argv[];
+static int response_file(int argc, char* argv[])
 {
 	int	i;
 	int	show_command;
@@ -793,6 +823,12 @@ static demo_message()
 /*
 **	History:
 **	$Log: wisp.c,v $
+**	Revision 1.20  1998-06-09 10:09:10-04  gsl
+**	fixed prototypes and added new header
+**
+**	Revision 1.19  1998-03-04 13:45:13-05  gsl
+**	Add logging
+**
 **	Revision 1.18  1997-09-09 17:55:48-04  gsl
 **	Change scrn_para() to gen_endstuff() as part of ACN code
 **

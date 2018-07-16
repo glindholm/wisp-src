@@ -4,7 +4,7 @@
 #/*	    			and OPEN3K with 			*/
 #/*		CAST - Cobol Automated Software Translation		*/
 #/*	     Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993,		*/
-#/*			   1994, 1995, 1996, 1997			*/
+#/*			   1994, 1995, 1996, 1997, 1998, 1999		*/
 #/*	 	An unpublished work of NeoMedia Technologies, Inc.	*/
 #/*			    All rights reserved.			*/
 #/*									*/
@@ -138,6 +138,8 @@ PC_STD_FLAGS = +N
 PC_SYS_FLAGS =
 
 RANLIB= ar ts
+STRIP= strip
+
 SOCKET_LINK =
 CURSES_LINK = -lcurses
 MATH_LINK = -lm
@@ -145,16 +147,6 @@ LEX_LINK = -ll
 
 LEX=lex
 YACC=yacc
-
-# 	SPECIAL Build Options:
-#
-# 	Uncomment the following ONLY if you are building a 
-#	special kit which includes the module for displaying 
-#	of VISION indexed files.
-#
-#DISPIDXOBJS = vsn_only.o $(ACUDIR)/filetbl.o  $(ACUDIR)/runcbl.a
-#LIBACU = $(DISPIDXOBJS)
-#CC_OPT_FLAGS = -DINCLUDE_VDISPIDX
 
 #
 #	SYSTEM defines for system dependent options. 
@@ -167,11 +159,11 @@ SYSDEF = "Error SYSDEF not defined"
 #==================================================================
 #	IBM AIX RS/6000
 #
-#	AIX 3.2 
+#	AIX 4.3.2
 #
 #SYSDEF = -DAIX
 #CC_SYS_FLAGS = -qlanglvl=ansi
-#CCC = g++
+#CCC = gcc
 #CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
 #
 #	AIX 4.1
@@ -179,12 +171,14 @@ SYSDEF = "Error SYSDEF not defined"
 #CCC = xlC
 #CCC_SYS_FLAGS = -qchars=signed 
 #CCC_EXT = C
-
-#==================================================================
-#	Ultrix RISC
 #
-#SYSDEF = -DULTRIX -DNOCONST -DNOSTRDUP
-#CURSES_LINK=-lcursesX
+#	AIX 3.2 
+#
+#SYSDEF = -DAIX
+#CC_SYS_FLAGS = -qlanglvl=ansi
+#CCC = g++
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
+#
 
 #==================================================================
 #       DEC ALPHA OSF/1
@@ -200,20 +194,48 @@ SYSDEF = "Error SYSDEF not defined"
 #CCC = cxx
 #CCC_SYS_FLAGS = -ms
 
-
 #==================================================================
 #	HP/UX
 #
 #SYSDEF = -DHPUX
 #CC_STD  = c89
 #CC_ANSI = c89
-#CC_SYS_FLAGS = +z -D_HPUX_SOURCE +ESsfc +DA1.0 +DS1.0 -Wl,-a,archive
-#CCC = g++
+#CC_SYS_FLAGS = +z -D_HPUX_SOURCE +DAportable -Wl,-a,archive
+#CCC = gcc
 #CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
-
-# If using HP-UX 10.20 then uncomment
 #CURSES_LINK = -lcur_colr
+#
+#Old CC flags:
+#CC_SYS_FLAGS = +z -D_HPUX_SOURCE +ESsfc +DA1.0 +DS1.0 -Wl,-a,archive
+#	+z		Position independent code (PIC)
+#	-D_HPUX_SOURCE	Termio struct definitions (vrawunix)
+#	+ESsfc		???
+#	+DA1.0		Architecture PA-RISC 1.0
+#	+DS1.0		Optimize instruction scheduling for PA 1.0
+#	-W1,-a,archive	Linker use archive libraries not shared libraries
 
+#==================================================================
+#	SCO UNIX
+#
+#SYSDEF = -DSCO
+#SOCKET_LINK= -lsocket
+#CCC = CC
+#CCC_SYS_FLAGS = +.cpp +a1
+
+#==================================================================
+#	SUN Solaris
+#
+#  NOTE:  We have installed WorkShop which includes the proper
+#	  version of C so make sure it is included
+#	  on your path /opt/SUNWspro/bin
+#
+#SYSDEF = -DSOLARIS 
+#CDEBUG=
+#CC_STD  = c89
+#CC_ANSI = c89
+#CCC = CC
+#CCC_SYS_LINK = -nolib -lm -Bstatic -lC -lC_mtstubs -Bdynamic -lc
+#STRIP = echo STRIP not available
 
 #==================================================================
 #	SUNOS
@@ -243,28 +265,17 @@ SYSDEF = "Error SYSDEF not defined"
 #CCC_LINK = -L$(CCC_LIBS_DIR) -lg++ -liostream
 
 #==================================================================
-#	SUN Solaris
-#
-#  NOTE:  We have installed WorkShop which includes the proper
-#	  version of C so make sure it is included
-#	  on your path /opt/SUNWspro/bin
-#
-#SYSDEF = -DSOLARIS 
-#CDEBUG=
-#CCC = CC
-#CCC_SYS_LINK = -nolib -lm -Bstatic -lC -lC_mtstubs -Bdynamic -lc
-
-#==================================================================
 #	Data General - DG/UX Intel
 #
 #SYSDEF = -DDGUX_INTEL
 #CC_STD=gcc
 #CC_ANSI=gcc
 #CDEBUG=
+#CC_SYS_FLAGS = -Wall
 #CCC = gcc
-#CCC_LIBS_DIR = /usr/opt/c++/lib
+#CCC_LIBS_DIR =
 #CCC_STD_FLAGS =
-#CCC_SYS_FLAGS = -Bstatic
+#CCC_SYS_FLAGS = -static -Wall
 #CCC_SYS_LINK =
 
 #==================================================================
@@ -279,12 +290,10 @@ SYSDEF = "Error SYSDEF not defined"
 #CCC_SYS_LINK = -static -L$(CCC_LIBS_DIR) -lg++ -lC
 
 #==================================================================
-#	SCO UNIX
+#	Ultrix RISC
 #
-#SYSDEF = -DSCO
-#SOCKET_LINK= -lsocket
-#CCC = CC
-#CCC_SYS_FLAGS = +.cpp +a1
+#SYSDEF = -DULTRIX -DNOCONST -DNOSTRDUP
+#CURSES_LINK=-lcursesX
 
 #==================================================================
 #	NEC	EWS-UX
@@ -387,7 +396,6 @@ SYSDEF = "Error SYSDEF not defined"
 #	Assign the C compilers
 #
 CC 	 = $(CC_ANSI)
-CCPRINTQ = $(CC_ANSI)
 
 #
 #	Construct CFLAGS from the pieces.  
@@ -417,7 +425,6 @@ PFLAGS0 = $(PDEBUG) $(PC_STD_FLAGS) $(PC_SYS_FLAGS)
 #	Old defines for backwards compatablity
 #
 #		$(LIBCFLAGS)	standard c flags when libraries are used
-#		$(CCPRINTQ)	the compiler used to compile the print queue (must be ansi)
 #
 V = $(VIDEO_INC_DIR)
 

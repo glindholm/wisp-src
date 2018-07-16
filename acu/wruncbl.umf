@@ -1,4 +1,4 @@
-#	Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.
+#	Copyright (c) 1988-1999 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -222,6 +222,12 @@ RTS1=wruncbl1
 # Standard CC flags
 #
 CFLAGS= -g -Dunix
+#
+# **** CHANGE CC HERE ****
+#
+#	SOLARIS 2 requires an ANSI C compiler (c89).
+#CC=c89
+#
 
 #============================================================================
 # ACUCOBOL version information
@@ -237,9 +243,12 @@ include $(WISPDIR)/acu/acucobol.include
 # directory.  It is used ONLY for detecting and displaying an error
 # message if the file is not found.
 #
+RTSALC = $(ACUDIR)/bin/runcbl.alc
+
 ACUFILES=$(ACUSRCDIR)/sub.c \
 	$(ACUSRCDIR)/filetbl.c \
-	$(ACUSRCDIR)/clntstub.o
+	$(ACUSRCDIR)/clntstub.o \
+	$(RTSALC)
 
 #============================================================================
 #
@@ -322,6 +331,8 @@ header: $(WISPDIR) $(ACUDIR) $(ACUTEST)
 	@echo ">>>>"
 	@echo ">>>> WISPDIR = " $(WISPDIR)
 	@echo ">>>> ACUDIR  = " $(ACUDIR)
+	@echo ">>>> PWD     = " `pwd`
+	@echo ">>>> CC      = " `which $(CC)`
 	@echo ">>>>"
 
 $(WISPDIR):
@@ -411,17 +422,17 @@ $(ORA7ACUSUBS) $(INFORMIXACUSUBS):
 	@echo ">>>>"
 	@exit 1
 
-rts:	$(RTS)
+rts:	$(RTS) $(RTS).alc
 
-ede:	$(RTSE)
+ede:	$(RTSE) $(RTSE).alc
 
 both:	rts ede
 
 rts1:	$(RTS1)
 
-oracle7:  $(RTSORA7)
+oracle7:  $(RTSORA7) $(RTSORA7).alc
 
-informix: $(RTSINFORMIX)
+informix: $(RTSINFORMIX) $(RTSINFORMIX).alc
 
 clean:	
 	rm -f $(CLEANUP) core
@@ -471,6 +482,8 @@ filetbl.c: $(ACUSRCDIR)/filetbl.c
 sub85.c: $(WISPDIR)/acu/sub85.c
 	cmp -s $(WISPDIR)/acu/sub85.c $@ || cp $(WISPDIR)/acu/sub85.c $@
 
+$(RTS).alc $(RTSE).alc $(RTSORA7).alc $(RTSINFORMIX).alc: $(RTSALC)
+	cmp -s $(RTSALC) $@ || cp $(RTSALC) $@
 
 #============================================================================
 #
@@ -480,7 +493,13 @@ sub85.c: $(WISPDIR)/acu/sub85.c
 #
 
 COBFLAGS = -da4 -zd -te 800 
-ACN_OBJS = WACUGETPFKEY WACUFAC2SCREEN WACUHELP WACUERROR WACUGETPARM WACUWSB
+ACN_OBJS = 	WACUERROR \
+		WACUDISPLAY \
+		WACUFAC2SCREEN \
+		WACUGETPARM \
+		WACUGETPFKEY \
+		WACUHELP \
+		WACUWSB
 
 acn: acn_header $(COBOL) $(ACN_OBJS)
 	@echo ">>>>"
@@ -494,20 +513,23 @@ acn_header: $(ACUDIR)
 	@echo ">>>> ACUDIR  = " $(ACUDIR)
 	@echo ">>>>"
 
+WACUERROR: wacuerror.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacuerror.cob
+
+WACUDISPLAY: wacudisplay.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacudisplay.cob
+
+WACUFAC2SCREEN: wacufac2screen.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacufac2screen.cob
+
+WACUGETPARM: wacugetparm.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacugetparm.cob
+
 WACUGETPFKEY: wacugetpfkey.cob
 	$(COBOL) $(COBFLAGS) -o $@ wacugetpfkey.cob
 
 WACUHELP: wacuhelp.cob
 	$(COBOL) $(COBFLAGS) -o $@ wacuhelp.cob
-
-WACUFAC2SCREEN: wacufac2screen.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacufac2screen.cob
-
-WACUERROR: wacuerror.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacuerror.cob
-
-WACUGETPARM: wacugetparm.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacugetparm.cob
 
 WACUWSB: wacuwsb.cob
 	$(COBOL) $(COBFLAGS) -o $@ wacuwsb.cob

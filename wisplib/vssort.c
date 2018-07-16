@@ -66,7 +66,7 @@ static char rcsid[]="$Id:$";
 **				 0	Success
 **				 4	Input file was empty
 **				 8	Insufficient buffer space (or other internal error)
-**				12	Record size greater then 2024 bytes
+**				12	Record size greater then 9999 bytes  (Was 2024 on Wang)
 **				16	Invalid sort key
 **				20	Program check (see sortcode for reason).
 **				24	Input records are out of order for merge
@@ -184,7 +184,7 @@ char *vssort_retcode(int4 retcode)
 	case  0:	message = "";						break;
 	case  4:	message	= "Input file empty";				break;
 	case  8:	message = "Insufficient buffer sapce";			break;
-	case 12:	message = "Record size greater then 2024 bytes";	break;
+	case 12:	message = "Record size greater then 9999 bytes";	break;  /* Was 2024 on Wang */
 	case 16:	message = "Invalid sort key";				break;
 #ifdef VMS
 	case 20:	message = "Program Check";				break;
@@ -242,6 +242,9 @@ char *vssort_sortcode(int4 sortcode)
 /*
 **	History:
 **	$Log: vssort.c,v $
+**	Revision 1.7  1998-04-17 14:53:41-04  gsl
+**	Change max recsize to 9999 from 2024
+**
 **	Revision 1.6  1996-07-10 19:52:36-04  gsl
 **	fix missing includes and fix prototype warning
 **

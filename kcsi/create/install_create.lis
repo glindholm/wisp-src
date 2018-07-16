@@ -1,29 +1,22 @@
-  	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+ 	Copyright (c) 1998 by NeoMedia Technologies Inc. All Rights Reserved.
 	
 	====================================================================
 	
-	Title:		KCSI CREATE INSTALLATION INSTRUCTIONS 
+	Title:		Installation of CREATE on UNIX
 	
 	Document:	install_create.lis
-	Last Updated:	31 OCTOBER 95
+	Last Updated:	$Date:$
 	Products:	CREATE/MF, CREATE/ACU
-	Versions:	1.8 (AND LATER)
+	Versions:	3.3 (AND LATER)
 	
 	Summary:	Installation instructins for the CREATE tool for unix
-			with Micro Focus COBOL or AcuCOBOL.
+			with Micro Focus COBOL or ACUCOBOL.
 
 	==================================================================== 
  
-			***** ! ! ! ATTENTION ! ! ! *****
- 
- 	Please Read carefully! The instructions have changed from
-	previous releases.
- 
-	USING EXISTING UTILITIES
-	========================
 
-	Distribution
-        ------------
+	INSTALLATION
+	============
 
         First install WISP and setup the WISP runtime environment.  This
         must be in place before create can be used.
@@ -31,27 +24,31 @@
         CREATE will normally be distributed on diskette or tape as a
         compressed tar file.
 
-		Micro Focus:	createmf.XXX.tar.Z
-		AcuCOBOL:	createacu.XXX.tar.Z
+		Micro Focus:	createmfx.XXX.tar.Z
+		ACUCOBOL:	createacu.XXX.tar.Z
 
-	Unload this file from the distribution media as follows:
+	It is recommended that you install CREATE in your WISP directory
+	($WISPDIR).  Unload this file from the distribution media as
+	follows: 
 
-        E.g.    $ tar -xvf /dev/rfd0
+		$ cd $WISPDIR 
+                $ tar -xvf /dev/rfd0
 
         Extract the distribution files from the compressed tar file using
 	the following command:
 
 	Micro Focus:
-                $ uncompress -c createmf.XXX.tar.Z|tar -xvpf -
-	AcuCOBOL:
+                $ uncompress -c createmfx.XXX.tar.Z|tar -xvpf -
+	ACUCOBOL:
                 $ uncompress -c createacu.XXX.tar.Z|tar -xvpf -
 
-        This will create a directory "createmf.XXX" ("createacu.XXX" for
-	AcuCOBOL) where XXX is a version number.  Refer to packlist.lis
+        This will create a directory "createmfx.XXX" ("createacu.XXX" for
+	ACUCOBOL) where XXX is a version number.  Refer to packlist.lis
 	in the distribution for a listing of expected files.
+
  
-	Installation
-        ------------
+	Configuration
+        -------------
  
 	Copy the create executable to a program directory or a directory
 	on your path.
@@ -66,12 +63,14 @@
         ====================================================================
 
 	   *********************************************************
-	       If you could not run the distribution executable,
-	       then continue.
+	   	The following instructions are only needed if
+		you could not run the distribution executable 
+		or if you need to relink the executable.
 	   *********************************************************
 
-	MAKING THE UTILITY
-	------------------ 
+	RELINKING THE UTILITIES
+	-----------------------
+
  	1. Copy the distribution into a directory on the user's path.
  
 	2. Ensure that the COBOL compiler will run in this directory.
@@ -91,7 +90,7 @@
 
 		CURSES_LINK = -lcurses
 
-	   d.  AcuCOBOL:  Confirm the versin of AcuCOBOL that you are
+	   d.  ACUCOBOL:  Confirm the versin of ACUCOBOL that you are
 			  using and correclty comment and uncomment the
 			  ACULIBS, ACUSUBS, and ACUTEST variables.
 
@@ -104,15 +103,11 @@
  
 	4. Now the utility may be built:
 
-	   Micro Focus:
+	   Micro Focus COBOL:
 
-			$ make -f create.umf mfcreate
+			$ make -f create.umf mfxcreate
  
-		   or if you are creating an EDE version type
- 
-			$ make -f create.umf mfcreatee
-
-	   AcuCOBOL:
+	   ACUCOBOL:
 
 			$ make -f create.umf
  
@@ -127,7 +122,5 @@
 	   NOTE: create is a full executable, and does not require
 	   	 any run time.
 
-
-
-
+       ========================= END OF DOCUMENT ==========================
 

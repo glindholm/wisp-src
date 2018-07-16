@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : range.cpp
 // Author : George Soules
@@ -78,3 +85,53 @@ int_32 range::pack() {
 }
 
 
+
+//
+//	History:
+//	$Log: range.cpp,v $
+//	Revision 1.7  1998-08-31 15:14:10-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/range.cpp,v
+//	Working file: range.cpp
+//	head: 1.6
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 6;	selected revisions: 6
+//	description:
+//	----------------------------
+//	revision 1.6
+//	date: 1997-10-02 08:39:54-04;  author: gsl;  state: V4_3_00;  lines: +2 -2
+//	fix warnings
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:16:05-04;  author: gsl;  state: V4_1_02;  lines: +0 -0
+//	Renamed from range.cc to range.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:17-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:33-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:16-05;  author: gsl;  state: V3_3x12;  lines: +0 -0
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:22-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

@@ -1,0 +1,124 @@
+#-----------------------------------------------------------------------
+#	Copyright (c) 1998 NeoMedia Technologies, All rights reserved.
+#	$Id:$
+#
+#	File:		cridmfx.umf
+#
+#	Project:	CRID for MICRO FOCUS COBOL
+#
+#	RCS:		$Source:$
+#
+#	Purpose:	To re-build the CRID executables.
+#
+#	Description:	The CRID utilities are shipped pre-built as
+#			part of the CRID shipping kit.  They were built
+#			with the latest version of Micro Focus COBOL
+#			that NeoMedia had at the time.  If you upgrade
+#			to a later version of Micro Focus COBOL you
+#			may wish to re-build the executables using this
+#			makefile.
+#
+#			If you are using EDE then you may wish to 
+#			re-build an EDE version of the CRID utilites.
+#
+#-----------------------------------------------------------------------
+#
+#	Targets:	
+#
+#	default		CRID (default)
+#	CRID		"control", "report", "inquiry", "datentry"
+#	CRID_EDE	The CRID for EDE
+#
+#-----------------------------------------------------------------------
+#
+#	Usage:
+#
+#	$ make -e -f cridmfx.umf {target}
+#
+#-----------------------------------------------------------------------
+
+MAKEFILE=cridmfx.umf
+
+#-----------------------------------------------------------------------
+
+WISPDIR=/usr/local/wisp
+
+CDEBUG= -g
+
+L_WISP=wisp
+L_VIDEO=video
+L_EDE=ede
+
+include $(WISPDIR)/etc/make.include
+
+MF_COBOL=cob
+
+#-----------------------------------------------------------------------
+#
+#	Targets
+#
+default:	CRID
+
+CRID:	header required control report inquiry datentry
+	@echo $@ is up to date.
+
+CRIDEDE: header_ede required control.mfxe report.mfxe inquiry.mfxe datentry.mfxe
+	@echo $@ is up to date.
+
+CRIDSYMBS = -I KCSEXTFH
+MFXLIBS= libmfxcridwcb.a libmfxcrid.a 
+
+header:
+	@echo "=="
+	@echo "== Building CRID for MICRO FOCUS COBOL"
+	@echo "== WISPDIR=$(WISPDIR)"
+	@echo "== COBDIR=$(COBDIR)"
+	@echo "== PWD=`pwd`"
+	@echo "=="
+
+header_ede:
+	@echo "=="
+	@echo "== Building CRID with EDE for MICRO FOCUS COBOL"
+	@echo "== WISPDIR=$(WISPDIR)"
+	@echo "== COBDIR=$(COBDIR)"
+	@echo "== PWD=`pwd`"
+	@echo "=="
+
+CRID_O = control.o report.o inquiry.o datentry.o
+
+REQUIRED=$(WISP_LIBS_PATHS) $(MFXLIBS) $(CRID_O)
+REQUIRED_EDE=$(WISPEDE_LIBS_PATHS) $(MFXLIBS) $(CRID_O)
+
+required: $(REQUIRED)
+
+required_ede: $(REQUIRED_EDE)
+
+$(REQUIRED_EDE):
+	@echo "=="
+	@echo "== ERROR: Required file $@ was not found"
+	@echo "=="
+	@exit 1
+
+control \
+report \
+inquiry \
+datentry: $(CRID_O) $(MFXLIBS) $(WISP_LIBS_PATHS)
+	@echo "=="
+	@echo "== Building $@"
+	@echo "=="
+	$(MF_COBOL) $(CDEBUG) -o $@ $(@).o $(CRIDSYMBS) $(MFXLIBS) $(WISP_LIBS_PATHS) $(CURSES_LINK)
+	@echo "== $@ has been built"
+
+control.mfxe \
+report.mfxe \
+inquiry.mfxe \
+datentry.mfxe: $(CRID_O) $(MFXLIBS) $(WISPEDE_LIBS_PATHS)
+	@echo "=="
+	@echo "== Building $@"
+	@echo "=="
+	$(MF_COBOL) $(CDEBUG) -o $@ $(@:.mfxe=.o) $(CRIDSYMBS) $(MFXLIBS) $(WISPEDE_LIBS_PATHS) $(CURSES_LINK)
+	@echo "== $@ has been built"
+
+#-----------------------------------------------------------------------
+# 	End
+#-----------------------------------------------------------------------

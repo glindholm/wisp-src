@@ -13,10 +13,13 @@ static char rcsid[]="$Id:$";
 **	setenvstr()
 */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "setenvst.h"
 #include "wmalloc.h"
+#include "werrlog.h"
 
 /*
 **	ROUTINE:	setenvstr()
@@ -39,8 +42,14 @@ static char rcsid[]="$Id:$";
 */
 int setenvstr(const char* envstring)
 {
-	if ( putenv( wstrdup(envstring) ) )
+	wtrace("PUTENV","ENTER", "%s", envstring);
+
+	if ( 0 != putenv( wstrdup(envstring) ) )
 	{
+		char buff[256];
+		
+		sprintf(buff, "%%PUTENV-E-FAILED putenv(\"%s\") failed errno=[%d]", envstring, errno);
+		werrlog(104,buff,0,0,0,0,0,0,0,0);
 		return(2);
 	}
 
@@ -50,6 +59,12 @@ int setenvstr(const char* envstring)
 /*
 **	History:
 **	$Log: setenvst.c,v $
+**	Revision 1.12  1998-12-09 10:46:24-05  gsl
+**	up buff to 256
+**
+**	Revision 1.11  1998-12-09 10:45:44-05  gsl
+**	Add tracing and error checking
+**
 **	Revision 1.10  1996-10-14 12:25:34-04  gsl
 **	rewrote to use wstrdup()
 **

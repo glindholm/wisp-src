@@ -1,231 +1,297 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 #define EXT extern
 #include "wisp.h"
 #include "cobfiles.h"
+#include "statment.h"
+#include "reduce.h"
+#include "wt_procd.h"
+#include "wt_datad.h"
 
-p_write()
+/*
+**	WRITE record-name-1 [FROM identifier-1]
+**		[advancing_clause]
+**		[at_end_of_page_clause]
+**		[not_at_end_of_page_clause]
+**		[END-WRITE]
+**
+**	WRITE record-name-1 [FROM identifier-1]
+**		[timeout_clause]
+**		[invalid_key_clause]
+**		[not_invalid_key_clause]
+**		[END-WRITE]
+*/
+NODE parse_write(NODE the_statement, NODE the_sentence)
 {
-	int 	i,j,fnum,inv_key;
-	int	lock_clause;
-	char	recname[40];
-	int	fd;
-	char	fdname[40];
+	NODE	curr_node, verb_node, record_node;
+	NODE	from_node = NULL;
+	NODE	next_statement = NULL;
+	int	col;
+	int	add_after_advancing_clause = 0;
 
-	write_log("WISP",'I',"PROCWRITE","Processing WRITE Statement.");
+	verb_node = first_token_node(the_statement);
 
-	ptype = get_param(o_parms[0]);							/* get next parameter (should be WRITE)	*/
-	j = peek_param(o_parms[1]);							/* peek at the record name		*/
-
-	strcpy(recname, o_parms[1]);
-	if (strchr(recname,'.')) *((char *)strchr(recname,'.')) = 0;			/* save the record name			*/
-
-	fd = fd_record( recname );
-	if (fd == -1)
+	if (!eq_token(verb_node->token,VERB,"WRITE"))
 	{
-		write_log("WISP",'E',"WRITE","WRITE Unknown Record Name");
-		strcpy(fdname,"????");
-		fd=0;
+		write_tlog(verb_node->token,"WISP",'E',"VERB","Expected WRITE found [%s].", token_data(verb_node->token));
+		return(the_statement);
+	}
+
+	write_tlog(verb_node->token,"WISP",'I',"WRITE","Processing WRITE Statement.");
+
+	tput_leading_fluff(the_statement);
+
+	col = verb_node->token->column;
+	if (col > 36) col = 36;
+	if (col < 12) col = 12;
+
+	curr_node = verb_node->next;
+	record_node = curr_node;
+
+	curr_node = curr_node->next;
+	if (eq_token(curr_node->token,KEYWORD,"FROM"))
+	{
+		curr_node = curr_node->next;
+		from_node = reduce_data_item(curr_node);
+
+		curr_node = curr_node->next;
+	}
+	
+	if ( vax_cobol)
+	{
+		tie_down(curr_node, make_clause(col+4,"ALLOWING NO OTHERS",NULL));
+	}
+
+	/*
+	**	advancing_clause:
+	**	
+	**	{BEFORE|AFTER} advancing  { data-item [line|lines] }
+	**				  { 2-byte-fig-constant    }
+	**				  { PAGE                   }
+	**				  { mnemonic-name          }
+	*/
+	
+	if (eq_token(curr_node->token,KEYWORD,"BEFORE") ||
+	    eq_token(curr_node->token,KEYWORD,"AFTER")     )
+	{
+		NODE prep_node = curr_node;
+		
+		curr_node = curr_node->next;
+
+		if (eq_token(curr_node->token,KEYWORD,"ADVANCING"))
+		{
+			curr_node = curr_node->next;
+		}
+
+		/*
+		**	Check if 2-byte figcon
+		*/
+		if (curr_node->token && IDENTIFIER == curr_node->token->type && fig_count)
+		{
+			int 	idx;
+			char	num_lines[40];
+			
+			for(idx=0; idx<fig_count; idx++)
+			{
+				if (0 == strcmp(token_data(curr_node->token),fig_cons[idx]))
+				{
+					write_tlog(curr_node->token,"WISP",'E',"WRITE",
+						   "2-byte-figcon [%s] unsupported in ADVANCING phrase",
+						   token_data(curr_node->token));
+					
+					if (fig_val[idx][0] & 0x40)
+					{
+						edit_token(prep_node->token,"BEFORE");
+					}
+					else
+					{
+						edit_token(prep_node->token,"AFTER");
+					}
+					
+					if (fig_val[idx][0] & 0x80)
+					{	/* Number of lines to skip	*/
+						sprintf(num_lines,"%d",(int)(fig_val[idx][1] & 0x7f));	
+
+						edit_token(curr_node->token, num_lines);
+					}
+					
+					break;
+				}
+			}
+		}
+
 	}
 	else
 	{
-		strcpy(fdname, prog_files[fd]);
+		/*
+		**	There was no advancing clause.  If this is a PRINTER file
+		**	then we must add an "AFTER ADVANCING 1 LINE" clause.
+		**	This is automatic for true printer files but WISP changes
+		**	printer files into sequentilal files so we need to check.
+		*/
+		int fnum;
+		
+		fnum = fd_record(token_data(record_node->token));
+		if (-1 == fnum)
+		{
+			write_tlog(record_node->token,"WISP",'W',"NOTFOUND",
+				  "WRITE [%s], unknown record name.",
+				   token_data(record_node->token));
+		}
+		else
+		{
+			if (prog_ftypes[fnum] & PRINTER_FILE)
+			{
+				add_after_advancing_clause = 1;
+			}
+		}
 	}
 	
-	i = 0;
-	o_parms[5][0] = '\0';								/* no status field yet			*/
 
-	fnum = -1;									/* set fnum to error status		*/
-
-	inv_key = 0;									/* no INVALID KEY yet...		*/
-	lock_clause = 0;								/* no ALLOWING clause yet		*/
-
-	if (vax_cobol && (prog_ftypes[fd] & AUTOLOCK))					/* If using automatic record locking	*/
-	{										/* then don't supply an "ALLOWING" 	*/
-		lock_clause = 1;							/* clause. (Trick it into not writing	*/
-	}										/* the ALLOWING clause.)		*/
-
-	tput_line("           MOVE \"WR\" TO WISP-DECLARATIVES-STATUS\n");
-
-	if (vax_cobol && !(prog_ftypes[fd] & SEQ_FILE))
+	/*
+	**	Anything remaining will be in the next fragment
+	*/
+	next_statement = get_statement_from_sentence(the_sentence);
+	curr_node = next_statement->next;
+	
+	if (eq_token(curr_node->token, KEYWORD, "TIMEOUT"))
 	{
-		tput_line("           MOVE \"N\" TO WISP-TEST-BYTE\n");
+		int next_sentence_found = 0;
+
+		write_tlog(curr_node->token,"WISP",'E',"WRITE","TIMEOUT clause is not supported on WRITE statement");
+
+		for(curr_node=curr_node->next; NODE_END != curr_node->type; curr_node=curr_node->next)
+		{
+			if (eq_token(curr_node->token,KEYWORD,"SENTENCE"))
+			{
+				next_sentence_found = 1;
+				break;
+			}
+		}
+
+		next_statement = free_statement(next_statement);
+
+		/*
+		**	If not NEXT SENTENCE then need to parse out the imperative-statement
+		*/
+		if (!next_sentence_found)
+		{
+			tput_scomment("*** TIMEOUT clause removed from WRITE statement");
+			tput_line_at(col, "MOVE 1 TO WISP-FILE-TIMEOUT");
+			tput_line_at(col, "IF WISP-FILE-TIMEOUT < 1");
+			tput_flush();
+			next_statement = parse_imperative_statements(next_statement, the_sentence);
+			tput_line_at(col, "END-IF");
+		}
+		
+		if (!next_statement)
+		{
+			next_statement = get_statement_from_sentence(the_sentence);
+		}
 	}
+
+	tput_line_at(col,"MOVE \"WR\" TO WISP-DECLARATIVES-STATUS\n");
 
 	tput_flush();
+	tput_statement(col,the_statement);
+	the_statement = free_statement(the_statement);
 
-	do
+	if (add_after_advancing_clause)
 	{
-		tput_clause(12, "%s",o_parms[0]);					/* output parm				*/
+		tput_clause(col+4, "AFTER 1");
+	}
+	
 
-		if (o_parms[0][0]) stredt(linein,o_parms[0],"");			/* Remove it from the input line	*/
-		ptype = get_param(o_parms[0]);						/* get a new parm....			*/
+	the_statement = next_statement;
+	next_statement = NULL;
+	curr_node = the_statement->next;
 
-		if (ptype == 1)								/* first parm on a new line		*/
-		{
-			tput_flush();
-		}
-
-		if (!strcmp(o_parms[0],"BEFORE") || !strcmp(o_parms[0],"AFTER"))	/* Look for BEFORE or AFTER ADVANCING.	*/
-		{
-			strcpy(o_parms[9],o_parms[0]);
-			stredt(linein,o_parms[9]," ");					/* remove the word			*/
-			ptype = get_param(o_parms[0]);					/* get "ADVANCING"			*/
-
-			if (!strcmp(o_parms[0],"ADVANCING"))				/* Was it?				*/
-			{
-				stredt(linein," ADVANCING","");				/* remove it.				*/
-				ptype = get_param(o_parms[0]);				/* Get it.				*/
-			}
-
-			if ( vax_cobol && !lock_clause )
-			{
-				tput_line("               ALLOWING NO OTHERS");
-				lock_clause = 1;
-			}
-
-			if (fig_count)							/* There is a list of 2 byte fig cons.	*/
-			{
-				i = 0;
-				do
-				{
-					if (!strcmp(o_parms[0],fig_cons[i]))		/* Is it one of them?			*/
-					{
-						if (fig_val[i][0] & 0x40)
-							strcpy(o_parms[9],"BEFORE");	/* Check before/after bit.		*/
-						else
-							strcpy(o_parms[9],"AFTER");
-						sprintf(o_parms[0],"%d",fig_val[i][1] & 0x7f);	/* Number of lines to skip	*/
-						break;
-					}
-				} while(++i < fig_count);
-			}
-
-											/* write it out				*/
-			tput_line("                    %s ADVANCING",o_parms[9]);
-
-		}
-		else if (!strcmp(o_parms[0],"INVALID"))					/* INVALID KEY phrase?			*/
-		{
-			stredt(linein," INVALID"," ");					/* remove INVALID			*/
-			if (ptype != -1)
-			{
-				peek_param(o_parms[7]);					/* get "KEY"				*/
-				if (!strcmp(o_parms[7],"KEY"))				/* Was it KEY?				*/
-				{
-					ptype = get_param(o_parms[0]);			/* Get it, and remove it.		*/
-					stredt(linein," KEY"," ");			/* remove KEY				*/
-				}
-
-			}
-
-			if ( vax_cobol && !lock_clause )
-			{
-				tput_line("               ALLOWING NO OTHERS");
-				lock_clause = 1;
-			}
-
-			if (ptype == -1)						/* Premature period!			*/
-			{
-				write_log("WISP",'I',"BADINVKEY",
-					"Bad WRITE syntax, INVALID KEY followed by a period.");
-				o_parms[0][0] = 0;
-			}
-			else
-			{
-				ptype = get_param(o_parms[0]);				/* what to do?				*/
-			}
-
-			tput_line        ("               INVALID KEY ");		/* write it out				*/
-			if (vax_cobol)
-			{	
-				tput_line("               MOVE \"Y\" TO WISP-TEST-BYTE");
-				tput_line("           END-WRITE");
-			}
-			else
-			{
-				if (!strcmp(o_parms[0],"ELSE"))				/* INVALID KEY followed by ELSE		*/
-				{
-					tput_line("               CONTINUE ");
-					tput_line("           END-WRITE ");
-				}
-			}
-			inv_key = 1;							/* flag it				*/
-		}
-		else if (!strcmp(o_parms[0],"TIMEOUT"))
-		{
-			write_log("WISP",'E',"TIMEOUT",	"Write %s with TIMEOUT not supported.",o_parms[1]);
-
-		}
-	}	while ((ptype != -1) && !proc_keyword(o_parms[0]));			/* do till we hit a LAST parm or keyword*/
-
-
-	if (ptype == -1)								/* a LAST parm				*/
+	/*
+	**	INVALID [KEY] statement
+	**	[AT] {END-OF-PAGE|EOP} statement
+	*/
+	if (eq_token(curr_node->token, KEYWORD, "INVALID") ||
+	    eq_token(curr_node->token, KEYWORD, "END-OF-PAGE") ||
+	    eq_token(curr_node->token, KEYWORD, "EOP") ||
+	    (eq_token(curr_node->token, KEYWORD, "AT") && 
+	     (eq_token(curr_node->next->token, KEYWORD, "END-OF-PAGE") || 
+	      eq_token(curr_node->next->token, KEYWORD, "EOP")))
+	    )
 	{
-		tput_line("                   %s\n",o_parms[0]); 
+		curr_node->token->column_fixed = 1;
+		tput_statement(col+4, the_statement);
+		the_statement =  free_statement(the_statement);
+
+		the_statement = parse_imperative_statements(the_statement, the_sentence);
+
+		if (!the_statement)
+		{
+			the_statement = get_statement_from_sentence(the_sentence);
+		}
+		curr_node = the_statement->next;
 	}
 
-	if ( vax_cobol && !lock_clause )
+	/*
+	**	NOT INVALID [KEY] statement
+	**	NOT [AT] {END-OF-PAGE|EOP} statement
+	*/
+	if (eq_token(curr_node->token, KEYWORD, "NOT") && 
+	    (
+	     eq_token(curr_node->next->token, KEYWORD, "INVALID") ||
+	     eq_token(curr_node->next->token, KEYWORD, "END-OF-PAGE") ||
+	     eq_token(curr_node->next->token, KEYWORD, "EOP") ||
+	     (eq_token(curr_node->next->token, KEYWORD, "AT") && 
+	      (eq_token(curr_node->next->next->token, KEYWORD, "END-OF-PAGE") || 
+	       eq_token(curr_node->next->next->token, KEYWORD, "EOP")))
+	     ))
 	{
-		tput_line("               ALLOWING NO OTHERS\n");
-		lock_clause = 1;
-	}
+		curr_node->token->column_fixed = 1;
+		tput_statement(col+4, the_statement);
+		the_statement =  free_statement(the_statement);
 
+		the_statement = parse_imperative_statements(the_statement, the_sentence);
 
-
-	if ( vax_cobol )
-	{
-
-		if (inv_key)
+		if (!the_statement)
 		{
-			tput_line("           IF WISP-TEST-BYTE = \"N\" THEN\n");
-			tput_line("               MOVE %s TO WISP-SAVE-FILE-STATUS\n",prog_fstats[fd]);
-			tput_line("               UNLOCK %s\n", fdname );
-			tput_line("               MOVE WISP-SAVE-FILE-STATUS TO %s\n",prog_fstats[fd]);
-			tput_line("           ELSE\n");
-			if (!strcmp(o_parms[0],"ELSE"))
-			{
-				tput_line("               CONTINUE\n");
-				tput_line("           END-IF\n");
-			}
+			the_statement = get_statement_from_sentence(the_sentence);
 		}
-		else if ( !(prog_ftypes[fd] & AUTOLOCK) )
-		{
-			tput_line("           MOVE %s TO WISP-SAVE-FILE-STATUS\n",prog_fstats[fd]);
-			tput_line("           UNLOCK %s\n", fdname );
-#ifdef OLD
-			if ( !(prog_ftypes[fd] & SEQ_FILE) || (prog_ftypes[fd] & SEQ_DYN) ) 
-				tput_line("           UNLOCK %s\n", fdname );
-			else
-				tput_line("           UNLOCK %s ALL\n", fdname );
-#endif
-			tput_line("           MOVE WISP-SAVE-FILE-STATUS TO %s\n",prog_fstats[fd]);
-		}
+		curr_node = the_statement->next;
 	}
 
-	if (ptype == -1)
+	if (eq_token(curr_node->token, KEYWORD, "END-WRITE"))
 	{
-		tput_line  ("           CONTINUE.\n");
+		curr_node->token->column_fixed = 1;
+		tput_statement(col, the_statement);
+		the_statement =  free_statement(the_statement);
 	}
 
-	if (ptype != -1) hold_line();
+	return the_statement;
 
-	write_log("WISP",'I',"WRITEDONE","Completed WRITE analysys");
-	return 0;
+	/*
+	**	NOTE: There is additional VAX/VMS logic which has not been added.
+	*/
 }
 
 /*
 **	History:
 **	$Log: wt_write.c,v $
+**	Revision 1.15  1998-12-15 14:44:52-05  gsl
+**	Add support for the END-OF-PAGE clauses
+**
+**	Revision 1.14  1998-10-13 09:37:29-04  gsl
+**	Add missing include file
+**
+**	Revision 1.13  1998-08-28 17:14:09-04  gsl
+**	For PRINTER files a WRITE statement without an advancing clause
+**	needs to have a AFTER ADVANCING 1 LINE clause added.
+**
+**	Revision 1.12  1998-03-27 14:11:12-05  gsl
+**	Move OLD to old.c
+**
+**	Revision 1.11  1998-03-03 15:34:29-05  gsl
+**	rewrote for cobol-85
+**
 **	Revision 1.10  1996-08-30 21:56:26-04  gsl
 **	drcs update
 **

@@ -5,12 +5,19 @@ static char sccsid[]="@(#)report.c	1.1 2/4/93";
 
 main()
 {
+#ifdef KCSI_MFX
+	cobinit();
+#endif
+
 	RPTMAIN();
 }
 
 /*
 **	History:
 **	$Log: report.c,v $
+**	Revision 1.3  1999-03-05 10:00:35-05  gsl
+**	Add cobinit() for MFX
+**
 **	Revision 1.2  1996-09-17 19:45:47-04  gsl
 **	drcs update
 **

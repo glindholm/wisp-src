@@ -67,6 +67,39 @@ const char *wanguid3(void)								/* This routine returns the first 3 	*/
 	char	tstr[40];
 	int	i,x;
 
+#ifdef NISEEAST
+	if (first_wanguid3)
+	{
+		/*
+		**	Custom patch for NISEEAST to emulate the way Wang Resource
+		**	works.  Get the userid from environmment variable ID or VSID.
+		**	If neither is set then default to the WISP way.
+		*/
+		char *ptr;
+		int len;
+					
+		ptr = getenv("ID");			/* Check if ID set 			*/
+		if (!ptr || !ptr[0])			/* If ID not set then check VSID 	*/
+		{
+			ptr = getenv("VSID");
+		}
+		if (ptr && ptr[0])			/* If ID or VSID the use it		*/
+		{
+
+			memset(uid3,' ',3);
+			len = strlen(ptr);
+			if (len > 3) len = 3;
+			memcpy(uid3, ptr, len);
+
+			upper_mem(uid3,3);		/* Make UPPERCASE.			*/
+			uid3[3] = '\0';
+
+			first_wanguid3 = 0;
+		}
+	}
+	
+#endif /* NISEEAST */
+
 	if ( first_wanguid3 )
 	{
 		first_wanguid3 = 0;
@@ -147,6 +180,9 @@ const char *longuid(void)							/* This routine will return the long userid	*/
 /*
 **	History:
 **	$Log: wanguid.c,v $
+**	Revision 1.12  1998-03-31 13:48:00-05  gsl
+**	Move NISEEAST patch from EXTRACT ID to here
+**
 **	Revision 1.11  1996-10-25 17:08:11-04  gsl
 **	Fix to return const ptrs
 **

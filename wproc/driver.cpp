@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : driver.cpp
 // Author : George Soules
@@ -98,7 +105,18 @@ int main(int argc, char *argv[]) {
 
 #if WANG
    // Initialize full screen IO services
-   if (!wbackground()) clear_screen();
+   if (!wbackground()) 
+   {
+	if (user_options.compile() || user_options.syntax_check())
+	{
+		/* Don't need to clear the screen if compiling or checking */
+	}
+	else
+	{
+	        vwang_title("WPROC - WISP Procedure Interpreter");
+		clear_screen();
+	}
+   }
 #endif
 
    // Set up handler to intercept Ctrl-c
@@ -169,6 +187,7 @@ int main(int argc, char *argv[]) {
    check_memory_state();
 
 #if WANG
+   wang_os_decrement_link_level();
    wispexit_cleanup();
 
    if (logoff)
@@ -178,3 +197,77 @@ int main(int argc, char *argv[]) {
    exit(rc);
    return 0;  // Never reached (avoids compiler warning)
 }
+
+//
+//	History:
+//	$Log: driver.cpp,v $
+//	Revision 1.13  1999-08-29 13:19:37-04  gsl
+//	Move the vwang_title() call out of wang_os_init() so it doesn't get
+//	called while in CoSTAR if just checking the version.
+//
+//	Revision 1.12  1999-01-29 18:58:33-05  gsl
+//	Add decrement link level before call to wispexit_cleanup().
+//
+//	Revision 1.11  1998-09-28 17:08:09-04  gsl
+//	If compiling or syntax checking then don't go into full screen IO.
+//	Just use the stdout IO.
+//	THis allows you to redirect errors to a file.
+//
+//	Revision 1.10  1998-08-31 15:13:40-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/driver.cpp,v
+//	Working file: driver.cpp
+//	head: 1.9
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 9;	selected revisions: 9
+//	description:
+//	----------------------------
+//	revision 1.9
+//	date: 1997-06-10 01:27:15-04;  author: scass;  state: V4_3_00;  lines: +1 -1
+//	Removed #else if so is #else, to remove warning.
+//	----------------------------
+//	revision 1.8
+//	date: 1996-11-11 20:13:14-05;  author: gsl;  state: V3_3_93;  lines: +2 -0
+//	Add call to wispexit_cleanup() before exit
+//	----------------------------
+//	revision 1.7
+//	date: 1996-07-25 19:45:48-04;  author: gsl;  state: Exp;  lines: +6 -11
+//	NT
+//	----------------------------
+//	revision 1.6
+//	date: 1996-07-25 14:14:37-04;  author: gsl;  state: Exp;  lines: +0 -0
+//	Renamed from driver.cc to driver.cpp
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-02 09:00:05-04;  author: gsl;  state: V3_3_19;  lines: +10 -0
+//	Add test to ensure char's are signed.
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:48-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:05-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:44-05;  author: gsl;  state: V3_3x12;  lines: +2 -2
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:03-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

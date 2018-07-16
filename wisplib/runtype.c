@@ -27,6 +27,11 @@ static char rcsid[]="$Id:$";
 #include <fcntl.h>
 #include <string.h>
 
+#ifdef unix
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
+
 #ifdef _MSC_VER
 #include <io.h>
 #endif
@@ -65,16 +70,16 @@ static char rcsid[]="$Id:$";
 */
 
 #ifdef unix
-int runtype(filespec)
-char	*filespec;
+int runtype(const char* filespec)
 {
 	char	buff[256];
 	int	i, rc;
 	int	fh;
+	struct	stat	filestat;
 
 	if (!fexists(filespec)) return(RUN_ACCESS);
 
-	strcpy(buff,splitext(filespec));
+	strcpy(buff,splitext((char *)filespec));
 
 	if (buff[0])								/* There is an extension, find out what	it is.	*/
 	{
@@ -87,6 +92,10 @@ char	*filespec;
 		if (0==strcmp(buff,".acu")) 	return(RUN_ACUCOBOL);
 		if (0==strcmp(buff,".wcb")) 	return(RUN_NOT);
 		if (0==strcmp(buff,".cob")) 	return(RUN_NOT);
+		if (0==strcmp(buff,".vix")) 	return(RUN_NOT);
+		if (0==strcmp(buff,".idx")) 	return(RUN_NOT);
+		if (0==strcmp(buff,".o")) 	return(RUN_NOT);
+		if (0==strcmp(buff,".exe")) 	return(RUN_EXEC); /* This is a way to force it to think it's executable */
 	}
 
 	switch(isexec(filespec))						/* Call isexec to check the magic number	*/
@@ -99,13 +108,32 @@ char	*filespec;
 	}
 
 	/*
-	**	Last chance: Read the file to see if it contains regular text characters. If it does assume a shell script.
+	**	If the 'x' bit is not set then assume not executable.
+	*/
+	if (0 != stat(filespec,&filestat))
+	{
+		return(RUN_UNKNOWN);
+	}
+	if (   (filestat.st_mode & S_IXUSR)
+	    || (filestat.st_mode & S_IXGRP)
+	    || (filestat.st_mode & S_IXOTH) )
+	{
+		/* The execute bit is set so we will assume it is executable */
+	}
+	else
+	{
+		return RUN_NOT;
+	}
+
+	/*
+	**	Read the file to see if it contains regular text characters. If it does assume a shell script.
+	**	Otherwise assume it is executable.
 	*/
 
 	fh = open(filespec,O_RDONLY,0);
 	if ( fh == -1 )
 	{
-		return(RUN_UNKNOWN);
+		return(RUN_EXEC);
 	}
 
 	rc = read(fh,buff,sizeof(buff));
@@ -119,7 +147,7 @@ char	*filespec;
 		    buff[i] == '\t' ||
 		    buff[i] == 0x07   ) continue;
 		close(fh);
-		return(RUN_NOT);
+		return(RUN_EXEC);
 	}
 	close(fh);
 	return(RUN_SHELL);
@@ -127,7 +155,7 @@ char	*filespec;
 #endif /* unix */
 
 #ifdef MSFS
-int runtype(char* filespec)
+int runtype(const char* filespec)
 {
 	char	buff[64];
 	int	rc;
@@ -135,7 +163,7 @@ int runtype(char* filespec)
 
 	if (!fexists(filespec)) return(RUN_ACCESS);
 
-	strcpy(buff,splitext(filespec));
+	strcpy(buff,splitext((char *)filespec));
 
 	if (buff[0])
 	{
@@ -151,7 +179,8 @@ int runtype(char* filespec)
 		if (0==strcmp(buff,".ACU")) 	return(RUN_ACUCOBOL);
 		if (0==strcmp(buff,".WCB")) 	return(RUN_NOT);
 		if (0==strcmp(buff,".COB")) 	return(RUN_NOT);
-		return(RUN_NOT);
+		if (0==strcmp(buff,".VIX")) 	return(RUN_NOT);
+		if (0==strcmp(buff,".OBJ")) 	return(RUN_NOT);
 	}
 
 	/*
@@ -164,10 +193,10 @@ int runtype(char* filespec)
 		return(RUN_UNKNOWN);
 	}
 
-	rc = read(fh,buff,2);
+	rc = read(fh,buff,4);
 	close(fh);
 
-	if (rc == 2 && buff[0] == 0x10 && buff[1] == 0x12) 
+	if (rc == 4 && 0==memcmp(buff,"\x10\x12\x14\x20",4))
 	{
 		return(RUN_ACUCOBOL);
 	}
@@ -178,6 +207,24 @@ int runtype(char* filespec)
 /*
 **	History:
 **	$Log: runtype.c,v $
+**	Revision 1.12  1998-10-14 12:00:16-04  gsl
+**	Enhanced runtype() to check the filemode to see if the 'X' execute bit
+**	was set. If set then default to executable if other type not determined.
+**
+**	Revision 1.11  1998-05-18 10:12:03-04  gsl
+**	Add .o and .obj as NOT_RUN.
+**	WIN32 changed to check for RUN_ACUCOBOL even if it has an unknow extension.
+**
+**	Revision 1.10  1998-05-14 17:01:44-04  gsl
+**	Add .vix as NOT_RUN and fix RUN_ACUCOBOL logig so it looks at the full magic
+**	number.
+**
+**	Revision 1.9  1998-03-09 13:51:44-05  gsl
+**	make filespec const
+**
+**	Revision 1.8  1998-03-09 13:48:47-05  gsl
+**	Make filespec const
+**
 **	Revision 1.7  1996-09-16 17:44:04-04  gsl
 **	Add extensions .CBX and .ACU to be Acucobol object files
 **

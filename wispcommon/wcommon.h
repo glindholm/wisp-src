@@ -21,7 +21,7 @@
 	WCOMMON.H		Define common defines for WISP and WISPLIB
 */
 
-#define WISP_VERSION "V4.2.00"			 					/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION "V4.3.05"			 					/* WISPTRAN version (char[20])		*/
 #define LIBRARY_VERSION	30								/* WISPLIB version number.		*/
 #define SCREEN_VERSION  22								/* SCREEN version number.		*/
 
@@ -72,6 +72,33 @@
 /*
 **	History:
 **	$Log: wcommon.h,v $
+**	Revision 1.39  1999-05-24 17:40:26-04  gsl
+**	V4.3.05
+**
+**	Revision 1.38  1999-03-03 18:18:00-05  gsl
+**	Update to 4.3.04
+**
+**	Revision 1.37  1999-01-04 16:43:15-05  gsl
+**	4.3.03
+**
+**	Revision 1.36  1998-10-26 10:02:42-05  gsl
+**	Change version to 4.3.02
+**
+**	Revision 1.35  1998-08-28 11:52:33-04  gsl
+**	Update to 4.3.01
+**
+**	Revision 1.34  1998-06-23 16:13:17-04  gsl
+**	Change version to 4.3.00
+**
+**	Revision 1.33  1998-05-08 15:12:33-04  gsl
+**	change to v4.2.03
+**
+**	Revision 1.32  1998-03-23 08:52:41-05  gsl
+**	Change to 4.2.02
+**
+**	Revision 1.31  1998-03-04 16:07:01-05  gsl
+**	update for COBOL-85 features
+**
 **	Revision 1.30  1998-01-08 11:38:59-05  gsl
 **	change version to 4.2.00
 **

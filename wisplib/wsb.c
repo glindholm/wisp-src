@@ -27,15 +27,14 @@ static char rcsid[]="$Id:$";
 #include "wexit.h"
 #include "wperson.h"
 #include "wisplib.h"
+#include "vchinese.h"
 
 /*
 **	Structures and Defines
 */
-#define FAC_MENU_TAB		FAC_MOD_BOLD_LINE
-
 #define MAX_WSB			32	/* Max open WSB handles */
 
-#define MAX_WSB_FIELDS		32	/* Max number of entry fields */
+#define MAX_WSB_FIELDS		40	/* Max number of entry fields */
 #define MAX_WSB_FIELD_LEN	79	/* Max length of entry fields */
 
 /*
@@ -58,7 +57,7 @@ typedef struct s_wsbnative
 	char	data[WSB_ROWS][WSB_COLS];	/* Static text data 24x80 */
 	uint2	currow;				/* Cursor row */
 	uint2	curcol;				/* Cursor column */
-	uint2 	fields;				/* Number of fields in field_list 0-32 */
+	uint2 	fields;				/* Number of fields in field_list 0-40 */
 	field_t field_list[MAX_WSB_FIELDS];	/* Array of fields */
 } wsbnative_t;
 
@@ -71,6 +70,7 @@ typedef struct s_wsb
 	wsbvwang_t *vw;			/* Vwang struct for WISP screens */
 	wsbnative_t *na;		/* Native struct for Native screens */
 	int (*menumap)[NUM_PFKEYS];	/* Map of screen position to pfkey value for menu items (0=enter, 1-32, 33=help) */
+	int sound_alarm;		/* Flag to ring the bell */
 } wsb_t;
 
 
@@ -128,7 +128,7 @@ static int check_hwsb(HWSB hWsb)
 {
 	wsb_first();
 
-	if (hWsb < 0 || hWsb >= MAX_WSB || !wsb[hWsb])
+	if (hWsb >= MAX_WSB || !wsb[hWsb])
 	{
 		ASSERT(0);
 		werrlog(104,"%%WSB-E-HWSB Invalid handle to WSB",0,0,0,0,0,0,0);
@@ -251,6 +251,7 @@ HWSB wsb_new(void)
 	wsb[idx]->vw = (wsbvwang_t *)NULL;
 	wsb[idx]->na = (wsbnative_t *)NULL;
 	wsb[idx]->menumap = NULL;
+	wsb[idx]->sound_alarm = 0;
 	
 	if (nativescreens())
 	{
@@ -381,6 +382,23 @@ void wsb_add_text(HWSB hWsb, int row, int col, const char *text)
 		memcpy(&wsb[hWsb]->vw->data[row][col], text, len);
 
 		/*
+		**	If chinese then change '[' and ']' into '(' and )'.
+		*/
+		if (outctx)
+		{
+			char *ptr;
+			
+			while(ptr = memchr(&wsb[hWsb]->vw->data[row][col], '[', len))
+			{
+				*ptr = '(';
+			}
+			while(ptr = memchr(&wsb[hWsb]->vw->data[row][col], ']', len))
+			{
+				*ptr = ')';
+			}
+		}
+
+		/*
 		**	Add the surrounding FACs
 		*/
 		if (col > 0)
@@ -471,7 +489,7 @@ void wsb_add_field(HWSB hWsb, int row, int col, fac_t fac, const char *field, in
 			
 			if (wsb[hWsb]->na->fields >= MAX_WSB_FIELDS)
 			{
-				werrlog(104,"%%WSB-E-MAXFIELDS Max 32 modifiable fields",0,0,0,0,0,0,0);
+				werrlog(104,"%%WSB-E-MAXFIELDS Max 40 modifiable fields",0,0,0,0,0,0,0);
 			}
 			else
 			{
@@ -552,7 +570,7 @@ void wsb_add_menu_item(HWSB hWsb, int row, int col, int pfkey, const char *text)
 		wtrace("WSB","COLUMN","Invalid column value %d (using 2)",col);
 		col = 2;
 	}
-	len = check_field_len(len, col+2);
+	len = check_field_len(len, col+3);
 
 	if (pfkey < 0 || pfkey > 33)
 	{
@@ -587,8 +605,8 @@ void wsb_add_menu_item(HWSB hWsb, int row, int col, int pfkey, const char *text)
 
 	if (nativescreens())
 	{
-		memcpy(&wsb[hWsb]->na->data[row][col+2], text, len);
-		wsb_add_field(hWsb, row+1, col+1, FAC_MENU_TAB, " ", 1);
+		wsb_add_tabstop(hWsb, row+1, col+1);
+		memcpy(&wsb[hWsb]->na->data[row][col+3], text, len);
 	}
 	else
 	{
@@ -604,6 +622,62 @@ void wsb_add_menu_item(HWSB hWsb, int row, int col, int pfkey, const char *text)
 		{
 			wsb[hWsb]->vw->data[row][col+2+len] = (char)PLAIN_TEXT;
 		}		
+	}
+}
+
+/*
+**	ROUTINE:	wsb_add_tabstop()
+**
+**	FUNCTION:	Add a tabstop to the screen
+**
+**	DESCRIPTION:	
+**
+**	ARGUMENTS:	
+**	hWsb		The handle to the WSB structure to be deleted
+**	row		The row position (1-24)
+**	col		The column position of the cursor tab character (2-77)
+**
+**	GLOBALS:	
+**	wsb		The WSB table.
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+void wsb_add_tabstop(HWSB hWsb, int row, int col)
+{
+	if (check_hwsb(hWsb))
+	{
+		return;
+	}
+
+	row = check_row(row);
+	if (col < 2 || col > WSB_COLS-3) 
+	{
+		wtrace("WSB","COLUMN","Invalid column value %d (using 2)",col);
+		col = 2;
+	}
+	
+	/*
+	**	Convert row and col to be zero based.
+	*/
+	col--;
+	row--;
+
+	if (nativescreens())
+	{
+		memcpy(&wsb[hWsb]->na->data[row][col-1], "[ ]", 3);
+		wsb_add_field(hWsb, row+1, col+1, FAC_MOD_BLANK_LINE, " ", 1);
+	}
+	else
+	{
+		/*
+		**	Add the menu pick FACs
+		*/
+		wsb[hWsb]->vw->data[row][col-1] = (char)NUMPROT_FIELD;
+		wsb[hWsb]->vw->data[row][col]   = '-';
+		wsb[hWsb]->vw->data[row][col+1] = (char)PLAIN_TEXT;
 	}
 }
 
@@ -654,6 +728,16 @@ void wsb_get_field(HWSB hWsb, int row, int col, char *field, int len)
 	{
 		memcpy(field, &wsb[hWsb]->vw->data[row][col], len);
 	}
+}
+
+void wsb_set_alarm(HWSB hWsb)
+{
+	if (check_hwsb(hWsb))
+	{
+		return;
+	}
+
+	wsb[hWsb]->sound_alarm = 1;
 }
 
 
@@ -716,22 +800,27 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 		/*
 		**	CALL "WACUWSB" USING
 		**	[0]	static_text		PIC X(24*80)
-		**	[1]	field_cnt		PIC 99			0-32
-		**	[2]	field_table		PIC X(86) * 32	
+		**	[1]	field_cnt		PIC 99			0-40
+		**	[2]	field_table		PIC X(86) * 40	
 		**	[3]	key_list		PIC X(80)
 		**	[4]	key_cnt			UNSIGNED-SHORT		1-33
 		**	[5]	term_key		UNSIGNED-SHORT		0-33
 		**	[6]	cur_row			UNSIGNED-SHORT		1-24
 		**	[7]	cur_col			UNSIGNED-SHORT		1-80
+		**	[8]	sound_alarm		UNSIGNED-SHORT		0-1
+		**	[9]	timeout			UNSIGNED-SHORT		0-65536 (0=No Timeout, n=Hundreds of seconds)
 		*/
-		char	*parms[8];
-		int4	lens[8];
+#define WACUWSB_ARGCNT	10
+		char	*parms[WACUWSB_ARGCNT];
+		int4	lens[WACUWSB_ARGCNT];
 		int4	rc;
 		uint2	field_cnt;
 		uint2	key_cnt;
 		uint2	term_key;
 		uint2	cur_row;
 		uint2	cur_col;
+		uint2	alarm_flag;
+		uint2	timeout_hsecs;
 		char	*ptr;
 
 		field_cnt = wsb[hWsb]->na->fields;
@@ -758,6 +847,9 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 			}
 		}
 
+		alarm_flag = (wsb[hWsb]->sound_alarm) ? 1:0;
+		timeout_hsecs = 0;
+
 		parms[0] = (char *)wsb[hWsb]->na->data;
 		lens[0]  = WSB_ROWS*WSB_COLS;
 
@@ -781,8 +873,14 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 		
 		parms[7] = (char*)&cur_col;
 		lens[7]  = sizeof(cur_col);
+		
+		parms[8] = (char*)&alarm_flag;
+		lens[8]  = sizeof(alarm_flag);
+		
+		parms[9] = (char*)&timeout_hsecs;
+		lens[9]  = sizeof(timeout_hsecs);
 
-		call_acucobol("WACUWSB", 8, parms, lens, &rc);
+		call_acucobol("WACUWSB", WACUWSB_ARGCNT, parms, lens, &rc);
 
 		if (rc)
 		{
@@ -825,6 +923,8 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 	{
 		unsigned char	function, lines, term[2], no_mod[2];
 
+		no_mod[0] = no_mod[1] = ' ';
+		
 		wsb[hWsb]->vw->oa.row = 1;
 		wsb[hWsb]->vw->oa.currow = *piCurrow;
 		wsb[hWsb]->vw->oa.curcol = *piCurcol;
@@ -843,6 +943,11 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 			function = WRITE_ALL;
 		}
 
+		if (wsb[hWsb]->sound_alarm)
+		{
+			wsb[hWsb]->vw->oa.wcc |= SOUND_ALARM;
+		}
+		
 		lines = 24;
 
 		/* 
@@ -907,11 +1012,30 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 		wtrace("WSB","CURCOL","Invalid cursor column [%d] (using 1)", *piCurcol);
 		*piCurcol = 1;
 	}
+
+	/*
+	**	Clear one time flags
+	*/
+	wsb[hWsb]->sound_alarm = 0;
 }
 
 /*
 **	History:
 **	$Log: wsb.c,v $
+**	Revision 1.8  1998-10-13 14:57:46-04  gsl
+**	hWsb is unsigned so can't be < 0
+**
+**	Revision 1.7  1998-07-09 16:16:56-04  gsl
+**	Initialize the no_mod arg to vwang()
+**
+**	Revision 1.6  1998-03-16 13:22:30-05  gsl
+**	Moved the outctx vchinese logic from wshelp to wsb_add_text()
+**
+**	Revision 1.5  1998-03-13 18:01:06-05  gsl
+**	Add wsb_set_alarm()
+**	Increase number of fields to 40
+**	add wsb_add_tabstop()
+**
 **	Revision 1.4  1997-12-05 16:05:33-05  gsl
 **	Add missing includes
 **

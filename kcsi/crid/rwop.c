@@ -31,7 +31,7 @@ error_text,
 */
 " ",
 " ",
-"        **  Press PF14 for an explanation of the Print Options  **",
+"        **  Press (14) for an explanation of the Print Options  **",
 "              **  Press ENTER to Continue or (16) to Exit **"
 };
 
@@ -270,6 +270,9 @@ void RPTWOP(char *RC,char *RPT_OPTIONS,char *MESSAGE)
 /*
 **	History:
 **	$Log: rwop.c,v $
+**	Revision 1.3  1999-03-17 13:46:20-05  gsl
+**	Fix screen tag PF14 --> (14)
+**
 **	Revision 1.2  1996-09-17 19:45:51-04  gsl
 **	drcs update
 **

@@ -86,11 +86,11 @@ int bytenormal(void)
 	return( normal );
 }
 
-int4 get_swap(int4 *src)
+int4 get_swap(const int4 *src)
 {
 	int4	temp;
 
-	memcpy((char*)&temp, (char*)src, 4);
+	memcpy((char*)&temp, (const char*)src, 4);
 	wswap(&temp);
 
 	return temp;
@@ -106,6 +106,9 @@ void put_swap(int4 *dest, int4 value)
 /*
 **	History:
 **	$Log: wswap.c,v $
+**	Revision 1.14  1998-11-04 10:04:49-05  gsl
+**	change get_swap() arg to const
+**
 **	Revision 1.13  1997-10-17 11:41:18-04  gsl
 **	Add get_swap() and put_swap().
 **	These are replacements for GETBIN()/PUTBIN() and swap used together.

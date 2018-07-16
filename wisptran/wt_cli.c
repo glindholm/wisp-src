@@ -1,4 +1,5 @@
-static char copyright[]="Copyright (c) 1987-1997 NeoMedia Technologies Inc., All rights reserved.";
+/* CHANGE-COPYRIGHT-DATE */
+static char copyright[]="Copyright (c) 1989-1999 NeoMedia Technologies Inc., All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		wt_cli.c
@@ -79,9 +80,16 @@ $DESCRIPTOR(cli_dataconv,"DATACONV");
 $DESCRIPTOR(cli_x4dbfile,"X4DBFILE");
 #endif	/* VMS */
 
-get_cli(argc,argv)
-int	argc;
-char	*argv[];
+
+static void whodunit(void);
+static void printusage(void);
+static void fullusage(void);
+static void showflags(void);
+
+
+
+
+int get_cli(int argc, char *argv[])
 {
 #ifdef VMS
 	int status,i;
@@ -90,6 +98,8 @@ char	*argv[];
 	copy_only = 0;
 
 	init_data = 1;									/* init data areas (default)		*/
+
+	manual_locking = 1;								/* VMS always uses manual locking	*/
 
 	status = cli$present(&cli_list);
 	if (status == CLI$_PRESENT)							/* The /LIST switch is present		*/
@@ -475,6 +485,10 @@ char	*argv[];
 	i = strpos(cli_infile," ");
 	if (i != -1) cli_infile[i] = '\0';						/* NUll terminate			*/
 #else
+	/*
+	**	UNIX, DOS, NT code
+	*/
+
 	int	c;
 	extern	char	*optarg;
 	extern	int	optind,opterr;
@@ -547,7 +561,7 @@ char	*argv[];
 		exit_wisp(EXIT_FAST);
 	}
 
-	while ( (c = getopt( argc, argv, "LlzZcsCxneTRS1dDFmfwI:P:G:qkK:oO:V:W:U4?")) != -1 )
+	while ( (c = getopt( argc, argv, "LlzZcsCxneTRS1dDFmMfwI:P:G:qkK:oO:V:W:U4?")) != -1 )
 	{
 		switch( c )
 		{
@@ -652,6 +666,9 @@ char	*argv[];
 				break;
 			case 'm':							/* /INIT=NOMOVE_SPACEA			*/
 				init_move = 1;
+				break;
+			case 'M':
+				manual_locking = 1;
 				break;
 			case 'F':							/* SHOW ALL FLAGS IN USE		*/
 				show_flags = 1;
@@ -803,6 +820,12 @@ char	*argv[];
 	if (copylib || !concat) { copylib = 1; concat = 0; }
 	else			{ copylib = 0; concat = 1; }
 
+	if (manual_locking && !do_locking)
+	{
+		write_log("WISP",'F',"OPTIONS","NODMS (-S) and MANLOCK (-M) can not both be specified.");
+		exit_with_err();
+	}
+	
 
 #ifdef VMS
 	write_log("WISP",'I',"DCLSWITCHES","Comments  = %d\nCopy Only = %d\nConcat    = %d\nCopy Lib  = %d",
@@ -816,19 +839,19 @@ char	*argv[];
 	write_log("WISP",'I',"FLAGS","Data = %d, Move = %d.\n",init_data,init_move);
 #endif
 
-	load_res_keywords(word_fname);
+	load_change_words(word_fname);
 
 	return 0;
 }
 
-whodunit()
+static void whodunit(void)
 {
               /*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
 	printf("\n\n\n");
 	printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n\n\n",WISP_VERSION,LIBRARY_VERSION,SCREEN_VERSION);
-	printf("  Translator written by Greg Lindholm and Frank Dziuba.\n");
+	printf("  Translator written by Greg Lindholm.\n");
 	printf("  Library and utilities written by Greg Lindholm, Frank Dziuba, David Young,\n");
-	printf("  Jock Cooper, Suzette Boron, and Gregory Adams.\n");
+	printf("  Jock Cooper, Suzette Cass, and Gregory Adams.\n");
 	printf("  Screen management and Wang workstation emulation written by Gregory Adams.\n");
 	printf("  Unix implementation written by Greg Lindholm and Jock Cooper.\n");
 	printf("  MS-DOS implementation written by Greg Lindholm.\n");
@@ -838,11 +861,10 @@ whodunit()
 	printf("  this product would not exist.\n");
 	printf("\n");
 	printf("  %s\n\n\n",copyright);
-	return 0;
 }
 
 #ifndef VMS
-printusage()
+static void printusage(void)
 {
 	printf("%s\n",copyright);
 	printf("\n");
@@ -861,9 +883,8 @@ printusage()
 	printf("	-U				SHOW ALL USAGE FLAGS.\n");
 	printf("	-F				SHOW FLAGS IN USE.\n");
 	printf("\n");
-	return 0;
 }
-fullusage()
+static void fullusage(void)
 {
 	printf("%s\n",copyright);
 	printf("\n");
@@ -898,9 +919,9 @@ fullusage()
 	printf("	-w	/INIT=(NOWS_FILLER)	Change WS FILLERS to fields.\n");
 	printf("	-q	/DATACONV		Generate data conversion program.\n");
 	printf("	-4	/X4DBFILE		Add check for database files.\n");
-	return 0;
+	printf("	-M	/MANLOCK		Use manual record locking.\n");
 }
-showflags()
+static void showflags(void)
 {
 	printf("\n");
 	printf("The Following WISP Option are in use;\n\n");
@@ -993,13 +1014,28 @@ showflags()
 		printf("     no -S	/DMS			Add DMS locking logic.\n");
 	else
 		printf("        -S	/NODMS			Do not add DMS locking logic.\n");
-	return 0;
+	if ( manual_locking )
+		printf("        -M	/MANLOCK		Use manual record locking.\n");
+	else
+		printf("     no -M	/NOMANLOCK		Use automatic record locking.\n");
 }
 #endif
 
 /*
 **	History:
 **	$Log: wt_cli.c,v $
+**	Revision 1.18  1999-09-13 15:57:06-04  gsl
+**	update copyrights
+**
+**	Revision 1.17  1998-06-09 13:02:31-04  gsl
+**	Add option -M for manual record locking
+**
+**	Revision 1.16  1998-03-27 10:38:03-05  gsl
+**	change_words
+**
+**	Revision 1.15  1998-03-04 16:13:19-05  gsl
+**	Update copyright
+**
 **	Revision 1.14  1997-08-28 17:12:05-04  gsl
 **	Add -VACN for Native Acucobol
 **

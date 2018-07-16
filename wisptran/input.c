@@ -534,7 +534,7 @@ int get_next_cobol_line(char *the_line, int linesize)
 			}
 			else if ( KEYWORD == tmptok.type || VERB == tmptok.type )
 			{
-				write_log("WISP",'E',"RESERVED","Using reserved word %s as a COPY filename.",tmptok.data);
+				write_log("WISP",'I',"RESERVED","Using reserved word %s as a COPY filename.",tmptok.data);
 				strcpy(file_name,tmptok.data);
 				parse_step = 3;
 				break;
@@ -611,12 +611,12 @@ int get_next_cobol_line(char *the_line, int linesize)
 		{
 			if (4==parse_step)
 			{
-				write_log("WISP",'E',"RESERVED","Using reserved word %s as a COPY library.",tmptok.data);
+				write_log("WISP",'I',"RESERVED","Using reserved word %s as a COPY library.",tmptok.data);
 				strcpy(library_name,tmptok.data);
 			}
 			else
 			{
-				write_log("WISP",'E',"RESERVED","Using reserved word %s as a COPY volume.",tmptok.data);
+				write_log("WISP",'I',"RESERVED","Using reserved word %s as a COPY volume.",tmptok.data);
 				strcpy(volume_name,tmptok.data);
 			}
 			parse_step++;
@@ -763,18 +763,63 @@ int get_conditional_cobol_line(char *the_line, int linesize, A_file *the_file, i
 #define DOS_CODE	8
 #define COPY_CODE       9
 #define DMF_CODE	10
+#define ACN_CODE	11
 
-	static char *code_else[] ={	"",	"$WANG_ELSE",	"$VAX_ELSE",	"$LPI_ELSE",	"$ACU_ELSE",	"$AIX_ELSE",
-						"$MF_ELSE",	"$UNIX_ELSE",	"$DOS_ELSE",	"$COPY_ELSE",	"$DMF_ELSE"};
+	static char *code_else[] ={ 
+		"",	
+		"$WANG_ELSE",	
+		"$VAX_ELSE",	
+		"$LPI_ELSE",	
+		"$ACU_ELSE",	
+		"$AIX_ELSE",
+		"$MF_ELSE",	
+		"$UNIX_ELSE",	
+		"$DOS_ELSE",	
+		"$COPY_ELSE",	
+		"$DMF_ELSE",
+		"$ACN_ELSE"};
 
-	static char *code__else[] ={	"",	"$WANG-ELSE",	"$VAX-ELSE",	"$LPI-ELSE",	"$ACU-ELSE",	"$AIX-ELSE",
-						"$MF-ELSE",	"$UNIX-ELSE",	"$DOS-ELSE",	"$COPY-ELSE",	"$DMF-ELSE"};
+	static char *code__else[] ={ 
+		"",
+		"$WANG-ELSE",	
+		"$VAX-ELSE",
+		"$LPI-ELSE",
+		"$ACU-ELSE",
+		"$AIX-ELSE",
+		"$MF-ELSE",
+		"$UNIX-ELSE",
+		"$DOS-ELSE",
+		"$COPY-ELSE",
+		"$DMF-ELSE",
+		"$ACN-ELSE"};
 
-	static char *code_end[] ={	"",	"$WANG_END",	"$VAX_END",	"$LPI_END",	"$ACU_END",	"$AIX_END",
-						"$MF_END",	"$UNIX_END",	"$DOS_END",	"$COPY_END",	"$DMF_END"};
+	static char *code_end[] ={
+		"",
+		"$WANG_END",
+		"$VAX_END",
+		"$LPI_END",
+		"$ACU_END",
+		"$AIX_END",
+		"$MF_END",
+		"$UNIX_END",
+		"$DOS_END",
+		"$COPY_END",
+		"$DMF_END",
+		"$ACN_END"};
 
-	static char *code__end[] ={	"",	"$WANG-END",	"$VAX-END",	"$LPI-END",	"$ACU-END",	"$AIX-END",
-						"$MF-END",	"$UNIX-END",	"$DOS-END",	"$COPY-END",	"$DMF-END"};
+	static char *code__end[] ={
+		"",
+		"$WANG-END",
+		"$VAX-END",
+		"$LPI-END",
+		"$ACU-END",
+		"$AIX-END",
+		"$MF-END",
+		"$UNIX-END",
+		"$DOS-END",
+		"$COPY-END",
+		"$DMF-END",
+		"$ACN-END"};
 
 	static	int	xxx_code = 0;						/* Flag and index while in CODE/ELSE/END	*/
 	static	int	xxx_else = 0;						/* Flag while in ELSE/END			*/
@@ -839,6 +884,12 @@ int get_conditional_cobol_line(char *the_line, int linesize, A_file *the_file, i
 		{
 			write_log("WISP",'I',"ACUCOPY","Start Copy of ACU code.");
 			xxx_code = ACU_CODE;
+		}
+		else if (acn_cobol && ((strpos(the_line,"$ACN_CODE") != -1) ||
+		     		       (strpos(the_line,"$ACN-CODE") != -1)    ))
+		{
+			write_log("WISP",'I',"ACNCOPY","Start Copy of ACN code.");
+			xxx_code = ACN_CODE;
 		}
 		else if (aix_cobol && ((strpos(the_line,"$AIX_CODE") != -1) ||
  		    		       (strpos(the_line,"$AIX-CODE") != -1)    ))
@@ -1625,6 +1676,13 @@ int set_end_of_input(void)
 /*
 **	History:
 **	$Log: input.c,v $
+**	Revision 1.9  1998-05-07 16:37:40-04  gsl
+**	Add $ACN_CODE $ACN_ELSE $ACN_END conditional support
+**
+**	Revision 1.8  1998-03-20 17:16:23-05  gsl
+**	Changed error message to informational.
+**	Using a keyword for a copybook name.
+**
 **	Revision 1.7  1996-08-30 21:56:03-04  gsl
 **	drcs update
 **

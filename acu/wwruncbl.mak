@@ -1,24 +1,28 @@
-#	Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.
+#	Copyright (c) 1988-1999 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
 #	File:	wwruncbl.mak
 #
 #	Function:
-#		The WINNT/WIN95 makefile for building the ACUCOBOL runtime
+#		The WIN32 makefile for building the ACUCOBOL runtime
 #		systems that include the WISP runtime routines.
 #
 #	Description:
 #		This makefile can generate the following versions
 #		of the ACUCOBOL runtime system.
 #
-#		wwruncbl	The standard runtime for ACUCOBOL.
+#		wwruncbl.exe	The standard runtime for ACUCOBOL.
 #
-#		wwruncble	The EDE version of the runtime.
+#		wwruncble.exe	The EDE version of the runtime.
 #
-#		wwruncblk	The KCSI version of the runtime.
+#		wwruncblk.exe	The KCSI version of the runtime.
 #
-#		wwruncblke	The KCSI + EDE runtime.
+#		wwruncblke.exe	The KCSI + EDE runtime.
+#
+#		run32w.exe	The console runtime.
+#
+#		run32wk.exe	The console runtime with KCSI.
 #
 #
 #	Instructions:
@@ -54,6 +58,12 @@
 #		To build a KCSI+EDE runtime:
 #			C:\WISP\ACU> nmake /f wwruncbl.mak kcsiede
 #
+#		To build a console runtime:
+#			C:\WISP\ACU> nmake /f wwruncbl.mak rtst
+#
+#		To build a console runtime with KCSI:
+#			C:\WISP\ACU> nmake /f wwruncbl.mak kcsit
+#
 #
 #	Targets:
 #		When running the make utility you can specify what "targets"
@@ -67,20 +77,28 @@
 #		which can be used to change the name of the runtime.
 #
 #		rts		The default WISP + ACUCOBOL runtime.
-#				Runtime = wwruncbl
+#				Runtime = wwruncbl.exe
 #				Macro   = RTS
 #
 #		ede		The EDE runtime.
-#				Runtime = wwruncble
+#				Runtime = wwruncble.exe
 #				Macro   = RTSE
 #
 #		kcsi		The KCSI runtime.
-#				Runtime = wwruncblk
+#				Runtime = wwruncblk.exe
 #				Macro   = RTSK
 #
 #		kcsiede		The KCSI + EDE  runtime.
-#				Runtime = wwruncblke
+#				Runtime = wwruncblke.exe
 #				Macro   = RTSKE
+#
+#		rtst		The console WISP + ACUCOBOL runtime.
+#				Runtime = run32w.exe
+#				Macro   = RTST
+#
+#		kcsit		The console KCSI runtime.
+#				Runtime = run32wt.exe
+#				Macro   = RTSKT
 #
 #		both		Create both rts and ede targets.
 #
@@ -89,9 +107,9 @@
 #
 #		Examples:
 #
-#		(1) Build the EDE runtime using the name "wrunede".
+#		(1) Build the EDE runtime using the name "wrunede.exe".
 #
-#			C:\WISP\ACU> nmake .f wruncbl.umf RTSE=wrunede ede
+#		   C:\WISP\ACU> nmake /f wwruncbl.mak RTSE=wrunede.exe ede
 #
 #
 #	NOTE:	This makefile supports different versions of ACUCOBOL.
@@ -109,20 +127,27 @@
 #
 # These macros represent environment variables.
 #
-# WISPDIR	The installed WISP directory
 # ACUDIR	The ACUCOBOL directory
+# ACURPCDIR	The directory for FTP libraries for Acuserver. Supply if
+#		an Acuserver client (CLIENT=1).
+# WISPDIR	The installed WISP directory
 # KCSIDIR	The KCSI directory
+# CREATEDIR	The CREATE directory
 #
 # OUTDIR	The output directory where the rts is created
 #
+#ACUDIR=D:\ACUCBL40\ACUGT
+#ACUDIR=D:\ACUCBL41
+ACUDIR=D:\ACUCBL42\ACUGT
+ACURPCDIR=D:\ACUFTP
+
+# Uncomment for Acuserver client enabled runtime.
+#CLIENT=1
+
 #WISPDIR=C:\WISP
-#ACUDIR=C:\ACUCBL31
-#KCSIDIR=C:\CRIDACU
-#CREATEDIR=C:\CREATEACU
 WISPDIR=..
-ACUDIR=D:\ACUCBL321
-KCSIDIR=..\kcsi\crid
-CREATEDIR=..\kcsi\create
+KCSIDIR=$(WISPDIR)\CRIDACU.297
+CREATEDIR=$(WISPDIR)\CREATEACU.34
 
 OUTDIR=.
 
@@ -139,11 +164,11 @@ WISPLIBSDIR=$(WISPDIR)\lib
 ACULIBSDIR=$(ACUDIR)\lib
 
 WISPTRAN=$(WISPDIR)\bin\wisp.exe
-ACUCOBOL=$(ACUDIR)\bin\ccbl32.exe
+COBOL=$(ACUDIR)\bin\ccbl32.exe
 
 #============================================================================
 #
-# Standard WISP libraries
+# Standard WISP items
 #
 L_WISP=wisp
 L_VIDEO=video
@@ -159,6 +184,12 @@ EDE_LIB_PATH   		= $(WISPLIBSDIR)\$(LIBEDE)
 WISP_LIBS_PATHS 	= $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
 WISPEDE_LIBS_PATHS	= $(EDE_LIB_PATH) $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
 
+WISPICON		= wispicon.ico
+WISPRTSRC		= wisprts.rc
+WISPRTSRES		= wisprts.res
+
+WISPACUFILES 		= sub85.c $(WISPICON) $(WISPRTSRC)
+
 EXTRA_LINK = 
 OTHER_LINK		= $(EXTRA_LINK) /MAP /DEBUG
 
@@ -171,15 +202,23 @@ RTSE	=$(OUTDIR)\wwruncble.exe
 RTSK	=$(OUTDIR)\wwruncblk.exe
 RTSKE	=$(OUTDIR)\wwruncblke.exe
 
+RTST	=$(OUTDIR)\run32w.exe
+RTSET	=$(OUTDIR)\run32we.exe
+RTSKT	=$(OUTDIR)\run32wk.exe
+RTSKET	=$(OUTDIR)\run32wke.exe
+
 CREATE	=$(OUTDIR)\create.exe
 
 #============================================================================
 #
 # Standard CC flags
 #
-CLFLAGS=$(cflags) $(cvars) -nologo -D_WINDOWS -DWINNT -DWIN32 -DMSFS -Z7
+STD_CFLAGS=$(cflags) $(cvars) -nologo -D_WINDOWS -DWINNT -DWIN32 -DMSFS -Z7
 LDFLAGS=$(lflags)
 RCFLAGS=
+
+# Uncomment for BoundsChecker build
+#link=D:\BChecker\nmlink.exe
 
 #============================================================================
 #
@@ -187,14 +226,17 @@ RCFLAGS=
 # ACUSUBS is the list of ACUCOBOL subroutines (other then sub.obj)
 # ACUTEST a test file used to determine version of ACUCOBOL
 # ACUVISN is the list of link items needed to link in VISION filesystem
-# ACUBLD  is extra link items needed (was part of OTHER_LINK
+# ACUBLD  is extra link items needed (was part of OTHER_LINK)
+# ACUCFLAGS is extra C compiler flags
 #
 # Different versions of ACUCOBOL use different sets of
 # libraries and subroutines.
 #
 # 4	ACUCOBOL Version 2.4 - 2.4.2
 # 5	ACUCOBOL Version 3.1
-# 6	ACUCOBOL Version 3.2
+# 6	ACUCOBOL Version 3.2 - 3.2.1
+# 7	ACUCOBOL Version 3.2.2
+# 8	ACUCOBOL Version 4.0.0 - 4.2.0
 #
 ## 4
 ACULIBS4=$(ACULIBSDIR)\wruncbl.lib $(ACULIBSDIR)\wacuterm.lib $(ACULIBSDIR)\wvision.lib
@@ -274,6 +316,84 @@ ACUVISN6=$(ACULIBSDIR)\wfsi32.lib \
 ACUTEST6=$(ACULIBSDIR)\wrun32.lib
 ACUBLD6 = $(guilibs) netapi32.lib comctl32.lib winmm.lib
 
+## 7
+!ifdef CLIENT
+ACULIBS7=$(ACULIBSDIR)\wterm32.lib \
+	$(ACULIBSDIR)\wclnt32.lib \
+	$(ACULIBSDIR)\wrun32.lib \
+	$(ACULIBSDIR)\wfsi32.lib \
+	$(ACULIBSDIR)\wvis32.lib \
+	$(ACULIBSDIR)\wmsg32.lib \
+	$(ACULIBSDIR)\wmem32.lib \
+	$(ACULIBSDIR)\wstd32.lib \
+	$(ACULIBSDIR)\conc32.lib \
+	$(ACURPCDIR)\rpc4w32.lib \
+	wsock32.lib
+ACUSUBS7=filetbl.obj \
+	mswinsub.obj
+ACUCFLAGS7=-DNO_CLIENT=0 -DNO_ACUCONNECT=0
+!else
+ACULIBS7=$(ACULIBSDIR)\wterm32.lib \
+	$(ACULIBSDIR)\wrun32.lib \
+	$(ACULIBSDIR)\wfsi32.lib \
+	$(ACULIBSDIR)\wvis32.lib \
+	$(ACULIBSDIR)\wmsg32.lib \
+	$(ACULIBSDIR)\wmem32.lib \
+	$(ACULIBSDIR)\wstd32.lib \
+	$(ACULIBSDIR)\conc32.lib 
+ACUSUBS7=filetbl.obj \
+	mswinsub.obj \
+	$(ACULIBSDIR)\clntstub.obj \
+	$(ACULIBSDIR)\netstub.obj \
+	$(ACULIBSDIR)\wsastub.obj
+ACUCFLAGS7=-DNO_CLIENT=1 -DNO_ACUCONNECT=1
+!endif
+ACUVISN7=$(ACULIBSDIR)\wfsi32.lib \
+	$(ACULIBSDIR)\wvis32.lib \
+	$(ACULIBSDIR)\wmsg32.lib \
+	$(ACULIBSDIR)\wmem32.lib \
+	$(ACULIBSDIR)\wstd32.lib \
+	$(ACULIBSDIR)\clntstub.obj \
+	$(ACULIBSDIR)\netstub.obj
+
+ACUTEST7=$(ACULIBSDIR)\conc32.lib
+ACUBLD7 = $(guilibs) netapi32.lib comctl32.lib winmm.lib
+
+## 8
+ACUSUBS8=filetbl.obj \
+	mswinsub.obj
+
+!ifdef CLIENT
+ACUCLIENT_LIBS8= $(ACULIBSDIR)\wclnt32.lib \
+	$(ACURPCDIR)\rpc4w32.lib
+ACUCFLAGS8=-DNO_CLIENT=0
+!else
+ACUCLIENT_LIBS8=
+ACUCFLAGS8=-DNO_CLIENT=1
+!endif
+
+ACULIBS8= $(ACUCLIENT_LIBS8) \
+	$(ACULIBSDIR)\wrun32.lib \
+	$(ACULIBSDIR)\wfsi32.lib \
+	$(ACULIBSDIR)\wvis32.lib \
+	$(ACULIBSDIR)\wmsg32.lib \
+	$(ACULIBSDIR)\wmem32.lib \
+	$(ACULIBSDIR)\wlib32.lib \
+	$(ACULIBSDIR)\wstd32.lib \
+	$(ACULIBSDIR)\conc32.lib 
+
+ACUWLIBS8= $(ACULIBSDIR)\wterm32.lib
+ACUTLIBS8= $(ACULIBSDIR)\term32.lib
+
+ACUVISN8=$(ACULIBSDIR)\wfsi32.lib \
+	$(ACULIBSDIR)\wvis32.lib \
+	$(ACULIBSDIR)\wmsg32.lib \
+	$(ACULIBSDIR)\wmem32.lib \
+	$(ACULIBSDIR)\wstd32.lib
+
+ACUTEST8=$(ACULIBSDIR)\wlib32.lib
+ACUBLD8 = $(guilibs) wsock32.lib netapi32.lib comctl32.lib winmm.lib
+
 
 #============================================================================
 #
@@ -304,22 +424,48 @@ ACUBLD6 = $(guilibs) netapi32.lib comctl32.lib winmm.lib
 # ACUSRCDIR=$(ACUDIR)\lib
 # ACURESFILEDEP=acucobol.ico acudebug.ico arrows.bmp
 #
-# 6	ACUCOBOL Version 3.2
+# 6	ACUCOBOL Version 3.2 - 3.2.1
 #
-ACULIBS=$(ACULIBS6)
-ACUSUBS=$(ACUSUBS6)
-ACUTEST=$(ACUTEST6)
-ACUVISN=$(ACUVISN6)
-ACUBLD=$(ACUBLD6)
+# ACULIBS=$(ACULIBS6)
+# ACUSUBS=$(ACUSUBS6)
+# ACUTEST=$(ACUTEST6)
+# ACUVISN=$(ACUVISN6)
+# ACUBLD=$(ACUBLD6)
+# ACUSRCDIR=$(ACUDIR)\lib
+# ACURESFILEDEP=acucobol.ico acudebug.ico arrows.bmp acudbg.bmp help.cur go.cur
+#
+# 7	ACUCOBOL Version 3.2.2
+#
+#ACULIBS=$(ACULIBS7)
+#ACUSUBS=$(ACUSUBS7)
+#ACUTEST=$(ACUTEST7)
+#ACUVISN=$(ACUVISN7)
+#ACUBLD=$(ACUBLD7)
+#ACUCFLAGS=$(ACUCFLAGS7)
+#ACUSRCDIR=$(ACUDIR)\lib
+#ACURESFILEDEP=acucobol.ico acudebug.ico arrows.bmp acudbg.bmp help.cur go.cur
+#
+# 8	ACUCOBOL Version 4.0.0 - 4.2.0
+#
+ACULIBS=$(ACUWLIBS8) $(ACULIBS8)
+ACUTLIBS=$(ACUTLIBS8) $(ACULIBS8)
+ACUSUBS=$(ACUSUBS8)
+ACUTEST=$(ACUTEST8)
+ACUVISN=$(ACUVISN8)
+ACUBLD=$(ACUBLD8)
+ACUCFLAGS=$(ACUCFLAGS8)
 ACUSRCDIR=$(ACUDIR)\lib
-ACURESFILEDEP=acucobol.ico acudebug.ico arrows.bmp acudbg.bmp help.cur go.cur
+ACURESFILEDEP=acucobol.ico acudebug.ico arrows.bmp acudbg.bmp help.cur go.cur divider.cur
 
 
-ACUSRCSUBLIST = sub.c filetbl.c mswinsub.c 
+ACUSRCSUBLIST = sub.c filetbl.c mswinsub.c config85.c direct.c
 ACUSRCDIRLIST = $(ACUSRCSUBLIST) wruncbl.rc $(ACURESFILEDEP)
 
-ACU_SUB_DEP = $(ACUSRCSUBLIST) sub85.c
+ACU_SUB_DEP = sub.c sub85.c config85.c direct.c
 
+#============================================================================
+#
+CLFLAGS=$(STD_CFLAGS) $(ACUCFLAGS)
 
 #============================================================================
 #
@@ -327,6 +473,8 @@ ACU_SUB_DEP = $(ACUSRCSUBLIST) sub85.c
 # directory.  It is used ONLY for detecting and displaying an error
 # message if the file is not found.
 #
+RTSALC = $(ACUDIR)\bin\wrun32.alc
+
 ACUFILES=$(ACUSRCDIR)\sub.c \
 	$(ACUSRCDIR)\filetbl.c \
 	$(ACUSRCDIR)\config85.c \
@@ -337,10 +485,12 @@ ACUFILES=$(ACUSRCDIR)\sub.c \
 	$(ACUSRCDIR)\acudbg.bmp \
 	$(ACUSRCDIR)\help.cur \
 	$(ACUSRCDIR)\go.cur \
+	$(ACUSRCDIR)\DIVIDER.cur \
 	$(ACUSRCDIR)\direct.c \
-	$(ACUSRCDIR)\clntstub.obj \
+	$(ACULIBSDIR)\clntstub.obj \
 	$(ACULIBSDIR)\netstub.obj \
-	$(ACULIBSDIR)\wsastub.obj
+	$(ACULIBSDIR)\wsastub.obj \
+	$(RTSALC)
 
 #============================================================================
 #
@@ -351,7 +501,7 @@ ACUFILES=$(ACUSRCDIR)\sub.c \
 WISPFILES=$(WISPLIBSDIR)\$(LIBWISP) \
 	$(WISPLIBSDIR)\$(LIBVIDEO) \
 	$(WISPLIBSDIR)\$(LIBEDE) \
-	$(WISPDIR)\acu\sub85.c
+	$(WISPACUFILES)
 
 #============================================================================
 #
@@ -374,7 +524,8 @@ CREATELIBS=$(ACUVISN) $(CREATEDIR)\createacu.lib $(WISP_LIBS_PATHS)
 # CLEANUP is a list of files that are created by this
 # makefile and can be deleted.
 #
-CLEANUP=$(RTS) $(RTSE) sub.obj filetbl.obj mswinsub.obj
+CLEANUP=$(RTS) $(RTSE) sub.obj sub_wisp.obj sub_crid.obj \
+	tsub_wisp.obj tsub_crid.obj filetbl.obj mswinsub.obj
 
 #============================================================================
 #
@@ -446,7 +597,7 @@ $(ACUFILES):
 	@echo ">>>>"
 	@exit_with_error
 
-$(ACUCOBOL):
+$(COBOL):
 	@echo ">>>> ERROR: An ACUCOBOL configuration error was detected!"
 	@echo ">>>>"
 	@echo ">>>> The ACUCOBOL file $@ was not found."
@@ -483,26 +634,46 @@ $(KCSIFILES):
 	@echo ">>>>"
 	@exit_with_error
 
-rts:	header $(RTS) acu
+rts:	header $(RTS) $(RTS:.exe=.alc) acu
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTS) is up to date.
 	@echo ">>>>"
 
-ede:	header $(RTSE) acu
+ede:	header $(RTSE) $(RTSE:.exe=.alc) acu
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTSE) is up to date.
 	@echo ">>>>"
 
+rtst:	header $(RTST) $(RTST:.exe=.alc) acu
+	@echo ">>>>"
+	@echo ">>>> RTS     = " $(RTST) is up to date.
+	@echo ">>>>"
+
+edet:	header $(RTSET) $(RTSET:.exe=.alc) acu
+	@echo ">>>>"
+	@echo ">>>> RTS     = " $(RTSET) is up to date.
+	@echo ">>>>"
+
 both:	rts ede
 
-kcsi:	header headerkcsi $(RTSK)
+kcsi:	header headerkcsi $(RTSK) $(RTSK:.exe=.alc)
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTSK) is up to date.
 	@echo ">>>>"
 
-kcsiede: header headerkcsi $(RTSKE)
+kcsiede: header headerkcsi $(RTSKE)  $(RTSKE:.exe=.alc)
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTSKE) is up to date.
+	@echo ">>>>"
+
+kcsit:	header headerkcsi $(RTSKT) $(RTSKT:.exe=.alc)
+	@echo ">>>>"
+	@echo ">>>> RTS     = " $(RTSKT) is up to date.
+	@echo ">>>>"
+
+kcsiedet: header headerkcsi $(RTSKET)  $(RTSKET:.exe=.alc)
+	@echo ">>>>"
+	@echo ">>>> RTS     = " $(RTSKET) is up to date.
 	@echo ">>>>"
 
 create:	header headercreate $(CREATE)
@@ -513,53 +684,119 @@ create:	header headercreate $(CREATE)
 clean:	
 	del $(CLEANUP) core
 
-RBJFILE=wruncbl.rbj
-RESFILE=wruncbl.res
-RCFILE=wruncbl.rc
+#
+#	Resource macros
+#
 
-$(RTS): $(WISP_LIBS_PATHS) $(RBJFILE) $(ACU_SUB_DEP) $(ACUSUBS)
-	$(cc) $(CLFLAGS) /I$(ACUSRCDIR) sub.c
-	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub.obj $(ACUSUBS) $(RBJFILE) $(ACULIBS) \
+ACURBJFILE=wruncbl.rbj
+ACURESFILE=wruncbl.res
+ACURCFILE=wruncbl.rc
+
+#
+#	LINK marcos
+#
+
+RTSLINKOBJS = $(ACUSUBS) $(WISPRTSRES)
+
+#
+#	RTS targets
+#
+
+$(RTS): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(ACU_SUB_DEP) sub_wisp.obj
+	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub_wisp.obj $(RTSLINKOBJS) $(ACULIBS) \
 		$(WISP_LIBS_PATHS) $(ACUBLD) $(OTHER_LINK)
 
-$(RTSE): $(WISPEDE_LIBS_PATHS) $(RBJFILE) $(ACU_SUB_DEP) $(ACUSUBS)
-	$(cc) $(CLFLAGS) /I$(ACUSRCDIR) sub.c
-	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub.obj $(ACUSUBS) $(RBJFILE) $(ACULIBS) \
+$(RTSE): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(ACU_SUB_DEP) sub_wisp.obj
+	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub_wisp.obj $(RTSLINKOBJS) $(ACULIBS) \
 		$(WISPEDE_LIBS_PATHS) $(ACUBLD) $(OTHER_LINK) 
 
-$(RTSK): $(WISP_LIBS_PATHS) $(RBJFILE) $(KCSI_LIB_PATH) $(ACU_SUB_DEP) $(ACUSUBS) $(KCSI_DEP)
-	$(cc) /DCRID $(CLFLAGS) /I$(ACUSRCDIR) sub.c
-	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub.obj $(ACUSUBS) $(RBJFILE) $(ACULIBS) \
+$(RTSK): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(KCSI_LIB_PATH) $(ACU_SUB_DEP) $(KCSI_DEP) sub_crid.obj
+	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub_crid.obj $(RTSLINKOBJS) $(ACULIBS) \
 		$(WISP_LIBS_PATHS) $(KCSI_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
 
-$(RTSKE): $(WISPEDE_LIBS_PATHS) $(RBJFILE) $(KCSI_LIB_PATH) $(ACU_SUB_DEP) $(ACUSUBS) $(KCSI_DEP)
-	$(cc) /DCRID $(CLFLAGS) /I$(ACUSRCDIR) sub.c
-	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub.obj $(ACUSUBS) $(RBJFILE) $(ACULIBS) \
+$(RTSKE): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(KCSI_LIB_PATH) $(ACU_SUB_DEP) $(KCSI_DEP) sub_crid.obj
+	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub_crid.obj $(RTSLINKOBJS) $(ACULIBS) \
 		$(WISPEDE_LIBS_PATHS) $(KCSI_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
 
+#
+#	RTS (alternate terminal) targets - Required at least Acucobol-GT 4.0.0 
+#
+
+$(RTST): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(ACU_SUB_DEP) tsub_wisp.obj
+	$(link) $(LDFLAGS) $(conflags) -out:$@ tsub_wisp.obj $(RTSLINKOBJS) $(ACUTLIBS) \
+		$(WISP_LIBS_PATHS) $(ACUBLD) $(OTHER_LINK)
+
+$(RTSET): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(ACU_SUB_DEP) tsub_wisp.obj
+	$(link) $(LDFLAGS) $(guiflags) -out:$@ tsub_wisp.obj $(RTSLINKOBJS) $(ACULIBS) \
+		$(WISPEDE_LIBS_PATHS) $(ACUBLD) $(OTHER_LINK) 
+
+$(RTSKT): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(KCSI_LIB_PATH) $(ACU_SUB_DEP) $(KCSI_DEP) tsub_crid.obj
+	$(link) $(LDFLAGS) $(guiflags) -out:$@ tsub_crid.obj $(RTSLINKOBJS) $(ACULIBS) \
+		$(WISP_LIBS_PATHS) $(KCSI_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
+
+$(RTSKET): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(KCSI_LIB_PATH) $(ACU_SUB_DEP) $(KCSI_DEP) tsub_crid.obj
+	$(link) $(LDFLAGS) $(guiflags) -out:$@ tsub_crid.obj $(RTSLINKOBJS) $(ACULIBS) \
+		$(WISPEDE_LIBS_PATHS) $(KCSI_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
+
+#
+#	CREATE target
+#
 
 $(CREATE): $(CREATESUBS) $(CREATELIBS)
 	$(link) $(LDFLAGS) $(conflags) -out:$@ $(CREATESUBS) $(CREATELIBS) $(ACUBLD) $(OTHER_LINK)
 
+#
+#	Component targets
+#
 
+$(WISPRTSRES): $(WISPRTSRC) $(WISPICON) $(ACURCFILE) $(ACURESFILEDEP)
 
-$(RBJFILE): $(RESFILE)
-	cvtres -$(CPU) $(RESFILE) -o $@
+$(ACURBJFILE): $(ACURESFILE)
+	cvtres -$(CPU) $(ACURESFILE) -o $@
 
-$(RESFILE): $(RCFILE) $(ACURESFILEDEP)
-	$(rc) $(RCFLAGS) $(RCFILE)
+$(ACURESFILE): $(ACURCFILE) $(ACURESFILEDEP)
+	$(rc) $(RCFLAGS) $(ACURCFILE)
 
 .c.obj:
 	$(cc) $(CLFLAGS) /I$(ACUSRCDIR) $<
 
-
+#
+#	sub.obj		- standard acucobol sub.obj, not used anymore
+#	sub_wisp.obj	- sub.obj plus wisp routines
+#	sub_crid.obj	- sub.obj plus wisp and crid routines
+#
+#	tsub_wisp.obj	- alternate terminal sub.obj with wisp routines
+#	tsub_crid.obj	- alternate terminal sub.obj wisp wisp and crid routines
+#
 sub.obj: $(ACU_SUB_DEP)
 
+sub_crid.obj: $(ACU_SUB_DEP)
+	$(cc) $(CLFLAGS) /Fo$@ /DCRID /I$(ACUSRCDIR) sub.c
+
+sub_wisp.obj: $(ACU_SUB_DEP)
+	$(cc) $(CLFLAGS) /Fo$@ /I$(ACUSRCDIR) sub.c
+
+tsub_wisp.obj: $(ACU_SUB_DEP)
+	$(cc) $(CLFLAGS) /Fo$@ -DACU_ALWAYS_INIT /I$(ACUSRCDIR) sub.c
+
+tsub_crid.obj: $(ACU_SUB_DEP)
+	$(cc) $(CLFLAGS) /Fo$@ /DCRID -DACU_ALWAYS_INIT /I$(ACUSRCDIR) sub.c
+
+#
+#	Copy files to current dir
+#
 $(ACUSRCDIRLIST): $(ACUSRCDIR)\$(@F)
 	copy $(ACUSRCDIR)\$@ $@
 
-sub85.c: $(WISPDIR)\acu\sub85.c
-	copy $(WISPDIR)\acu\sub85.c $@
+#
+#	Copy Acucobol license file
+#
+
+$(RTS:.exe=.alc) $(RTSE:.exe=.alc) $(RTSK:.exe=.alc) $(RTSKE:.exe=.alc): $(RTSALC)
+	copy $(RTSALC) $@
+
+$(RTST:.exe=.alc) $(RTSET:.exe=.alc) $(RTSKT:.exe=.alc) $(RTSKET:.exe=.alc): $(RTSALC)
+	copy $(RTSALC) $@
 
 #
 #	KCSI targets
@@ -574,44 +811,63 @@ $(CREATEACUSUB):
 #
 #	ACULINK and ACUUSING
 #
-acu:	$(ACUCOBOL) ACULINK ACUUSING
+acu:	$(COBOL) ACULINK ACUUSING
 	@echo "Target $@ is up-to-date."
 
 ACULINK: aculink.cob
-	$(ACUCOBOL) -da4 -zd -o $@ aculink.cob
+	$(COBOL) -da4 -zd -o $@ aculink.cob
 
 aculink.cob: $(WISPTRAN) aculink.wcb
 	$(WISPTRAN) $*.wcb
 
 ACUUSING: acuusing.cob
-	$(ACUCOBOL) -da4 -zd -o $@ acuusing.cob
+	$(COBOL) -da4 -zd -o $@ acuusing.cob
 
 #============================================================================
 #
 #	ACUCOBOL Native Screens programs
 #
-#	$ nmake -f wwruncbl.umf acn
+#	$ nmake -f wwruncbl.mak acn
 #
 
 COBFLAGS = -da4 -zd -te 800 
+ACN_OBJS = 	WACUERROR \
+		WACUDISPLAY \
+		WACUFAC2SCREEN \
+		WACUGETPARM \
+		WACUGETPFKEY \
+		WACUHELP \
+		WACUWSB
 
-acn: $(ACUCOBOL) acn_objs
-	@echo "Target $@ is up-to-date."
+acn: acn_header $(COBOL) $(ACN_OBJS)
+	@echo "Native Screens programs:"
+	@echo "$(ACN_OBJS)"
+	@echo "are up-to-date."
 
-acn_objs: WACUGETPFKEY WACUFAC2SCREEN WACUHELP WACUERROR WACUGETPARM
-
-WACUGETPFKEY: wacugetpfkey.cob
-	$(ACUCOBOL) $(COBFLAGS) -o $@ wacugetpfkey.cob
-
-WACUHELP: wacuhelp.cob
-	$(ACUCOBOL) $(COBFLAGS) -o $@ wacuhelp.cob
-
-WACUFAC2SCREEN: wacufac2screen.cob
-	$(ACUCOBOL) $(COBFLAGS) -o $@ wacufac2screen.cob
+acn_header: $(ACUDIR)
+	@echo "BUILDING ACUCOBOL Native Screens Programs"
+	@echo " "
+	@echo "ACUDIR  =  $(ACUDIR)"
+	@echo ""
 
 WACUERROR: wacuerror.cob
-	$(ACUCOBOL) $(COBFLAGS) -o $@ wacuerror.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacuerror.cob
+
+WACUDISPLAY: wacudisplay.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacudisplay.cob
+
+WACUFAC2SCREEN: wacufac2screen.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacufac2screen.cob
 
 WACUGETPARM: wacugetparm.cob
-	$(ACUCOBOL) $(COBFLAGS) -o $@ wacugetparm.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacugetparm.cob
+
+WACUGETPFKEY: wacugetpfkey.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacugetpfkey.cob
+
+WACUHELP: wacuhelp.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacuhelp.cob
+
+WACUWSB: wacuwsb.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacuwsb.cob
 

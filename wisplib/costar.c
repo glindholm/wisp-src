@@ -50,10 +50,54 @@ static char rcsid[]="$Id:$";
 **	Structures and Defines
 */
 #define COSTAR_MOUSE_SCRIPT	"w4w\\mouse.scr"
-#define COSTAR_FLAG_ENV		"W4W"
+#define COSTAR_TITLE_SCRIPT	"sdk\\settitle.scr"
 
 #define COSTAR_MAGIC_STRING 	"\177"
 #define COSTAR_MAGIC_CHAR	'\177'
+
+
+#define W4W_HOTSPOT_VMODE		(VMODE_REVERSE)
+#define W4W_TABSTOP_VMODE		(VMODE_REVERSE | VMODE_BLINK)
+
+/*
+**	V1 defines
+*/
+#define COSTAR_EDIT_VMODE		(VMODE_UNDERSCORE)
+#define COSTAR_HOTSPOT_VMODE		(VMODE_REVERSE)
+#define COSTAR_TABSTOP_VMODE		(VMODE_REVERSE | VMODE_BLINK)
+
+#define COSTAR_FAC_SET_EDIT(fac)	FAC_SET_UNDERSCORED(fac)
+#define COSTAR_FAC_CLEAR_EDIT(fac)	FAC_CLEAR_UNDERSCORED(fac)
+#define COSTAR_FAC_EDIT(fac)		FAC_UNDERSCORED(fac)
+
+/*
+**	V2 defines
+*/
+#define V2_EDIT_VMODE			(VMODE_REVERSE)
+#define V2_HOTSPOT_VMODE		(VMODE_REVERSE|VMODE_UNDERSCORE|VMODE_BLINK)
+#define V2_TABSTOP_VMODE		(VMODE_REVERSE | VMODE_BLINK)
+
+/*
+**	Version 1 - ORIGINAL
+**	ATTR_MODE_V1:	Entry field 	= + UNDERSCORE
+**			Text		= - UNDERSCORE
+**			Hotspot		= REVERSE
+**			Tabstop		= REVERSE + BLINK
+*/
+#define ATTR_MODE_V1	1	       
+
+/*
+**	Version 2 - 5/20/1998 V4.3.00
+**	ATTR_MODE_V2:	Entry field	= + REVERSE
+**			Text		= unchanged
+**			Hotspot		= REVERSE + BLINK + UNDERSCORE
+**			Tabstop		= REVERSE + BLINK
+**	
+**	The benefit of V2 is that all Wang attributes are preserved.
+**	Since REVERSE is not used on Wang it will not conflict with any attributes.
+**	Note: On Wang BLINK is actually BLINK+BOLD so BLINK does not occur without BOLD.
+*/
+#define ATTR_MODE_V2	2
 
 struct w4w_pfkey_map_s
 {
@@ -72,6 +116,8 @@ typedef struct w4w_pfkey_map_s w4w_pfkey_map_s;
 */
 static char magic_char = COSTAR_MAGIC_CHAR;
 
+static int attr_mode = ATTR_MODE_V1;
+
 /*
 **	Function Prototypes
 */
@@ -87,7 +133,7 @@ static w4w_pfkey_map_s *load_w4wmap(void);
 **
 **	FUNCTION:	Test if using costar terminal emulator.
 **
-**	DESCRIPTION:	Check the environment variable $COSTAR and if
+**	DESCRIPTION:	Check the environment variable $W4W and if
 **			set then we are using costar.
 **
 **	ARGUMENTS:	None
@@ -96,6 +142,7 @@ static w4w_pfkey_map_s *load_w4wmap(void);
 **
 **	RETURN:
 **	1		Using COSTAR version 1
+**	2		Using COSTAR version 2
 **	0		Not using COSTAR
 **
 **	WARNINGS:	None
@@ -105,29 +152,64 @@ int use_costar(void)
 {
 	static int first = 1;
 	static int costar_flag = 0;
+	char	*ptr;
 
 	if (first)
 	{
 		if (!wbackground())  /* No COSTAR in background */
 		{
+			
 #ifdef WIN32
-			costar_flag = !vrawdirectio();
-#else
-			char	*ptr;
-			if (ptr = getenv(COSTAR_FLAG_ENV))
+			/*
+			**	If not using direct IO then assume Costar.
+			*/
+			if (!vrawdirectio())
 			{
-				if (0==strcmp(ptr,"1"))
-				{
-					costar_flag = 1;
-				}
-				else
-				{
-					/* Unknown version */
-				}
+				costar_flag = 1;
 			}
 #endif
+
+			if (ptr = getenv("W4W"))
+			{
+				switch(*ptr)
+				{
+				case '0': /* Turn off Costar */
+					costar_flag = 0;
+					break;
+					
+				case '1': /* Costar attributes v1 */
+					costar_flag = 1;
+					break;
+					
+				case '2': /* Costar attributes v2 */
+					costar_flag = 2;
+					attr_mode = ATTR_MODE_V2;
+					break;
+					
+				default:
+					costar_flag = 0;
+					wtrace("COSTAR","W4W", "Unknown W4W=%c flag", *ptr);
+					break;
+				}
+			}
+
+			if (costar_flag && get_wisp_option("COSTARV2"))
+			{
+				attr_mode = ATTR_MODE_V2;
+				costar_flag = 2;
+			}
+			
 		}
 		first = 0;
+
+		if (0 != costar_flag)
+		{
+			wtrace("COSTAR","FLAG","Using the COSTAR frontend (attribute mode V%d)", costar_flag);
+		}
+		else
+		{
+			wtrace("COSTAR","FLAG","NOT using the COSTAR frontend");
+		}
 	}
 
 	return costar_flag;
@@ -138,7 +220,8 @@ int use_costar(void)
 **
 **	FUNCTION:	Map FAC's for use with COSTAR
 **
-**	DESCRIPTION:	Map all modifiable FAC's to have the UNDERSCORE bit on.
+**	DESCRIPTION:	*** This only applies to mode V1. In V2 the FAC is not changed ***
+**			Map all modifiable FAC's to have the UNDERSCORE bit on.
 **			Map all protected FAC's to have the UNDERSCORE bit off.
 **			Also make DIM+UNDERSCORE into BRIGHT.
 **
@@ -148,20 +231,21 @@ int use_costar(void)
 **	ARGUMENTS:
 **	the_fac		The FAC before mapping.
 **
-**	GLOBALS:	None
+**	GLOBALS:	
+**	attr_mode	The attribute mode version number.
 **
 **	RETURN:		The mapped FAC
 **
 **	WARNINGS:	None
 **
 */
-unsigned char costar_fac(int the_fac)
+fac_t costar_fac(fac_t the_fac)
 {
-	int	new_fac;
+	fac_t	new_fac;
 
 	new_fac = the_fac;
 
-	if (use_costar() && the_fac >= 128 && the_fac <= 255)
+	if (ATTR_MODE_V1==attr_mode && the_fac >= 128 && the_fac <= 255)
 	{
 		if ( FAC_PROTECTED(the_fac) )
 		{
@@ -217,7 +301,7 @@ unsigned char costar_fac(int the_fac)
 **			a read then disable it after a read.
 **
 **	ARGUMENTS:
-**	flag		1=enable, 2=disable
+**	flag		1=enable, 0=disable
 **
 **	GLOBALS:
 **	vkeyvalue(GENERIC_MOUSE)
@@ -284,18 +368,18 @@ void costar_enable_mouse(int flag)
 */
 int costar_get_mouse_position(int *m_row, int *m_col)
 {
-	char	buff[40];
-	int	the_meta_char;
+	char	buff[10];
+	char	the_char;
 	int	i;
 
 	for(i=0;i<8;i++)
 	{
-		the_meta_char = vgetm();
-		if ((the_meta_char == return_key) || (the_meta_char == enter_key)) 
+		the_char = vgetc();
+		if (0x0a == the_char || 0x0d == the_char)
 		{
 			break;
 		}
-		buff[i] = (char)the_meta_char;
+		buff[i] = the_char;
 	}
 	buff[i] = (char)0;
 
@@ -420,6 +504,94 @@ void costar_messtext(char *message)
 	sprintf(buff,"%cUWMSG%s%c", magic_char, message, magic_char);
 	costar_raw_api(buff);
 }
+
+/*
+**	ROUTINE:	costar_title()
+**
+**	FUNCTION:	Set the COSTAR window title.
+**
+**	DESCRIPTION:	Use the costar api to set the title.
+**
+**	ARGUMENTS:
+**	title		The new title.
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+void costar_title(const char *title)
+{
+	char buff[256];
+	
+	if ( !wbackground() && !nativescreens())
+	{
+		sprintf(buff,  "%cUWSCRIPT%s,%s%c",  magic_char, COSTAR_TITLE_SCRIPT, title, magic_char);
+		costar_raw_api(buff);
+	}
+}
+
+
+
+/* Return the VMODE for edit fields */
+int costar_edit_vmode(void)
+{
+	if (ATTR_MODE_V2==attr_mode)
+	{
+		return V2_EDIT_VMODE;
+	}
+	return COSTAR_EDIT_VMODE;
+}
+
+/* Return the VMODE for hotspot fields */
+int costar_hotspot_vmode(void)
+{
+	if (ATTR_MODE_V2==attr_mode)
+	{
+		return V2_HOTSPOT_VMODE;
+	}
+	return COSTAR_HOTSPOT_VMODE;
+}
+
+/* Return the VMODE for tabstop fields */
+int costar_tabstop_vmode(void)
+{
+	if (ATTR_MODE_V2==attr_mode)
+	{
+		return V2_TABSTOP_VMODE;
+	}
+	return COSTAR_TABSTOP_VMODE;
+}
+
+/* Return the VMODE for message fields (used in vdisplay) */
+int costar_message_vmode(void)
+{
+	/*
+	**	Without Costar uses VMODE_REVERSE
+	*/
+	if (ATTR_MODE_V2==attr_mode)
+	{
+		return (VMODE_BOLD|VMODE_BLINK);
+	}
+	return VMODE_BOLD;
+}
+
+/* Return the VMODE for highlighted message fields (used in vdisplay) */
+int costar_high_message_vmode(void)
+{
+	/*
+	**	Without Costar uses (VMODE_REVERSE | VMODE_UNDERSCORE)
+	*/
+	if (ATTR_MODE_V2==attr_mode)
+	{
+		return (VMODE_BOLD|VMODE_UNDERSCORE|VMODE_BLINK);
+	}
+	return VMODE_BOLD;
+}
+
+
 #endif /* COSTAR */
 
 
@@ -635,7 +807,6 @@ static w4w_pfkey_map_s *load_w4wmap(void)
 **			print in reversed video.
 **
 **	ARGUMENTS:
-**	rownum		The number of the row
 **	the_row		The stripped and cleaned row. (null terminated)
 **	the_mask	The mask to return consisting of Blanks and 'X's (same length as the_row)
 **
@@ -648,7 +819,7 @@ static w4w_pfkey_map_s *load_w4wmap(void)
 **	WARNINGS:	None
 **
 */
-int w4w_mask_row(int rownum, char *the_row, char *the_mask)
+int w4w_mask_row(const char *the_row, char *the_mask)
 {
 	static int first = 1;
 	static char **hotspots = NULL;
@@ -676,7 +847,7 @@ int w4w_mask_row(int rownum, char *the_row, char *the_mask)
 	if (hotspots)
 	{
 		int	hot_idx;
-		char	*row_ptr, *hot_ptr;
+		const char *row_ptr, *hot_ptr;
 		int	offset;
 
 		for(hot_idx=0; hotspots[hot_idx] && *hotspots[hot_idx]; hot_idx++)
@@ -708,7 +879,7 @@ int w4w_mask_row(int rownum, char *the_row, char *the_mask)
 	if (w4w_pfkey_head)
 	{
 		w4w_pfkey_map_s	*pfkey_curr;
-		char	*row_ptr, *hot_ptr;
+		const char *row_ptr, *hot_ptr;
 		int	offset;
 
 		for(pfkey_curr=w4w_pfkey_head; pfkey_curr; pfkey_curr = pfkey_curr->next)
@@ -750,7 +921,6 @@ int w4w_mask_row(int rownum, char *the_row, char *the_mask)
 **			on the click column offset then return the pfkey code.
 **
 **	ARGUMENTS:
-**	rownum		The number of the row
 **	click_offset	The column offset in the row where the mouse was clicked.
 **	the_row		The stripped and cleaned row. (null terminated) (See w4w_mask_row())
 **
@@ -765,7 +935,7 @@ int w4w_mask_row(int rownum, char *the_row, char *the_mask)
 **	WARNINGS:	None
 **
 */
-int w4w_click_row(int rownum, int click_offset, char *the_row)
+int w4w_click_row(int click_offset, const char *the_row)
 {
 	static int first = 1;
 	static w4w_pfkey_map_s	*w4w_pfkey_head = NULL;
@@ -786,7 +956,7 @@ int w4w_click_row(int rownum, int click_offset, char *the_row)
 	if (w4w_pfkey_head)
 	{
 		w4w_pfkey_map_s	*pfkey_curr;
-		char	*row_ptr, *hot_ptr;
+		const char	*row_ptr, *hot_ptr;
 		int	offset;
 
 		for(pfkey_curr=w4w_pfkey_head; pfkey_curr; pfkey_curr = pfkey_curr->next)
@@ -830,11 +1000,119 @@ int w4w_click_row(int rownum, int click_offset, char *the_row)
 }
 #endif /* W4W */
 
+
+/*
+**	ROUTINE:	use_w4w()
+**
+**	FUNCTION:	Check if w4w functionality is being used.
+**
+**	DESCRIPTION:	On WIN32 this returns true if using directio or costar. (but not telnet without costar)
+**			On UNIX this checks if costar is being used.
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	1		Using W4W
+**	0		Not using W4W
+**
+**	WARNINGS:	None
+**
+*/
+int use_w4w(void)
+{
+	static int flag = -1;
+	
+	if (-1 == flag) /* first time set flag */
+	{
+		flag = (use_costar()) ? 1 : 0;
+		
+#ifdef WIN32
+		if (vrawdirectio())
+		{
+			flag = 1;
+		}
+#endif
+
+		if (flag)
+		{
+			wtrace("W4W","FLAG","Using W4W mouse handling.");
+		}
+		else
+		{
+			wtrace("W4W","FLAG","Not using W4W mouse handling.");
+		}
+	}
+
+	return flag;
+}
+
+/*
+**	ROUTINE:	w4w_hotspot_vmode()
+**
+**	FUNCTION:	Return the hotspot vmode for W4W processing
+**
+**	DESCRIPTION:	If COSTAR running then return the COSTAR hotspot vmode
+**			otherwise return the w4w hotspot vmode.
+**
+**	ARGUMENTS:	none
+**
+**	GLOBALS:	none
+**
+**	RETURN:		A vmode to use for hotspots.
+**
+**	WARNINGS:	none
+**
+*/
+int w4w_hotspot_vmode(void)
+{
+	if (use_costar())
+	{
+		return costar_hotspot_vmode();
+	}
+	else
+	{
+		return W4W_HOTSPOT_VMODE;
+	}
+}
+
 #endif /* unix || VMS || WIN32 */
 
 /*
 **	History:
 **	$Log: costar.c,v $
+**	Revision 1.30  1999-08-30 12:48:13-04  gsl
+**	Add checks in costar_title() to not run in background or native screens.
+**
+**	Revision 1.29  1999-05-11 12:50:28-04  gsl
+**	Add costar_title() to set the costar window title.
+**
+**	Revision 1.28  1998-12-14 15:58:33-05  gsl
+**	FIx use_w4w() on WIN32 for telnet w/o costar case
+**
+**	Revision 1.27  1998-11-19 11:13:57-05  gsl
+**	In use_costar() combine the unix and WIN32 code and allow W4W=0 to turn
+**	off costar.
+**
+**	Revision 1.26  1998-11-19 09:07:27-05  gsl
+**	Fix costar_get_mouse_position() to use vgetc() instead of vgetm() as we don't
+**	want any meta processing
+**
+**	Revision 1.25  1998-10-02 15:21:50-04  gsl
+**	Add use_w4w() and w4w_hotspot_vmode()
+**	used in wproc.
+**
+**	Revision 1.24  1998-09-30 17:11:36-04  gsl
+**	Remove rownum from w4w_mask_row() and w4w_click_row() as not used.
+**
+**	Revision 1.23  1998-05-21 13:37:49-04  gsl
+**	Add support for COSTARV2 - the attribute mapping (version 2).
+**	Version 2 allows for underline attribute
+**
+**	Revision 1.22  1998-05-05 12:02:52-04  gsl
+**	Add trace statement
+**
 **	Revision 1.21  1997-08-25 16:14:48-04  gsl
 **	Make costar_ctrl_api() external so it can be used from vwang()
 **

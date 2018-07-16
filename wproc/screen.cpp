@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : screen.cpp
 // Author : George Soules
@@ -33,7 +40,6 @@ field_attributes default_field_attributes =
 colors default_colors = {color_white, color_black};
 
 Boolean in_insert_mode = false;
-
 
 // screen_info member functions
 
@@ -86,19 +92,19 @@ screen_contents::screen_contents(
 #if WANG
         get_region(left, top, right, bottom, the_contents);
         the_ok = BOOLEAN(the_contents != NULL);
+	saved_w4w_handler = global_w4w_handler;		// Save a copy of the W4W handler.
 #endif
 #endif
 }
 
 
 screen_contents::~screen_contents() {
-   if (the_contents)
 #if DOS || DOS_HOST
+   if (the_contents)
       delete the_contents;
-#else
-#if WANG
-           the_contents = NULL;
 #endif
+#if WANG
+   the_contents = NULL;
 #endif
    trace(object, "~screen_contents");
 }
@@ -112,6 +118,7 @@ void screen_contents::restore_screen() {
 #else
 #if WANG
       put_region(the_contents);
+      global_w4w_handler = saved_w4w_handler;		// Restore the W4W handler.
 #endif
 #endif
    }
@@ -219,15 +226,62 @@ void field::screen_put(Boolean highlight) {
    usign_8 attr =
       highlight ? the_video_attribute | ATTR_BRIGHT : the_video_attribute;
 
-   while (c) {
+   //  If using COSTAR then we mung with the display attributes.
+   //  There is two costar mapping modes V1 and V2.
+   int costar_version = global_w4w_handler.costar();
+   if (0 != costar_version)
+   {
+	if (is.modifiable && !is.tab)
+	{
+		// This is an edit field.
+
+		if (1 == costar_version)
+		{
+			attr &= ~(ATTR_NORMAL);	// Remove the "normal" bits
+			attr |= ATTR_UNDER_DIM;	// Add the underscore	
+		}
+		if (2 == costar_version)
+		{
+			attr |= ATTR_REVERSE;
+		}
+	}
+	else	// Not an edit field
+	{
+		if (1 == costar_version)
+		{
+			attr |= ATTR_NORMAL;  // This removes the underscore
+		}
+	}
+
+	// Don't do pseudo blank process when using costar.
+	the_modchar = ' ';
+
+   }
+
+   while (c) 
+   {
       if (is.blank)
+      {
          c = ' ';
-      buffer[i] = is.modifiable && ! is.tab && c == ' ' ? the_modchar : c;
+      }
+      buffer[i] = (is.modifiable && !is.tab && c == ' ') ? the_modchar : c;
       c = the_text[++i];
    }
    buffer[right_col - left_col + 1] = '\0';
 
    put_text(left_col, row, buffer, attr);
+
+   // If using W4W then maintain the screen map
+   if (global_w4w_handler.w4w())
+   {
+	if (!(is.modifiable && !is.tab))
+	{
+		// Write non-edit field text into the W4W screen buffer.
+		// We don't do hotspot processing on edit fields.
+		global_w4w_handler.put_text(row-1, left_col-1, buffer);
+	}
+   }
+
    delete buffer;
 }
 
@@ -606,8 +660,17 @@ void screen::display(Boolean read) {
    }
 
    if (read) {
+
+      // if w4w then need to mark pfkey screen tags and enable the mouse
+      if (global_w4w_handler.w4w())
+      {
+	        global_w4w_handler.mark_pfkey_tags();
+		global_w4w_handler.enable_mouse();
+      }
+
       // Set initial cursor position
-      if (x < 1 || y < 1 || x > the_width || y > the_height) {
+      if (x < 1 || y < 1 || x > the_width || y > the_height) {  
+	 // if x,y invalid then  set it based on fields.
          if (the_first_mod_field)
             the_active_field = the_first_mod_field->initial_cursor_field();
          if (the_active_field == NULL)
@@ -618,6 +681,11 @@ void screen::display(Boolean read) {
       goto_xy(x, y);
 
       wait_for_fkey();
+
+      if (global_w4w_handler.w4w())
+      {
+		global_w4w_handler.disable_mouse();
+      }
    }
 
    restore_video_environment();
@@ -715,10 +783,11 @@ void screen::wait_for_fkey() {
       // Act on key
       if (the_key == KEY_CTRLC)
          break;
+
       if (convert_to_function_key(the_key, the_fkey))
          fkey_pressed = enabled_function_key(the_fkey);
       else
-         handle_key(the_key);
+         fkey_pressed = handle_key(the_key);
    }
 }
 
@@ -726,6 +795,18 @@ void screen::wait_for_fkey() {
 void screen::type_key(int a_key) {
    mod_field *fld = the_active_field;
    Boolean no_action = true;
+
+   /*
+   **  Certain actions can null the_active_field (BACKSPACE) so try to find the fld first
+   */
+   if (!fld)
+   {
+      fld = mod_field_at_cursor();
+   }
+   if (!fld)
+   {
+      fld = mod_field_closest_to_cursor();
+   }
 
    if (fld) {
       // First see if cursor in the active field
@@ -735,6 +816,13 @@ void screen::type_key(int a_key) {
          if (! fld) {
             // Move cursor to closest mod field
             fld = mod_field_closest_to_cursor();
+
+
+	    // Loop around to the first field
+            if (! fld) {
+	       fld = the_first_mod_field;
+            }
+
             if (fld) {
                move_cursor_to(fld);
                no_action = false;
@@ -786,10 +874,15 @@ void screen::tab_magic(int a_key, mod_field *a_field, Boolean first_action) {
    ring_bell();
 }
 
+// handle_key()  - Handle the key 
+//
+// Returns true if a function key was pressed, this can occur when a mouse click 
+// on a hotspot simulates a function key.
 
-void screen::handle_key(int a_key) {
+Boolean screen::handle_key(int a_key) {
    Boolean move_cursor = false;
    Boolean bad_key     = false;
+   Boolean fkey_pressed = false;
 
    switch (a_key) {
 
@@ -894,10 +987,21 @@ void screen::handle_key(int a_key) {
       case KEY_HELP :
 	 {
 		screen_contents *saved_screen;
+
+		if (global_w4w_handler.w4w())
+	      	{
+			global_w4w_handler.disable_mouse();
+      		}
+
 		saved_screen = new screen_contents(1, 1, SCREEN_WIDTH, SCREEN_HEIGHT);
 	 	ws_help(1);
           	saved_screen->restore_screen();
           	delete saved_screen;
+
+        	if (global_w4w_handler.w4w())
+		{
+			global_w4w_handler.enable_mouse();
+		}
 	 }
 	 break;
 
@@ -975,7 +1079,37 @@ void screen::handle_key(int a_key) {
          break;
 
       case KEY_MOUSE_CLICK :
-         bad_key = true;
+	 // Mouse click processing is done only when W4W is true.
+         if (global_w4w_handler.w4w())
+	 {
+		int mouse_row, mouse_col;
+
+		// Get the mouse click position
+		if (0 != global_w4w_handler.get_mouse_position(&mouse_row, &mouse_col) )
+		{
+			bad_key = true;
+			break;
+		}
+
+		// Check is the mouse clicked on a pfkey hotspot tag on the screen
+		the_fkey = global_w4w_handler.pfkey_tag_at(mouse_row, mouse_col);
+		if (-1 != the_fkey)
+		{
+			// Clicked on a tag, see if valid function key.
+			fkey_pressed = enabled_function_key(the_fkey);	
+			break;
+		}
+		the_fkey = 0; // reset back to default
+
+		// Not a pfkey tag so move the cursor
+		move_cursor = true;
+		y = mouse_row+1;
+		x = mouse_col+1;
+	 }
+	 else
+	 {
+         	bad_key = true;
+	 }
 	 break;
 
       default :
@@ -986,6 +1120,8 @@ void screen::handle_key(int a_key) {
       ring_bell();
    else if (move_cursor)
       goto_xy(x, y);
+
+   return fkey_pressed;
 }
 
 
@@ -1186,3 +1322,81 @@ void screen::init_fkey_map() {
       key_map[k].escape  = false;
    }
 }
+
+//
+//	History:
+//	$Log: screen.cpp,v $
+//	Revision 1.13  1998-10-12 12:11:27-04  gsl
+//	moved costar version assignment out of condition
+//
+//	Revision 1.12  1998-10-02 16:24:49-04  gsl
+//	Add W4W mouse support.
+//	This is all done thru a global w4w_handler object.
+//	Handle mouse support for both COSTAR and windows.
+//
+//	Revision 1.11  1998-08-31 15:14:15-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/screen.cpp,v
+//	Working file: screen.cpp
+//	head: 1.10
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 10;	selected revisions: 10
+//	description:
+//	----------------------------
+//	revision 1.10
+//	date: 1998-07-10 17:31:45-04;  author: gsl;  state: Exp;  lines: +3 -4
+//	Fix so do use uninitialized value
+//	----------------------------
+//	revision 1.9
+//	date: 1998-04-17 13:49:02-04;  author: gsl;  state: V4_3_00;  lines: +19 -0
+//	Fix trk472, typing out of the last field on a prompt screen
+//	gets an assert or an coredump.
+//	In screen::type_key() the item fld was being used when NULL.
+//	If mod_field_closest_to_cursor() returns NULL then use the first field.
+//	----------------------------
+//	revision 1.8
+//	date: 1997-05-02 22:42:24-04;  author: gsl;  state: V4_2_02;  lines: +17 -12
+//	Add handle_key() case for KEY_MOUSE_CLICK and in type_key() first
+//	check if there is an active_field before using it
+//	----------------------------
+//	revision 1.7
+//	date: 1996-07-25 19:47:59-04;  author: gsl;  state: V3_9_92;  lines: +7 -7
+//	NT
+//	----------------------------
+//	revision 1.6
+//	date: 1996-07-25 14:16:15-04;  author: gsl;  state: Exp;  lines: +0 -0
+//	Renamed from screen.cc to screen.cpp
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-02 10:04:53-04;  author: gsl;  state: V3_3_19;  lines: +1 -1
+//	change strdup() to dup_string()
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:22-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:38-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:22-05;  author: gsl;  state: V3_3x12;  lines: +51 -30
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:25-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

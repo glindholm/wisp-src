@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : options.cpp
 // Author : George Soules
@@ -89,23 +96,24 @@ void options::process_command_line(int &arg, int argc, char *argv[]) {
 
    while (arg <= argc && argv[arg][0] == '-') {
       index = 1;
-      if (opt_specified)
-         report_fatal_error(17);
 
       switch (the_opt = tolower(argv[arg][index])) {
 #if ! RUNTIME
          case compile_letter :
+            if (opt_specified) report_fatal_error(17);
             option[compile_opt] = true;
             opt_specified = true;
             break;
 
          case syntax_letter :
+            if (opt_specified) report_fatal_error(17);
             option[syntax_opt] = true;
             option[compile_opt] = true;
             opt_specified = true;
             break;
 #endif
          case trace_letter :
+            if (opt_specified) report_fatal_error(17);
             the_process->trace_active = true;
 	    the_process->trace_level = 0;
             option[trace_opt] = true;
@@ -118,13 +126,14 @@ void options::process_command_line(int &arg, int argc, char *argv[]) {
 #if WANG
          case fetched_args_letter :
             option[fetched_args_opt] = true;
-            opt_specified = true;
             break;
 #endif
 #if DEBUG
          case debug_letter :
-            index += 1;
-            switch (argv[arg][index]) {
+            while('\0' != argv[arg][index+1])
+	    {
+               index += 1;
+               switch (argv[arg][index]) {
                case debug_emitter_letter :
                   option[debug_emitter_opt] = true;
                   break;
@@ -177,7 +186,8 @@ void options::process_command_line(int &arg, int argc, char *argv[]) {
                   break;
                default :
                   bad_opt = true;
-            }
+               }
+	    }
             break;
 #endif
          default :
@@ -218,3 +228,65 @@ void show_usage() {
    write_stdout("   -v = Version numbers\n");
 #endif
 }
+
+//
+//	History:
+//	$Log: options.cpp,v $
+//	Revision 1.10  1998-09-08 14:50:22-04  gsl
+//	Fix the "only one options" allowed logic to not count debug
+//
+//	Revision 1.9  1998-09-02 17:28:59-04  gsl
+//	changed processing of the debug (-d) switch to allow multiple flags.
+//	you can now say -dkos instead of -dk -do -ds this was needed to
+//	handle passing multiple debug flags via WPROCDEBUG envvar.
+//
+//	Revision 1.8  1998-08-31 15:14:00-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/options.cpp,v
+//	Working file: options.cpp
+//	head: 1.7
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 7;	selected revisions: 7
+//	description:
+//	----------------------------
+//	revision 1.7
+//	date: 1996-07-25 14:15:35-04;  author: gsl;  state: V4_3_00;  lines: +0 -0
+//	Renamed from options.cc to options.cpp
+//	----------------------------
+//	revision 1.6
+//	date: 1995-08-09 12:56:24-04;  author: gsl;  state: V3_3_19;  lines: +9 -0
+//	Add a new debug option -d0 which uses a "smart" set of trace options.
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-15 06:44:37-04;  author: gsl;  state: V3_3_18;  lines: +8 -2
+//	Add -v to report version numbers
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:08-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:25-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:05-05;  author: gsl;  state: V3_3x12;  lines: +18 -4
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:16-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

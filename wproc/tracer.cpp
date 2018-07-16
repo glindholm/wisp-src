@@ -1,8 +1,11 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
-*/
-
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//
 // Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : tracer.cpp
@@ -757,6 +760,12 @@ char *tracer::symbol_data(symbol &a_symbol, int array_index) {
 /*
 **	History:
 **	$Log: tracer.cpp,v $
+**	Revision 1.10  1998-08-31 15:50:38-04  gsl
+**	drcs update
+**
+**	Revision 1.9  1998-08-31 15:14:23-04  gsl
+**	drcs update
+**
 **	Revision 1.8  1996-07-25 19:48:17-04  gsl
 **	NT
 **
@@ -773,3 +782,65 @@ char *tracer::symbol_data(symbol &a_symbol, int array_index) {
 **
 **
 */
+
+//
+//	History:
+//	$Log: tracer.cpp,v $
+//	Revision 1.10  1998-08-31 15:50:38-04  gsl
+//	drcs update
+//
+//	Revision 1.9  1998-08-31 15:14:23-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/tracer.cpp,v
+//	Working file: tracer.cpp
+//	head: 1.8
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 8;	selected revisions: 8
+//	description:
+//	----------------------------
+//	revision 1.8
+//	date: 1996-07-25 19:48:17-04;  author: gsl;  state: V4_3_00;  lines: +5 -1
+//	NT
+//	----------------------------
+//	revision 1.7
+//	date: 1996-07-25 14:16:32-04;  author: gsl;  state: Exp;  lines: +6 -2
+//	Renamed from tracer.cc to tracer.cpp
+//	----------------------------
+//	revision 1.6
+//	date: 1996-04-18 13:00:57-04;  author: jockc;  state: Exp;  lines: +7 -3
+//	moved declaration of for loop index from for loop to function
+//	auto decl area
+//	----------------------------
+//	revision 1.5
+//	date: 1995-10-12 08:18:12-04;  author: gsl;  state: V3_3_19;  lines: +16 -7
+//	Moved the env defines to envs.h
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:31-04;  author: gsl;  state: V3_3_18;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:46-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:31-05;  author: gsl;  state: V3_3x12;  lines: +316 -13
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:32-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

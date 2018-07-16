@@ -1,41 +1,36 @@
-        Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+ 	Copyright (c) 1998 by NeoMedia Technologies Inc. All Rights Reserved.
 
         ====================================================================
 
-        Title:          crid - CONTROL REPORT INQUIRY DATENTRY
+        Title:          Installation of CRID for ACUCOBOL on UNIX
 
         Document:       install_crid_acu.lis
-        Last Updated:   10 July 97
-        Products:       KCSI Utilities - CRID
-        Versions:       2.77 (AND LATER)
+        Last Updated:   $Date:$
+        Products:       KCSI CRID Utilities
+        Versions:       2.93 (AND LATER)
 
-        Summary:        Installation instructions for the KCSI Utilities
-			using the AcuCOBOL compiler.
+        Summary:        Installation instructions for the CRID Utilities
+			using the ACUCOBOL compiler.
 
         ====================================================================
  
-			***** ! ! ! ATTENTION ! ! ! *****
- 
- 	Please Read carefully! The instructions have changed from
-	previous releases.
- 
-	USING EXISTING UTILITIES
-	========================
 
-	Distribution
-        ------------
+	INSTALLATION
+	============
 
         First install WISP and setup the WISP runtime environment.  This
         must be in place before CRID can be used.  Create a standard 
-	AcuCOBOL WISP runtime by following the instructions supplied
+	ACUCOBOL WISP runtime by following the instructions supplied
 	with your WISP distribution. This will ensure that all current
 	pieces are up to date for WISP.
 
         CRID will normally be distributed on diskette or tape as a
-        compressed tar file named "cridmf.XXX.tar.Z".  Unload this file
-        from the distribution media as follows.
+        compressed tar file named "cridacu.XXX.tar.Z".  It is recommended
+        that you install CRID in your WISP directory ($WISPDIR). Unload
+        this file from the distribution media as follows.
 
-        E.g.    $ tar -xvf /dev/rfd0
+	        $ cd $WISPDIR
+                $ tar -xvf /dev/rfd0
 
         Extract the distribution files from "cridacu.XXX.tar.Z" using the
         following command:
@@ -46,8 +41,9 @@
 	number.  Refer to packlist.lis in the distribution for a listing
 	of expected files.
  
-	Installation
-        ------------
+
+	Configuration
+        -------------
 
 	1. Build an extended wisp runtime for the CRID utilities:
 

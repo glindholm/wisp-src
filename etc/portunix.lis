@@ -4,10 +4,10 @@
 	
 	Title:		WISP PORTING INSTRUCTIONS FOR UNIX
 	
-	Document:	PORTUNIX.LIS
+	Document:	portunix.lis
 	Last Updated:	$Date:$
 	Products:	WISP/UNIX, EDE, KCSI
-	Versions:	4.2.00 (AND LATER)
+	Versions:	4.3.00 (AND LATER)
 	
 	Summary:	How it port WISP (and others) for unix.
 			Building a shipping kit.
@@ -27,7 +27,7 @@
 
 	The following components are required to port WISP.
 
-	[ ]	WISP source kit  e.g.  wisp3991.src.tar.Z
+	[ ]	WISP source kit  e.g.  wisp4300.src.tar.Z
 
 	[ ] 	Acucobol COBOL compiler
 
@@ -56,7 +56,7 @@
 		Example:
 			$ mkdir /usr2/wisp
 
-	[ ]	RENAME THE OLD SOURCE DIRECTORY
+	[ ]	DELETE or RENAME THE OLD SOURCE DIRECTORY
 
 		If a previous port of WISP exists on this machine then
 		rename or delete the old source directory.
@@ -111,6 +111,12 @@
 	[ ]	$WISP/src/acu/acucobol.include
 		Uncomment the correct entries for the version of ACUCOBOL
 		that is being used.
+
+	[ ]	If LIBCURSES changes (E.g. HP-UX) change all.
+		  - acu/wruncbl.umf
+		  - mf/wrunmf.umf
+		  - kcsi/crid/wruncblk.umf
+		  - kcsi/create/create.umf
 
 
 	The following are only done on a port to a new platform. You
@@ -202,5 +208,17 @@
 		$ mv wisp.QA /usr/local/wisp.XXXX
 		$ ln -s /usr/local/wisp.XXXX /usr/local/wisp
 
+
+	MOVE SHIPPING KITS
+	==================
+
+	Move the shipping kits into the shipping area on zigzag.
+	There are 5 ship kits:
+
+	[ ]	 $WISP/src/wispXXXX.ship
+	[ ]	 $WISP/src/kcsi/create/createacuXX.ship
+	[ ]	 $WISP/src/kcsi/create/createmfxXX.ship
+	[ ]	 $WISP/src/kcsi/crid/cridacuXXX.ship
+	[ ]	 $WISP/src/kcsi/crid/cridmfxXXX.ship
 
 	========================= END OF DOCUMENT ==========================

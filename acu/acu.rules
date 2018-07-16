@@ -1,9 +1,6 @@
 #/************************************************************************/
-#/*									 */
-#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
-#/*	 An unpublished work of International Digital Scientific Inc.	 */
-#/*			    All rights reserved.			 */
-#/*									 */
+#	Copyright (c) 1996 NeoMedia Technologies, All rights reserved.
+#	$Id:$
 #/************************************************************************/
 #
 #
@@ -53,7 +50,8 @@ WISPFLAGS=
 COBOL=ccbl
 COBDEBUG=-Zd -Zi -Za
 COBFLAGS=-da4 $(COBDEBUG)
-LN=ln
+#LN=ln
+LN=cp
 LANG=-VACU
 
 .SUFFIXES: .cob .wcb

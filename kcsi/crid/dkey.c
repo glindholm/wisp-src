@@ -147,6 +147,7 @@ static int enter_key_entry(char *idx,char *mode)
 			return(0);
 			}
 		}
+	return 0;
 }
 
 /*----
@@ -423,6 +424,9 @@ void load_previous_record(char *idx)
 /*
 **	History:
 **	$Log: dkey.c,v $
+**	Revision 1.4  1999-09-13 15:47:06-04  gsl
+**	fix missing return code
+**
 **	Revision 1.3  1996-09-17 19:45:35-04  gsl
 **	drcs update
 **

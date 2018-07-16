@@ -18,6 +18,7 @@ static char rcsid[]="$Id:$";
 **	Includes
 */
 #include <windows.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "wispnt.h"
@@ -433,19 +434,19 @@ int win32_nt(void)
 /*
 **	ROUTINE:	win32_95()
 **
-**	FUNCTION:	Check if OS is Windows 95
+**	FUNCTION:	Check if OS is Windows 95 (or 98)
 **
-**	DESCRIPTION:	Get the OS version an test if 95
+**	DESCRIPTION:	Get the OS version an test if 95 (or 98)
 **
 **	ARGUMENTS:	None
 **
 **	GLOBALS:	None
 **
 **	RETURN:		
-**	1		This is Windows 95
+**	1		This is Windows 95 (or 98)
 **	0		Not 95 (probably NT)
 **
-**	WARNINGS:	None
+**	WARNINGS:	This should be used to test if WIN32 and not NT.
 **
 */
 int win32_95(void)
@@ -470,11 +471,106 @@ int win32_95(void)
 	return rc;
 }
 
+/*
+**	ROUTINE:	win32_98()
+**
+**	FUNCTION:	Check if OS is Windows 98 (only)
+**
+**	DESCRIPTION:	Get the OS version an test if 98.
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	1		This is Windows 98
+**	0		Not 98
+**
+**	WARNINGS:	none
+**
+*/
+int win32_98(void)
+{
+	static int rc = -1;
+	
+	if (-1 == rc)
+	{
+		OSVERSIONINFO osVer;
+		osVer.dwOSVersionInfoSize = sizeof(osVer);
+		GetVersionEx(&osVer);
+		if (osVer.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS &&
+		    4 == osVer.dwMajorVersion && 10 ==  osVer.dwMinorVersion)
+		{
+			rc = 1;
+		}
+		else
+		{
+			rc = 0;
+		}
+	}
+
+	return rc;
+}
+
+/*
+**	ROUTINE:	win32_version()
+**
+**	FUNCTION:	Get the WIN32 version formatted as a string.
+**
+**	DESCRIPTION:	NT  "WIN32 NT 4.0 build xxx"
+**			95  "WIN32 (Not NT) 4.0 build xxx"
+**			98  "WIN32 (Not NT) 4.10 build xxx"
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		The formatted string.
+**
+**	WARNINGS:	None
+**
+*/
+const char* win32_version(void)
+{
+	static char *the_version = NULL;
+	
+	
+	if (NULL == the_version)
+	{
+		OSVERSIONINFO osVer;
+		char	buff[128];
+		char	*is_nt;
+		
+		osVer.dwOSVersionInfoSize = sizeof(osVer);
+		GetVersionEx(&osVer);
+
+		if (osVer.dwPlatformId == VER_PLATFORM_WIN32_NT)
+		{
+			is_nt = "NT";
+		}
+		else
+		{
+			is_nt = "(Not NT)";
+		}
+
+		sprintf(buff,"WIN32 %s %d.%d %d %s", is_nt,
+			osVer.dwMajorVersion, osVer.dwMinorVersion,
+			osVer.dwBuildNumber, osVer.szCSDVersion);
+
+		the_version = strdup(buff);
+	}
+
+	return the_version;
+}
+
 #endif /* WIN32 */
 
 /*
 **	History:
 **	$Log: winnt.c,v $
+**	Revision 1.14  1998-12-04 13:08:31-05  gsl
+**	Add win32_98() and win32_version()
+**
 **	Revision 1.13  1997-12-04 18:12:25-05  gsl
 **	change to wispnt.h
 **

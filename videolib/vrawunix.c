@@ -451,23 +451,31 @@ static int vrawinit()
 	  bau==B2400? 2400:
 	  bau==B1200? 1200:
 	  bau==B300? 300:0;
-								/* Copy the old termio buffers to the	*/
-
+											/* Copy the old termio buffers to the	*/
 											/* ones we will use to set the desired	*/
 	memcpy(&vraw_termio, &prev_termio, sizeof(vraw_termio));			/* characteristics.			*/
 
-	vraw_termio.c_iflag = (IXON | IXOFF | IGNBRK);
-	vraw_termio.c_iflag &= ~ICRNL;	/* Don't map \r -> \n */
-#ifdef	ISTRIP
-	vraw_termio.c_iflag &= ~ISTRIP;
+	/* Input modes: c_iflag */
+	vraw_termio.c_iflag = 0;							/* Set everything off			*/
+	vraw_termio.c_iflag |= IGNBRK;							/* Set "Ignore Break"			*/
+	vraw_termio.c_iflag |= (prev_termio.c_iflag & IXON);				/* Preserve IXON			*/
+	vraw_termio.c_iflag |= (prev_termio.c_iflag & IXOFF);				/* Preserve IXOFF			*/
+#ifdef IXANY
+	vraw_termio.c_iflag |= (prev_termio.c_iflag & IXANY);				/* Preserve IXANY			*/
+#endif
+#ifdef IMAXBEL
+	vraw_termio.c_iflag |= (prev_termio.c_iflag & IMAXBEL);				/* Preserve IMAXBEL			*/
 #endif
 
+	/* Local modes: c_lflag */
 	vraw_termio.c_lflag &= ~ECHO;							/* Don't echo input. 			*/
 	vraw_termio.c_lflag &= ~ICANON;							/* Non-canonical input. 		*/
 	vraw_termio.c_lflag &= ~NOFLSH;							/* Allow flushes after INTR signal. 	*/
 
+	/* Output modes: c_oflag */
 	vraw_termio.c_oflag &= ~OPOST;							/* No output processing 		*/
 
+	/* Control modes: c_cflag */
 #ifdef	EIGHT_BIT
 	vraw_termio.c_cflag |= CS8;							/* Allow 8-bit input 			*/
 	vraw_termio.c_cflag &= ~PARENB;
@@ -1695,6 +1703,9 @@ char *callerbuf;
 /*
 **	History:
 **	$Log: vrawunix.c,v $
+**	Revision 1.25  1999-02-10 11:02:28-05  gsl
+**	Change vrawinit() to preserve IXON, IXOFF, IXANY, and IMAXBEL
+**
 **	Revision 1.24  1998-01-19 09:52:37-05  gsl
 **	add time.h and change time vars to be time_t type.
 **

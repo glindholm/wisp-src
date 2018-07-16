@@ -1,9 +1,11 @@
-SOURCE \\cyclone\d\projects\wisp\src
+SOURCE \\cyclone\wispdev\src
 VOLIN  \\cyclone\testacu\volin
 VOLOUT \\cyclone\testacu\volout
 VOLRUN \\cyclone\testacu\volrun
 VOLSPL \\cyclone\testacu\volspl
 VOLWRK \\cyclone\testacu\volwrk
 TEMP   \TEMP
-ROOT   C:\
+ROOT   C:\.
 HOME   C:\HOME
+FLOPPY A:\.
+WISP   $WISPDIR

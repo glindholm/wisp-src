@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : execute.cpp
 // Author : George Soules
@@ -128,17 +135,35 @@ opcode machine::execute() {
          case call_exp_op : {
             offset target;
             int_32 symbol_range;
+	    offset return_offset;
 
             if (the_opcode == call_exp_op) {
+	       /*
+	        *	The locate_label_offset() routine messes up the pc so we need to 
+		*	save then fixup the pc so call_return knows where to return to.
+		*
+		*	<call_exp_op> <fixup offset> <label(s) offset> <0 offset>
+	       */
+	       return_offset = the_pcode_reader->current_offset();
+
                pop_expressions(1);
                if (! locate_label_offset(exp[1].stripped_string(), target, true)) {
                   enter_cancel_state();
                   break;
                }
+
+	       return_offset += sizeof(offset); // step over the <fixup offset>
+   	       the_pcode_reader->reset_pc_to(return_offset);
+	       while( 0 != symbol::get_id(*the_pcode_reader) ) 
+	       { 
+			/* step over the label offset table */
+	       }
+	       return_offset = the_pcode_reader->current_offset();
             }
             else {
                target = the_pcode_reader->get_offset();
                symbol_range = the_pcode_reader->get_int_32();
+	       return_offset = the_pcode_reader->current_offset();
             }
 
             if (call_depth >= call_stack_size) {
@@ -149,10 +174,23 @@ opcode machine::execute() {
                enter_cancel_state();
                break;
             }
-
-            call_stack[call_depth].current_offset =
-               the_pcode_reader->current_offset();
+            call_stack[call_depth].return_offset = return_offset;
             call_stack[call_depth].for_loop_depth = for_loop_depth;
+
+#if DEBUG
+      	    if (user_options.debug_trace_machine())
+	    {
+		char mess[120], target_s[20], offset_s[20];
+
+		strcpy(target_s,the_pcode_reader->offset_image(target));
+		strcpy(offset_s,the_pcode_reader->offset_image(call_stack[call_depth].return_offset));
+
+		sprintf(mess, "target=%s return_offset=%s for_loop_depth=%d call_depth=%d",
+			target_s, offset_s, for_loop_depth, call_depth);
+	        trace_ss(machine, "call ", mess);
+           }
+#endif
+
             call_depth += 1;
 
             the_pcode_reader->reset_pc_to(target);
@@ -162,10 +200,27 @@ opcode machine::execute() {
 
          case call_return_op : {
             int_32 symbol_range = the_pcode_reader->get_int_32();
-            if (call_depth) {
+            if (call_depth > 0) {
                call_depth -= 1;
+
+#if DEBUG
+      	       if (user_options.debug_trace_machine())
+	       {
+		  char mess[120], offset_s[20];
+
+		  strcpy(offset_s,the_pcode_reader->offset_image(call_stack[call_depth].return_offset));
+
+		  sprintf(mess, "call_depth=%d call_stack.return_offset=%s call_stack.for_loop_depth=%d for_loop_depth=%d",
+			call_depth, 
+			offset_s, 
+			call_stack[call_depth].for_loop_depth,
+			for_loop_depth);
+	          trace_ss(machine, "call_return ", mess);
+               }
+#endif
+
                the_pcode_reader->reset_pc_to
-                  (call_stack[call_depth].current_offset);
+                  (call_stack[call_depth].return_offset);
 
                // Reset for_loop_depth in case a LEAVE inside a For loop
                // kept For loop(s) from terminating normally.
@@ -619,6 +674,7 @@ opcode machine::execute() {
          case statement_op : {
             label_id = 0;
             usign_16 stmt_number = the_pcode_reader->get_usign_16();
+	    trace_si(machine, "line ", stmt_number);
             if (the_tracer)
                if (! the_tracer->permission_to_execute(stmt_number))
                   halt_machine();
@@ -695,3 +751,70 @@ opcode machine::execute() {
 
 
 
+
+//
+//	History:
+//	$Log: execute.cpp,v $
+//	Revision 1.11  1998-09-08 14:08:30-04  gsl
+//	For call_exp_op had to save the current offset then calculate the
+//	return offset.
+//	CALL <exp> was failing to correctly set the return offset
+//
+//	Revision 1.10  1998-09-04 13:16:17-04  gsl
+//	Add debug tracing to the call_op and call_return_op, also print the line
+//	number on a statement_op
+//
+//	Revision 1.9  1998-08-31 15:13:47-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/execute.cpp,v
+//	Working file: execute.cpp
+//	head: 1.8
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 8;	selected revisions: 8
+//	description:
+//	----------------------------
+//	revision 1.8
+//	date: 1997-04-17 17:53:47-04;  author: gsl;  state: V4_3_00;  lines: +1 -1
+//	Add check nesting_level==1 to test of fetched_args
+//	----------------------------
+//	revision 1.7
+//	date: 1996-07-25 19:46:05-04;  author: gsl;  state: V3_9_91;  lines: +2 -2
+//	NT
+//	----------------------------
+//	revision 1.6
+//	date: 1996-07-25 14:15:06-04;  author: gsl;  state: Exp;  lines: +0 -0
+//	Renamed from execute.cc to execute.cpp
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-02 11:29:21-04;  author: gsl;  state: V3_3_19;  lines: +1 -1
+//	fix warning
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:55-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:13-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:51-05;  author: gsl;  state: V3_3x12;  lines: +24 -10
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:07-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : assert.cpp
 // Author : George Soules
@@ -31,3 +38,57 @@ void assert_error(char *source_file, int line_number) {
    abort();
 }
 
+
+//
+//	History:
+//	$Log: assert.cpp,v $
+//	Revision 1.8  1998-08-31 15:13:32-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/assert.cpp,v
+//	Working file: assert.cpp
+//	head: 1.7
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 7;	selected revisions: 7
+//	description:
+//	----------------------------
+//	revision 1.7
+//	date: 1996-12-12 13:25:48-05;  author: gsl;  state: V4_3_00;  lines: +1 -1
+//	DevTech -> NeoMedia
+//	----------------------------
+//	revision 1.6
+//	date: 1996-07-25 19:43:00-04;  author: gsl;  state: Exp;  lines: +1 -1
+//	Change IDSI to DevTech
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:14:18-04;  author: gsl;  state: Exp;  lines: +0 -0
+//	Renamed from assert.cc to assert.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:38-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:51:55-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:33-05;  author: gsl;  state: V3_3x12;  lines: +2 -2
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:50:56-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

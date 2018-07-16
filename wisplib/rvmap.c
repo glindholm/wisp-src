@@ -239,25 +239,14 @@ static struct rvmap_struct *rvmap(void)
 				strcpy(rvmap_end->local_prefix, local_prefix);
 				strcpy(rvmap_end->remote_prefix, remote_prefix);
 				rvmap_end->next = NULL;
+
+				wtrace("RVMAP","ADD", "local=[%s] remote=[%s]",	
+				       rvmap_end->local_prefix, rvmap_end->remote_prefix);
+
 			}
 
 			fclose(the_file);
 		}
-
-#ifdef DEBUG
-	        {
-			struct rvmap_struct *rvmap_end;
-		
-			rvmap_end = rvmap_list;
-			while(rvmap_end)
-			{
-				sprintf(err_msg,"RVMAP: local=[%s] remote=[%s]\n",
-					rvmap_end->local_prefix, rvmap_end->remote_prefix);
-				werr_write(err_msg);
-				rvmap_end = rvmap_end->next;
-			}
-		}
-#endif
 	}
 	
 	return rvmap_list;
@@ -267,6 +256,9 @@ static struct rvmap_struct *rvmap(void)
 /*
 **	History:
 **	$Log: rvmap.c,v $
+**	Revision 1.8  1998-05-22 14:49:47-04  gsl
+**	Change to use wtrace()
+**
 **	Revision 1.7  1997-06-05 12:49:29-04  scass
 **	Added #ifdef #undef for MAX to resolve warning.
 **

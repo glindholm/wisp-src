@@ -48,7 +48,7 @@ void wfree(void *ptr)
 	free(ptr);
 }
 
-void *wdupstr(char *str)
+void *wdupstr(const char *str)
 {
 	char	*new;
 
@@ -59,13 +59,29 @@ void *wdupstr(char *str)
 	}
 	else
 	{
-		new = str;
+		new = NULL;
 	}
 	return( (void *)new );
 }
+
+void *wrealloc(void *ptr, int size)
+{
+	ptr = realloc(ptr, size);
+
+	if (!ptr)
+	{
+		write_log("WISP",'F',"REALLOC","Failed to realloc %d bytes",size);
+		exit_with_err();
+	}
+	return( (void *)ptr );
+}
+
 /*
 **	History:
 **	$Log: wmalloc.c,v $
+**	Revision 1.7  1998-03-20 17:39:10-05  gsl
+**	Add wrealloc() and make const args const
+**
 **	Revision 1.6  1996-08-30 21:56:12-04  gsl
 **	drcs update
 **

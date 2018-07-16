@@ -60,6 +60,7 @@ void wexit(int4 num)
 	int	exit_code;
 
 	wtrace("WEXIT", "ENTER", "wexit(%ld) linklevel=%d", (long)num, linklevel()); 
+	wtrace_timestamp("WEXIT");
 
 	if (0 == num)
 	{
@@ -111,6 +112,9 @@ void wexit(int4 num)
 /*
 **	History:
 **	$Log: wexit.c,v $
+**	Revision 1.15  1998-05-12 10:53:36-04  gsl
+**	Added wtrace_timestamp()
+**
 **	Revision 1.14  1997-05-02 20:03:32-04  gsl
 **	Add wtrace()
 **

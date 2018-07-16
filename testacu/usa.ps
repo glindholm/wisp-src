@@ -1,0 +1,3483 @@
+%!PS-Adobe-2.0
+%%DocumentFonts: (atend)
+%%Pages: (atend)
+% Created as:
+% netmap-1.5
+% USENET Backbone in the U.S. 
+% Created by decwrl!reid (Brian Reid) Sat Jul  9 12:53:44 1988
+%
+% Modified by kevin%kosman.uucp%nrc.com (Kevin O'Gorman)
+%%EndComments
+
+%Modify this predicate to change what you see and don't see
+/noshow{IsUSA not IsLake or IsWater or} bind def
+
+%Modify Xpt and Ypt and xscf to get blow-ups of part of the map.
+% Xpt and Ypt are in default coordinates and are a point that will remain
+% in the same place on the page.  xscf is a number usually no less than one
+% which is the scale factor.  A theorem in topology states that this is
+% sufficient to produce any enlargement of the type contemplated here.
+/Xpt 500 def
+/Ypt 710 def
+/xscf 1 def
+% Make this true to have the map label the start-points of all paths.
+/markpoint false def
+
+% Define the geometry of the page on your printer
+/Pwid 612 def		% page width
+/Pht 792 def		% page height
+/Margin 23 def		% border margin
+
+% Define the setlinewidth argument for hairlines, for use in enlarged views
+% Zero is okay for 300-DPI printers, but may be invisible on imagesetters
+/hairline 0 def
+
+
+% You probably should not change anything below here
+
+% "Lake" is used because I figure any map that doesn't show Tahoe doesn't
+% deserve to show anything less than the Great Lakes.  Besides, they clutter
+% up the image for no good reason.
+
+/USA {/IsUSA true def} bind def
+/Canada {/IsCanada true def} bind def
+/Lake {/IsLake true def} bind def
+/Water {/IsWater true def} bind def
+/Foreign {/IsForeign true def} bind def
+/Mexico {/IsMexico true def} bind def
+Pht 792 gt 
+    {statusdict /11x17tray known {
+	statusdict begin 11x17tray end
+    }{
+	statusdict /setpageparams known {
+	    11 72 mul 17 72 mul 36 1	% w h offs. orientation
+	    statusdict begin setpageparams end
+	}{
+	    11 17 div dup scale		% for laserwriter
+	} ifelse
+    } ifelse
+  } if
+/Nlw 0.25 def   /Mlw 0.5 def	/Wlw 1 def	/Xlw 1.5 def	/Zlw 2.5 def
+/MMX matrix def
+/PT {/Pointnum exch def}bind def
+/DV {scf div} bind def
+/MP {moveto gsave currentpoint 2 copy translate mapmark}bind def
+/MB {lineto mapstroke grestore nowhere} bind def
+/ST {mapstroke grestore nowhere} bind def
+/mapmark {
+	noshow markpoint not or
+	{
+		pop pop
+	}{
+		0 lt {10}{-10}ifelse DV exch 0 lt {10}{-10}ifelse DV exch
+		2 copy 0 0 moveto rlineto stroke 2 copy moveto 
+		0 lt {0 -4 DV rmoveto} if pop
+		Pointnum (     ) cvs show
+		0 0 moveto
+	}ifelse
+	} bind def
+/mapstroke { noshow {} {stroke} ifelse} bind def
+/nowhere {
+	/IsCanada	false def
+	/IsMexico	false def
+	/IsUSA		false def
+	/IsLake		false def	% Lakes and the islands in them
+	/IsWater	false def	% Internal borders in bodies of water
+	/IsForeign	false def	% Other countries
+	} bind def
+/R /rlineto load def
+/SLW {[] 0  setdash DV setlinewidth} bind def
+/X {0 rlineto} bind def
+/Y {0 exch rlineto} bind def
+/ntbl [ [/M /x /w /v /a /b /Z]
+	[/y /s /m /U /i /J /c]
+	[/z /q /h /u /e /n /V]
+	[/A /W /l /X /r /E /T]
+	[/B /p /g /d /f /o /S]
+	[/C /t /k /D /j /K /Q]
+	[/F /G /H /I /N /O /P] ] def
+0 1 6 {/rx exch def 0 1 6 {/cx exch def ntbl rx get cx get dup
+       /X ne {[ cx 3 sub 3 rx sub /rlineto load] cvx bind def} {pop} ifelse
+      } for } for
+/PR { 1 rlineto}bind def
+/MR {-1 rlineto}bind def
+/pR { 1 exch rlineto}bind def
+/mR {-1 exch rlineto}bind def
+/Mpath {newpath 0 0 moveto Pwid Margin 2 mul sub 0 rlineto
+  0 Pht Margin 3 mul sub rlineto Pwid Margin 2 mul sub neg 0 rlineto
+  closepath} bind def
+/INIT {Margin dup 2 mul translate 
+       MMX currentmatrix pop
+	Mpath 1 setlinewidth stroke} def
+%%EndProlog
+%%BeginSetup
+gsave
+Xpt Ypt translate xscf dup scale Xpt neg Ypt neg translate
+nowhere
+INIT
+283 361 translate
+0.240000 dup dup scale /scf exch xscf mul def
+
+% USA
+Nlw SLW 
+xscf 1 ne{hairline SLW}if		% enlargements get hairline boundaries
+/Helvetica findfont 5 DV scalefont setfont
+(undef) PT
+%%EndSetup
+%%Page: 1 1
+
+% Path 1
+Canada
+1 PT
+1164 1364 MP
+o j D f 4 pR s q u m 6 pR J 4 PR T f E r 14 11 MB
+% Path 2
+USA
+(2u) PT
+741 1213 MP
+E a n n 5 X o V i q s g W g p l g h e V n i 5 X f E -4 Y k l f r f 4 PR
+c 3 2 R V u h a E j n e -4 Y g W f t l g f T f V n k t f 5 PR T f 7 PR U
+M e r f V 5 PR n K n e r D g f V ST
+% Path 2
+USA Canada
+(2b) PT
+818 1219 MP
+a ST
+% Path 2
+Canada
+(2c) PT
+819 1222 MP
+n r o e 5 Y m u A a 4 PR r N f j e u h a n f T d k n n e E d k g f E F
+D k N j f o r f o r r h l q h q h m u h i i i n i a f r r j o T f E r f
+o f r K r j f e -2 4 R l q q 4 Y h e -2 4 R U l q -4 PR s e 5 6 R n e
+i i i V e V 6 PR r o P f d k W g l g -13 X g o 4 X f N D -5 pR K ST
+% Path 3
+Canada
+3 PT
+878 1239 MP
+w u e 6 mR u e 5 PR V n r j K o 5 PR e E o D j I j K n 4 PR i n e n h g
+l p t p z h U m v h W q W g l g z m h e E f 5 PR q h g q u s u h a i q i
+n 5 pR n e 6 PR n e n e c 4 PR 4 X t l g l g l f E K V N r j f r r K
+4 PR n e r j f r -4 Y g N -5 pR j f e h m v h 5 pR i u q h m h U h a e i
+r f o 4 PR h g h q h u h e E Q f r o r -5 pR K N f r r f r f r o j V n E
+d j o N 4 PR u h q M U h g q t q q q p M U h U q u m u q q u h i 5 X e a
+r f n h q s 4 pR a r j o f T f r f r f D j f e u h u m s -4 PR h q u h z
+h 4 Y 5 PR r f e U h U h 4 pR i J 4 pR 4 3 R D k f r f g f k f D g d n i
+u m 6 pR T -4 Y g d k j d g k g I j g D g j o f N f 6 X D g d Q j 8 X
+5 PR e l h g W h g W q t h m 4 Y h q l p q v M a 6 pR e 11 pR E j D j f
+N 6 pR T K i e 4 pR v m a J o K D g d g d k D g k j K ST
+% Path 4
+Canada
+4 PT
+1002 1327 MP
+8 pR i i 4 PR 5 -2 R u s l q l g s u h 4 Y a n i V u q 4 pR a n i i l F
+t k D g w u h u i n n i i V a e c o i e n P o f e u h i a V e n T f r j
+-4 Y k f D k g D k t -4 Y -6 pR K r f x m h 5 pR a i e i j e U 4 pR 5 pR
+e E N d k P j j P o r r K g f k f k -5 Y g d k D k k k g d k D k g -4 pR
+j f 6 PR -4 X s u h 4 pR b a i i e a U 4 pR J u h a r f r f r -4 pR r f
+r f e q h w u q q 4 pR v F k d w M h l g M h u h 4 pR T D g f n 4 pR r f
+E 6 PR r r f r f r r f T f r r K r j j D k j f o r f r P j -4 Y g q h i
+e M h j f d g I N n r f E N -6 Y j P d t D k g l p z W p p A p p l p p T
+n 4 X e r n e 12 MR -8 Y g c 7 Y m i a c E f V r o r r K j N j -4 pR
+5 -4 R 5 MR T J r e B W q -4 X q M h v h u h U h u q u -4 PR h 7 Y h u q
+m u m U h i u h e r f r K x s q m h e E o 4 X f N V 4 X f j r r M q W g
+M h a 8 X f r f j D g f j f 6 pR -2 4 R u q h u l M h M m h i i K j E f
+-4 pR o K r r o r r K o K r P K r o r r f ST
+% Path 5
+Canada
+5 PT
+1165 -754 MP
+j f j f Q o f o f 13 -12 MB
+% Path 6
+Canada
+6 PT
+856 -1308 MP
+z m w -4 PR U o o n e u n W t q q m -5 4 R -4 X z k h m w z h q y q m q
+-6 X g -5 PR h w -13 PR -4 PR q -5 PR q M z z z U i m u Z e v b m m 5 Y
+e u e v i u e m h 10 mR m u J 14 mR h d j d k -8 mR q w l p P f D j d f
+d j D f -8 mR g j k d k g I j f -7 mR F k d j k -17 PR -10 PR q z -6 5 R
+z -5 X p q m q m m x h l p q -9 PR q -5 PR -5 PR h -4 5 R -4 3 R q q q q
+m z q -5 PR q q ST
+% Path 7
+Canada
+7 PT
+647 -1215 MP
+f o f o S j -5 pR o f o N j f o 6 -7 R f Q o S o o o S S 7 MR j f o o E
+n 4 MR f o K 4 MR f o S S o S S S f r e 4 MR 4 MR S j j S S o o f o S S
+o Q Q 4 -3 R f j o 4 -3 R 6 -5 R 4 MR O j S o o f j j S j j 10 -9 R f ST
+% Path 8
+Canada
+8 PT
+1147 -518 MP
+j o N D k g D k B o -4 mR p -4 MR n 4 X e 4 pR e -7 Y g k j d g -12 pR
+o -5 Y F q l q Q f k D f d f -12 mR p g H r e o Z -2 -4 R k W q -4 MR p
+W h p p k p W h -8 X q -8 X q -6 X h -6 X h -4 MR -4 MR -5 MR -4 -3 R l
+H k p p B p p p p B p -7 X h A q -4 MR -5 MR p p p p B B B l h q M W h
+-11 MR B l p k H H p k k p W ST
+% Path 9
+Canada
+9 PT
+971 -636 MP
+g p -4 -5 R -10 -11 R k k -6 MR B k g U w m h m h l e m h g z j o K
+-6 Y j -4 mR p g p g G -4 mR H k d -5 mR k p -5 -4 R -4 mR g k p H p k p
+g B p p p p p k k -5 MR B M m M s l h W h W h m s l h W m h q l f d g d
+o n f S f D f d K o o f S o P K -8 mR -4 Y -4 mR -4 mR -4 -5 R k H k C p
+k k k g -10 -9 R -5 -4 R p ST
+% Path 10
+Canada
+10 PT
+842 -780 MP
+5 PR i n 10 11 R b i n c n n E f r r o 5 PR n r r j f r f r N V e n j f
+r P r f r f d g D g z W p D N f F k g B p g l p B -5 MR p k f r i e 4 X
+4 MR o u V o S o -4 Y e 6 pR 7 X a e a E i J 4 MR N o f r r i n S j
+4 -3 R 4 MR f o f 6 MR T e o -5 Y J U h i S E r J r r r o Z r e u m J h
+J o 4 3 R r n n i e j j f n e o r f x 5 pR V Q n 6 pR K n h e 7 MR n f e
+j e u ST
+% Path 11
+Canada
+11 PT
+1031 -762 MP
+n V n r 4 PR b h J n r K p g f n J D N 3 4 R h u e S r e 5 pR f N n E e
+S r D g j i 4 pR e i N f i 4 pR k j i f e j j e i u a e u h 4 Y f N r k
+f n r K e -2 4 R h 4 pR i u o r o U m i n V J E f i 4 PR i V e K e i l n
+u h 4 PR q U h Q P f o N r N j j P d j j f j d K o P d j P j P r d ST
+% Path 12
+Canada
+12 PT
+1014 -1506 MP
+4 mR l z h w w q u e i 4 mR h w u n w 4 mR w w q w q m w 7 Y e w
+-3 4 R -3 4 R w w m h u 4 mR 7 mR h v 5 mR x w q w m x m w u i w y -4 PR
+e h q 7 mR x u e n e m z -4 X -4 Y f z 6 Y e h -5 PR -7 PR m w q q -4 X
+g q -5 PR e m z -5 X g l t q q -4 X g l p p -5 PR -5 PR z h m 4 mR w h
+m m m z 8 mR h m h m -5 PR m h U g -5 mR ST
+% Path 13
+Canada
+13 PT
+839 -1337 MP
+o j 4 -5 R 9 -10 R 3 -4 R 22 -23 R j 6 -7 R O j j f j N N j j j N f j o
+-4 pR j N -10 pR j -6 pR -10 pR -2 -5 R -8 Y g d g D g d g D k g D t D t
+p l t k h i i 14 Y t d h u g j f D k s -4 Y k d g d t k d g h m h -4 MR
+D g d W M q W M m M h M h u g W q -5 MR h u s m m g y M q q M s h w w i
+J h 4 Y i 8 mR e i i e r M l h l h A m e u m m m p h e i 5 mR m q W s w
+l h m h m h ST
+% Path 14
+Canada
+14 PT
+797 -1394 MP
+-6 pR o j j o j 3 -4 R j d B g j d k -4 pR -5 mR -7 pR -6 Y g k F l p g
+G p l g d S K d j o o o o j S j f j O j d q h q N j f O j d g W s I g
+4 MR d g d g M l m B W q q B g l s K g -4 MR A e h -5 MR W m h l h l h W
+q h q l M s H d o d t O P f k D o f d -31 -111 MB
+% Path 15
+Canada
+15 PT
+1179 -405 MP
+-4 mR -4 mR H k k G k -6 mR -4 Y f H g G -5 mR G G C p p k -3 -4 R H k
+-6 mR -4 X h m W s q W q l h l s -8 MR f E o 5 X o f o r r o o P d f d f
+H -8 mR -8 Y j j f j d j I f H D ST
+% Path 16
+Canada
+(16c) PT
+625 -1506 MP
+q h 6 Y n u e m u e o f o r 5 PR h l q A s m l g k D k q q z h u n w h
+d f k q q m q h q u r n e u m y -4 5 R q m E w q i n K e v e s u z q Z e
+V u h l q ST
+% Path 16
+USA
+(16u) PT
+599 -1442 MP
+D t k t l F t z m g h U h k g p E f g n f g p f e n k t p z m -5 PR q h
+z u e q u e u f r i q u e -4 -2 R g s n J -5 PR i e z -5 -2 R x n m
+-4 PR J V z V h -4 PR C m g -5 X e r n W h n V q h g k p m -4 PR ST
+% Path 17
+USA
+17 PT
+529 -1419 MP
+e E i c n i l q V u l p a e U g k l q U q h i n U t l g q n x l p g A k
+q g 2 5 R 5 Y e m m T K E f e m q u r r o 6 PR v g l p -4 PR e m q m l g
+l F q q z l g -4 PR -6 X d f -4 PR -4 PR m W z U E o m q n h u n u f r m
+l z -11 PR n e A e 4 PR e r o n -5 PR -5 -2 R p q e i u 4 X n 5 X h q z
+-4 PR l k A f r g -5 PR u 4 PR u V e E n e 7 PR z z h k f g l g l g l g
+A t l g q q e n n o J n h l -4 MR h q q o 6 PR -6 PR q r o E o e h e q h
+-6 5 R -5 PR -4 PR h d f H W z m q m A p g -4 PR h q h w -4 PR -4 X g A
+-4 PR -4 PR u e u -4 X k -4 PR -4 PR -5 X g z l H g p h e F g l D f g d
+f T g k l q m z w m h m A f g q s l m W t l u h u e B W d f W H l f j g
+f Z f t H D k t W k t k l F h n i B m g k k d f k g l g p A g k k I j
+-4 Y s d j j o K d f j P 4 PR n n m g h n V n Z e m W g 2 4 R r o -8 mR
+g k F t l g p g l ST
+% Path 18
+USA
+18 PT
+329 -1379 MP
+h l f p p -4 MR l m m w m m m h q e 4 mR h u h q z m w s m f V E n r n
+f n v h W -4 PR m s p 4 mR W g q u q m u V h q q q u e V n 4 PR 4 X o E
+o n -4 PR h m W z U 4 PR u i n J p l g l t q e m l k l g -4 PR C p
+-5 PR -5 PR 5 mR m -3 4 R m m m e 6 mR q 4 Y z u e m h m h 4 Y V i
+-4 -3 R z i m m h 7 mR x 5 mR m m n m q q M h q h 4 mR q w -7 8 R h q m
+w h -4 PR h q q q h z m h q z q 5 X o E o 11 X n 4 PR V r J J u e n W g
+l t C p W g W g W g -10 PR z -8 PR h q u n h z h -7 PR A ST
+% Path 19
+USA
+19 PT
+179 -1182 MP
+B k d f d f -4 mR -4 mR r e f C -4 MR B -15 PR g -6 MR -11 MR -4 X e
+4 X e 10 X n r e -4 X h p l h g -6 MR -5 2 R B g l h W q h l s q p g l i
+e m e -4 MR g A e m W t p M h e o m q l u p f -4 2 R l h q -5 PR h k q z
+h -4 PR q m q v E n f T o 5 X n e 5 mR U e w q u e n e u i e v Z U i i Z
+U J f 5 PR Z K E o o e o o K o j f j j f d j r f e u r P E f m q h q l g
+h m q m 4 mR m z h q q -4 PR q q h A g k g z W p k F p k k p t l p -4 X
+g l g W g k t p g W g k t k g k d j f p A g W g u a h B k m s g f H K n
+k -4 X g l g l p ST
+% Path 20
+USA
+20 PT
+28 -1174 MP
+m q w H W H q z -4 PR u e h -6 PR z m -8 PR q h -4 MR l g q q q -5 PR
+-4 PR -7 PR B z h Z h W q h q W g q h -12 -2 R q n h -4 PR u n J n n o e
+r o n f n o r f e u r o o e T f g 4 X K r f e r f n e f g d f d E f 4 PR
+e m r P n w w y m e o e E P f o 5 mR o r K e m m w h 4 X o j f e v 4 X o
+T f e h z q -6 PR n J K n h q q -5 MR u Z u Z e u e u l g p u n i e n Z
+r f t f T K r f e m q U r o J -4 Y K W -4 mR I j K T h q 5 Y e i i n q n
+r n u -4 PR e V -5 X g h e V E f T f d g d F d P e q i n Q g n J q e V U
+q q U l t m e 10 X f F N K n r f E f r K x i q -5 PR n V i T f 4 X f 4 X
+f j n j -5 pR D j N 6 Y h i r f o K I e n K V q q s q h E o T f U q U h
+U -5 PR g D g h q M w 6 PR h -5 X p g h i V v s g f d g q q i W t a i p
+F d m u i a U h u g d t f F g f F g h u m u g I k g m q i n i i l t k F
+t h i i u l g d t h u g h l g o g q q h g p g p l g -4 X g W F t k g p g
+q m u e n u e v Z i e V n r n V A g l p W g W g l k t k D k p g I j g
+-5 X k F g q l g q J u e u E n h q w n n i e 7 mR h b J V n u e l g l g
+l g l h u i J u J r n J m q u V -6 PR m h b r n n r o E o f r r f j T o
+f d f 4 PR 4 PR V i t W p W p q m h m l g z u n m l -9 PR -6 X g h k q h
+N d ST
+% Path 21
+USA
+21 PT
+-6 -1057 MP
+N j o N o d g p l s d g k k B -4 mR -4 Y f k g D N d f t k k W p f k g
+d H -5 mR H g B s e m p k A h k s -4 MR h i u e h J h l u i r Z e Z h n
+h u Z J e i u e r i i r Z e 4 Y e n 4 mR g f k p -6 mR C B H p H k B k p
+-4 mR -4 mR p p p k D j H g -6 mR h 4 mR g H g o f k l h p g B l q W Z e
+U i r h p m t l k p m h v e i i u Z J u e i Z J h p k g p H g -6 -7 R k
+H H -4 mR p d f k p m g j g -6 X 4 mR h l h Z J U J u i i r n r J u m m
+l J v i e E h g y u Z e m s n w u i m e m p D f k d f -4 mR d K k p H I
+f -4 mR g k d K g p -4 MR g -4 mR g k g k l p l h g P f -4 mR g k r i o
+J f d f -4 mR -4 Y f k d K k C p B p p g p g p g p p ST
+% Path 22
+USA
+22 PT
+-112 -1161 MP
+B p p B p g p B p g C p p k p k p p -6 -5 R C p g b e e E Z e Z m o r e
+u J r n r n n Z r J r r e r n n e r e 4 PR e 4 PR e n n e u -4 X g h p W
+g K g l g l q v n Z l p A t k W k g g J f E g l g -5 MR k p p p p g C p
+i i J r r Z J V u e h k g W g B g 5 Y Z U J u e v h k H F g k h m h m u
+Z i u l g k l k h U i v i e U h d k g H g x m q -3 4 R 4 Y e m U e E J n
+7 X o n e U F y q -7 -2 R t l t l g z l -4 Y j d f D f j f j H W K g I e
+u o f d f d K k j d H q W f g z h k -4 PR u l H -4 MR l v e ST
+% Path 23
+USA
+23 PT
+-175 -1158 MP
+g k N f 8 X e T n o o k g d g c j f i f d t d p k p g -6 MR p l h u h k
+g W y m e i e h p l h l m h p q l h W e h A m h l U m i h u i J h -4 MR
+e U K 4 2 R e h l g x l g U e V m V e K k K i 7 mR q C g p q U e 4 mR m
+2 5 R 5 Y e v e u e C d C f -8 mR l -7 mR -8 mR -6 mR p z e m k h 4 mR s
+l d f g d f k q q q h q m q m h 5 Y e u e u J U J i J C g l k F l g k
+-9 mR k K o f o H g k n e o f t f e o E f p W g q h g d K g r o d r n k
+C l w p l M z q q z w n n e -7 PR u V n w h q j k q 10 mR m x m m h V e
+-4 PR U p s y q s u i U K r f J n J U e ST
+% Path 24
+USA
+24 PT
+-256 -1099 MP
+B g k p l h w g k k W h u m q h q m q m q q y q z q q z -17 PR 4 PR
+5 PR 4 PR e n e -4 -2 R W g W p -5 PR -4 PR q v e 6 mR 5 mR m v r h
+m m m x e m g q m m q m q m q -4 3 R q h q q q q z q q q q -13 PR V n v
+T f r f r o m z h -7 X k H g W g q u e s v ST
+% Path 25
+USA
+25 PT
+-389 -1012 MP
+H W m h -5 PR m w J w q q q l k r g h -6 5 R q -3 4 R x n U r o e w g l
+g h u e t H t z -3 4 R U h k h w m m q u e u Z C k q m -4 5 R r J p q h
+2 5 R u e u J B 6 mR u h -8 Y f k h w h N -5 mR z h y f d P f -4 PR l q
+m q 4 mR h u 7 PR u V o n z -6 -2 R l h u Z u n n e E f i J e -4 -2 R W
+g W t p A F -4 mR g q z m q m E o 4 PR l -4 PR -4 PR q q W -4 mR q q v m
+W t q h 2 6 R e h l q l -4 mR k q q x 5 Y e u h H k z l j d r K p -6 PR
+q r n i u l t q 6 mR l g d k q P f j g q z h q z Z h F t h 10 Y e h ST
+% Path 26
+USA
+26 PT
+-537 -907 MP
+H -7 mR k k A M l s l h i T e s C l m g k o g -4 X h r i J B k W h m g
+d g l h q p l h B g p l h p d j g -9 MR W J E e h -4 MR k g -4 -3 R p p
+-5 MR -4 MR p p p p p -4 MR p B p B p p p B p p p g p p p p g p C C p g
+p p p C -4 -3 R p t p g k B g -8 -7 R -4 -3 R -10 -9 R -6 -5 R p p p W M
+-6 MR -6 MR B B B p -4 -3 R p k p p g p ST
+% Path 27
+USA
+27 PT
+-776 -1013 MP
+e n i n n n i n n c n V 6 PR 5 PR T o 8 PR V e v q 6 pR e 4 X f V a b p
+l g W p l p g l g W p p p l p p p g p g p g l g p g l g p g p p t p g p
+g l g p t p C p C p C p B p p p p p C C p C p g e i h J h G j k p H p p
+C p p p u p g p p B -4 MR -4 MR -4 MR -6 X -13 MR -23 MR -6 MR -7 MR
+-4 MR -4 X h T e f 4 2 R l q q -4 MR A m h W q W h q B A h l -4 MR -4 MR
+g l h l m l h W h l -4 MR g ST
+% Path 28
+USA
+28 PT
+-970 -1050 MP
+i n U h g k 5 pR e U h z u m h m q e 5 mR e u e m q h 4 mR m 4 mR u i e
+u r n e n o 4 X f F g k -4 mR g l j j V i n 7 pR a i V e 5 4 R r f e i
+n n e n n u a n r f n i i 5 pR e u a e 5 pR q h i q i T g d V i V i n V
+l e n 4 PR 6 PR i E 5 PR V e z i a U n r g j K r r K 4 X K r f g o r ST
+% Path 29
+USA
+29 PT
+-873 -943 MP
+m h -5 4 R -4 PR z w m i 7 PR e E n r f 9 PR e i r P j f r f x u s v q
+u i a n U F g d g p g l g l p i m 7 pR n n n e u t a n n n i V n n e
+4 PR i e c g f n n e V i a 4 pR n n d p g d g f E i D k n j r e h Q o T
+K r K r r P o 4 PR V b u q p W q a r 6 PR i i e a i g W g d s u h g d g
+d k -4 pR q h g -4 PR W p h q i e i n i i i p k F g l p i V 8 7 R e T f
+r A f E f 14 PR e 4 X j 4 X f e 6 -2 R r r r f 13 PR 6 X 4 PR e n e f t
+8 PR 4 pR 4 3 R n V e i E n n h 8 pR u s a n V i a ST
+% Path 30
+USA
+30 PT
+-700 -828 MP
+V e 4 5 R a 3 4 R i e V r 5 PR a i i a n n n i V i b i i e 5 pR a
+i i i i U m v q i e u h U z i s q W g d h 4 pR i l t -5 Y t q h n 5 Y s
+v M h u h m s q m s u h u h e V M h q h 4 pR u h U h u h U h v m 4 pR V
+n V T f -4 X p l p p t K 4 PR 5 PR i V b i 4 pR i i n k t n b i i n i r
+g j l g I F k g N r n q i V e r u h u 6 pR i i r f o r -4 pR f r f n u z
+h U h u i J q 4 Y A p K D t W t h a i i i i i a 3 pR a 4 pR 5 pR a 8 pR
+u m 4 pR r -10 pR f g k j J D g k I g f n J r f 5 pR -2 7 R v s i E f ST
+% Path 31
+USA
+31 PT
+-639 -615 MP
+U -4 PR m w h m 9 mR w 5 mR 4 mR w 4 mR m U f j f d f I j P k f e v e u
+J f r f Z l g h q -5 PR h V V u J h W t z W m h m -4 PR s w w w w K d e
+f d j n f r K j J U h g h q q h m q w n e -4 MR f g q w m w w 9 mR 5 mR
+U f d f d f k D j j d j V i J r f n q g 2 5 R n V E o 5 PR n n 4 pR V W
+h g q -5 PR -4 PR -15 PR J U n 5 Y e 6 mR z h q i e 4 Y n m w m U e u e
+u Z 4 Y 4 mR -6 mR 4 mR 4 mR w m w m m w n d J 4 mR l k g h x y q q 5 mR
+m h U f e 5 mR u e u V u m U J u 4 Y U V J u J v i 6 mR q q h ST
+% Path 32
+USA
+32 PT
+-675 -381 MP
+q q m h q q l p l t k -7 mR H -4 Y f -4 Y j j P f o f k p D K o l h g d
+f j J -4 mR l s W s W i 5 mR l -5 MR -5 Y f -4 MR k -5 Y o 4 MR e o j f
+d 4 MR k g d j g h w h W -5 mR W h e h g d p f B m p g w l Z e h l m W h
+U -5 PR I g k g u i i v i u e B p g u e m e m g p g p g k -4 mR k g l p
+m k d f d -8 mR m g D j k p d K k p k p h g k d f k l g u m r m h -5 mR
+h l h e M l h B l i J n Z A h m h W h l h l h m ST
+% Path 33
+USA
+33 PT
+-770 -443 MP
+4 MR o f S f o S r h J h p l q h i 4 PR i n n r e u l 7 pR n E e u h w
+5 Y K V n h n e n q i U 4 pR e i i i U g i J h l g h u g d g d t -4 Y t
+h l g z p g h u h u W p g f z M s u s u h 4 PR n r f 4 PR e h i J f s q
+e 4 PR J z s 5 Y i l t h l g a -5 PR g h U q e x i f e i u q h i i e
+4 pR f e u s a i 7 pR a n e n ST
+% Path 34
+USA
+34 PT
+-749 -321 MP
+g d K o d g p H l h p D f e r o J i i J r Z o r S f E e h W s A q e i
+4 pR r e m u m U o n 4 PR u h a o 5 PR 4 Y h 5 Y h u h e V S t V a u h a
+q x h u M n u h e h g p l j d g h l g l g N d s g h 8 Y M u h 5 pR 5 pR
+11 pR 5 pR a 3 pR i i i i i a 3 pR a a 6 pR 4 Y h u m 15 Y h 6 Y h u h u
+s a n ST
+% Path 35
+USA
+35 PT
+-726 -162 MP
+6 MR -4 pR 4 MR 5 MR J h U s W q h q q A F g p g m i 5 mR u 5 mR w m x
+m w m m m m m m m m m m m q m q v r P P f D P f k D K e v e w 4 mR 4 mR
+w n d K o o 4 X o e n i u h w q z m U n e u e w g k q l t z q g k D
+-4 PR C f F k w z w -6 5 R -3 4 R u e U l g z l p -4 PR m m q m q m s
+m m m h m -3 4 R x m m u 9 mR m w m g A f d f j f j d j q m h m m m w w
+m m x m m m r j f j j f j d f d j V w m m m w U r f g f j e m U r K n
+w w q m n e 5 PR U e C g -5 X q w m f d f n h u n v T n i w W g p g -4 X
+j F g z m k K H k g h m x m m m x m J T b V u n ST
+% Path 36
+USA
+36 PT
+-820 18 MP
+B p u e u h l t p l h -7 PR -6 7 R u f r o n f o w W -4 PR q u e E f e
+m m m m n h l z m l g k g W j r o K d K -7 PR q m q q q -4 3 R h u n J w
+m u f e m v e 4 mR l t j -4 mR -4 X F g -4 mR z q z q q -4 PR q q z z h
+m m q U o K d f U 4 PR q y w h u n n n e e n u J C p l t q d z U e h k
+-6 mR g I k d f d j j g z -4 PR l g q m l g -4 PR 5 mR -4 X p t k W i e
+m W p H g A p -4 X g A g A g z m k z W f -4 -2 R k l f g q A f g z -5 MR
+g W t -4 mR s q A D j f T o ST
+% Path 37
+USA
+37 PT
+-996 43 MP
+B -4 X ST
+% Path 38
+USA
+38 PT
+-355 1224 MP
+10 PR V 4 PR V n V n 5 4 R n 7 6 R n n i n i 6 5 R n n e n b i i v z a
+n a T j o n 6 PR V n V i 6 pR 8 Y i i b i 6 7 R a n n e 8 PR a V e 8 9 R
+i a w i b 5 pR e 4 5 R 4 pR i i 5 pR a 9 Y ST
+% Path 39
+USA
+39 PT
+-211 1380 MP
+5 PR n e i i 4 X f r j o 4 PR 4 -2 R f 5 PR n f o f S o o T Z e u i
+5 4 R 4 X f o f l g 9 PR a 6 5 R n 4 PR 4 PR i i e n V 6 PR n n n n E
+7 PR 4 3 R V 4 PR V n i n i n V e 6 -2 R 7 PR E K n e P k p j f o o r f g ST
+% Path 40
+USA
+40 PT
+-36 1410 MP
+14 PR 4 PR i U 7 pR n i n n n V n i 5 PR n T o f r f E f V 7 PR e 5 X K
+o 5 X f r r o j g D g g q l g u h z W q F g d g p F t l p k f 4 PR u e
+14 PR i f n 4 3 R r K 5 PR i V j K k j f I F -8 Y k d g d g k g d g D t
+D e f O j p F g p g E Z n e r 5 Y m h u a f -4 pR o m h u 5 pR m u e r i
+n T U m q u h m J i e n n i n e M v q q l t h u h q g l g h u -4 PR a V
+5 4 R e h e V e 4 PR i n i n q h m e j o f r K o 5 PR r g p p l p W p
+5 PR V 4 PR 4 PR n e h ST
+% Path 41
+USA
+41 PT
+90 1448 MP
+12 PR 7 6 R c V V n 5 PR n e n n n n n n n T f j o 4 X o n 5 PR r f
+5 PR 7 -2 R r f r f r P f 7 X f 6 PR T o V n 5 PR 4 PR n n i f 5 PR e n
+i n V e c E f r f 8 PR Q f r o K o K o P j y g j E P -5 pR n U M h r P f
+o f r K r f 11 MR f o o Q Q o o o S 17 MR T Z r e ST
+% Path 42
+USA
+42 PT
+345 1439 MP
+j o o o o S r n n J E e 12 X S r e S f S 4 MR o j 5 MR 5 X e 4 X i S E
+e o Q 8 -7 R o o o Q o o S S I q p o S j f d -4 MR g f n 5 MR u s u s m
+o 4 -3 R o f Q Q o o N o d p f J m q 4 MR o o o o o S o f 5 MR o S o o
+S S S Q o D f a o S o S j g V 5 MR S 4 MR o f o d ST
+% Path 43
+USA
+43 PT
+553 1361 MP
+4 MR S S o f Q 4 MR o f S E 4 MR g f T e S f d g p o e o r i S o P u e
+T e S f o o 4 X e f N o S 13 MR p p g G l q j E e f I B -6 Y N f d t
+-4 MR p k d t -4 pR j 7 pR n e n T e i 5 Y i e n r h 4 pR m m e i r n r
+e m h e S f S S 4 MR S 4 MR S d h -5 X h l q -5 X q p d j o g d l f c e
+o j o 5 PR g 4 MR f I g p f ST
+% Path 44
+USA
+44 PT
+671 1312 MP
+e n n i h 4 pR a n 5 -2 R 6 X g l g l t V r -4 pR -7 pR r a e i 4 PR n
+v h -5 PR u e 5 -2 R f 4 X f 5 X o 7 PR e r V 7 -2 R T f 6 X f 11 PR
+5 PR n n i 13 X o 6 X K r f E f r r S 4 X ST
+% Path 45
+USA
+45 PT
+803 1320 MP
+H g k p g -9 -10 R k g k p B k G k k H -5 mR p H H -4 mR p H H D f d f
+d p k B l -4 MR 4 MR -4 mR -4 MR A h P r e n P -4 mR W u z -6 MR p -6 MR
+l w s m q s q l u e f o o r o r e z r e h -4 X M l s m m M h M h M q s k
+H I f -4 Y j d f e h 4 mR U m i i o P P P f j f I f g j d f o o P d K d
+f t 7 X k g A h -7 MR q i e M e n h p -6 X q J T e z p g l u g d j f g q
+B y q h q W s -4 X u e i J f j o f e s m M h -6 X h J 6 MR d f S r e o y
+h l m U s q l s 4 Y p m h 2 -4 R d f g M h O A W g 4 MR S d p d o p B g
+d j K d P o K o g C j e K I f o E e S T n f S t r r r J n f d O E n f S
+f d K o o f I f d ST
+% Path 46
+Canada
+46 PT
+1156 1385 MP
+-6 PR -9 PR v n e n e n h u J E f p l D r f V -5 mR k f o f ST
+% Path 47
+Canada
+47 PT
+1178 1377 MP
+-4 PR q h q q z m -4 PR h z 4 Y e U r f o o T o K o o j K o 0 5 MB
+% Path 48
+Canada
+48 PT
+1178 1383 MP
+q u m q h q q q q z e m b n e n E V 4 X 0 21 MB
+% Path 49
+Canada
+49 PT
+1178 1401 MP
+0 0 MB
+% Path 50
+Canada
+50 PT
+1178 1410 MP
+B p p B B B B -5 2 R l s l m e r o r e V u E f e n 4 X f e n T K r 0 2 MB
+% Path 51
+Canada
+51 PT
+1178 1506 MP
+0 0 MB
+% Path 52
+Canada
+52 PT
+1174 1506 MP
+H p l h e U -4 0 MB
+% Path 53
+Canada
+53 PT
+1168 1506 MP
+H g k l s u i e -4 0 MB
+% Path 54
+Canada
+54 PT
+1003 1389 MP
+7 PR i n i e 4 5 R J i 4 pR e u h u h 9 pR U h U g h g h W p g d h u W
+p g -4 X t A k l g f r f p l D j -4 mR l D j -5 mR d j e n i u e U Z H k
+H k C -7 mR h i m w -4 X g -6 X g J 4 PR E b i e 5 mR 5 pR s q y l g d H
+l q l g l k m m h x m F g d j f j d j g q W I j f H m h k m A p l g I f
+d f r f n f g l p g D K g s m m z m h -4 X p W g l -4 mR H j 4 MR g l h
+p d j f r n k -5 MR g D g q W h -9 MR I j f o g l m s B k k g -10 mR W e
+u i h u i v i e U m 5 mR l q A s W h -4 MR I f n f f d g W B C j f S
+-4 MR d j -5 mR M -4 MR k f d o K g M q h U z p d f j g D o P l h q q l
+t -5 2 R g 2 -5 R g m h m w u i e m B H p g p p p g C k d f d K d f o k
+g m h p k D K k p j k k D f d K r o j o o 4 MR f ST
+% Path 55
+Canada
+55 PT
+863 1306 MP
+-8 PR h y -5 6 R 5 mR h q 4 mR x m l g -4 X g k F k p g k l g l F F k k
+g j k s g k t p k p k g -7 -8 R H g H -4 -3 R H g D o d o d K H p I o f
+n r e 5 X f e 4 MR E J q l m W h l m h o f 5 X o E Z e f k d o J K J r e
+r r J r n e n f t S d n e o n J u e T e f d n e i u J U f d r n e u i e
+i J i i i Z e r e r J i e o i 8 X e E e f k j T J r e r e r r e r J 5 PR
+7 X 6 PR V i K n T f 8 PR i n i a 4 pR n i i 4 pR V n i i e b a n 6 pR b
+a n 4 5 R i e i i V 4 pR n a V i n e n e r e s ST
+% Path 56
+USA
+56 PT
+795 1243 MP
+p p p l m B l u e r i J 5 X r K d g ST
+% Path 57
+USA
+57 PT
+800 1231 MP
+k p k W u m h e 5 PR -4 X q u e n m E P j d ST
+% Path 58
+Canada
+58 PT
+824 1257 MP
+p g p p e h p p p W e i A v n r o o 6 PR E f ST
+% Path 59
+Canada
+59 PT
+837 1258 MP
+-4 MR -4 MR p p t -6 -5 R U J n Z n n r n 6 PR ST
+% Path 60
+Canada
+60 PT
+899 1285 MP
+B k p k k p p -4 MR B p p p W u Z e n J r Z e T J r e n J o f ST
+% Path 61
+Canada
+61 PT
+934 1292 MP
+-12 PR m m r o V e K j K n ST
+% Path 62
+Canada
+62 PT
+942 1302 MP
+-5 MR A h q m l t q -4 PR 4 PR o e n n 5 X o E f I ST
+% Path 63
+Canada
+63 PT
+953 1300 MP
+p g p -9 MR B z e h l s u r f o T e 7 PR e 4 mR U E K k f r f o ST
+% Path 64
+Canada
+64 PT
+994 1333 MP
+-5 MR l m m z U i i e m u J U e P K k K -4 pR g -4 Y ST
+% Path 65
+Canada
+65 PT
+892 1361 MP
+B W h -4 PR u e n U n f r o r -4 Y ST
+% Path 66
+Canada
+66 PT
+1082 1386 MP
+-20 PR m h n n e u e 4 X E f n r r f r o j -4 Y ST
+% Path 67
+Canada
+67 PT
+1105 1376 MP
+z q q q m q h -5 PR m i U o K n f e U J P f E K j f D g f g D g ST
+% Path 68
+Canada
+68 PT
+1121 1337 MP
+z l g q m m 9 mR h w w m m q m z q h U e w u 4 X f o o o d f r o P j f
+g f k j D j D f j f -8 pR g ST
+% Path 69
+Canada
+69 PT
+1122 1370 MP
+-8 PR u e U Z j D f e 4 Y e -4 pR j t ST
+% Path 70
+Canada
+70 PT
+1118 1381 MP
+q q z -3 4 R u r o E n P f I g ST
+% Path 71
+Canada
+71 PT
+1164 1375 MP
+-10 PR z -6 PR -5 PR -3 4 R m h u i r f j f o 5 X f r o E o r f o f r r K ST
+% Path 72
+Canada
+72 PT
+936 1378 MP
+p k l h -7 X q -5 X s v n e u e V n V n r f g j d e n e f -8 Y ST
+% Path 73
+Canada Lake
+73 PT
+1009 -670 MP
+k p k p G -9 -8 R p p g p C -4 X h l u e u i 9 Y i i u i i u e 5 Y e m
+4 Y e U e U i U e 7 Y e u e u e u e o f E o o f o f D j d j f j I f -4 Y
+j g f D k j -4 Y g ST
+% Path 74
+Canada Lake
+74 PT
+942 -762 MP
+k s -9 PR 7 mR m h e n e o r f g P o d j o f g ST
+% Path 75
+Canada Lake
+75 PT
+1026 -1236 MP
+-4 mR H t k -5 X p C A u i u J r n r e i h B C p k g k d H A q W h v h
+W h m w v e m n e u e U w n e n Z 8 X f E f r o r o P K d j f -4 Y ST
+% Path 76
+Canada
+76 PT
+976 -1499 MP
+-6 Y 0 -7 MB
+% Path 77
+Canada
+77 PT
+945 -1506 MP
+i V b i i i i a 3 pR 19 pR a i u p 4 pR e a f r P j f j K j -10 Y k f N
+-5 pR -9 pR d ST
+% Path 78
+Canada
+78 PT
+828 -1503 MP
+-13 PR q i u o e u e T o f j g d f E r ST
+% Path 79
+USA
+79 PT
+113 -1199 MP
+4 MR 4 MR S 4 MR W q A h l q W q ST
+% Path 80
+USA
+80 PT
+-10 -1168 MP
+6 MR o S S r e S 4 MR 4 MR l q -8 X q A h W q l q A h -4 PR u f n j r ST
+% Path 81
+USA
+81 PT
+-203 -1190 MP
+o N o j j 12 X e T e 7 X n e r n e r J f p t l p p g -9 MR -6 X p -10 X
+h m u h m h m u f ST
+% Path 82
+USA
+82 PT
+-206 -1185 MP
+h m h -6 5 R e r P j P j ST
+% Path 83
+USA
+83 PT
+-218 -1173 MP
+q m h f o f r d ST
+% Path 84
+USA
+84 PT
+-230 -1165 MP
+q h y y q q q -4 PR q z q r f r o E o o r r o f r f o f o f o K ST
+% Path 85
+USA
+85 PT
+-251 -1142 MP
+6 mR w m w m m m u f j f d j d f D f d f -6 Y ST
+% Path 86
+USA
+86 PT
+-271 -1107 MP
+m q m -6 5 R q m o f o P P K d ST
+% Path 87
+USA
+87 PT
+-322 -1082 MP
+z u e f r j ST
+% Path 88
+USA
+88 PT
+-777 -1014 MP
+p p p g p g p p p p p p p p p C C p p p g p g Z e n n J r n Z r e E e n
+e r r e n n n e r n e n n n ST
+% Path 89
+USA
+89 PT
+-946 -1060 MP
+-6 PR 4 X o ST
+% Path 90
+USA
+90 PT
+-958 -1057 MP
+-4 PR z q q W z q h -4 3 R z m z h u K E K o f r r P J u f g j r o o E
+n e j j r f r d l ST
+% Path 91
+USA
+91 PT
+-997 -1035 MP
+m K ST
+% Path 92
+USA
+92 PT
+-1002 -1030 MP
+m u K g ST
+% Path 93
+USA
+93 PT
+-1007 -1021 MP
+m h m K j f ST
+% Path 94
+USA
+94 PT
+-1012 -1014 MP
+h 4 mR f j j ST
+% Path 95
+USA
+95 PT
+-1013 -990 MP
+k t p p e i e r Z ST
+% Path 96
+USA
+96 PT
+-1019 -986 MP
+g W e u r f ST
+% Path 97
+USA
+97 PT
+-1020 -982 MP
+k p m q m m o d K e f d J ST
+% Path 98
+USA
+98 PT
+-1027 -976 MP
+q m E f d ST
+% Path 99
+USA
+99 PT
+-1031 -970 MP
+m u f j d h ST
+% Path 100
+USA
+100 PT
+-892 -920 MP
+p k g 2 -4 R g l s e U e u i 4 PR g ST
+% Path 101
+USA
+101 PT
+-681 -728 MP
+h -4 5 R m x -3 4 R m m u J k d f D j P j f j d P K ST
+% Path 102
+USA
+102 PT
+-648 -609 MP
+9 mR 5 mR 4 mR w w 5 mR m 4 mR w 4 mR J k d j d f I j j d f -5 Y f d f
+I f D f -12 Y ST
+% Path 103
+USA
+103 PT
+-668 -516 MP
+9 mR w r f -9 pR f g d h ST
+% Path 104
+USA
+104 PT
+-673 -489 MP
+12 pR j -2 -6 R I ST
+% Path 105
+USA
+105 PT
+-691 -474 MP
+-4 MR -6 X h z f 14 PR V g l g ST
+% Path 106
+USA
+106 PT
+-683 -447 MP
+B t m n 5 mR u P P K h q ST
+% Path 107
+USA
+107 PT
+-734 -296 MP
+M q 4 Y e u e i u i e i o I j f I g k g f p I ST
+% Path 108
+USA
+108 PT
+-755 -105 MP
+H l m h q m h m h x -3 4 R -3 4 R f o K j f j f r K j K j n ST
+% Path 109
+USA
+109 PT
+-820 -16 MP
+m q w h f o f j d ST
+% Path 110
+USA
+110 PT
+-827 -6 MP
+-4 PR m m m m x -3 4 R m -8 9 R f r f 4 X o -4 Y K j P j j K -4 Y j E f ST
+% Path 111
+USA
+111 PT
+-847 21 MP
+-4 PR m q h q m z h y e f o o P n f o f r o j r t ST
+% Path 112
+USA
+112 PT
+-868 35 MP
+q m z h q h q q q q q q q q q z q -4 PR -4 PR q 4 X o 4 X o o E f r r o
+f o o f e Q g K E f r P K o r d l ST
+% Path 113
+USA
+113 PT
+-914 56 MP
+-26 MR -5 MR -4 MR -4 MR B B B -4 MR -4 MR -6 MR p -10 MR -6 X e r 5 X
+n 7 X n n T e E r n r e n 4 X n e r r r e r r n o e V o 10 PR 11 X o ST
+% Path 114
+Canada
+114 PT
+580 -1471 MP
+g B g l h l s -4 PR u 4 PR o n o E o ST
+% Path 115
+USA
+115 PT
+532 -1408 MP
+g k C l M U B l h U e U f e u 5 X o E K D ST
+% Path 116
+USA
+116 PT
+298 -1384 MP
+p -5 -4 R s 4 mR 7 Y K j d g K o m o V ST
+% Path 117
+USA
+117 PT
+295 -1355 MP
+g p g p l 4 mR w m m q u e u e f D K r o r f o f t r f ST
+% Path 118
+USA
+118 PT
+247 -1294 MP
+h -6 7 R m h -8 9 R -3 4 R f e m -4 PR m x m q m o d f 4 mR h v -4 PR u
+e m h w h m w q 5 mR q w q 4 mR m w h m m m l D f q 6 mR m m x K j P n
+5 mR q z h m n u e E f r r f T o r f D K I f r f g n u r f k t E n r o f
+d j k k n e o k l g f D e u e f k D j -4 Y j f n j g K I j D f D j I j f
+d j j o f o P P f r j f j g s w q q l q W g 5 mR z q m l d j f k K d f E
+f r P e f g j r f t f r r f p g d j P K g K d s ST
+% Path 119
+Canada
+119 PT
+477 -731 MP
+-5 PR l D j g A M A q -4 PR q z m U Z u o f g P f r K n x h y -5 4 R h
+m Z 4 Y e i u i u J 4 mR u J u e 6 Y J 4 mR u e w 4 Y n v e v e m v e E
+o o H p P k d f o D j f g z l t k g l j f k g K F l f 4 PR h n u r P o p
+f r f d j j k W d f t p t l f r o T P f -4 Y t A d f k g -4 PR W F f 6 X
+f r o f g ST
+% Path 120
+Canada
+120 PT
+472 -648 MP
+g k B y h U i u e u E K r o D ST
+% Path 121 - In a lake, but I'll leave it in anyway
+USA
+121 PT
+478 -633 MP
+H p p H l q l s U i w u i m Z u r f k d K j f n e f D ST
+% Path 122
+Canada
+122 PT
+489 -617 MP
+k k g k A q l i m p W s n n n J u J r n n r -8 Y ST
+% Path 123
+USA Lake
+123 PT
+439 -544 MP
+-5 MR A s 4 Y r o 4 X f o E D l ST
+% Path 124 - sort of in the lake but I'll leave it out of "Lake" status
+USA 
+124 PT
+398 -474 MP
+z u e -7 MR u h k z s z q q l g q z h q m i u n n E o r r o o o f o 5 X
+f k f o f E o f r k j ST
+% Path 125
+Canada Lake
+125 PT
+586 -516 MP
+H H l h w m u e m 6 Y E P f -5 Y ST
+% Path 126
+USA Lake
+126 PT
+541 -411 MP
+h -11 10 R h q z m z -4 PR u Z E P 6 PR q q k s 2 5 R u J o n o j o f
+o o P f d j f d P j k f j -10 pR d g d t l s m 8 Y h g D q ST
+% Path 127
+USA Lake
+127 PT
+599 -382 MP
+q m y z m q m w m m m q m l j q m m m h v e r o f U o f f j K j f j j f
+j d P f g o f d f d j j l f ST
+% Path 128
+Canada Lake
+128 PT
+651 -411 MP
+-4 PR q U e m w z h e n 4 PR r P N -8 Y g ST
+% Path 129
+USA
+129 PT
+-339 1297 MP
+B p C p g C e v i J 5 PR 4 PR 4 PR D g l ST
+% Path 130
+USA
+130 PT
+-306 1288 MP
+p H p H -5 MR g W u i J v i E o r r n u e i r D k ST
+% Path 131
+USA
+131 PT
+-306 1347 MP
+g C 4 Y J n r g d f g ST
+% Path 132
+USA
+132 PT
+-245 1354 MP
+k g H k p k D f d f g k q 4 mR i v m i U i u n e f V e D ST
+% Path 133
+USA
+133 PT
+-245 1369 MP
+-4 mR B k q u m 6 Y J r n V -6 Y ST
+% Path 134
+USA
+134 PT
+-240 1381 MP
+g l u i u e U f d N g ST
+% Path 135
+USA
+135 PT
+773 1224 MP
+-4 MR p s J w q v g H g l g -5 PR -8 X f o E f p B k q p l M i f T a u
+V n f n o o n U n n T o P P N ST
+% Path 136
+Canada Lake
+136 PT
+943 84 MP
+q w w 6 mR m m w q A g l g p g q -4 -2 R l k g l g k p W k F t -7 X g l
+g p k k -4 mR -4 MR g B l h B k g -11 MR g k g G k k d r J T o f e f o f
+E e u e o d f d g p d f j f k A h l h l m h p A p d 4 MR r o j K H -4 MR
+-5 MR g p -5 MR W h W h W q l q -6 MR -9 MR d P K 5 X S o o j D P f H W
+t W h p f g A q l M A M q q A s q -5 MR j K o K o f S f t d f g l q h l
+h l w h q s -4 X h w W h p p y q l q p p l h l q -8 MR l B l h
+-5 MR -5 MR g k k k d j d j P E n r e r o 5 X e f d f e o f B p g G -4 Y
+n e n r r o 5 X e o n 6 X n 4 X e r S -4 Y n e E 2 -4 R r e n e n r J u
+J r e n r e n e r o r n e n Z n e n r J f I ST
+% Path 137
+Canada Lake
+137 PT
+847 8 MP
+4 PR b i i f r f r f n n n i n V n e V n n D S n n j n E n e 4 PR V
+4 PR n 5 PR n i n e n V n e S n e r j K n i 7 PR r 4 PR e n i n 7 PR
+4 3 R E 4 PR n n i V e o 7 PR e n 4 PR c o n n r K k 3 -6 R f 4 PR s q a
+u h q m u A w e n i e E f j n r o 4 X K -5 pR K D j o f n U h 4 pR f d S
+3 4 R h W z u q l q h W q h z -5 PR s l q W p g A p k g D g p p p d k d
+k g x h a 4 PR e i 4 5 R i i 4 pR -2 10 R i n i 5 Y h u h -5 PR h A p z
+q h W p s -4 PR W z M h l q -4 PR p s g h l t k F g A t j f d k t o E d
+k k -5 Y k f d k ST
+% Path 138
+Canada Lake
+138 PT
+999 298 MP
+p W h -5 6 R u n T o e m q z U m m h U e j f d P f r f r f -5 pR N k g ST
+% Path 139
+Canada Lake
+139 PT
+1037 155 MP
+p k k W g d S -6 mR M m h m 6 mR q w q W g j g W d H l s w q g p W d r
+P I K o j D f o S P f k q p l s w -4 X h -4 X q l U Z E h m h p g l h l
+e i h A u x u e z w p g K F p k p -7 MR k W h l w g C h p G D f S S G
+-6 Y K o j k l h l h -8 MR k W m w p k W h 6 Y e o d r U e f e E n e h B
+l U m e r m l h m h U e i u J u i U e v J n n r V e m U e n i e i e i J
+u e n U o o d f o g -4 mR l g k g f E f n U e r o H F K r K H g j 5 PR n
+V V e U n K d j j j d f j f e m h w w h u e n u T o -4 mR t l j K Z E o
+K n n e V e o f k t l f o r K g ST
+% Path 140
+Canada Lake
+140 PT
+954 171 MP
+B H H -5 mR k k p g k k k -5 mR l h q W h P f k W h q -4 MR l h B -5 MR
+A h -4 MR A q h q A s A q m l m B -9 X h p g k p -4 X q W u e h -12 MR H
+7 MR 4 MR C A q l -6 MR -4 MR w w h u Z r Z J o T e o d o E n r n r o
+r r n r e m -4 MR -10 MR l s p -4 X U e T n r e E e r n f 4 MR e n 6 MR
+6 X e S r n 4 MR o S P j T 4 MR E r e i S e 4 MR 6 X e u e U i f J r e h
+q l M -4 mR p z B p l s e r e h e S f i J 4 X o n e f T f E i 4 Y r f e
+m u e m q F t -4 PR m -6 PR i m m u T K n m m m r f o J U E o f n e j V
+u J u r n r K N d k g W g -4 Y f H d f o g P r d k k ST
+% Path 141
+Canada Lake
+141 PT
+849 118 MP
+-4 MR H -7 MR -6 MR -6 MR -4 MR g B g 7 X n 10 X Z n 4 -3 R k K g p
+-4 MR p g W s -5 MR y B -4 MR p -5 mR k W B s w A p m h n B l h w -4 MR
+-5 MR k I f H g k p H p p t p k p p g C B p -6 -5 R -5 MR A s u m s l h
+m h u m w 7 Y i Z r e 5 X o K E n n r e r r e r r e T n r e n r r r e r
+n J r n i o r n f r m e n n r n J 5 MR g -5 -4 R W B d 4 MR K r e s r n
+T o 4 X e M p l Z n r e i E e 9 X e f r n V h w n 6 PR m 5 pR z -5 PR q
+5 PR 5 X o e E o r K r j d t -4 mR A g W g W d j g 4 X n 5 X g ST
+% Path 142
+Canada Lake
+142 PT
+1086 8 MP
+m w 5 mR 4 mR q m l j g q w 4 mR m h n e m q x g D g m 7 mR v n m y l g
+z m u i u e w h U e o o f j o d P g d j r o f g W j I f d f o I f D f D
+K d f j f d f d j f H j -6 pR d ST
+% Path 143
+Canada Lake
+143 PT
+1108 32 MP
+m W q m m m w m m l I f j j H -4 mR g h 5 mR m u K 4 mR x u f e m q m x
+4 Y o K e m U f j f I f j P E o P j g l j j -4 pR D h ST
+% Path 144
+Canada Lake
+144 PT
+1179 -19 MP
+h m k h 4 Y J w 5 Y 4 mR h 4 X 0 21 MB
+% Path 145
+Canada Lake
+145 PT
+714 -90 MP
+p A h B g -4 MR p p d f -4 mR p W h u p k g 4 Y e w G C g -4 mR k H g U
+h p g k k g u h p -5 X M h i K d o n u J U e S e E h m h e P S e 8 mR
+5 mR U e h q 5 mR -5 PR W K g K d k k m l k g p g k P f d H p B q f -9 Y
+f g m l M h v J w h p y m q h l 4 mR m y z u e 7 Y Z e n e 5 mR z m m
+4 Y J V r o D j J n 4 X f r K I f g W j f D j K 7 PR n i 4 Y f D j f g f
+r n K d f T f g j d f d f o f o e 6 mR q m h z 4 mR q m m m U E f o f n
+e u e r r P t j g k q l -4 Y j K n v o K j D j D k -4 Y J 8 PR e n Z e o
+r N t ST
+% Path 146
+Canada Lake
+146 PT
+831 885 MP
+-9 PR 9 X ST
+% Path 147
+Canada Lake
+147 PT
+963 946 MP
+k p t -5 -4 R l h p A e n i J T n r e n n ST
+% Path 148
+Canada Lake
+148 PT
+1040 985 MP
+p -4 MR p C p p B B p -4 MR B p B -4 MR p B -5 MR k d -5 Y f d g s m a
+i m p v i e o o r n f r n e r n T e r n J E r n r n r r r e r r e r n J
+r e 4 X n ST
+% Path 149
+Canada Lake
+149 PT
+882 960 MP
+m w 4 mR l g q m -5 PR z -6 PR -7 X p W p -5 PR -3 4 R K 7 PR 5 PR 4 X
+f 6 X o f 4 X o E o f r f j d j d j D ST
+% Path 150
+Canada Lake
+150 PT
+816 994 MP
+z z q -8 PR -8 X t p l g h Z e n 12 X o T o f r f r o f ST
+% Path 151
+USA Lake
+151 PT
+738 1012 MP
+-4 PR m -4 PR h q m q -14 PR e T o e E o r r r o o o K o o P ST
+% Path 152
+Canada Lake
+152 PT
+1032 245 MP
+p g l w l g p -4 X e 9 Y e f o o f e f E P g D ST
+% Path 153
+Canada Lake
+153 PT
+953 -1060 MP
+z q m -8 7 R q l j f p K o P r P f g d f H h m h u s q m q q q s -5 X h
+z 4 PR -6 PR h z z q m z y q h r o f 4 X o E o f r K r P J r o r f g q f
+r r f n n u m z q q z q q q z q -6 PR -4 PR u r o n q -9 PR h -4 PR W g
+-7 PR -5 -2 R l t W d f q U V n h l t l t p l p -5 PR h -6 5 R y q f g q
+6 mR o j K E o f r f r K p P f n i U r r n n e D g f Z 7 X n 4 X o 4 PR
+q q -4 PR -4 X p f g q h b q q q q l p q q q E o o 5 X o 6 X o e r f n
+6 X f 4 X o 5 X o n h q u 5 X K w n f D f r o D K o P E o K o o f o f
+r r f d f o P K r f j D k h w q y q W P o P P g j j ST
+% Path 154
+Canada Lake
+154 PT
+1041 -1250 MP
+p -6 X h z q k -6 MR g k -4 MR B k k p M p l m h B A e w M -5 PR q z A
+p l g -10 PR l g l g W e n V 11 PR e u e n u n n u e u e b e U e u Z e u
+e n s n 4 PR r n f e o n E 4 PR Z i Z e i i J f g d f r g A g k t k D f
+6 2 R e n 6 PR J r f F A g -4 X g l g W t p D K r o f V t D f k o f d j
+r n J f p g d f 7 PR V V n e r k p g l g W f E f g h -10 X g q q l D P g
+k l d j f r o 7 PR ST
+% Path 155
+USA
+155 PT
+241 -530 MP
+-6 MR -8 MR -24 X h -5 X h -7 PR q q q z h q -4 PR -4 PR z q q q q
+-8 9 R -4 5 R x m m m m m 4 mR 2 7 R e i e u n J n e r n V n n T n V e u
+J n n e n r n 4 X n f 12 PR 7 PR f E o 7 PR Z n 7 PR n ST
+% Path 156
+USA Lake
+156 PT
+-828 -1002 MP
+k -7 -6 R p p g -4 MR W q l q h q p W h J p p m 5 Y e i u i e n n i n m
+u i n n e P K j f r K r o f o o f I ST
+% Path 157
+USA Lake
+157 PT
+-601 -716 MP
+-5 MR j D f s m h m 4 mR z u J U 10 PR e G A W g l j I P E o ST
+% Path 158
+USA Lake
+158 PT
+-524 -687 MP
+-5 PR z -6 X F P y h B g A U e r b o f e n V e r f g 5 X o Z e r t -4 pR ST
+% Path 159
+USA Lake
+159 PT
+-338 -520 MP
+-5 mR D f -4 mR p -8 mR k p -5 mR H p g k p u e u e i i u e u e u i n i
+w h n u e u e i h v i 4 mR m m m u P j f j d ST
+% Path 160
+USA Lake
+160 PT
+-342 -734 MP
+B k W h l h l m h d g q q q w h U r n e f g d f r D f r o n e u 7 PR j
+l k q W -5 Y r n V ST
+% Path 161
+USA Lake
+161 PT
+-192 -466 MP
+p k B p p B p p p p p B -4 MR l q -5 MR p g C p B -5 MR g -4 X s l q h
+-6 MR u i e f d f r Z N o f T n E r n n n n n n h l h -8 X e r r e u
+4 MR f n K 9 X n r J f r e r J E e r e n n n e r r n i n d k g ST
+% Path 162
+Canada
+(162c) PT
+436 -1037 MP
+k ST
+% Path 162
+USA
+(162u) PT
+435 -1039 MP
+p y h z h -4 3 R q q m h m -5 4 R -6 5 R p H W K o f g j t q y D j K g
+q m W g -4 3 R h n m q k C g p g -4 X g f z C q -4 5 R U e m q q m
+-7 6 R q q m h m h m m z u e 11 mR w 4 mR 4 mR h x m U i e u e u e i
+8 mR u i w 7 mR w 9 mR 5 mR m w w x m m w m h m h m u ST
+% Path 163
+Canada
+163 PT
+316 -893 MP
+m w m q m h m v 5 mR 6 Y e 4 Y i J 4 X K r f E f r f r o 4 X o j f r r
+f -5 pR f r j o K r K Q f r N P -6 pR f -4 pR j j j -4 pR -4 pR f j O
+j j -4 pR j -4 pR j -4 pR j f j -6 pR a -4 pR j d g D s k k k j j j
+-4 pR d s e h k g j o j q q p I N o j j 3 -4 R j r u h u h v m e o o
+5 -4 R S f x s q m v m 4 MR T e r u m s U m p u q e T u m u m h m M S N
+f j o j d N f d g N 3 -4 R j l h -4 MR f o f o k d s u m h l h q D g j f
+o j S j 5 -6 R j -5 pR K N o j o j j f N 3 -4 R j 6 -5 R o o f ST
+% Path 164
+Canada
+(164c) PT
+237 -770 MP
+o o f o j 3 -4 R j o j j -5 pR j -10 pR -5 Y g -5 Y g -5 Y k -7 pR
+-13 pR I -4 pR U e h 6 Y m e i h 4 pR S O f S Q O j -4 pR j -4 pR j j N
+j O d g N -4 pR N f -6 pR j -5 pR I g j j j j o E U i e i e o Z d ST
+% Path 164
+USA
+(164u) PT
+303 -895 MP
+-8 Y g W h q F B p g -5 X M h M h W h q l q q u M s h m l M l M q s m M h ST
+% Path 165
+USA
+165 PT
+269 -725 MP
+n c n V V n n 5 PR 4 PR 4 PR n n n V V 4 PR 4 PR V V e n n 6 7 R i i
+4 Y h u s x h m U h u h z m U h I g s W q l q q z i q h q q h 12 pR i e
+n n o n E f 4 PR 5 -2 R f r -5 pR N E f N r r f 12 X f j g f r K j f V
+10 PR 15 PR 5 PR V n i i J V e 5 -2 R D t N i E 4 PR i i V 5 PR a n 9 pR
+i e 7 pR i e i 7 Y a V 5 6 R 4 pR U h U h i i 3 4 R a 3 pR i u q h 9 Y ST
+% Path 166
+USA
+166 PT
+445 -569 MP
+t l q h q y q A g W g l t k -4 mR l h u m 7 mR m -3 4 R -4 3 R q -4 X g
+W g -17 PR q z q z u 4 X o o 8 PR h -4 PR h p q -5 PR u e V o r o 5 PR u
+o r K e n n r f d o n m -4 3 R -4 PR h y z -4 PR v e u m z h i h -4 X p
+q W g x 4 mR m A g l p p -4 PR -7 X p -5 PR q q z -4 PR q q -5 4 R W g l
+F p -5 X g W g -4 PR q h q q A p p g l g l g l p p l g l g p p g l t f d
+f z h l g l g l p l g l g l p ST
+% Path 167
+USA
+167 PT
+233 -446 MP
+i r f r f n e E f V e 8 X f 4 X f r f 13 MR o o 8 X J 5 X 8 MR 5 MR S f
+j Q o T J n 5 MR 11 MR 5 MR S o o S 4 MR E i i e r J q h u m h U h q q l
+q -4 PR q u h u M z q a i r f 5 X f 4 X K E f r r K r f 5 X j N j j f
+4 PR 5 MR T f o o f o o o S o o f 4 MR 4 MR o o o o S N 8 MR S 4 MR f g
+l h l h l p p -5 MR N j S o o 4 MR d g d g j o O p W h l h g h u s q l h
+B G f 4 MR o f o j f O f ST
+% Path 168
+USA
+168 PT
+440 -502 MP
+7 MR o O -4 pR N d g I k d S -4 pR -8 pR o S o O -4 pR D g -5 Y k -5 Y
+g -4 Y k F t d g d p g D g j r e r e 4 MR o 4 MR D g j p g D j I g
+-19 pR j D E J U i J n o i u i e u m h e r e f Q J T e r n e r e r Z v m
+h W h m h i r J v m h m 4 pR a u m a e o f 11 2 R o Q U h m i U m m u m
+s m m h u h 8 Y h 12 Y h u h u m u m i ST
+% Path 169
+USA
+169 PT
+504 -505 MP
+m q m q w h m h m q m z h q u e v n w q U e i u n a w x e 11 Y 5 PR u i
+e n u n Z e V a e u J i a 3 pR -2 11 R U s q q T o P f e x q h m x z q q
+u o n 6 X f 5 PR n i 5 PR 5 pR e E o n U h q M u q h u h W q q s U m i s
+q M s w m m 6 mR m 10 mR h -5 4 R -6 7 R m m w m m w m ST
+% Path 170
+USA
+170 PT
+478 -297 MP
+h u e 6 pR i 5 6 R g h g M U m a K r K 4 PR r f r f r f r f E f n e a e
+q u h U m M s a e M h u M h U h u h 4 Y h m h U h u m U m U 5 pR i n e E
+P j P K j P P j K r P K j o P K r P f r K r f o P o K j P P P K j j f j
+K j d j j -4 pR f j N j j j j j O j j j o j o j N r ST
+% Path 171
+Canada
+171 PT
+583 -330 MP
+j f j K o N r o 4 MR 6 MR o f r J 5 MR o j f j f j N j j j j g h l h q
+h A W q s W g j j j j 5 MR 5 MR j n 6 MR N T e K 5 PR o S -4 Y k g B
+-4 X q l M h q q M l q g B g S 4 MR f o g j f j J S p N q g Q o o f T n
+E r i r a J S r J r r t N o -4 pR f p F I g N -2 -5 R d g p j f d W k N
+d F -4 Y h k -4 pR -5 pR -4 pR f d t d g N f j o d g D g h p -4 pR f j j
+p d l h k p p d q ST
+% Path 172
+Canada Lake
+172 PT
+642 -480 MP
+k p p -4 MR p -4 MR g -4 MR g p p p g B p k p g k t -4 -5 R k -4 mR
+-9 Y f -5 Y K d f D f -5 Y f -4 Y j H d f k A s l s B k h l h l m p W h
+A p k B k -4 mR k k -4 -3 R p d k p g W s q l q W h B l s l h -4 MR k
+-4 mR p k E N d j H k p W h u i m s -5 X h p g d 4 MR f p p l s l s q h
+l B k p D o K -7 Y P -5 mR p -6 X q p k k D f I k g D j k k 2 -4 R d ST
+% Path 173
+Canada Lake
+173 PT
+491 -632 MP
+k -8 mR -8 mR I f -5 mR -4 Y j I f D j -5 pR j l m g d f -6 pR j g j I
+h u g -29 pR D s -4 MR o o K o d g D g h l m m s O j d f D s U g W m s O
+j P B K -8 mR D f d o e s o f k A h g d j d K -5 mR d f k d f t o g B g
+k p g p B k p p d k B d f j n k B -7 MR t B f n f -4 MR g -6 mR r e S j
+H B g W q M F j k p W h w g k k p H B g j k p g l t p g o r n f t q h p H ST
+% Path 174
+Canada Lake
+174 PT
+414 -844 MP
+11 pR e u V v h u l q h m l g l -4 mR k g -6 X g -6 PR q h 4 Y e u i
+6 Y e 5 Y J 5 Y e n r n b m m m q q q q h e o 7 X f n n 6 mR -4 5 R r f
+o j f r o e E o e U h z J 5 pR r n q e n 5 PR i n E o f a U h U h 10 pR
+u h q l g D g f g f W F F F l g r g f t -4 X g l k W k l p W p A g -4 PR
+q q q -6 PR m m z q h q g -6 PR -4 PR z m -4 X p A g l p -4 X p -7 X g
+-5 X p W g W g A g -8 PR -4 PR -13 12 R q q -5 6 R m m m h m u ST
+% Path 175
+USA Lake
+175 PT
+595 309 MP
+H H H k k k B -3 -4 R g l s q h q W h B k H H D K n e E n 4 MR H g d K
+g z m p -4 MR -6 MR H H 5 mR h A h k H k g H g k f k I f k H D j d r e f
+-10 mR N I j K B k A v e u e h W h u i h l h u Z w w 4 mR U w v e m l u
+J E i i e h e n h e i e u i h l e 4 mR W h 4 MR o I f d S o 4 2 R e w u
+e u e i u e h Z 8 MR o f d f e u Z e Z J U i 4 Y ST
+% Path 176
+Canada
+(176c) PT
+209 -698 MP
+5 MR j j j -5 Y g -7 pR -6 pR -5 pR f o o E e r e T m a U a i ST
+% Path 176
+USA
+(176u) PT
+234 -718 MP
+o r e E e r r a h m l h u h p k q U h q W p -5 X h q h u m M l q q -8 X ST
+% Path 177
+USA
+177 PT
+240 -872 MP
+m q m m m q m q m m h r K w z q m -4 5 R m h m -3 4 R m x m m m m x m h
+m m x m q m m m h -10 9 R -8 7 R -4 5 R 5 mR h 6 Y e 4 mR m m m m q w w
+m -3 4 R i U e u e u e u n l F 2 4 R m U i s m h U e v f d K d j I f d j
+d f a v n h z w u i u J i e v e v e u e i e m 4 Y i E K 4 X o f o f r o
+k V f j r r f e 4 X ST
+% Path 178
+Canada
+178 PT
+209 -698 MP
+-13 MR -5 mR H k -4 Y f d f d P d f -4 mR k p g C 9 X o o o K j j j
+6 -7 R j j -4 pR S j W h p o 7 MR S j o Q ST
+% Path 179
+Canada Lake
+179 PT
+652 -954 MP
+-4 PR z m x q W g f r K r d g q A d j N d f p h k D f g l u m q h -5 MR
+l h p p l s p k g k d o H g m q l J U i u i i f e r n n r e w l t p g u
+J n U o n r o n h w V o e T d n h i d f r o r o d j K E f r K ST
+% Path 180
+Canada Lake
+180 PT
+754 -373 MP
+H B -4 mR p p p A i r e h p p -4 X p E o f -3 -4 R k p h e s l 4 mR H g
+-5 X h B g -9 X h q B l h p p -4 X e E n q h n e h i h -4 X h l h l i r
+n r o m 6 PR e n h W t W q -3 4 R i U Z o f E o r j f g D f n e w s e h
+l z s x m u V U n r f g p g f g f 6 PR u o J r f 4 PR q z u e h T e U f
+e E o r g A g k f o f n u e o j d K J f J u e r f d j r o 7 X P K o f k
+t l g f o t H B k g D r n Z J e u r f ST
+% Path 181
+USA Lake
+181 PT
+245 -275 MP
+k g p p l h l M l h 4 MR f o E n Z ST
+% Path 182
+USA Lake
+182 PT
+258 -268 MP
+B g W i 5 PR ST
+% Path 183
+USA Lake
+183 PT
+270 -269 MP
+-8 X J V r o r j l ST
+% Path 184
+USA Lake
+184 PT
+285 -265 MP
+k -8 X u r n n n r f ST
+% Path 185
+USA Lake
+185 PT
+330 -199 MP
+-5 mR -6 mR p p -3 -4 R k k 5 Y Z J n e U i v i i r g ST
+% Path 186
+USA Lake
+186 PT
+536 -109 MP
+-6 mR k A h e w W q h U J n E K o r ST
+% Path 187
+USA Lake
+187 PT
+533 -94 MP
+g B s U e n P ST
+% Path 188
+USA Lake
+188 PT
+537 -79 MP
+g l s T f ST
+% Path 189
+USA Lake
+189 PT
+527 -76 MP
+h ST
+% Path 190
+USA Lake
+190 PT
+282 145 MP
+-5 MR A h q m q B m l g H g -6 MR g p z G -4 mR p p p p k p k H g p B
+-5 mR p p k d f k k l h i 5 Y J r Z v i r e f E e i i Z J n J n e U e u
+J r r o e r n 4 PR e v e E K d f T P o n n r r o ST
+% Path 191
+USA Lake
+191 PT
+480 204 MP
+k B H -9 X h l -5 MR -5 X h l h p W h q q p g z p B -6 -5 R p D f g y
+-5 MR p p W q m m s W s p k H k -6 MR p y B B l q -4 X h l h q g k l h l
+h i 4 mR -7 MR W q m q M h U Z e l t p l -5 PR W p g d j p g s y j I k A
+i 5 mR u J n e f d f Z e o 4 PR r f n J U e U e w m w 4 Y e 4 mR h u K o
+-5 mR j d j e f d f t d f r t j f e n j g d k k t W g f 6 MR g k d o
+5 2 R r o e o D f I e 4 MR S r n j T n J n e v e m m 4 mR U K D f d j I
+f H p D f E e n n J u i e r n Z r e n f k p k k f o o I f e r n r r e r
+e T e u i n e r e E n e r r n e f V o P f 11 X n 8 MR r r n n e u e i Z
+r d k g d ST
+% Path 192
+USA Lake
+192 PT
+591 310 MP
+i U m w q x 7 mR h m J n e 4 PR m w q m h E n f N j K k f k A g A g j d
+j f -4 Y j o r j N g -4 pR ST
+% Path 193
+USA Lake
+193 PT
+-91 769 MP
+q W w g -5 PR m l q m w q m h m z w l k q m -4 PR m 4 mR q q m l k H
+-5 Y j q m 2 7 R U 4 mR h m 11 mR q t U e s e n q i 4 mR q w U T n e n f
+t H f E n t p g l D j e E o D f n e k k -4 X g P n r g d p l D k D f D f
+j o P V r k f e r f t D j E o f n e r r f T g p p d K r P P f D f r o K
+n E o d j T g f l ST
+% Path 194
+USA Lake
+194 PT
+-144 1004 MP
+z l -7 PR -4 3 R q -4 PR q A g p t A t l g I f E o f P K D o g -7 MR k
+B t k g p -5 MR p -4 MR C l e i f J 4 X J 4 X J i e r J r e u e T e w l
+h l h l s l h 6 Y e i e u f 4 PR e m W w u E n n n 7 mR m y q u f e v e
+f V e f H j d f p d j k j k D k f o K r o e T P P J E r f B K r o ST
+% Path 195
+USA Lake
+195 PT
+-210 1035 MP
+z -4 X g -6 PR n e 7 X o f E f W ST
+% Path 196
+USA Lake
+196 PT
+-287 1034 MP
+B p -9 -8 R g k l i u e n Z J e r Z u T K l ST
+% Path 197
+USA Lake
+197 PT
+253 1354 MP
+h -5 4 R l D j g h g I h v J U e 7 mR i P g f E f g q l g j P o j ST
+% Path 198
+USA Lake
+198 PT
+294 749 MP
+-6 MR p W J V E n e r r g D l ST
+% Path 199
+USA Lake
+199 PT
+289 832 MP
+p p k h m w q h 4 mR h m h n j o K j K o o o d ST
+% Path 200
+USA Lake
+200 PT
+270 872 MP
+H l h 2 5 R u r I ST
+% Path 201
+USA Lake
+201 PT
+572 1095 MP
+-6 PR 4 PR 5 PR r F ST
+% Path 202
+USA Lake
+202 PT
+-434 628 MP
+-10 PR h e T K 6 PR d g ST
+% Path 203
+USA Lake
+203 PT
+-451 636 MP
+-6 PR q -5 PR V 4 -2 R E o n j ST
+% Path 204
+USA Lake
+204 PT
+37 502 MP
+p k l u i e E ST
+% Path 205
+USA Lake
+205 PT
+193 854 MP
+h -8 X p B k p H -4 MR p A -6 MR k d f d H p g B C p -4 -3 R W h t B D
+h U i E e r r n e r n i z -4 X h p -4 MR p -4 X M w m m U 6 X n J 6 X
+n n e S n E n m q m q u n n r r o 7 PR r e 4 PR V n o 4 2 R r o n o r o
+K E K -6 Y ST
+% Path 206
+USA Lake
+206 PT
+577 559 MP
+-9 mR C -4 MR l p 5 MR f d j d K o j i e -2 -7 R d g H d f o 3 -4 R q g
+d k k -15 pR r e i f d t o d g f -5 pR o g j f j r f o r v f j j -5 pR N
+W p g h U h g l -4 MR p -4 Y h u h B h p -4 MR l h B l m h q u S K r e o
+E J f n e r r n r r Z T u h q W h u h q W i r e h m M e r v h -4 X h q
+4 MR r e h w s u o e U i 5 Y i 4 pR e s l h U i e 4 mR 4 mR q h m w h A
+h m W h l s S r f e o S 5 2 R e i e w U e ST
+% Path 207
+USA Lake
+207 PT
+-122 358 MP
+k h e m u n v f I g d ST
+% Path 208
+USA Lake
+208 PT
+403 740 MP
+p k k m F u i h J 6 PR r g ST
+% Path 209
+USA Lake
+209 PT
+533 738 MP
+p C p l p p -6 X h l h e n 4 MR E e r r n e r r n V d g ST
+% Path 210
+Mexico
+210 PT
+-1004 41 MP
+-7 PR -11 PR z q z z z q z q q q q -4 3 R q q q q q q q z q -5 PR -4 PR
+z -4 PR -4 PR -4 PR -4 PR -6 PR z -4 PR -5 PR -6 PR -7 PR -10 PR
+-13 PR -13 PR u i m -4 mR -8 X f 6 X g -7 PR l -174 41 MB
+% Path 211
+Mexico
+211 PT
+-1179 661 MP
+J i 4 PR n n r 5 PR n n a n n n c n n i i n n r V n V 4 PR n n e 4 3 R
+n i n i n i n i n 5 6 R 5 4 R n i 14 15 R 6 7 R o g l g k F t k F d t n
+e g k r S 5 PR V a q j g m s a n 4 pR e V i V a e i l p F g a n i n i
+n n r o n n e r d F K n n r f 5 X f V J z p W q -4 PR 5 pR V V V V V n c
+J d k p t l g l p g d g o n i j r g p g k f g j n n 5 6 R g h a V n u h
+4 pR i n d g f 4 PR e q z q 6 PR n i i i 3 4 R i i 4 pR r d k D g k e n
+i 7 pR N e n E o r r e u i e v l g l q h u i e i u h g h i n c P d k d g
+l f E j j K r r g o T j f o U q s q h m v M h m v i 4 PR 3 4 R u l F p t
+a n i e 7 pR i f -4 Y j f V b U h p q 7 PR e E f o d 5 PR 4 X o r f o K
+j o f r K o f r f r f g x W q A K r o f r f T K t p q u F p f n
+5 PR 5 PR u h u h u e 5 -2 R 4 PR 4 PR n n i V c i n V J U h l k l g h
+i i a 5 mR i e c ST
+% Path 212
+Mexico
+212 PT
+-885 853 MP
+n V 4 PR 6 PR V n t l g 9 PR n e i U h a e i i a i e a n n n e n a i
+-4 pR n V U h e E f V e r f 6 PR n 5 X g j f e r N i e r f E f r k N e
+i i h i n a i 6 pR j 4 PR u W q s d -4 PR i n J 5 PR 4 Y h i n 7 6 R c
+V V n n e 4 PR n e n f n i i e i b i n V 4 PR n n n i n n 4 3 R r f D g
+l g o n a n i 4 3 R V e 3 4 R e o 6 X f 4 PR n E f r f 4 PR n a s a n n
+r o f r f r f n e V n e n n 4 PR i 6 PR n 6 PR n e i r o r f V 5 X f 4 X
+f n n n a o f 8 PR V e n n n n n V V 9 PR 4 -2 R o f 11 PR j -5 X g o r
+o r f T f e n V U g h i n i V U l t a i i i i 4 pR 4 5 R i e ST
+% Path 213
+Mexico
+213 PT
+-516 1034 MP
+f 6 MR E n J b 3 4 R i n 4 pR V -5 PR t m s u h a 4 pR i 18 17 R c J
+5 pR i V a e n 6 7 R i V -4 X d k t p W g l k g z l p -6 PR u s q q
+-5 PR q -4 PR W q l q A q z l g W t q q C k F z W -7 PR -4 PR -8 X g
+-10 PR -4 PR -4 PR q -5 PR q -6 -2 R g W g -5 X t -4 -2 R g k g -5 PR l
+g l F d f k k g l g l g p p g l g l F g p t l F C F l g p l g l g p g z
+A g k W t -4 X q -6 PR l g W d k f E o g f g l k l g -4 PR h p l k o k f
+k g W -6 X g -13 PR W k F k D f k p g q -4 X h -5 MR k B l q -7 X -4 MR
+k h l h W q W h B g -5 MR p k p B g k k t -5 -6 R g p -6 X h -6 MR
+p p p p m p G -3 -4 R k k G d ST
+% Path 214
+Mexico
+214 PT
+-837 985 MP
+q w q h -4 -2 R p g W g l g -7 PR h p g -4 MR C p p p d j K 4 2 R J n i
+E n 4 X n r r o -4 mR p k p g C -7 -6 R q -4 X q B k g H l h l s l B g B
+g A m B -5 MR -4 MR p l q h l h W h -10 MR g A B p p B -5 MR p g p -4 mR
+t -4 X q B B B -7 MR p l h p p B g p H p -5 MR p B -8 X h l q M l h W h
+-9 MR -7 X h p p p p g k -4 -3 R k k H H -4 mR h m n m -4 MR I o f d f
+5 X n S o d f H B p B -10 -9 R -7 MR G I f k p q l h l h B -5 -4 R C A q
+-6 MR G k k k k p g -4 MR p p W h p y q A h A M q s m U m u m m h y h m
+u m s m w w U i Z e r n n T n 15 X n 5 X e r n J r n E r n r r r n Z r Z
+u e i i e i Z J n e n n n e n Z e Z e E n J n e n Z e i Z i Z J i Z i n
+e t k Z e n n Z u n e V 6 PR e h l h u e U e W h u 10 X n n n J V e V h
+B q e U f e o n h -5 PR m o 8 PR r K e j f e E o m q h z q u r o r r f r
+K r f o n f e f r o o f d f r o T o 5 X f n d o 7 X o 4 X o e q -4 PR
+-6 PR h r o 4 X o E o 6 X n T n 5 PR 4 PR r n n i n ST
+% Path 215
+Mexico
+215 PT
+-907 1020 MP
+i r o 8 PR n i u m i n n 4 pR e 4 pR n n i e o a n n n i b e n 6 5 R r
+j 4 pR a c f T f j P K E r V U -4 PR z q u h d g m u l q i 4 5 R i i j i
+U q u s u q 4 pR n e n i n V 4 PR e n 3 4 R i v h e c n 4 PR 6 7 R i u h
+a n i i n J 5 X o 4 PR V e c n a e i c n V n i 4 PR u h e n i i 8 PR E d
+F d g d j g D F -4 Y F g d k I k k j j j K j d g l q W p p t k t -9 Y t
+d S J 4 Y m u h e 4 3 R r f n n a E o o f N f j K d l q f j n Q o E 5 PR
+i r r P f o P r f r f o 6 PR 4 3 R r f n i 4 pR r V c 4 PR i 5 PR n i e
+u i 4 PR e 6 PR V i e n 4 PR 7 6 R n n n n a i i i a u ST
+% Path 216
+Mexico
+(216m) PT
+-633 1154 MP
+4 PR 6 7 R i n c n 4 pR 4 PR n a V e T o 5 PR 4 PR a E o f r f 8 X f
+r r o 5 PR 5 PR e i i e j r V e l p h U z V 4 X f E f r r f 4 X f 8 X
+4 PR n e 5 4 R c n a E f r f r f r r o 5 PR V n n V n V 4 PR n i i 4 PR
+c r N T f 5 PR i E F j f o o V i e n i n 4 PR u i V E o 12 PR 6 5 R V
+4 PR 4 PR T f 2 PR ST
+% Path 216u
+USA
+(216u) PT
+-390 1223 MP
+6 X 5 PR r t A p f 5 PR n i u h z n r f r o 6 X P 8 X ST
+% Path 217
+Foreign
+217 PT
+-1060 -1481 MP
+-10 mR p d H d f f H k s l h u e m h e 4 Y e s e n Z J r ST
+% Path 218
+Foreign
+218 PT
+-1096 -1506 MP
+z z m s q u T K g K r f U K r o 2 0 MB
+% Path 219
+Foreign
+219 PT
+-1071 -1506 MP
+1 0 MB
+% Path 220
+Foreign
+220 PT
+-1066 -1506 MP
+0 0 MB
+% Path 221
+Foreign
+221 PT
+-1071 -1488 MP
+-6 PR h q h E o o f o r ST
+% Path 222
+Foreign
+222 PT
+-1013 -1404 MP
+h q j g -4 X f k p p p k F k p k p p W h -4 MR k -3 -4 R h U i u i e D
+e u e h l g k k k H D f -6 mR p k p p k p g G r e r n n n r J i Z 4 Y h
+e u i J r e E n r n n n Z e Z n r n e i i e r Z ST
+% Path 223
+Foreign
+223 PT
+-1003 -1434 MP
+H W h l u e 5 mR u r o d f j ST
+% Path 224
+Foreign
+224 PT
+-971 -1447 MP
+4 MR j F -4 X q l e -4 X w e 8 X ST
+% Path 225
+Foreign
+225 PT
+-947 -1366 MP
+a i v A H k k g B -4 mR p p -4 -3 R -6 -7 R H p A m s m p I P D f -5 Y
+J r e n i i n e i i u e i Z e n Z J e r n ST
+% Path 226
+Foreign
+226 PT
+-1034 -1385 MP
+-9 mR u m e u m J ST
+% Path 227
+Foreign
+227 PT
+-1024 -1357 MP
+-5 mR d k p H k H p H -4 mR k U i 4 mR i J i e u i i 5 Y m K i T ST
+% Path 228
+Foreign
+228 PT
+-1002 -1238 MP
+f k g p m q s -4 MR g -5 X h K r o S 7 MR H p p g p B -4 MR p W w h g o
+j g -5 MR A m g -4 X h U i h W J m v o -4 Y o P K e M s h l U Z N P m
+4 mR m u V n e E n r b r i u e u K r o K r r f j f T j f ST
+% Path 229
+Foreign
+229 PT
+-942 -1192 MP
+-7 mR D f -5 mR W h C -4 MR H p g p p -9 -10 R k g -4 MR -6 MR p g p
+-4 2 R w h l w p l M U M h p U J r e r J u i e 5 X e z h v e U i u i i J
+i e f o K d f o p A q g j o p h g D r n f d Z r J n -4 MR i J T o K E o
+d 6 X e o 5 X n J r n e r r r ST
+% Path 230
+Foreign
+230 PT
+-1013 -1228 MP
+S o j U m z u s m g l d P ST
+% Path 231
+Foreign
+231 PT
+-943 -1239 MP
+N j -4 pR I g j g h m m s U w h e m u J d o f ST
+% Path 232
+Foreign
+232 PT
+-896 -1280 MP
+H B f -3 -4 R H k k k k -6 Y f k t -3 -4 R G k k H C -9 X q p C -6 X q
+-4 MR B B u i e r e r n u i U i e f -7 Y o f E n h W e r r n S o f r r n
+r r e n J v i Z e Z e u 4 Y i 5 Y e i e i u m 6 mR h 10 X ST
+% Path 233
+Foreign
+233 PT
+-816 -1183 MP
+j f N -5 pR d g -4 pR -5 pR I k g k g k k k g k k g -4 Y s p g -7 mR
+H H k p l h p B k -4 MR g m h r m M q -9 MR -7 MR -4 MR -6 X U i J n e
+5 Y i f d o o d K r o K i r e r o E n e o r r e r e S f 5 MR r r J 10 Y
+J r r J h U e r n Z e i e v m 10 Y i v m u m U ST
+% Path 234
+Foreign
+234 PT
+-844 -1122 MP
+H H g H g d j -4 Y K o o T i o 5 MR F p j d k -5 Y g N f j N -4 pR d g
+j O -4 pR j S d -5 MR p W h i u m U m m u h U m v h u m m m m w m m M m
+s m m U e i i i J i e i e u e ST
+% Path 235
+Foreign
+235 PT
+-1178 -866 MP
+-4 pR S I g f o I j S j o j f j D g h p j e o j N f d g d g d N S j
+-6 pR -6 pR j -5 pR j j f 6 -7 R j j j j j -8 pR N N d g k -9 pR
+-6 pR -6 pR -7 Y t W q g j o o -4 pR j j j j f j f 3 -4 R d s m h m s g
+D g d t G N 4 MR f j d g d t N N j N j -7 pR j T f d h A p t d p g -5 Y
+g k -5 pR -2 -5 R -5 pR 4 -5 R d g -4 pR r g d p F -5 pR O O l s u h l p
+g N -2 -4 R D k f d g p l p p D g k l p k g N p k p k d t d k f G O k j
+o k -4 pR O I -5 pR d g N f p g p d f T f t I k -4 Y F -4 Y g -4 pR p d
+t d g -4 Y k -4 pR -2 -4 R g I F d p p D 0 -389 MB
+% Path 236
+Foreign
+236 PT
+-1179 -1263 MP
+o g d h u 0 0 MB
+% Path 237
+Foreign
+237 PT
+-1179 -1281 MP
+o I t 0 -6 MB
+% Path 238
+Foreign
+238 PT
+-1179 -1002 MP
+e a i i i 7 pR -2 6 R U h U m 9 pR v m u h 7 Y h 6 Y 0 60 MB
+% Path 239
+Foreign
+239 PT
+-1137 -1133 MP
+j D g k g k H k -4 mR g k p i e u i J m i U Z J w e ST
+% Path 240
+Foreign
+240 PT
+-1141 -1171 MP
+-6 pR I h 8 Y ST
+% Path 241
+Foreign
+241 PT
+-1143 -1212 MP
+N o I g D h g H k W u e s w m o r 5 mR h v J 5 mR u r n q u r o f -5 mR
+D j d ST
+% Path 242
+Foreign
+242 PT
+-1150 -1226 MP
+f j N N -2 -5 R t p p k g v e i h v i f J h l h e o e 5 Y ST
+% Path 243
+Foreign
+243 PT
+-1153 -1247 MP
+H l h p d H K k l p k -4 X w n J h W u e u J u e o 6 X e ST
+% Path 244
+Foreign
+244 PT
+-1168 -1255 MP
+-8 pR j G j g -4 pR d g -4 X h t m h r h l -10 -19 MB
+% Path 245
+Foreign
+245 PT
+-1179 -1273 MP
+n 7 pR r n h u 5 pR n n ST
+% Path 246
+Mexico
+246 PT
+-987 815 MP
+-8 mR k k p W e i J i e 4 Y e ST
+% Path 247
+Mexico
+247 PT
+-1058 885 MP
+p p B B B B W u e u J n 13 X ST
+% Path 248
+Mexico
+248 PT
+-1038 914 MP
+g p p g p l s l h J o ST
+% Path 249
+Mexico
+249 PT
+-997 929 MP
+p k k k -8 MR -4 X i e n i e 4 X e r n f r ST
+% Path 250
+Mexico
+250 PT
+-921 946 MP
+H l h B l u J q q h q q q q e r o f E o r K 4 X K ST
+% Path 251
+Mexico
+251 PT
+-682 989 MP
+-5 pR -6 pR l q -8 MR p -6 X h W M W h q l h W m e i e u n u i Z J r K
+j K n r f 4 X f r o o o ST
+% Path 252
+Mexico
+252 PT
+-713 1005 MP
+H W h U 4 X ST
+% Path 253
+Mexico
+253 PT
+-713 1023 MP
+k k p p g h e n Z e r ST
+% Path 254
+Mexico
+254 PT
+-641 1055 MP
+p d H p g p k -5 MR l q h -4 MR H H -4 mR W h -5 X q B -4 MR g q e i Z
+e r n e n Z n e n E J i 7 PR n E f o 6 X ST
+% Path 255
+Mexico
+255 PT
+-481 1090 MP
+4 pR i V T f k g p t A ST
+% Path 256
+Mexico
+256 PT
+-627 1352 MP
+p d K 4 MR 6 MR c e r S r 4 Y m g q W p g -9 X ST
+% Path 257
+Mexico
+257 PT
+-729 1179 MP
+p k g f o 4 MR o 5 X e o 4 X e E e u M -6 MR q M s u q g D t ST
+% Path 258
+Mexico
+258 PT
+-968 1019 MP
+-6 PR q q z q -6 PR h z -4 PR -5 X g W g -7 PR W F g W g z J r n E n e
+n r K 5 PR n J m J K o K o o o o o o r o o o o 4 X f ST
+% Path 259
+Mexico
+259 PT
+-1025 1021 MP
+-11 mR -4 MR k p C p A q e n Z J n i Z e Z ST
+% Path 260
+USA Lake
+260 PT
+-740 291 MP
+n s i e r N r o V h q i E f l g o I g -4 PR t d p g d k j o j f S j f h
+q h p l p d s e 4 mR s 2 4 R i U ST
+% Path 261
+USA Lake
+261 PT
+-958 170 MP
+5 pR e n n r t f 8 PR 5 PR e u h z h i J r D p r o o n 4 PR a o n a T t
+k g d A F d g l g f g o f r d g m W m W F q l p g h g S f I h u s g l h
+g h q g W ST
+% Path 262
+Mexico Lake
+262 PT
+-1044 61 MP
+k s -6 MR l h z q h q -6 PR s p -4 PR q -5 PR h -6 PR -5 PR -4 PR z
+-4 PR -5 PR -7 PR -4 PR -7 PR -7 PR -14 PR -11 PR 7 X n f 5 PR e E f g f
+6 X o 5 X o 4 X n f r r o e m h m u J r o r e r f r d j g A g l d f o r
+o E o 5 X h u r r o 4 PR r f e u r r f d j f r K e u J u e w o K 6 X o r
+f 4 PR V u e U f k K r f T f -4 mR q l g j k l d f e T o f e n r d k d g ST
+% Path 263
+USA
+263 PT
+811 1320 MP
+g -4 -5 R -6 -7 R -5 -6 R -8 -9 R G G k k G k k k k -15 Y P P K n E n
+4 MR 11 MR -5 Y j -6 Y E o e n n e n e n e n n ST
+% Path 264
+USA Canada
+264 PT
+671 -63 MP
+H -5 Y f k p k g -4 MR -7 MR -4 MR -4 MR B B -7 X ST
+% Path 265
+USA Canada
+265 PT
+617 -148 MP
+4 mR -4 PR 6 mR m 7 Y n T b 4 pR 13 pR e n 6 pR 5 mR a 3 pR n i n 4 X ST
+% Path 266
+USA Canada
+266 PT
+617 -148 MP
+f -4 pR D k -11 Y k k H k -6 mR W h w p k d j -5 mR p -6 MR g C p D f d
+r e 4 MR 2 -5 R f k D k B B k -4 mR g -6 mR p g q g -5 mR p d f -4 mR ST
+% Path 267
+USA Canada
+267 PT
+592 -260 MP
+m h m q m q m 5 mR h u ST
+% Path 268
+USA Canada
+268 PT
+592 -260 MP
+j j j I l ST
+% Path 269
+USA Canada
+269 PT
+587 -291 MP
+15 mR U J V e r ST
+% Path 270 - a boundary starting in Vancouver Bay, and running across the top
+USA Canada
+270 PT
+825 1244 MP
+d H H H H I H H H H H H H H I H H k I H H H H H H I H H H H H I
+H H H H H I k H I H H H H I H H H H I H H H D H H H I H H H I H H H D
+H H I H H H I H H H -5 mR I H H H I H H H -5 mR I H H I H H H -5 mR I
+H H I H H I k I H H I H H I k I H H I H H -5 mR I H H I H I k I H H I
+H H -5 Y H H I H H -5 Y H H I H I k I H I H H -5 Y H H -6 mR -5 mR
+-6 mR -6 mR I k -6 mR I H I k -6 mR -6 mR -5 Y H H -6 mR -5 Y H I H I k
+-6 mR -6 mR -5 Y H I H -5 Y H I H I k -6 mR -6 Y H -5 mR -6 Y H -5 mR
+-6 Y H -5 mR -6 Y H -5 mR -6 Y H -5 Y H -6 mR -8 mR -6 Y k -6 Y H -5 Y H
+-6 mR -8 Y H -6 mR -8 Y H -5 Y H -6 Y k -9 mR -8 Y H -8 mR -9 mR -8 Y H
+-8 Y H -8 mR -9 Y k -9 Y k -12 mR -11 mR -11 Y k -12 mR -11 Y k -12 Y k
+-11 Y H -14 mR -14 Y H -13 Y H -14 Y H -19 mR -19 Y H -20 Y k -25 Y H
+-30 Y H -47 mR -128 Y ST
+% Path 271
+USA Canada
+271 PT
+643 -63 MP
+27 X ST
+% Path 272
+USA Canada
+272 PT
+583 -330 MP
+-13 pR j f j 3 -4 R 4 -5 R 3 -4 R 3 -4 R 3 -4 R O N j N N j d g d g d
+k k k k d g d g d g d g d k k k k d g d g d g d g d k k k k d g d g d g
+d k k H H k k k k k H k k k k k k H k k k k k k H k k k k k H k k k k H
+k k k k k k H k k k k H k k k k k k k H k k k B B B p B B ST
+% Path 273
+USA Canada
+273 PT
+509 -572 MP
+g -10 -11 R k d f o f j -5 Y P -5 mR W h -8 MR g -4 MR B p p k p p k p
+d f o f j k 2 -4 R -6 mR k G C l q l q l h l q l h l ST
+% Path 274
+USA Canada
+274 PT
+458 -637 MP
+k H k k k k H k k k H k k k k H k k k H k k k k k k -4 MR
+B B B B B B B B B B B B B B B B B B B B B -4 MR
+B B B B B B B B B B B B B B B B -6 X h -4 X h -4 X h -4 X h A q -4 X h A
+q A q W ST
+% Path 275
+USA Canada
+275 PT
+234 -718 MP
+q y q q -6 7 R x m m z z -5 X g -7 PR l p g l g l g p p g k g d k k d
+k k g H k -10 Y j -4 Y P K j P j P P P j P f j P P K j P P f j P K j j d
+f d j d j d f d j d j d f d j d j d f -5 pR N j j N j N j j N j j f O
+4 -5 R 4 -5 R 4 -5 R O 4 -5 R 4 -5 R 4 -5 R 3 -4 R 3 -4 R 7 -6 R S r ST
+% Path 276
+USA
+276 PT
+316 -893 MP
+n c 4 3 R c P j P 3 -4 R O 3 -4 R O -4 pR 3 -15 R -4 pR 12 -60 R -4 pR
+-5 pR N 8 -2 R S S 4 MR S S S 4 MR S E ST
+% Path 277
+USA Canada
+277 PT
+401 -1013 MP
+o Q 5 -4 R o 5 -4 R Q j O 6 -5 R 5 MR o o o Q o Q o f Q o 5 -4 R o o
+j j o 3 -4 R f o 3 -4 R j f j -6 pR d ST
+% Path 278
+USA
+278 PT
+484 -1085 MP
+-5 pR -6 pR -5 pR -5 pR -4 pR N -4 pR N -4 pR N -4 pR N N -4 pR -4 pR N
+-4 pR N -4 pR N -4 pR N -4 pR -4 pR N -4 pR -5 pR N -4 pR N
+-4 pR -4 pR -4 pR N -4 pR N -4 pR N -4 pR -4 pR N ST
+% Path 279
+USA
+279 PT
+525 -1239 MP
+13 MR r e S S j d g d k N S f j S j F p g f 4 MR r n E n f j d g d N
+r r u i i n 6 MR o o o o j o j f T e 5 MR Q o 5 X 4 pR E e 5 MR r ST
+% Path 280
+USA
+280 PT
+643 -1280 MP
+6 PR 6 PR 5 PR E f r r f r r o 5 MR S 4 MR S S 4 MR o 4 MR S S 4 MR
+S S S S 4 MR r ST
+% Path 281
+USA
+281 PT
+719 -1372 MP
+B B B B B B B B B B B B B B B B B B B p B B B B B p g W h p t q
+-4 MR -4 MR I f g G -8 Y K g ST
+% Path 282 - actually a borderline, but poorly drawn so I want it obscured
+USA Canada Water
+282 PT
+599 -1441 MP
+-4 mR -10 -9 R G p p p -4 mR W h ST
+% Path 283
+USA
+283 PT
+587 -291 MP
+N -7 pR -4 Y t k B H k K j d -9 mR ST
+% Path 284
+USA Canada
+284 PT
+268 -725 MP
+-13 PR l g -14 PR q q w ST
+% Path 285
+USA
+285 PT
+293 -905 MP
+n 4 pR i 5 PR i r ST
+% Path 286
+USA
+286 PT
+618 -1277 MP
+4 PR i r f 5 X f 4 X f S o f ST
+% Path 287
+USA
+287 PT
+725 -1297 MP
+-10 mR -6 MR B p -4 mR -4 mR ST
+% Path 288
+USA
+288 PT
+711 -1319 MP
+f 4 -5 R j j o o j f -5 pR 6 MR -8 Y t D k k d g d g d F d F -4 Y ST
+% Path 289
+USA
+289 PT
+623 -1422 MP
+g B -5 PR p k B l q -4 MR g k p k k D 4 MR I ST
+% Path 290
+USA
+290 PT
+316 -893 MP
+-4 MR B W h g ST
+% Path 291
+Canada
+291 PT
+1129 1004 MP
+p k W h B H B -4 X U i i h -5 PR l k p -8 MR -4 -3 R f H H -4 mR A
+-6 MR -4 MR g k k p k g d S S k p k p p p W h p g p A h B A W j -4 mR
+-4 MR g -7 MR W B M -5 MR g q B p l u y p l g -5 pR D f S o g B -3 -4 R
+k k -4 X M m h B B g H p p -6 mR k I o g A h -6 MR g p p k B p -6 MR
+-9 MR g H o P f -4 mR -6 MR A -4 MR k p -4 MR g -5 MR k -4 X q p W B H B
+k p p l h -4 MR p k k k g B g k B p -4 MR l 4 mR p k B g -5 -4 R g k p A
+h B p B d f -5 pR k p B -4 MR p -4 MR t p h -15 X B p -8 2 R h q -5 MR
+-5 X q W s W h l w h B k k d g W q h l h B B k -4 MR B k l h p H k k p g
+q p B k g s ST
+% Path 292
+Canada
+292 PT
+926 -59 MP
+f 8 -7 R 13 -12 R 14 -13 R 11 -10 R 16 -15 R 8 -7 R o j S f Q 5 -4 R o
+f Q 5 -4 R o f Q 4 -3 R 4 -3 R Q 4 -3 R 4 -3 R Q 4 -3 R 4 -3 R Q
+4 -3 R 4 -3 R Q 4 -3 R 4 -3 R Q 5 -4 R o f Q 5 -4 R o f 4 -3 R o j o o
+4 -3 R o f 4 -3 R 4 -3 R Q 5 -4 R o f Q 5 -4 R Q 4 -3 R Q 5 -4 R o f
+4 -3 R 4 -3 R Q f 252 -197 MB
+% Path 293
+Canada
+293 PT
+1161 228 MP
+15 X 17 -1 MB
+% Path 294
+Canada
+294 PT
+1134 228 MP
+15 X S 9 X ST
+% Path 295
+Canada
+295 PT
+1107 228 MP
+15 X o 9 X e ST
+% Path 296
+Canada
+296 PT
+1080 228 MP
+15 X o 9 X u ST
+% Path 297
+Canada
+297 PT
+1080 228 MP
+d -26 PR ST
+% Path 298
+Canada
+298 PT
+1026 228 MP
+15 X o 9 X u ST
+% Path 299
+Canada
+299 PT
+1002 227 MP
+15 X o 6 X e ST
+% Path 300
+Canada
+300 PT
+973 228 MP
+17 X S 8 X ST
+% Path 301
+Canada
+301 PT
+947 227 MP
+15 X o 9 X u ST
+% Path 302
+Canada
+302 PT
+921 228 MP
+17 X o 7 X ST
+% Path 303
+Canada
+303 PT
+895 228 MP
+17 X o 7 X ST
+% Path 304
+Canada
+304 PT
+868 228 MP
+17 X o 7 X ST
+% Path 305
+Canada
+305 PT
+818 229 MP
+17 X o 15 X S 12 X u ST
+% Path 306
+Canada
+306 PT
+792 229 MP
+17 X o 6 X ST
+% Path 307
+Canada
+307 PT
+766 229 MP
+17 X o 7 X ST
+% Path 308
+Canada
+308 PT
+740 229 MP
+17 X o 6 X r ST
+% Path 309
+Canada
+309 PT
+714 229 MP
+17 X o 6 X e ST
+% Path 310
+Canada
+310 PT
+688 229 MP
+17 X o 7 X ST
+% Path 311
+Canada
+311 PT
+662 229 MP
+19 X o 4 X r ST
+% Path 312
+Canada
+312 PT
+649 229 MP
+13 X ST
+% Path 313
+Canada
+313 PT
+1129 1004 MP
+E o T o S r r S o r r r 4 -2 R r r r o r r r o S r r S o r r r 49 -12 MB
+% Path 314
+Canada
+314 PT
+689 633 MP
+4 X S 5 X o 5 X o 5 X o T o 5 X S 4 X S 5 X o 5 X o E r o 5 X o 5 X S
+4 X S 5 X o T o 5 X o 5 X S 5 X o 5 X o E r o 5 X o 5 X S 5 X o T o 5 X
+o 5 X S 5 X o E S 5 X o 5 X S 5 X o 5 X o r r r o 5 X S 5 X o 5 X S E o
+5 X S 5 X o T o 5 X S 5 X o 5 X S r r S 4 X S 5 X o 5 X S E S 5 X o 5 X
+S r r S 5 X o 5 X S 5 X o T o 5 X S 5 X o r r r o 5 X S 5 X S E S 5 X o
+5 X S 5 X o T o 5 X S r r S 5 X S 5 X o r r r o 5 X S 5 X S 489 -72 MB
+% Path 315
+Canada
+315 PT
+671 -63 MP
+64 X n 64 X V 66 X V 53 X ST
+% Path 316
+Canada
+316 PT
+874 -764 MP
+-6 MR -5 MR -5 MR -5 MR -6 MR -5 MR -5 MR -5 MR -5 MR -5 MR -6 MR
+-5 MR -5 MR -5 MR -5 MR -6 MR -5 MR -6 MR -5 MR -5 MR -5 MR -5 MR -5 MR
+-6 MR -5 MR -5 MR -5 MR -5 MR -6 MR -5 MR -5 MR -5 MR -5 MR -6 MR
+-5 MR -5 MR -5 MR -6 MR -5 MR -5 MR -5 MR -5 MR -5 MR -6 MR
+-5 MR -5 MR -5 MR -6 MR -5 MR -4 X ST
+% Path 317
+Canada
+317 PT
+614 -814 MP
+-4 PR -6 X g p p k p C B -7 MR p p k -5 -4 R p k p k g k l ST
+% Path 318
+Canada
+318 PT
+534 -921 MP
+-7 mR k k k k k k k -4 MR g -3 -4 R k k H H I j r n r e K -4 mR k -5 MR
+p H p B g p g k k -5 mR -5 mR k g O K o j -8 mR k k p k k d P P o j j f
+d P f j d f d P f f -4 Y f D P P d j -6 Y f D f H H d f H H -18 MR k G k
+p h q s q A M m m h l ST
+% Path 319
+Canada
+319 PT
+716 -1309 MP
+j 3 -4 R O 12 -11 R o o Q o E e r r n r r e r r e r r n r r e r r e r r
+f j j N N r e T j N -4 pR N N -4 pR N d p p -6 Y g I H 4 MR -6 pR j S j
+d g N r e 4 MR j ST
+% Path 320
+Canada
+320 PT
+564 -841 MP
+p p C p H C p p p k G k k k k B -12 mR I f -4 mR I j -4 Y -5 mR d f
+-14 mR D ST
+% Path 321
+USA
+321 PT
+247 -2 MP
+128 X ST
+% Path 322
+USA
+322 PT
+247 5 MP
+-103 pR -41 pR -30 pR -27 pR -22 pR -21 pR -19 pR -13 Y ST
+% Path 323
+USA
+323 PT
+224 336 MP
+-15 mR -15 mR -16 mR -17 mR -18 mR -18 mR -22 mR -23 mR -27 mR -32 mR -30 Y ST
+% Path 324
+USA
+324 PT
+433 321 MP
+-14 mR -16 mR -16 mR -16 mR -18 mR -21 mR -21 mR -25 mR -28 mR -35 mR
+-53 mR -55 Y ST
+% Path 325
+USA
+325 PT
+437 -207 MP
+23 PR 18 X ST
+% Path 326
+Canada
+326 PT
+1178 -1254 MP
+p k p p d K H p g -5 X q -4 MR B k -6 MR W q h -6 MR p p B -7 MR k j f
+H D n J f k B g f S K d E n r r e r r n r n S I f 4 X n f -4 mR H B G g
+l M B k p A U z p B p k p m p k B t M l h -4 MR k p B k g H ST
+% Path 327
+Canada
+327 PT
+1093 -1320 MP
+V r f n n n K g p d t N D g A p t D k -7 pR E e o -7 Y H T n o 6 MR N I
+g -4 pR j I g d k g k g I g d g d -5 MR g d g D g d g -6 Y A h m h p p g
+-4 mR g C p f o S 4 MR f j o S i i n J 6 X J o o 5 2 R r e S N f E e r e
+r e r r e 7 X J r Z J i n 5 X J n S r Z e 6 MR j r 86 -76 MB
+% Path 328
+Canada
+328 PT
+1178 -1418 MP
+-4 mR -5 mR k p l u m w m m m x m -5 4 R y -5 PR W k d K k g p h w d ST
+% Path 329
+Canada Lake
+329 PT
+1126 -1435 MP
+8 mR t k ST
+% Path 330
+Canada
+330 PT
+894 -760 MP
+-5 MR -5 MR -5 MR -4 X ST
+% Path 331
+Canada
+331 PT
+810 -1428 MP
+8 mR v e 7 mR z q m ST
+% Path 332
+Canada
+332 PT
+1144 -1412 MP
+-10 mR g k p k p p p -5 -4 R ST
+% Path 333
+Canada
+333 PT
+1122 -1432 MP
+N j N N N j N j N N j N N j N j N N N j j N j N N j N j 28 -73 MB
+% Path 334
+USA
+334 PT
+-564 -147 MP
+36 PR 38 X V 33 X ST
+% Path 335
+USA
+335 PT
+-492 -145 MP
+-34 pR -28 pR -25 pR -21 pR -22 pR -19 pR -18 pR I ST
+% Path 336
+USA
+336 PT
+-630 -295 MP
+-19 pR -17 pR -16 pR -15 pR -16 pR -15 pR -13 pR -5 Y ST
+% Path 337
+USA
+337 PT
+-323 -558 MP
+-9 pR -10 pR -8 pR -9 pR -10 pR -8 pR -9 pR -8 pR -8 pR -9 pR -7 pR
+-9 pR -8 pR -7 pR -8 pR D ST
+% Path 338
+USA
+338 PT
+-611 -541 MP
+-10 pR -10 pR -10 pR -9 pR -10 pR -9 pR -10 pR -9 pR -9 pR -9 pR -8 pR
+-9 pR -8 pR -8 pR -9 pR -8 pR -8 pR -4 Y ST
+% Path 339
+USA
+339 PT
+-162 -916 MP
+-5 pR -7 pR -4 pR -6 pR -5 pR -6 pR -6 pR -4 pR -6 pR -5 pR -6 pR
+-5 pR -5 pR -6 pR -4 pR -6 pR -5 pR -5 pR -5 pR -4 pR 1 -6 R
+-5 pR -5 pR -5 pR -4 pR -5 pR -6 pR -4 pR -5 pR -5 pR -4 pR -6 pR -4 pR
+-5 pR -5 pR -4 pR -5 pR -4 pR -5 pR -5 pR -4 pR -4 pR -5 pR -4 pR -5 pR
+-4 pR -5 pR -5 pR N -4 Y ST
+% Path 340
+USA
+340 PT
+3 189 MP
+-29 mR -35 mR -48 mR -142 Y ST
+% Path 341
+USA
+341 PT
+-207 197 MP
+-29 mR -34 mR -47 mR -172 Y j -19 Y ST
+% Path 342
+USA
+342 PT
+-210 -106 MP
+50 PR 48 PR 48 PR 4 X ST
+% Path 343
+USA
+343 PT
+221 -874 MP
+-6 pR -5 pR -5 pR -5 pR -5 pR -6 pR -6 pR
+-5 pR -5 pR -5 pR -5 pR -5 pR -5 pR -5 pR -5 pR -5 pR -5 pR -4 pR -6 pR
+-5 pR -4 pR -5 pR -5 pR -5 pR -5 pR -4 pR -5 pR -4 pR -6 pR -4 pR -4 pR
+-5 pR -5 pR -4 pR -5 pR -4 pR -4 pR -5 pR -5 pR -4 pR -4 pR -5 pR
+-4 pR -4 pR -4 pR -5 pR I ST
+% Path 344
+USA
+344 PT
+221 -874 MP
+5 PR 6 PR 6 PR r ST
+% Path 345
+USA
+345 PT
+55 -863 MP
+5 PR 6 PR 6 PR 6 PR 5 PR 6 PR 6 PR 6 PR 6 PR 5 PR 5 PR 6 PR 6 PR 4 X V
+4 PR 6 PR 6 PR 6 PR 4 X V 4 PR 6 PR 6 PR T V 4 PR 6 PR 6 PR 6 PR E r ST
+% Path 346
+USA
+346 PT
+55 -863 MP
+-6 pR -5 pR -6 pR -6 pR -5 pR -5 pR -6 pR -5 pR -5 pR -6 pR ST
+% Path 347
+USA
+347 PT
+65 -918 MP
+-5 pR -5 pR -6 pR -5 pR -5 pR -6 pR -5 pR -4 pR -6 pR
+-5 pR -5 pR -5 pR -5 pR -5 pR -5 pR -5 pR -5 pR -5 pR -4 pR
+-5 pR -5 pR -5 pR -4 pR -5 pR -5 pR -5 pR -4 pR -5 pR -4 pR -5 pR -5 pR
+-4 pR -5 pR -4 pR -5 pR -4 pR -4 pR -5 pR -4 pR -5 pR D ST
+% Path 348
+USA
+348 PT
+106 -1114 MP
+ST
+% Path 349
+USA
+349 PT
+151 -508 MP
+-10 pR -9 pR -9 pR -9 pR -8 pR -10 pR -8 pR -8 pR -9 pR -7 pR -9 pR
+-7 pR I ST
+% Path 350
+USA
+350 PT
+-245 -106 MP
+-42 pR -30 pR -29 pR -22 pR -23 pR -19 pR -19 pR -17 pR -17 pR -16 pR
+-15 pR I ST
+% Path 351
+USA
+351 PT
+-245 -106 MP
+35 X ST
+% Path 352
+USA
+352 PT
+-231 -401 MP
+-12 pR -12 pR -13 pR -11 pR -11 pR -12 pR -7 Y ST
+% Path 353
+USA
+353 PT
+-232 -393 MP
+-4 Y ST
+% Path 354
+USA
+354 PT
+-340 -358 MP
+-14 pR -14 pR -14 pR -12 pR -14 pR -11 pR -13 pR -11 pR -11 pR -7 Y ST
+% Path 355
+USA
+355 PT
+212 0 MP
+-4 PR q g s z h q q W t k t q -5 -2 R A ST
+% Path 356
+USA
+356 PT
+42 -39 MP
+-111 pR -21 pR -19 pR -16 pR -16 pR -10 pR -11 pR -10 pR d ST
+% Path 357
+USA
+357 PT
+-131 -363 MP
+-5 MR D K d ST
+% Path 358
+USA
+358 PT
+-205 -414 MP
+m l g k W w q C g ST
+% Path 359
+USA
+359 PT
+-281 -386 MP
+w z 4 mR 4 mR l g p g d f k q w h q B i u w W t p q U r n e h -5 4 R l
+g K d B -4 PR w p -4 mR g A -5 PR i m -4 PR h m u m W F -5 PR q 5 mR m V
+m l g -4 X g q m u r o a -5 X -5 mR -4 PR m u 4 PR h q W t -6 PR l p
+-4 PR m q -4 PR u 4 PR 4 mR g -5 PR u e h -4 PR h u J h l g k j k g m v
+e m h l g k k -4 PR 5 mR l g q J u e u h F g q q W p k g h U i 4 mR W g
+l g f D B h v Z e m l p F z w l k p q y D K r f t q m m l g I K r o k q
+m q q l g W g l j f g q h -7 PR u e w l t -8 PR h q l t j f T f k -4 X g
+q w -4 PR W k -4 mR z m m A g l D j K k z m W k k q i e m W t I f k q A
+g k H ST
+% Path 360
+USA
+360 PT
+-533 -335 MP
+h w W h 5 mR m m q p g j D K t q m q h u i h k g k q m m q z m q W g U
+J m q A -4 mR 4 mR h -6 PR q U e m l g -5 mR h m m h -4 X g p z u e m l
+g l F q 6 mR h l F z A k p q x ST
+% Path 361
+USA
+361 PT
+-447 -118 MP
+134 PR 6 PR 6 PR 6 PR 7 PR 6 PR 6 PR 7 PR 5 PR 7 PR 6 PR 5 X ST
+% Path 362
+USA
+362 PT
+-331 -480 MP
+p -3 -4 R g -19 X W h -47 X q -45 X q -47 X W h -46 X -9 MR -7 MR -7 MR
+-8 MR -7 MR -8 MR -7 MR -7 MR -7 MR -8 MR -7 MR -8 MR -7 MR -7 MR -4 X ST
+% Path 363
+USA
+363 PT
+-323 -558 MP
+13 mR 13 mR 13 mR 12 mR 13 mR 13 mR h ST
+% Path 364
+USA
+364 PT
+-234 -359 MP
+g p B H -8 X h m A m m q q m q q q q W f -9 Y f -9 Y f -9 Y f -5 Y ST
+% Path 365
+USA
+365 PT
+-224 -479 MP
+8 PR n V -12 Y p -8 pR -8 pR -8 pR -9 pR -14 pR -8 pR -9 pR -9 pR j
+-20 pR -15 pR -13 pR -11 pR -5 pR -6 pR -8 pR -21 pR -9 pR -10 pR -8 pR
+-7 pR -12 pR -14 pR r ST
+% Path 366
+USA
+366 PT
+-189 -724 MP
+-7 pR -7 pR -6 pR I -9 pR -7 pR -6 pR -6 pR -7 pR -7 pR -6 pR -6 pR
+-7 pR -7 pR -6 pR f j -8 pR -5 Y g -5 pR -12 pR -10 pR
+-7 pR -7 pR -7 pR -7 pR -6 pR -6 pR -6 pR -5 Y ST
+% Path 367
+USA
+367 PT
+-171 -837 MP
+z q W g -6 PR W g q U e h -6 5 R q q -4 PR q q s v n e 4 mR m m m m
+q q q z m q v n 4 PR w x m -4 PR q u i w W p q z q h 6 mR h m h -6 5 R
+m m -3 4 R h q m m v 5 mR 4 mR m h m m q q m m -6 PR -7 PR m 4 mR U e m
+q q W p -11 X ST
+% Path 368
+USA
+368 PT
+-308 -688 MP
+-13 pR -8 pR -6 pR -7 pR -6 pR -7 pR -6 pR -7 pR -6 pR -7 pR -7 pR -5 Y ST
+% Path 369
+USA
+369 PT
+-296 -773 MP
+j j j j j j j j D j j o j O N j N S d k -4 pR -5 pR
+-9 pR -9 pR -9 pR -9 pR -8 pR -10 pR -11 pR t l h p N o j t k F F B
+-7 MR j -6 pR -6 pR -6 pR -7 pR -6 pR -7 pR -6 pR -6 pR -7 pR -5 pR G g
+k t k g k g k g k t k g k g H g G G -3 -4 R G G -3 -4 R G G -3 -4 R G G
+-3 -4 R G G ST
+% Path 370
+USA
+370 PT
+-325 -773 MP
+g k g k p H 2 -6 R k p p p p ST
+% Path 371
+USA
+371 PT
+-361 -812 MP
+p p -4 mR -3 -4 R k H k k g -4 -3 R p p ST
+% Path 372
+USA
+372 PT
+-583 -913 MP
+m U e 13 pR 5 pR e 4 Y z m q W g -5 X F -10 PR W p q 5 mR v n n 5 PR J
+V m 13 mR 14 mR 13 mR 14 mR 14 mR 13 mR 14 mR 13 mR 15 mR 14 mR 14 mR
+7 Y e u e r n 4 PR V J ST
+% Path 373
+USA
+373 PT
+-611 -541 MP
+-12 MR k t p G k k g p l h A h -5 MR p H l m s l q l m g l m l ST
+% Path 374
+USA
+374 PT
+-550 -690 MP
+e c n 4 PR n 6 X f E o r f 5 X ST
+% Path 375
+USA
+375 PT
+-465 -673 MP
+5 PR n 4 PR V 4 PR V 4 PR 4 PR V 4 PR V V 4 PR 4 PR V 4 PR V 4 PR V
+4 PR V 4 PR 4 PR n V 4 PR V V V 4 PR V V V V V 4 PR V V V V V 4 PR V V r ST
+% Path 376
+USA
+376 PT
+-2 -1171 MP
+w m w w w m w h -3 4 R m -3 4 R m w u n U 4 mR ST
+% Path 377
+USA
+377 PT
+-22 -1121 MP
+s 2 5 R 5 pR 4 pR n a n a e n m 9 Y h 5 pR e i n i e a j 5 PR U q m s
+m m i 4 3 R n 5 X f r o E P j 5 X j 5 MR 4 PR V e ST
+% Path 378
+USA
+378 PT
+27 -1062 MP
+o Q Q Z i i u M ST
+% Path 379
+USA
+379 PT
+28 -1174 MP
+5 mR 4 mR 4 mR 5 mR 4 mR 4 mR 4 mR 5 mR u 4 PR E n V
+4 PR 4 PR 4 PR 4 PR 4 PR V 4 PR 4 PR V 4 PR V V 4 PR V 4 PR V V
+4 PR 4 PR V 5 X f E f r P j D j D k d g ST
+% Path 380
+USA
+380 PT
+56 -1017 MP
+-6 PR -5 PR q u e u e u e i e u i i i e i u e u e i a i q W g -6 PR q l
+g -5 X z q h q q -4 PR q m q s w q q z q U e u i m q h -4 PR -7 PR h
+-5 PR -5 PR q q q U e 5 Y i U n J 2 5 R m W -10 PR -4 PR h q W g q m z h
+q -7 PR -5 PR y q h q h q q q -4 PR -4 PR q l g d B q m l g k -6 7 R y i
+n w -3 4 R m q m v n 4 mR A g -4 PR m 5 mR h w w M J u e u e i m z m w z
+m m v i u J i 4 Y Z e u e 4 PR e i r f V ST
+% Path 381
+USA
+381 PT
+-109 -809 MP
+9 pR 3 4 R i e 4 pR V V i i n n n i e 4 PR i i V i n i T f E r o 6 PR e r r r ST
+% Path 382
+USA
+382 PT
+-109 -809 MP
+h q m q -6 5 R -7 6 R -5 6 R m -4 5 R m h -5 4 R W g q m h m h q l g z
+x m m w q q -4 PR 4 mR w m m m q w 5 mR x m q ST
+% Path 383
+USA
+383 PT
+65 -918 MP
+-6 MR -6 MR -6 MR -6 MR -6 MR -5 MR ST
+% Path 384
+USA
+384 PT
+171 -684 MP
+5 mR 4 mR 6 mR 6 mR 6 mR 6 mR 6 mR 6 mR 6 mR 6 mR 6 mR 6 mR ST
+% Path 385
+USA
+385 PT
+163 -615 MP
+-9 MR -8 MR -8 MR -7 MR -8 MR -7 MR -8 MR -9 MR -9 MR -8 MR -9 MR -9 MR
+-8 MR -9 MR -8 MR -9 MR -9 MR -8 MR -8 MR -9 MR -8 MR -9 MR W ST
+% Path 386
+USA
+386 PT
+144 -472 MP
+-12 MR -10 MR -10 MR -11 MR -11 MR -10 MR -11 MR -10 MR -11 MR -11 MR
+-10 MR -11 MR -11 MR -10 MR -10 MR -6 X ST
+% Path 387
+USA
+387 PT
+197 -452 MP
+13 mR 11 mR 12 mR 12 mR 13 mR 13 mR 17 mR -1 16 R 18 mR 18 mR 4 Y ST
+% Path 388
+USA
+388 PT
+-564 -147 MP
+g k B k k p p C -4 MR p -5 X h -4 MR k p H s k p p p g l h B k p -4 MR D ST
+% Path 389
+USA
+389 PT
+-707 -167 MP
+z q z m q m A k g l t ST
+% Path 390
+USA
+390 PT
+-430 28 MP
+S N p g B I H k d K o f k -4 MR d k ST
+% Path 391
+USA
+391 PT
+-622 -412 MP
+-8 PR z z q -7 PR F -5 X g k g p k p -4 MR C p h p p p p D f g ST
+% Path 392
+USA
+392 PT
+-378 203 MP
+-6 mR k p -11 -12 R D P k k k D o 4 MR g p H k B k -4 X h B g -5 mR
+-4 mR O -4 -5 R k -5 mR -5 Y f -5 mR p k p k d f D o o -9 mR I f d f g
+-9 MR k -5 mR -5 X h p -4 mR D j j P P f H g -5 MR d j -4 mR -5 MR -4 Y
+j f o k d o H g -5 2 R p p g I f 5 MR d n f k o o ST
+% Path 393
+USA
+393 PT
+-436 2 MP
+t -6 mR p -3 -4 R d 4 MR -5 Y K o N -5 pR j K k t -6 pR o -4 pR j N D g
+B -4 Y g -6 pR f N o o D g D t d g k F I p k p k -4 mR H p -6 mR d g
+-4 mR H p k k g I S k k N k d f k k ST
+% Path 394
+USA
+394 PT
+-621 -178 MP
+g -4 X h p g p h m B p h l h B W h -4 PR -5 PR m q -4 PR h q l g A g z
+h q -4 X t p z W g l p q -5 PR h y ST
+% Path 395
+USA
+395 PT
+213 102 MP
+p -4 -5 R k k k k k k g G k -4 Y f o o f -4 mR d f H D j H I j g 2 -5 R
+-4 mR k B H g -5 mR H p j H k B -6 mR q p k B p d f H -4 mR k p -6 2 R p
+g p g -4 X q p p k p -6 MR k g k -9 MR g -4 -3 R h l h A q -5 MR g W p d
+f g -4 MR k g W h -4 X g k p M -4 MR H h -6 X h ST
+% Path 396
+USA
+396 PT
+74 -33 MP
+-5 MR -5 MR A h -4 MR -5 2 R p k k -9 MR H -4 MR g -5 MR -4 X g H p k k
+-5 MR g p g q B H k p k g -3 -4 R k p I f -5 pR B C B W U e m l h W m h
+l h A w p p k B k -3 -4 R g l -6 MR H -4 MR k k -6 mR g h ST
+% Path 397
+USA
+397 PT
+50 -254 MP
+p g p H p k p g p k k d ST
+% Path 398
+USA
+398 PT
+219 -276 MP
+-6 MR g p B B B k k H -8 mR -4 mR p p B -6 MR H p k k k p p -4 MR
+-4 -5 R k k k t -4 MR -4 MR -5 2 R -7 X M s h A h W -5 X h m M w 4 mR s
+l m 4 mR 5 mR m i U m M A q W h -5 MR -4 -5 R g C -7 MR -4 2 R s q s l h
+-8 X h l s m w u x -4 3 R t p z l p q U ST
+% Path 399
+USA
+399 PT
+34 -271 MP
+h z -4 PR -10 X p W g -4 X g p -8 MR k p -5 MR g G -8 -9 R k p p p
+k k k k k p k k p g p B -5 MR p h B -4 MR p p k g I f o f o -5 mR H
+-5 mR G k k W h l h q q -4 MR A q h l h l q W q l q q h l h -7 MR p p k
+g -5 -6 R -4 -5 R -3 -4 R k D ST
+% Path 400
+USA
+400 PT
+-21 -488 MP
+w q A t -5 PR m -4 X k t p -4 MR g -5 X B B p W q W m s -5 PR A p m h y
+z q m -5 PR u m u h y W F q m q k h m l g -7 X q m l k k h m D ST
+% Path 401
+USA
+401 PT
+-134 -369 MP
+k g k k C p g G H k -4 MR l q B p p g C -4 X q m q B k B p -5 -4 R B G
+k o Z f H p k B d f k -7 X h ST
+% Path 402
+USA
+402 PT
+119 -851 MP
+m h 4 mR A F l t -5 PR C p -5 PR h -4 PR -7 PR -7 X g q z h l p q -5 PR
+h F q -6 PR w q m q q y q -6 7 R m q v e n w q -4 3 R W q 5 mR -4 PR h
+-5 X g q m h F g q B u e h z q U e f E n J u e w q q q q -7 PR y l t p
+-4 X g q h w q -8 PR w w x w Z n u e i n u e 5 Y J V n 4 PR 4 mR h w q
+-4 3 R q 7 mR h u Z e 5 Y e i m m h q q u i v Z e u n e U e 4 mR 9 Y e U
+n V n Z V e i U i n e m m w h u e u e i e m q w q W F -4 PR h l g j k z
+W q 5 mR w m q m m q U ST
+% Path 403
+USA
+403 PT
+-219 -414 MP
+z z h b e i m -4 PR -4 PR z m u E f V n w A g p A g -4 PR 4 mR A k k h
+w w l F t q m q z q W F p h u e w W k g q ST
+% Path 404
+USA
+404 PT
+-54 -621 MP
+a e i m h 4 Y h W p p W p z m q q 4 mR q -5 PR -4 PR -3 4 R u i m -5 PR
+h -12 PR q 4 mR q u Z 5 Y e u e u e 5 PR e u J h l k q m u e h l t q
+4 mR W g A q w W z U 4 PR m v e n n e m -4 5 R w q q -5 PR m u e n e U
+i i i U e i 4 mR x u J n h l p g -5 PR v 5 PR m m m u e u Z m W g l g l
+z m 2 4 R h W -4 PR m q q W g l F p g q m 5 mR 4 mR m q 7 mR z -7 X g l
+F g l g q q q 5 Y e u J u i U i u e U e u i e 6 mR m q h q z m -5 X g k ST
+% Path 405
+USA
+405 PT
+29 -924 MP
+f 4 -3 R 3 -4 R f S f 6 -5 R S j I g j o Q o K 5 MR d g B d g d g -5 Y ST
+% Path 406
+USA
+406 PT
+61 -969 MP
+-6 pR o n E f j j k f o o j f D g d k d g d p -4 pR N D W s t D h g j l
+g h p D g -5 MR D f H D f k p -4 mR A q B g G D f -4 mR -4 mR B -7 mR g k ST
+% Path 407
+USA
+407 PT
+179 -1130 MP
+-4 MR B -7 mR -4 MR B k -4 mR p k g k -4 -5 R k g C s m M h M l h u ST
+% Path 408
+USA
+408 PT
+91 -1131 MP
+9 PR i r K T f 7 MR 5 -6 R j j f j f o V j 4 MR ST
+% Path 409
+USA
+409 PT
+-296 -773 MP
+-5 PR m -4 3 R z M -5 PR W g k g k d k d f ST
+% Path 410
+USA
+410 PT
+-339 -796 MP
+p k p p B B k k C G ST
+% Path 411
+USA
+411 PT
+-383 -839 MP
+p H -4 mR k t G k g -7 MR G k g -4 MR k k B k -4 mR H k k H p -5 MR g C
+p g p p p W p -5 MR k H k k g -4 -3 R p p p g k -4 X -7 MR B k k D f k H
+g D ST
+% Path 412
+USA
+412 PT
+-550 -690 MP
+-4 MR p l q -8 X q -9 MR -4 MR k p p C p l B g p ST
+% Path 413
+USA
+413 PT
+-465 -673 MP
+g p p g p -4 MR g B k p k -5 MR g p h g z g k k p y h l m m l h -4 MR ST
+% Path 414
+USA
+414 PT
+550 -1254 MP
+-4 MR p B B B B B B B B B B B B B B p B B B B B B p
+B B B B B B B B B B B B B B B p -6 MR p -6 MR k k p k H p -5 MR k G ST
+% Path 415
+USA
+415 PT
+388 -1314 MP
+6 mR h -5 4 R h w q z h q h m
+4 mR 4 mR 4 mR 4 mR 4 mR 4 mR 4 mR 4 mR 4 mR 5 mR 4 mR 5 mR
+4 mR 4 mR 4 mR 5 mR 4 mR 5 mR 4 mR 5 mR 4 mR 5 mR v ST
+% Path 416
+USA
+416 PT
+346 -1194 MP
+n n 5 PR 5 PR 4 PR 4 PR 5 PR 4 PR 5 PR 4 PR 5 PR 4 PR 5 PR e i V v
+-4 PR h ST
+% Path 417
+USA
+417 PT
+346 -1194 MP
+-44 PR -5 X p g -6 MR -5 MR -5 MR -6 MR -6 MR -5 MR -6 MR -5 MR -6 MR p
+-4 -4 R M h M q h B G ST
+% Path 418
+USA
+418 PT
+295 -1195 MP
+-5 pR -4 pR -5 pR -4 pR -5 pR -4 pR -5 pR D p j o j -7 pR j N -4 pR N
+-4 pR -4 pR -4 pR -4 pR -4 pR -4 pR D g W p B W p B W p B B B -4 MR B
+-4 MR W m B A ST
+% Path 419
+USA
+419 PT
+315 -1281 MP
+-4 pR N N N -4 pR N p p B H -6 MR k H p k k H -4 MR g B l ST
+% Path 420
+USA
+420 PT
+231 -1145 MP
+-4 mR k -4 mR H H H -4 mR H H H H H H -4 mR k g A q -5 X q A h p W h q
+h m m h -5 X h -4 MR -4 Y f d f j f d f j k d ST
+% Path 421
+USA
+421 PT
+225 -275 MP
+10 MR f o T Z v ST
+% Path 422
+USA
+422 PT
+262 -269 MP
+4 PR 4 X ST
+% Path 423
+USA
+423 PT
+275 -267 MP
+V n e n r ST
+% Path 424
+USA
+424 PT
+318 -221 MP
+a 3 pR i n n b 6 pR a i ST
+% Path 425
+USA
+425 PT
+478 -298 MP
+p d f t k H p p B p p H -5 mR -5 mR -5 mR -5 mR -1 -6 R -4 mR
+-5 mR -5 mR -5 mR -4 mR k k k k k H ST
+% Path 426
+USA
+426 PT
+500 -1149 MP
+p p W h -5 MR C g q B -8 MR p k p k B A h -4 MR p B W M -12 MR k -5 MR
+B k -5 MR p W ST
+% Path 427
+USA
+427 PT
+414 3 MP
+q q q h m -5 6 R q W ST
+% Path 428
+USA
+428 PT
+252 -270 MP
+p -4 X ST
+% Path 429
+USA
+429 PT
+564 23 MP
+e n 6 PR n V V T f 10 PR 4 X f V 6 PR 4 -2 R r o 5 PR V 5 PR n
+4 PR 4 PR T ST
+% Path 430
+USA Water
+430 PT
+383 -445 MP
+-5 mR D 7 MR S j j o S j o o o o o -8 pR -7 pR D k k k d g d k g d k k
+d g d g d g d g ST
+% Path 431
+USA Water
+431 PT
+383 -495 MP
+q z q z z z z ST
+% Path 432
+USA Water
+432 PT
+329 -482 MP
+-10 PR -5 X ST
+% Path 433
+USA Water
+433 PT
+272 -478 MP
+-11 MR -5 MR -5 MR ST
+% Path 434
+USA Water
+434 PT
+225 -489 MP
+p -4 MR -7 MR -8 X q -6 X h W ST
+% Path 435
+USA Water
+435 PT
+201 -492 MP
+9 Y ST
+% Path 436
+USA Water
+436 PT
+150 -495 MP
+9 mR 4 Y ST
+% Path 437
+USA Water
+437 PT
+154 -487 MP
+-5 X ST
+% Path 438
+USA Water
+438 PT
+148 -475 MP
+w l ST
+% Path 439
+USA Water
+439 PT
+537 -318 MP
+z z z z z W ST
+% Path 440
+USA Water
+440 PT
+530 -316 MP
+6 Y ST
+% Path 441
+USA Water
+441 PT
+529 -289 MP
+9 mR M ST
+% Path 442
+USA Water
+442 PT
+507 -253 MP
+m h -3 4 R x ST
+% Path 443
+USA Water
+443 PT
+486 -223 MP
+m x J i ST
+% Path 444
+USA Water
+444 PT
+583 -334 MP
+z -4 PR z ST
+% Path 445
+USA
+445 PT
+413 -1171 MP
+-12 MR ST
+% Path 446
+USA
+446 PT
+267 -1098 MP
+-5 mR k p p I f k H g q H -5 MR B W B k p g G H -9 mR -4 -3 R h m h l q
+h W h p q l q q h W h l h l m s l p p k p W h -4 X w l -6 X ST
+% Path 447
+USA
+447 PT
+444 -378 MP
+-9 mR d j -9 mR d H -9 mR t C q q g k D H -5 mR g -4 -3 R h p g A h p
+-4 X M -6 MR d f I j f k W q l q W q p g -4 -5 R d ST
+% Path 448
+USA
+448 PT
+225 -275 MP
+-5 X ST
+% Path 449
+USA
+449 PT
+262 -269 MP
+-6 MR -4 X ST
+% Path 450
+USA
+450 PT
+275 -267 MP
+A ST
+% Path 451
+USA
+451 PT
+318 -221 MP
+k k k -5 -4 R p p g p -4 -5 R k p k G k -5 mR g k p k g ST
+% Path 452
+USA
+452 PT
+340 -185 MP
+k -4 -5 R -4 -3 R ST
+% Path 453
+USA
+453 PT
+437 -207 MP
+m z 4 mR q 4 mR q m w s q q -4 PR q h -4 3 R -8 X k -4 Y t p l F -5 PR
+q z h -10 X g -4 PR m l t -5 X g z W -7 PR q ST
+% Path 454
+USA
+454 PT
+247 5 MP
+-5 MR p g -6 X s B -4 mR -5 MR -5 X M W ST
+% Path 455
+USA
+455 PT
+397 17 MP
+p k B p p p k k -4 mR k p p g ST
+% Path 456
+USA
+456 PT
+415 3 MP
+7 MR r e 7 MR T n 14 PR 4 3 R n n V 7 PR n n T o 4 PR 4 X f n 4 -2 R
+4 3 R 11 PR E 18 PR 6 X 10 PR 5 PR n V n n V n ST
+% Path 457
+USA
+457 PT
+525 -1239 MP
+h A g p A h -7 PR A p p k p p l s p A s W s q m z h w m h q -5 X g A p
+W p -4 PR z B -4 PR -11 PR q h q l p -6 PR q A g W p -4 X g l p -6 PR
+-9 -2 R p -9 PR h l p q W g l F k t ST
+% Path 458
+USA
+458 PT
+478 -205 MP
+-4 pR S f o d ST
+% Path 459
+USA
+459 PT
+93 1274 MP
+p C -4 -3 R p C C -4 -3 R C C p -4 -3 R C C C C C C C -4 -3 R C p C C
+-4 -3 R C C p -4 -3 R C C C C C C C -4 -3 R C p C -4 -3 R C C C p g
+C C C -4 -3 R p C C -4 -3 R C C p -4 -3 R C C C C C C C -4 -3 R C p C
+-4 -3 R C C C p g C C C -4 -3 R p C C -4 -3 R C C p -4 -3 R
+C C C C C C C -4 -3 R p C C -4 -3 R C C p -4 -3 R C C C C C C C -4 -3 R
+p C C -4 -3 R ST
+% Path 460
+USA
+460 PT
+-173 993 MP
+m q h q z m 4 Y i n e 4 PR b 6 pR e 8 Y m u h q g s ST
+% Path 461
+USA
+461 PT
+-178 1035 MP
+-8 MR g l s -7 PR l p -5 X ST
+% Path 462
+USA
+462 PT
+-206 1035 MP
+q -4 PR -6 X g -5 X g l ST
+% Path 463
+USA
+463 PT
+-226 1035 MP
+-10 PR z w W g -4 3 R g q -6 PR W t l g l ST
+% Path 464
+USA
+464 PT
+-264 1041 MP
+p g p ST
+% Path 465
+USA
+465 PT
+-269 1038 MP
+B -5 MR W -4 MR l ST
+% Path 466
+USA
+466 PT
+-285 1034 MP
+-6 MR k p p k p k B ST
+% Path 467
+USA
+467 PT
+-303 1023 MP
+q -3 4 R x m w w m q q q m m m -4 X g y -10 PR m -5 PR h z m q -5 6 R e
+w p z q l t -6 PR z q A p k k -4 mR g W g -9 PR m m q z 4 Y e i 4 mR ST
+% Path 468
+USA
+468 PT
+385 1040 MP
+S j o S S o 4 X o j o o Z T e u h e n u m e 13 MR r S N o o Q 4 -3 R o
+j N j o j S j S 5 MR f j o o j o f S o f o S 8 -7 R o j j o o r e 5 X e
+E n i Z r e a r r e n r e 6 X e T e r S Q r n o E e T n r e o o 5 MR r ST
+% Path 469
+USA
+469 PT
+669 928 MP
+g p B B -4 -3 R -6 MR g B g l h p -4 X m h g p B l 4 mR g -7 -6 R B p H
+k C p B p g p B p g p B C p g l h -4 MR C -4 -3 R l p K H p y -3 -4 R d
+f -9 mR A h q l q l m h p l q h q W s l h q -5 X w h C W s A p k l h q
+-4 X v m q h q B -4 X M W p k k B g p I f d o f g 2 -5 R P f D E j k p B
+k p l h l h g k W q h B g A h B p B C -5 MR k B B -4 X q m B -4 MR k p p
+d f d -4 mR p p p B B l s p B g q -4 MR g p k p k E n O f j D f G -4 mR
+k H t P o f D j g k -4 mR -6 mR d f -4 mR p g j I f -4 mR -5 mR g D Z
+o o f d 4 MR f D f k p p p p -5 MR k -4 MR G ST
+% Path 470
+USA
+470 PT
+-410 383 MP
+-11 PR -11 PR -11 PR -10 PR -11 PR -11 PR -5 X ST
+% Path 471
+USA
+471 PT
+79 294 MP
+-17 PR -18 PR -17 PR -17 PR -18 PR -17 PR -17 PR -18 PR -17 PR -18 PR
+-17 PR -17 PR -17 PR -18 PR -17 PR -18 PR A ST
+% Path 472
+USA
+472 PT
+87 400 MP
+12 MR 13 MR 13 MR 12 MR 14 MR 12 MR 12 MR 14 MR 12 MR 13 MR 12 MR 12 MR
+14 MR 12 MR 13 MR 12 MR 13 MR 12 MR 13 MR 13 MR 12 MR 13 MR 4 X ST
+% Path 473
+USA
+473 PT
+370 376 MP
+13 MR 13 MR 13 MR 13 MR 12 MR 14 MR
+13 MR 13 MR 13 MR 13 MR 13 MR 13 MR 13 MR 13 MR 13 MR 12 MR 13 MR 13 MR
+14 MR 12 MR 13 MR 13 MR T ST
+% Path 474
+USA
+474 PT
+-532 610 MP
+-4 MR -6 MR B k p ST
+% Path 475
+USA
+475 PT
+575 998 MP
+4 X ST
+% Path 476
+USA Water
+476 PT
+629 1296 MP
+10 pR n E f V i 6 pR i i 9 pR c n U w e ST
+% Path 477
+USA
+477 PT
+561 1100 MP
+m m 5 Y e u i 14 pR i -3 7 R e 21 mR w m u i m 4 Y e U e i n a u h u m
+4 Y m 7 pR a v h u h i 5 PR 3 4 R 4 pR i i e 6 pR 6 pR i U h u h u h U h
+9 Y m 5 pR i e i a e i e a 3 pR n n 4 X f E o 5 X f 10 PR 7 PR n b c n a u ST
+% Path 478
+USA
+478 PT
+580 997 MP
+5 MR 4 MR 4 MR 5 MR 4 MR 4 MR 5 MR 5 MR S 5 MR T S S 5 MR E S S
+5 MR 5 MR S 5 MR T S o 5 MR E r S S 5 MR r r S S 5 MR r r S S 5 MR 5 MR
+S 5 MR 5 MR S 5 MR 5 MR E ST
+% Path 479
+USA
+479 PT
+669 928 MP
+4 MR 5 MR T S S 5 MR 5 MR E r S S 5 MR 5 MR S 5 MR 5 MR r r r S S r r ST
+% Path 480
+USA
+480 PT
+131 772 MP
+6 MR 7 MR 6 MR 6 MR 7 MR 6 MR 7 MR 6 MR 4 X S 4 X S 4 MR 6 MR 7 MR
+6 MR 6 MR 7 MR 6 MR 7 MR 4 X S 4 MR 7 MR 6 MR 6 MR 7 MR 6 MR 6 MR 7 MR
+4 X S 4 MR 6 X S 4 MR 7 MR 6 MR 6 MR 7 MR 6 MR 7 MR 6 MR 6 MR 4 X S 6 MR
+4 X S 4 MR 7 MR 4 X ST
+% Path 481
+USA
+481 PT
+412 727 MP
+-6 mR -7 mR -6 mR -6 mR -7 mR -7 mR -6 mR -7 mR -7 mR -7 mR -6 mR -8 mR
+-7 mR -7 mR -7 mR -1 -8 R -7 mR -8 mR -7 mR
+-8 mR -8 mR -8 mR -8 mR -8 mR -8 mR -9 mR -8 mR -9 mR -9 mR -9 mR -9 mR
+-10 mR -9 mR -1 -9 R -11 mR -10 mR -10 mR -11 mR -11 mR -11 mR
+-12 mR -12 mR I ST
+% Path 482
+USA
+482 PT
+260 1068 MP
+4 MR 5 MR 4 MR 5 MR T S S E S S 5 MR 4 MR 5 MR 5 MR S 5 MR 4 MR 5 MR T
+S o E r S S 5 MR r r r S S r r S S 5 MR 4 MR 5 MR ST
+% Path 483
+USA
+483 PT
+131 772 MP
+-7 mR -6 mR -6 mR -7 mR -6 mR -6 mR -7 mR -7 mR -6 mR -7 mR -7 mR -7 mR
+-8 mR -7 mR -7 mR -4 Y ST
+% Path 484
+USA
+484 PT
+116 666 MP
+-8 mR -7 mR -7 mR -8 mR -7 mR -8 mR -8 mR -8 mR -8 mR -8 mR -9 mR -8 mR
+-9 mR -9 mR -8 mR -9 mR -9 mR -10 mR -9 mR -10 mR -10 mR -10 mR -10 mR
+-11 mR -10 mR -12 mR -11 mR -12 mR -11 mR -13 mR -12 mR
+-14 mR -14 mR -14 mR -15 mR -16 mR -10 Y ST
+% Path 485
+USA
+485 PT
+358 1434 MP
+H H -4 mR H H -4 mR H H H H -4 mR H H -4 mR H H -4 mR H -4 mR H H
+-4 mR -4 mR k -4 mR -4 mR H -4 mR H H -4 mR H -4 mR -4 mR H H
+-4 mR -4 mR H -4 mR H -4 mR -4 mR H -4 mR -4 mR H -4 mR -4 mR H
+-4 mR -4 mR H -4 mR -4 mR -4 mR H -4 mR -4 mR -4 mR H -5 mR H
+-4 mR -4 mR -4 mR -4 mR -4 mR -4 mR -4 mR H -5 mR -4 mR H -5 mR -4 mR H
+-5 mR -4 mR -4 mR -4 mR -5 mR H -4 mR -4 mR -5 mR -4 mR -4 mR -4 mR
+-5 mR -4 mR -4 mR -5 mR -4 mR -4 mR -4 mR -5 mR -5 mR -4 mR -4 mR -4 mR
+-6 mR -4 mR -4 mR -4 mR -6 mR -4 mR -5 mR -4 mR -5 mR -5 mR -4 mR
+-5 mR -5 mR -5 mR -4 mR -5 mR -5 mR -5 mR -5 mR -5 mR -5 mR -5 mR -4 mR
+-5 mR -6 mR -5 mR -5 mR -5 mR -5 mR -5 mR -5 mR -6 mR -5 mR -5 mR -6 mR
+-5 mR -5 mR -5 mR -7 mR -5 mR -6 mR -5 mR -6 mR -5 mR -6 mR -6 mR -5 mR
+-6 mR -6 mR -6 mR -7 mR -6 mR -6 mR -6 mR -6 mR -7 mR ST
+% Path 486
+USA
+486 PT
+93 1274 MP
+E S S S 4 MR 4 MR 4 MR S 5 MR S 5 MR S r r S S r r S o T S o S 5 MR S
+4 MR 4 MR 4 MR 4 MR 4 MR S 5 MR S E S S r r S S S 4 MR 4 MR 4 MR S 5 MR
+S 4 MR 4 MR 4 MR 4 MR 4 MR S E S S r r S S S 4 MR 4 MR 4 MR r ST
+% Path 487
+USA
+487 PT
+-173 993 MP
+5 MR 6 MR 5 MR 5 MR 5 MR 5 MR 4 X S S 6 MR 4 MR 6 MR 5 MR 6 MR 4 MR
+6 MR 5 MR 5 MR 5 MR 6 MR 4 MR 6 MR 5 MR 4 X S S 6 MR 5 MR 5 MR 5 MR 6 MR
+4 MR 6 MR 5 MR 4 X S S 6 MR T S S 6 MR 6 MR 4 MR 5 MR 6 MR 4 X S S 6 MR
+T S S 6 MR 6 MR 4 MR 5 MR 6 MR 4 MR 6 MR 5 MR 4 X S S 6 MR T S 4 MR 5 MR
+6 MR 4 MR 6 MR 5 MR 4 X S S 6 MR 5 MR 5 MR 5 MR 6 MR 4 MR 5 MR 6 MR 6 MR
+4 MR T ST
+% Path 488
+USA
+488 PT
+-562 759 MP
+8 MR 7 MR 7 MR 7 MR 7 MR 7 MR 8 MR 6 X S 4 X S 6 MR 8 MR
+7 MR 7 MR 7 MR 7 MR 7 MR 8 MR 6 X S 4 X S 4 X S 4 X S
+7 MR 7 MR 7 MR 7 MR 8 MR 7 MR 7 MR 7 MR 7 MR 7 X S 4 X S 4 X S 4 X S
+7 MR 7 MR 7 MR 7 MR 7 MR 8 MR 7 MR 7 MR 7 MR 8 MR 7 MR 7 MR 8 MR
+7 MR 7 MR 7 MR 7 MR 7 X S 5 MR 6 X S 5 MR 9 MR 5 X S 4 X S
+7 MR 7 MR 7 MR 7 MR 8 MR 7 MR 7 MR 7 MR 8 MR 7 MR 7 MR 7 MR 8 MR
+7 MR 7 MR 7 MR 8 MR 7 MR 7 MR 7 MR 8 MR 7 MR 7 MR 7 X S 4 X S 4 X S 4 X
+S 4 X S 7 MR 7 MR 7 MR 7 MR 8 MR 7 MR 7 MR ST
+% Path 489
+USA
+489 PT
+-532 610 MP
+-8 mR -10 mR -9 mR -9 mR -10 mR -10 mR -10 mR -10 mR -11 mR -11 mR
+-10 mR -12 mR -11 mR -11 mR -12 mR -1 -13 R -12 mR -13 mR -13 mR -10 Y ST
+% Path 490
+USA
+490 PT
+-552 395 MP
+15 MR 13 MR 14 MR 14 MR 13 X o ST
+% Path 491
+USA
+491 PT
+-410 383 MP
+12 X S 13 MR 14 MR 14 MR 14 MR 14 MR 14 MR 13 X S 11 X S 13 MR
+14 MR 14 MR 7 X ST
+% Path 492
+USA
+492 PT
+-233 370 MP
+-15 mR -14 mR -15 mR -17 mR -17 mR -19 mR -20 mR -20 mR -24 mR -11 Y ST
+% Path 493
+USA
+493 PT
+-378 203 MP
+24 X S 23 X S 24 MR 26 MR 27 X S E ST
+% Path 494
+USA
+494 PT
+-233 368 MP
+15 MR 14 MR 6 X ST
+% Path 495
+USA
+495 PT
+561 1100 MP
+-4 mR -4 mR -4 mR -4 mR -4 mR -4 mR -5 mR -4 mR -4 mR -4 mR -4 mR -5 mR
+-4 mR -4 mR -4 mR -5 mR -4 mR -4 mR -4 mR -4 mR -5 mR -4 mR -5 mR -4 Y ST
+% Path 496
+USA
+496 PT
+437 371 MP
+-12 mR -12 mR -14 mR -11 Y ST
+% Path 497
+USA
+497 PT
+228 389 MP
+-12 mR -13 mR -13 mR -14 mR d ST
+% Path 498
+USA
+498 PT
+8 298 MP
+-16 mR -19 mR -20 mR -20 mR -25 mR -9 Y ST
+% Path 499
+USA
+499 PT
+-117 982 MP
+-5 mR -5 mR -6 mR -4 mR -6 mR -5 mR -6 mR -5 mR -6 mR -5 mR -5 mR -7 mR
+-4 mR -6 mR -6 mR -6 mR -5 mR -6 mR -6 mR -6 mR -6 mR -5 mR -7 mR -5 mR
+-7 mR -5 mR -7 mR -6 mR -7 mR -5 mR -7 mR -6 mR -7 mR -6 mR -7 mR -6 mR
+-7 mR -7 mR -7 mR -6 mR -8 mR -6 mR -8 mR -6 mR -8 mR -7 mR -7 mR -8 mR
+-7 mR -8 mR -7 mR -8 mR -8 mR -8 mR -8 mR -8 mR -9 mR -8 mR -9 mR -8 mR
+-9 mR -9 mR -9 mR -8 mR -11 mR -9 mR -9 mR -11 mR -10 mR -9 mR
+-11 mR -11 mR -11 mR -11 mR -11 mR -13 mR -11 mR -13 mR -13 mR -13 mR
+-14 mR -14 mR -15 mR -16 mR -17 mR -17 mR -19 mR -20 mR -22 mR -24 mR -5 Y ST
+% Path 500
+USA
+500 PT
+-549 603 MP
+p -6 mR p C p p -5 MR p g -4 MR k g k k g k k k p p g -6 -5 R p g p k g
+-8 -7 R B F p k p k B k k k p j t k p k p G k -4 MR k C p -7 MR -4 MR g
+-4 MR g -4 MR k p p A h p h l h -7 MR l -4 MR p -5 MR k -4 MR B -6 -3 R
+g p -3 -4 R G -4 mR p k B p k -7 -8 R k H k -5 mR k l B G k -4 mR k g
+-8 -9 R k H g -6 mR k D K S o f D f o o f I K D n e S 4 MR D o f n o f E
+o f o o d e P f S o k f D f k d o -5 mR I o 4 MR d K k g G k k k -8 Y k
+D -5 Y k -4 mR -5 mR -5 Y o B d j k H B p p H h ST
+% Path 501
+USA
+501 PT
+-728 298 MP
+-4 MR o f k l q p H p k H k ST
+% Path 502
+USA
+502 PT
+-742 281 MP
+-5 MR G k -5 -6 R -4 -3 R -5 MR k -5 -4 R -5 MR -7 MR g p g p g B B
+-5 MR g p p g B p k l h p -6 MR C -5 MR -6 -7 R k k p p p g -4 MR p H B
+C l B -4 MR k g -5 -4 R C H g j k g k p -6 MR g l q -5 X q l h F C A q
+-6 X q l ST
+% Path 503
+USA
+503 PT
+-921 189 MP
+g k k l q B g p k k p p -4 MR p B -4 MR -5 X ST
+% Path 504
+USA
+504 PT
+-957 172 MP
+p k k W q l B D f G f k k k -6 mR k k p p g k D f H H t j k g k h g k
+-4 -5 R k k d f -5 mR t d K H -4 Y d j k D k H d f k g C k -6 -7 R k p d
+f k d T S I f o k I f d ST
+% Path 505
+USA
+505 PT
+-390 1223 MP
+-7 mR -8 mR -9 mR -7 mR -8 mR -9 mR -8 mR -7 Y H -7 mR -8 mR -9 mR
+-7 mR -8 Y H -7 mR -8 mR -9 mR -8 mR I ST
+% Path 506
+USA
+506 PT
+-407 1079 MP
+q q m m -6 PR h ST
+% Path 507
+USA
+507 PT
+-421 1088 MP
+k k k G G -4 -7 R k G -3 -5 R k G k g -4 -7 R k G g -5 -9 R k g -5 -9 R
+k g -4 -7 R k k g -4 -7 R k G g H k G G g -5 -9 R k -4 -7 R k G -3 -5 R
+k k G -3 -5 R k k t H k G G g H k G G -4 -7 R k G -4 -7 R k t H k ST
+% Path 508
+USA
+508 PT
+-544 879 MP
+-6 Y k -4 Y k -4 Y k -4 Y k -6 Y k -4 Y k -4 Y k -4 Y k -6 Y k -4 Y k
+-4 Y k -6 Y k -4 Y k -6 Y k -4 Y k -6 Y k -6 Y k -4 Y k -6 Y k -4 Y k
+-6 Y k -6 Y k -6 Y k -6 Y k D ST
+% Path 509
+USA
+509 PT
+-568 709 MP
+7 X o 5 X o 5 X o 8 MR ST
+% Path 510
+USA
+510 PT
+-537 705 MP
+-6 Y k -7 mR -9 Y H -4 Y k -6 Y k -6 Y k -6 Y k -6 Y k -8 Y k -6 Y k
+-8 Y k -6 Y k ST
+grestore
+/#copies 1 def
+showpage
+%%EndPage: 1 1
+%%Trailer
+%%DocumentFonts: Helvetica
+%%Pages: 1

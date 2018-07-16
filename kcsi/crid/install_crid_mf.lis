@@ -1,50 +1,46 @@
-        Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	Copyright (c) 1998 by NeoMedia Technologies Inc. All Rights Reserved.
 
         ====================================================================
 
-        Title:          crid - control report inquiry datentry
+        Title:          Installation of CRID for Micro Focus COBOL on UNIX
 
         Document:       install_crid_mf.lis
-        Last Updated:   31 OCTOBER 95
-        Products:       KCSI Utilities - CRID
-        Versions:       2.77 (AND LATER)
+        Last Updated:   $Date:$
+        Products:       KCSI CRID Utilities
+        Versions:       2.93 (AND LATER)
 
-        Summary:        Installation instructions for the KCSI Utilities
+        Summary:        Installation instructions for the CRID Utilities
 			using the Micro Focus COBOL compiler.
 
         ====================================================================
  
-			***** ! ! ! ATTENTION ! ! ! *****
  
- 	Please Read carefully! The instructions have changed from
-	previous releases.
- 
-	USING EXISTING UTILITIES
-	========================
-
-	Distribution
-        ------------
+	INSTALLATION
+	============
 
         First install WISP and setup the WISP runtime environment.  This
         must be in place before CRID can be used.
 
         CRID will normally be distributed on diskette or tape as a
-        compressed tar file named "cridmf.XXX.tar.Z".  Unload this file
-        from the distribution media as follows.
+        compressed tar file named "cridmfx.XXX.tar.Z".  It is recommended
+        that you install CRID in your WISP directory ($WISPDIR). Unload
+        this file from the distribution media as follows.
 
-        E.g.    $ tar -xvf /dev/rfd0
+	        $ cd $WISPDIR
+                $ tar -xvf /dev/rfd0
 
-        Extract the distribution files from "cridmf.XXX.tar.Z" using the
+        Extract the distribution files from "cridmfx.XXX.tar.Z" using the
         following command:
 
-                $ uncompress -c cridmf.XXX.tar.Z|tar -xvpf -
+                $ uncompress -c cridmfx.XXX.tar.Z|tar -xvpf -
 
-        This will create a directory "cridmf.XXX" where XXX is a version
+        This will create a directory "cridmfx.XXX" where XXX is a version
 	number.  Refer to packlist.lis in the distribution for a listing
 	of expected files.
  
-	Installation
-        ------------
+
+	Configuration
+        -------------
  
 	Copy the utilities to a program directory or a directory on
         your path.
@@ -61,13 +57,15 @@
 
         ====================================================================
 
+	
 	   *********************************************************
-	       If you could not run the distribution executable,
-	       then continue.
+	   	The following instructions are only needed if
+		you could not run the distribution executable 
+		or if you need to relink the executable.
 	   *********************************************************
 
-	MAKING THE UTILITIES
-	--------------------
+	RELINKING THE UTILITIES
+	-----------------------
  
 	1. Copy the distribution into a directory on the user's path.
  
@@ -76,7 +74,7 @@
  
 	3. Once this is complete, you may build the individual utilities.
 
-	   a.  Edit the make file cridutil.umf.  The make file contains
+	   a.  Edit the make file cridmfx.umf.  The make file contains
 	       instructions for building the utilities. This make file
 	       needs to be edited to correctly reflect the location of
 	       the wisp libraries.
@@ -85,13 +83,9 @@
  
 		WISPDIR=/usr/local/wisp
 
-	   c.  Verify and uncomment the correct curses library location.
-
-		CURSES_LINK = -lcurses
- 
 	4. Now the utilities may be built:
 
-		$ make -f cridutil.umf
+		$ make -f cridmfx.umf
  
 	Follow the instructions on the screen for each utility that you
 	wish to build.

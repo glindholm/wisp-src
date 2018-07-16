@@ -28,6 +28,8 @@
 
 #define SUBSTITUTION_TABLE_SIZE    64						/* Size of substitution table.			*/
 
+#define VMAP_CNG_OLDDATA ((unsigned char) 255)  				/* Was -1 but vmap_cng is unsigned */
+
 #ifdef VIDEO_DATA_ROOT
 
 /*						Global "general" data.								*/
@@ -287,6 +289,9 @@ extern int meta_substitute[SUBSTITUTION_TABLE_SIZE][2];
 /*
 **	History:
 **	$Log: vdata.h,v $
+**	Revision 1.16  1998-10-13 14:47:58-04  gsl
+**	Add VMAP_CNG_OLDDATA define
+**
 **	Revision 1.15  1997-07-12 17:49:33-04  gsl
 **	moved deferred to vdefer.c
 **

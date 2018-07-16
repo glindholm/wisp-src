@@ -1,3 +1,10 @@
+000100**   Copyright (c) 1997 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       mflink.wcb
+000500**
+000600**   Project:    WISP for Micro Focus COBOL
+000700**
       ******************************************************************
       *
       *  MFLINK	- WISP Micro Focus LINK INTERFACE
@@ -23,8 +30,7 @@
       
        IDENTIFICATION DIVISION.
        PROGRAM-ID.       MFLINK.
-       AUTHOR.           Greg Lindholm @ IDSI.
-       DATE-WRITTEN.     01/31/92.
+       AUTHOR.           NeoMedia Technologies Inc.
        DATA DIVISION.
        WORKING-STORAGE SECTION.
 

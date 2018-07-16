@@ -17,6 +17,7 @@ static char rcsid[]="$Id:$";
 /*			Include required header files.										*/
                 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "idsistd.h"
 #include "wperson.h"
@@ -24,24 +25,73 @@ static char rcsid[]="$Id:$";
 #include "wcommon.h"
 #include "wangkeys.h"
 #include "wfname.h"
-#include "werrlog.h"
 #include "level.h"
 #include "wisplib.h"
 #include "sharemem.h"
 #include "vwang.h"
 #include "filext.h"
 #include "wdefines.h"
+#include "wfiledis.h"
+#include "wmalloc.h"
+#include "wispcfg.h"
+
+#include "idsisubs.h"
 
 
-/*			Subroutine entry point.											*/
+#ifdef WIN32
+#include "win32spn.h"
+#endif
 
+#include "werrlog.h"
+#define		ROUTINE		77100
+
+
+/* OLD frontend for internal display */
 void wfile_disp(void)
 {
-#define		ROUTINE		77100
+	char	filename[COB_FILEPATH_LEN + 1];
+
+	/*
+	**	Issues the getparms and if a file was supplied then display it.
+	*/
+	if (display_util_getparms(filename))
+	{
+		/*
+		**	Do the DISPLAY
+		*/
+		wpushscr();
+
+		internal_display(filename);
+
+		wpopscr();
+	}
+}
+
+/*
+**	ROUTINE:	display_util_getparms()
+**
+**	FUNCTION:	Issue the DISPLAY getparms and return the filename.
+**
+**	DESCRIPTION:	Issues the INPUT getparm.
+**
+**	ARGUMENTS:	
+**	filename	The returned filename to be displayed.
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	0		Exit without displaying a file
+**	1		A filename was supplied.
+**
+**	WARNINGS:	Ensure the link-level is correct before calling this routine
+**			because GETPARM is dependent on the link-level.
+**
+*/
+int display_util_getparms(char *filename)
+{
 	char file[SIZEOF_FILE];
 	char library[SIZEOF_LIB];
 	char volume[SIZEOF_VOL];
-	char filename[COB_FILEPATH_LEN];
 	char entry_message[80];
 	char *end_name;
 	char tempname[COB_FILEPATH_LEN], orig_file[SIZEOF_FILE];
@@ -50,33 +100,24 @@ void wfile_disp(void)
 	char getparm_type[3];
 	char pf_key;
 	FILE *fh;
-	int displaying = TRUE;								/* Flag set to loop until PF16 pushed.	*/
-
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
 	wpload();									/* Load personality stuff.		*/
 	native_mode = 0L;                                           			/* Start off in WANG_VS mode.		*/
 
-	displaying = TRUE;								/* Keep displaying.			*/
-	while (displaying)								/* Loop until no more to display.	*/
+	memset(file, ' ', SIZEOF_FILE);						/* Initialize variables goin' to	*/
+	memset(orig_file, ' ', SIZEOF_FILE);					/* file_getparm().			*/
+	memset(tempname, ' ', COB_FILEPATH_LEN);
+	get_defs(DEFAULTS_IV,volume);
+	get_defs(DEFAULTS_IL,library);
+
+	strcpy(entry_message,"To display a file, enter the name and location of the file. ");
+	getparm_type[0] = 'I';							/* Start off as an initial getparm.	*/
+	getparm_type[1] = ' ';
+	getparm_type[2] = '\0';
+	mode = 0;
+        
+	for(;;)
 	{
-
-		displaying = FALSE;							/* Only do one display.			*/
-
-		memset(file, ' ', SIZEOF_FILE);						/* Initialize variables goin' to	*/
-		memset(orig_file, ' ', SIZEOF_FILE);					/* file_getparm().			*/
-		memset(tempname, ' ', COB_FILEPATH_LEN);
-		get_defs(DEFAULTS_IV,volume);
-		get_defs(DEFAULTS_IL,library);
-
-		strcpy(entry_message,"To display a file, enter the name and location of the file. ");
-		getparm_type[0] = 'I';							/* Start off as an initial getparm.	*/
-		getparm_type[1] = ' ';
-		getparm_type[2] = '\0';
-		mode = 0;
-                         
-get_name_loop:						      				/* A label to go to.			*/
-
 		file_getparm2(mode,file,library,volume,"INPUT   ","DISP  ",		/* Allow the user to enter the name.	*/
 			&native_mode,getparm_type,tempname,
 			entry_message,NULL,&pf_key,'E',orig_file,NULL,NULL,NULL);
@@ -84,40 +125,36 @@ get_name_loop:						      				/* A label to go to.			*/
 											/* get_name, these variables will all	*/
 											/* be equal to spaces.			*/
 
-		if (pf_key == PFKEY_16_PRESSED || (file[0] == ' ' && library[0] == ' ' && volume[0] == ' ' && tempname[0] == ' '))
+		if (PFKEY_16_PRESSED == pf_key)
 		{
-			displaying = FALSE;						/* Set to stop display loop.		*/
-		}                   
+			/* Exit without displaying a file */
+			return 0;
+		}
+
+		if (native_mode)
+		{
+			cobx2cstr(filename, tempname, COB_FILEPATH_LEN); 
+		}
 		else
 		{
-			int i;
-
-			if (native_mode)
+			if (0 != memcmp(file,"        ",8))
 			{
-				memcpy(filename,tempname,COB_FILEPATH_LEN);
-				*strchr(filename,' ') = '\0';				/* Null terminate.			*/
-			}
-			else		  						/* Are we NOT in native mode?		*/
-			{								/* Yup.					*/
-				mode = IS_PRINTFILE;					/* Tell wfname what type of file.	*/
+				mode = IS_PRINTFILE|IS_BACKFILL;			/* Tell wfname what type of file.	*/
 				SAVE_WISPFILEXT;					/* Save the file extension.		*/
 				end_name = wfname(&mode, volume, library, file, filename);	/* Construct native filename.	*/
 				*end_name = '\0';					/* Null terminate.			*/
 				memcpy(tempname,filename,strlen(filename));
-			}
-
-			if (fh = fopen(filename,"r"))					/* See if we can open file		*/
-			{
-				fclose(fh);						/* Success - we have access		*/
+				RESTORE_WISPFILEXT;					/* Restore the extension.		*/
 			}
 			else
-			{								/* Nope.  Give a new entry message.	*/
-				strcpy(entry_message,"UNABLE TO OPEN FILE, ACCESS DENIED or FILE MISSING");
-				getparm_type[0] = 'R';					/* Now its a respecify getparm.		*/
-				getparm_type[1] = ' ';
-				RESTORE_WISPFILEXT;					/* Restore the extension.		*/
-				goto get_name_loop;					/* And loop back up.			*/
+			{
+				filename[0] = '\0';
 			}
+		}
+
+		if (*filename && (fh = fopen(filename,"r")))			/* See if we can open file		*/
+		{
+			fclose(fh);						/* Success - we have access		*/
 
 			/*
 			**	Update the PRB for backwards referencing.
@@ -132,19 +169,57 @@ get_name_loop:						      				/* A label to go to.			*/
 					entry_message,NULL,&pf_key,'E',orig_file,NULL,NULL,NULL);
 			}
 
-			/*
-			**	Do the DISPLAY
-			*/
-			wpushscr();	      						/* Save the screen map and state.	*/
-			if ((i = greclen(filename)) >= 0) vdisplay(filename,i);		/* Get the record length.		*/
-			else if (i == -2) werrlog(ERRORCODE(2),filename,0,0,0,0,0,0,0);	/* Protection violation.		*/
-			else if (i == -1) werrlog(ERRORCODE(4),filename,0,0,0,0,0,0,0);	/* Error on OPEN.			*/
-			else vdisplay(filename,255);  					/* Display the file using max buffsize.	*/
-			wpopscr();							/* Restore the screen and map.		*/
+			wtrace("DISPLAY","GETPARM","Selected file [%s] to display",filename);
+			
+			return 1;
 		}
+										/* Nope.  Give a new entry message.	*/
+		strcpy(entry_message,"UNABLE TO OPEN FILE, ACCESS DENIED or FILE MISSING");
+		getparm_type[0] = 'R';					/* Now its a respecify getparm.		*/
+		getparm_type[1] = ' ';
 	}
+}
 
-	return;			      							/* All done mate.			*/
+/*
+**	ROUTINE:	utils_in_windows()
+**
+**	FUNCTION:	Flag if utilities are to be run in separate windows (UTILSWINDOWS option)
+**
+**	DESCRIPTION:	This applies to DISPLAY and VSEDIT from mngfiles().
+**			It is only meaningful on windowing environments (NT/95)
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	0		Run utils in same window.
+**	1		Run utils in their own window
+**
+**	WARNINGS:	None
+**
+*/
+int utils_in_windows(void)
+{
+	static int rc = -1;
+	
+	if (-1 == rc)
+	{
+		rc = 0;
+		
+#ifdef WIN32
+		if (no_windows())
+		{
+			rc = 0;
+		}
+		else if (get_wisp_option("UTILSWINDOWS"))
+		{
+			rc = 1;
+			wtrace("OPTIONS","UTILSWINDOWS","Using Utilities in Windows option");
+		}
+#endif /* WIN32 */
+	}
+	return rc;
 }
 
 /*
@@ -177,7 +252,15 @@ int use_internal_display(void)
 		{
 			rc = 0;
 		}
+		else if (custom_display_utility())
+		{
+			rc = 0;
+		}
 		else if (get_wisp_option("EXTDISPLAY"))
+		{
+			rc = 0;
+		}
+		else if (utils_in_windows())
 		{
 			rc = 0;
 		}
@@ -185,6 +268,9 @@ int use_internal_display(void)
 		{
 			rc = 1;
 		}
+
+		wtrace("DISPLAY","MODE","Using %s DISPLAY Utility", rc ? "Internal":"External");
+		
 	}
 	return rc;
 }
@@ -213,14 +299,13 @@ int link_display(const char* filepath)
 {
 	if (use_internal_display())
 	{
-		int	reclen;
+		int rc;
+		
+		wpushscr();					/* This forces vwang/video initialization */
+		rc = internal_display(filepath);
+		wpopscr();
 
-		reclen = greclen(filepath);
-		if (reclen >= 0)
-		{
-			return vdisplay(filepath,reclen);
-		}
-		return 0;
+		return rc;
 	}
 	else
 	{
@@ -264,9 +349,134 @@ int link_display(const char* filepath)
 	}
 }
 
+
+/*
+**	ROUTINE:	internal_display()
+**
+**	FUNCTION:	Display the file using vdisplay()
+**
+**	DESCRIPTION:	Get the record length and call vdisplay().
+**
+**	ARGUMENTS:	
+**	filepath	The file to be displayed.
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	0		Failed
+**	1		Success
+**
+**	WARNINGS:	None
+**
+*/
+int internal_display(const char* filepath)
+{
+	int reclen;
+	
+	reclen = greclen(filepath);
+
+	if (reclen >= 0) 
+	{
+		return vdisplay(filepath,reclen);
+	}
+	
+	if (reclen == -2) 
+	{
+		werrlog(ERRORCODE(2),filepath,0,0,0,0,0,0,0);	/* Protection violation.		*/
+		return 0;
+	}
+	
+	if (reclen == -1) 
+	{
+		werrlog(ERRORCODE(4),filepath,0,0,0,0,0,0,0);	/* Error on OPEN.			*/
+		return 0;
+	}
+	
+	return vdisplay(filepath,255);  					/* Display the file using max buffsize.	*/
+}
+
+/*
+**	ROUTINE:	custom_display_utility()
+**
+**	FUNCTION:	Return the name of the custom DISPLAY utility (DISPLAYUTIL)
+**
+**	DESCRIPTION:	Get the name from option DISPLAYUTIL.
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	none
+**
+**	RETURN:		The name of the custom display utility or NULL if 
+**			no custom display utility.  The name may be an exe which can
+**			be found on the path ("notepad") or a fully qualified path
+**			to the executable ("C:\BIN\MYDISPLAY.EXE").
+**
+**	WARNINGS:	None
+**
+*/
+const char* custom_display_utility(void)
+{
+	static int first = 1;
+	static char *exe = NULL;
+	
+	if (first)
+	{
+		const char *ptr;
+
+		first = 0;
+
+#ifdef WIN32
+		if (no_windows())
+		{
+			/*
+			**	On Windows the DISPLAYUTIL option is disabled if
+			**      there is no windows (running in telnet).
+			*/
+			return exe;
+		}
+#endif
+		
+		if ((ptr = get_wisp_option("DISPLAYUTIL")) && *ptr)
+		{
+			char buff[256];
+			if (1 == sscanf(ptr,"%s",buff))
+			{
+				exe = wstrdup(buff);
+				wtrace("OPTIONS","DISPLAYUTIL", "Using display utility [%s]",exe);
+			}
+		}
+	}	
+	
+	return exe;
+}
+
+
 /*
 **	History:
 **	$Log: wfiledis.c,v $
+**	Revision 1.17  1999-02-23 16:58:53-05  gsl
+**	moved the no_windows() routine to wispcfg.c
+**
+**	Revision 1.16  1999-02-23 15:38:34-05  gsl
+**	Add no_windows() routine which returns true on unix and when using
+**	telnet on windows NT.
+**	Disable the UTILSWINDOW and DISPLAYUTIL options on windows when
+**	the no_windows() tells us were in telnet.
+**
+**	Revision 1.15  1999-01-21 16:30:31-05  gsl
+**	Surround call to internal_display() with wpushscr() and wpopscr() just like it
+**	is done in LINK.  This is needed to fix TRK#918, CRID REPORT utility
+**	when printing a report to the screen DEVICE=DISPLAY uses link_display()
+**	this garbles the screen because vwang is not initialized because
+**	all io has been thru GETPARMS.
+**
+**	Revision 1.14  1998-08-03 17:19:28-04  jlima
+**	SUpport Logical Volume Translation to long file names containing eventual embedded blanks.
+**
+**	Revision 1.13  1998-05-05 13:50:10-04  gsl
+**	Add support for custom display utility DISPLAYUTIL and for UTILSWINDOWS.
+**	Rewrote much of the display frontend routines.
+**
 **	Revision 1.12  1997-10-23 16:21:41-04  gsl
 **	Add use_internal_display()
 **	Add link_display() as a front-end to vdisplay() or to LINK to DISPLAY.

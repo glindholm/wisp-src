@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1996 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1996-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		wmalloc.c
@@ -11,6 +11,9 @@ static char rcsid[]="$Id:$";
 **
 **	Routines:	
 **	wisp_malloc()
+**	wmalloc()
+**	wcalloc()
+**	wstrdup()
 */
 
 /*
@@ -90,12 +93,20 @@ void *wcalloc(size_t nelem, size_t elsize)
 
 char *wstrdup(const char *string)
 {
+	if (NULL == string)
+	{
+		return NULL;
+	}
+	
 	return strcpy(wmalloc(strlen(string)+1), string);
 }
 	
 /*
 **	History:
 **	$Log: wmalloc.c,v $
+**	Revision 1.5  1998-10-21 08:42:42-04  gsl
+**	In wstrdup() if a NULL is passed then a NULL will be returned.
+**
 **	Revision 1.4  1996-07-17 17:55:25-04  gsl
 **	Changed wisp_malloc() to wmalloc() and added wcalloc() and wdupstr()
 **	These routines ensure that memory is allocated or they exit with

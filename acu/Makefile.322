@@ -1,0 +1,62 @@
+# Makefile to create new version of "runcbl" or "acuconnect" based on 
+# changes to "sub.c"
+# If you have a runtime distribution:
+#   To relink the runtime type: make runcbl
+# If you have an AcuConnect distribution the acuconnect executable is a
+# runtime with additional functions to work as the AcuConnect server:
+#   To relink the AcuConnect server type: make acuconnect
+# Distributed with ACUCOBOL-GT version 3.2.2
+# PMK: 000527286700
+
+CC = cc
+X11_INCLUDE_FLAGS =
+CFLAGS = -O $(X11_INCLUDE_FLAGS)
+LDFLAGS = -s
+
+# If your Acucobol libraries are in another directory, change the value
+# of ACU_LIBDIR to point at them.
+ACU_LIBDIR = .
+
+# Use the following two lines for an AcuServer-DISABLED runtime
+#ACUSERVER_STUB = clntstub.o netstub.o
+#ACUSERVER_LIBS = # nothing - no networking libraries are necessary
+
+# Use the following two lines for an AcuServer-ENABLED runtime
+ACUSERVER_STUB = # nothing - don't stub out AcuServer functions
+ACUSERVER_LIBS = $(ACU_LIBDIR)/libclient.a
+
+# runtime libraries used to communicate with AcuConnect only sent with runtime
+CONNECT_C =
+
+# AcuConnect libraries only sent with AcuConnect
+CONNECT_S =
+
+# File System Interface section.
+# These subs/libs are for any extra file systems you want to link in.
+FSI_SUBS =
+FSI_LIBS =
+
+LIBS =  $(ACU_LIBDIR)/libruncbl.a \
+	$(ACU_LIBDIR)/libfsi.a \
+	$(ACU_LIBDIR)/libacuterm.a \
+	$(ACU_LIBDIR)/libvision.a \
+	$(ACUSERVER_LIBS) \
+	$(FSI_LIBS) \
+	$(ACU_LIBDIR)/libmessage.a \
+	$(ACU_LIBDIR)/libmemory.a \
+	$(ACU_LIBDIR)/libstdlib.a \
+	-lm
+
+SUBS = sub.o filetbl.o $(ACUSERVER_STUB) $(FSI_SUBS)
+
+runcbl: $(SUBS)
+	$(CC) $(LDFLAGS) -o runcbl $(SUBS) $(LIBS) $(CONNECT_C)
+
+acuconnect: $(SUBS)
+	$(CC) $(LDFLAGS) -o acuconnect $(SUBS) $(ACU_LIBDIR)/libruncbl.a \
+			$(CONNECT_S) $(LIBS)
+
+sub.o: sub.c sub85.c config85.c direct.c
+
+clean:
+	-rm -f runcbl sub.o filetbl.o

@@ -27,6 +27,7 @@ static char rcsid[]="$Id:$";
 #include "wispnt.h"
 #include "wisplib.h"
 #include "wperson.h"
+#include "werrlog.h"
 
 /*
 **	Structures and Defines
@@ -47,7 +48,6 @@ static char rcsid[]="$Id:$";
 #define REG_ACUCOBOL	"SOFTWARE\\NeoMedia\\WISP\\WISPBin\\WISPTran\\COBOL\\ACUCOBOL"
 #define REG_MFCOBOL	"SOFTWARE\\NeoMedia\\WISP\\WISPBin\\WISPTran\\COBOL\\MFCOBOL"
 #define REG_ACP		"SOFTWARE\\NeoMedia\\WISP\\ACP"
-#define REG_COBOL	"SOFTWARE\\NeoMedia\\WISP\\COBOL"
 
 /*
 **	Globals and Externals
@@ -1043,7 +1043,18 @@ const char *wispterm(char *the_term)
 		char *ptr;
 
 #ifdef WIN32
-		ptr = wgetreg(REG_VIDEOCAP, "WISPTERM");
+		if (wisptelnet())
+		{
+			/*
+			**	If no windows then don't use the registry for WISPTERM.
+			**	Use the env variables WISPTERM then TERM for telnet.
+			*/
+			ptr = getenv("WISPTERM");
+		}
+		else
+		{
+			ptr = wgetreg(REG_VIDEOCAP, "WISPTERM");
+		}
 #else
 		ptr = getenv("WISPTERM");
 #endif
@@ -1256,18 +1267,34 @@ const char* acu_vutil_exe(void)
 
 	if (!exe)
 	{
-		char *ptr;
+		const char *ptr;
 
-#ifdef WIN32
-		ptr = wgetreg(REG_COBOL, "VUTIL");
-#else
+		/*
+		 *	First check environment $VUTIL
+		 */
 		ptr = getenv("VUTIL");
-#endif
 		if (ptr && *ptr)
 		{
 			exe = wstrdup(ptr);
 		}
-		else
+
+		/*
+		 *	Next check OPTIONS file
+		 */
+		if (NULL == exe)
+		{
+			ptr = get_wisp_option("VUTIL");
+			
+			if (ptr != NULL && *ptr != '\0')
+			{
+				exe = wstrdup(ptr);
+			}
+		}
+		
+		/*
+		 *	Use default name
+		 */
+		if (NULL == exe)
 		{
 #ifdef unix
 			exe = "vutil";
@@ -1282,6 +1309,9 @@ const char* acu_vutil_exe(void)
 			exe = "vutil32.exe";
 #endif
 		}
+
+		wtrace("WISPCFG","VUTIL","Using VUTIL = [%s]", exe);
+		
 	}
 	ASSERT(exe);
 
@@ -1419,6 +1449,146 @@ const char *wispdefdir(char *dir)
 #endif
 }
 
+/*
+**	ROUTINE:	no_windows()
+**
+**	FUNCTION:	Flag if windows are not available.
+**
+**	DESCRIPTION:	On UNIX this is always true.
+**			On WIN32 this is normally false unless running in a telnet session.
+**
+**			This is used to determine if UTILSWINDOWS is valid and on WIN32 if
+**			you can run a Windows application (instead of a console app).
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	0		Windows
+**	1		No windows
+**
+**	WARNINGS:	None
+**
+*/
+int no_windows(void)
+{
+#ifdef unix
+	return 1;		/* UNIX always returns "No Windows" */
+#endif
+#ifdef WIN32
+
+	static int rc = -1;
+	
+	if (-1 == rc)
+	{
+		char	*ptr;
+
+		rc = 0;		/* Default to having windows */
+
+		/*
+		 *	If running in a telnet session then assume no windows.
+		 */
+		if (wisptelnet())
+		{
+			rc = 1;
+		}
+		
+		/*
+		 *	Variable WISPNOWINDOWS can force this flag on or off.
+		 */
+		if (ptr = getenv("WISPNOWINDOWS"))
+		{
+			if ('1' == *ptr)
+			{
+				rc = 1;
+			}
+			else
+			{
+				rc = 0;
+			}
+		}
+		
+		if (1 == rc)
+		{
+			wtrace("WISPCFG","NOWINDOWS","Running without multiple windows.");
+		}
+	}
+	return rc;
+
+#endif /* WIN32 */
+}
+
+/*
+**	ROUTINE:	wisptelnet()
+**
+**	FUNCTION:	Flag if running in a telnet session.
+**
+**	DESCRIPTION:	
+**			On WIN32 this is normally false unless running in a telnet session.
+**			On UNIX this is always considered true.
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	0	       	Not in a telnet session.
+**	1		Running in a telnet session
+**
+**	WARNINGS:	None
+**
+*/
+int wisptelnet(void)
+{
+#ifdef unix
+	return 1;		/* UNIX always returns true */
+#endif
+#ifdef WIN32
+
+	static int rc = -1;
+	
+	if (-1 == rc)
+	{
+		char	*ptr;
+
+		rc = 0;		/* Default to false */
+
+		/*
+		 *	The ATRLS telnet services sets the variable REMOTEADDRESS
+		 *	when in a telnet session.  If set then assume telnet.
+		 */
+		if (getenv("REMOTEADDRESS"))
+		{
+			rc = 1;
+		}
+
+		/*
+		 *	Variable WISPTELNET can force this flag on or off.
+		 */
+		if (ptr = getenv("WISPTELENT"))
+		{
+			if ('1' == *ptr)
+			{
+				rc = 1;
+			}
+			else
+			{
+				rc = 0;
+			}
+		}
+
+		if (1 == rc)
+		{
+			wtrace("WISPCFG","TELNET","Running in a TELNET session.");
+		}
+		
+	}
+	return rc;
+
+#endif /* WIN32 */
+}
+
 #if defined(DEBUG) && defined(MAIN)
 #define EXT_FILEXT
 #include "filext.h"
@@ -1544,6 +1714,22 @@ main()
 /*
 **	History:
 **	$Log: wispcfg.c,v $
+**	Revision 1.19  1999-08-24 09:29:35-04  gsl
+**	Fixed acu_vutil_exe() to get the VUTIL path out of the OPTIONS file.
+**	On WIN32 it was looking in the registry, however, the registry never was
+**	set. So now it check env $VUTIL first then VUTIL in OPTIONS then defaults.
+**
+**	Revision 1.18  1999-02-24 19:00:18-05  gsl
+**	Added routine wisptelnet() and check for REMOTEADDRESS variable for ATRLS
+**	In no_windows() add test of var WISPNOWINDOWS to force the value.
+**
+**	Revision 1.17  1999-02-23 16:58:21-05  gsl
+**	Move the no_windows() routine from wfiledis.c
+**
+**	Revision 1.16  1999-02-23 16:26:18-05  gsl
+**	For WIN32 if no_windows() (telnet) then use env vars WISPTERM and TERM
+**	instead of the registry for the videocap file info.
+**
 **	Revision 1.15  1997-12-18 09:13:50-05  gsl
 **	add missing include file
 **

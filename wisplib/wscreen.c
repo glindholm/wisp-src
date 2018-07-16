@@ -26,6 +26,8 @@ static char rcsid[]="$Id:$";
 #include "cobpic.h"
 #include "wisplib.h"
 #include "wperson.h"
+#include "costar.h"
+#include "wmalloc.h"
 
 #define MOD_BIT   64
 
@@ -112,7 +114,7 @@ static void wputscr();
 static int wgetscr();
 static int wgetfac();
 static loadbytes_long( void *vdst, const void *vsrc );
-static load_item_table22(unsigned char *screen);
+static void load_item_table22(unsigned char *screen);
 static void close_open_occurs( int this_level, struct v_struct *v1, struct v_struct *v2);
 
 
@@ -138,6 +140,10 @@ void wscreen(
 	unsigned char *pfkey_ret,							/* Place to return key in.		*/
 	unsigned char *file_stat)							/* place to return file status.		*/
 {
+	static char *costar_screenname_api = NULL;
+	static int use_costar_flag = 0;
+	static int first = 1;
+
 	int key_exit,s_err,i;
 
 
@@ -154,6 +160,21 @@ void wscreen(
 			vwang_load_charmap(0);
 		}
 	}
+
+	if (first)
+	{
+#ifdef COSTAR
+		if (use_costar_flag = use_costar())
+		{
+			char *ptr;
+			
+			costar_screenname_api  = (ptr = getenv("W4WSCREENNAME"))   ? wstrdup(ptr) : NULL;
+		}
+#endif
+		first = 0;
+	}
+	
+
 											/* We will continue to support screen	*/
 											/* version 20 & 21.			*/
 											/* Except on MSDOS; support starts at	*/
@@ -180,6 +201,20 @@ void wscreen(
 		wtrace("WSCREEN","ENTER","Prog=[%8.8s] Screen=[%32.32s]", &screen[1], &screen[9]);
 
 		load_item_table22(screen);
+
+#ifdef COSTAR
+		if (use_costar_flag)
+		{
+			if (costar_screenname_api)
+			{
+				char buff[256];
+
+				sprintf(buff, "%s%s:%s", costar_screenname_api, wisp_progname, wisp_screen);
+				costar_ctrl_api(buff);
+			}
+		}
+#endif /* COSTAR */
+
 	}
 	else
 	{
@@ -990,7 +1025,7 @@ static unsigned char *getnumber(unsigned char *ptr, int *num)
 
 
 */
-static load_item_table22(unsigned char *screen)
+static void load_item_table22(unsigned char *screen)
 {
 	static const unsigned char *last_screen;
 
@@ -1009,7 +1044,7 @@ static load_item_table22(unsigned char *screen)
 	char	*ptr;
 
 
-	if ( static_screen && screen == last_screen ) return(0);		/* Check if already loaded.			*/
+	if ( static_screen && screen == last_screen ) return;	/* Check if already loaded.			*/
 
 	/*
 	**	Initialize variables
@@ -1234,6 +1269,12 @@ static void close_open_occurs( int this_level, struct v_struct *v1, struct v_str
 /*
 **	History:
 **	$Log: wscreen.c,v $
+**	Revision 1.20  1999-09-13 15:56:27-04  gsl
+**	Fix return codes from load_item_table22()
+**
+**	Revision 1.19  1998-03-06 11:42:27-05  gsl
+**	Add the W4WSCREENNAME api hook for Costar.
+**
 **	Revision 1.18  1998-01-18 15:03:33-05  gsl
 **	Fix prototype errors
 **

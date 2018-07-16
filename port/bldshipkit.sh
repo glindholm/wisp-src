@@ -199,6 +199,7 @@ cp $WACU/wruncbl.umf	$SHIPWISP/acu
 cp $WACU/xterm.acu	$SHIPWISP/acu
 
 cp $WACU/wacuerror.cob		$SHIPWISP/acu
+cp $WACU/wacudisplay.cob	$SHIPWISP/acu
 cp $WACU/wacufac2screen.cob	$SHIPWISP/acu
 cp $WACU/wacugetparm.cob	$SHIPWISP/acu
 cp $WACU/wacugetpfkey.cob	$SHIPWISP/acu
@@ -289,6 +290,9 @@ echo
 
 #	History:
 #	$Log: bldshipkit.sh,v $
+#	Revision 1.25  1998-04-03 13:53:46-05  gsl
+#	Add wacudisplay.cob
+#
 #	Revision 1.24  1997-12-19 15:08:19-05  gsl
 #	Renamed much of the wisp/etc routines
 #

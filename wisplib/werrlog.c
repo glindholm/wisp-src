@@ -40,6 +40,7 @@ static char rcsid[]="$Id:$";
 #include "wisplib.h"
 #include "idsisubs.h"
 #include "wispcfg.h"
+#include "wanguid.h"
 
 #define INIT_ERR
 #include "werrlog.h"
@@ -142,7 +143,7 @@ void werr_write(char* buff)								/* Write out a buffer to the error log.	*/
 	FILE *efile;									/* Pointer to error log file.		*/
 
 	efile = fopen(werrpath(),"a");							/* First try to append.			*/
-	if (!efile) efile = fopen(werrpath(),"w");					/* Doesn't exist, create it.		*/
+	if (!efile) efile = fopen(werrpath(),FOPEN_WRITE_TEXT);				/* Doesn't exist, create it.		*/
 
 	if (!efile)									/* If can't open then use stderr	*/
 	{
@@ -362,10 +363,10 @@ void wtrace(const char* routine, const char* code, const char* format, ... /* ar
 	va_list ap;
 	char	buff[1024], msg[1024];
 
-
-	if (!(w_err_flag & ENABLE_LOGGING) 	 ||
-	    !(w_err_flag & LOG_SUBROUTINE_ENTRY) ||
-	    !(w_err_flag & LOG_LOGFILE) 	    ) return;
+	if (!wtracing())
+	{
+		return;
+	}
 
 	va_start(ap, format);
 			
@@ -379,8 +380,79 @@ void wtrace(const char* routine, const char* code, const char* format, ... /* ar
 }
 
 /*
+**	ROUTINE:	wtracing()
+**
+**	FUNCTION:	Test if we are tracing.
+**
+**	DESCRIPTION:	Check the flags to see if wtrace() is active.
+**
+**	ARGUMENTS:	none
+**
+**	GLOBALS:	w_err_flag
+**
+**	RETURN:		
+**	0		Not Tracing
+**	1		Tracing
+**
+**	WARNINGS:	none
+**
+*/
+int wtracing(void)
+{
+	if (!(w_err_flag & ENABLE_LOGGING) 	 ||
+	    !(w_err_flag & LOG_SUBROUTINE_ENTRY) ||
+	    !(w_err_flag & LOG_LOGFILE) 	    )
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+/*
+**	ROUTINE:	wtrace_timestamp()
+**
+**	FUNCTION:	Write a timestamp if tracing.
+**
+**	DESCRIPTION:	If tracing then write a timestamp.
+**
+**	ARGUMENTS:	
+**	routine		The routine name for wtrace()
+**
+**	GLOBALS:	None
+**
+**	RETURN:		none
+**
+**	WARNINGS:	none
+**
+*/
+void wtrace_timestamp(const char *routine)
+{
+	if (wtracing())
+	{
+		time_t	clock;
+		char	timestamp[40];
+
+		clock = time(0);
+		strcpy(timestamp, ctime(&clock));
+		timestamp[strlen(timestamp) - 1] = '\0';				/* Remove the trailing newline 		*/
+
+		wtrace(routine, "TIMESTAMP", "%s %8.8s %s", longuid(), WISPRUNNAME, timestamp);
+	}
+}
+
+
+/*
 **	History:
 **	$Log: werrlog.c,v $
+**	Revision 1.18  1998-12-09 09:42:40-05  gsl
+**	Use FOPEN mode defines
+**
+**	Revision 1.17  1998-05-12 10:57:15-04  gsl
+**	Add wtracing() and wtrace_timestamp()
+**
 **	Revision 1.16  1997-04-15 22:44:40-04  gsl
 **	Add wtrace() for tracing to wisperr.log
 **

@@ -219,6 +219,7 @@ static NODE dcv_process_selects (void)
 	NODE	curr_node, org_node, acc_node, name_node;
 	int	this_file;
 	char	buff[80];
+	static unsigned int seqcnt = 0;
 
 	the_statement = get_statement();
 
@@ -270,7 +271,7 @@ static NODE dcv_process_selects (void)
 
 				if (eq_token(curr_node->next->token,KEYWORD,"RELATIVE")) curr_node = curr_node->next;
 			}
-			else if (!org_node && eq_token(curr_node->token,KEYWORD,"SEQENTIAL"))
+			else if (!org_node && eq_token(curr_node->token,KEYWORD,"SEQUENTIAL"))
 			{
 				org_node = curr_node;
 			}
@@ -290,15 +291,15 @@ static NODE dcv_process_selects (void)
 		}
 
 		if (org_node &&
-			(eq_token(org_node->token,KEYWORD,"INDEXED") ||
-			 eq_token(org_node->token,KEYWORD,"RELATIVE")   ) )
+		    (eq_token(org_node->token,KEYWORD,"INDEXED") ||
+		     eq_token(org_node->token,KEYWORD,"RELATIVE")   ) )
 		{
 			/*
 			**	We found a SELECT for a file that we need to process.
 			*/
 
 			write_log("WISP",'M',"DATACONV", "Generating conversion routines for file %s.", 
-				token_data(name_node->token));
+				  token_data(name_node->token));
 
 			this_file = prog_cnt;					/* Remember this file index.			*/
 			prog_cnt++;
@@ -317,7 +318,7 @@ static NODE dcv_process_selects (void)
 			else
 			{
 				write_log("WISP",'W',"NOACCMODE","No ACCESS MODE found for SELECT [%s].",
-					token_data(name_node->token));
+					  token_data(name_node->token));
 			}
 
 			tput_statement(12,the_statement);			/* Write on the original SELECT			*/
@@ -325,11 +326,12 @@ static NODE dcv_process_selects (void)
 			/*
 			**	Generate a new SELECT statement for the sequential file.
 			**
-			**		SELECT SEQ-name ASSIGN TO "SEQINPUT" "DISK".
+			**		SELECT SEQ-name ASSIGN TO "SEQxxxx" "DISK".
 			*/
 			seq_name(buff,prog_files[this_file]);
 			tput_line_at(12,"SELECT %s",buff);
-			tput_clause (16,"ASSIGN TO \"SEQINPUT\" \"DISK\".");
+			sprintf(buff, "ASSIGN TO \"SEQ%04u\" \"DISK\".", seqcnt++);
+			tput_clause (16, buff);
 		}
 
 		free_statement(the_statement);
@@ -682,6 +684,7 @@ static int dcv_gen_procedure (void)
 		tput_line_at(7,"******");
 		tput_line_at(8, "%04d-CONVERT-PARA.",this_file);
 
+/*		tput_line_at(12, "MOVE \"filename\" to  %s.", filename-field);    initialize the file name field */
 		seq_name(seqfile, prog_files[this_file]);
 		tput_line_at(12, "OPEN INPUT  %s.", seqfile);
 		tput_line_at(12, "OPEN OUTPUT %s.", prog_files[this_file]);
@@ -793,6 +796,12 @@ static int seq_name ( char *outname, char *inname )
 /*
 **	History:
 **	$Log: dataconv.c,v $
+**	Revision 1.9  1999-09-07 10:51:03-04  gsl
+**	Change dataconv to use SEQxxxx as the PRNAME for the sequential files.
+**
+**	Revision 1.8  1998-07-07 09:42:35-04  gsl
+**	FIx SEQENTIAL -> SEQUENTIAL
+**
 **	Revision 1.7  1996-08-30 21:56:02-04  gsl
 **	drcs update
 **

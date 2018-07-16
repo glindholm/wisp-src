@@ -1,13 +1,5 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990			*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 #ifdef VMS
 #include <descrip.h>
@@ -19,6 +11,7 @@ static char rcsid[]="$Id:$";
 #include "wdefines.h"
 #include "wfname.h"
 #include "filext.h"
+#include "runtype.h"
 
 #ifdef unix
 #include "wrunconf.h"
@@ -179,6 +172,9 @@ char	*volname, *libname, *filename;
 /*
 **	History:
 **	$Log: wchain.c,v $
+**	Revision 1.15  1998-10-14 14:02:42-04  gsl
+**	Add include of runtype.h
+**
 **	Revision 1.14  1997-03-12 13:18:04-05  gsl
 **	CHange to use a standard not-defined routine if WCHAIN_DEFINED is not defined
 **

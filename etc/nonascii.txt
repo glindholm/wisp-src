@@ -5,9 +5,9 @@
 	Title:		WISP SUPPORT FOR NON-ASCII CHARACTERS
 	
 	Document:	nonascii.txt
-	Last Updated:	8 Jan 1998
+	Last Updated:	11 Jun 1998
 	Products:	WISP
-	Versions:	4.2.0 (AND LATER)
+	Versions:	4.3.0 (AND LATER)
 	
 	Summary:	WISP support for non-ASCII characters.
 			CHARMAP and OPTIONS file configuration.
@@ -120,6 +120,15 @@
 	example the character 'A' has the value 65 in all ASCII based
 	character sets.
 
+	Character values in the non-ASCII range (1-31,127) are considered
+	invalid unless they are listing in the CHARMAP file.  For this
+	reason unused or invalid character values in the non-ASCII range
+	should not be listed in the CHARMAP file (they may be commented
+	out).  If a value is listed then it is considered a valid input
+	value and will be accepted as input, an invalid value will ring
+	the bell when entered.  In the example below values 1 - 13 are
+	unused and commented out so they will be considered invalid.
+
 	Duplicate character mappings are not permitted and will be
 	ignored.  Invalid entries will be ignored.  A wisperr.log trace
 	with WISPDEBUG=FULL will show the character mappings used and
@@ -163,19 +172,19 @@
 	# Wang    Native  Terminal 	Description
 	#(1-127)  (1-255) (1-255)
 	#------------------------------------------
-	1	  1	  1	# (unused)
-	2	  2	  2	# (unused)
-	3	  3	  3	# (unused)
-	4	  4	  4	# (unused)
-	5	  5	  5	# (unused)
-	6	  6	  6	# (unused)
-	7	  7	  7	# (unused)
-	8	  8	  8	# (unused) Backspace
-	9	  9	  9	# (unused) Tab
-	10	 10	 10	# (unused) Linefeed
-	11	 11	 11	# (unused) Psuedo-blank
-	12	 12	 12	# (unused) Formfeed
-	13	 13	 13	# (unused) Carriage return 
+	#1	  1	  1	# (unused)
+	#2	  2	  2	# (unused)
+	#3	  3	  3	# (unused)
+	#4	  4	  4	# (unused)
+	#5	  5	  5	# (unused)
+	#6	  6	  6	# (unused)
+	#7	  7	  7	# (unused)
+	#8	  8	  8	# (unused) Backspace
+	#9	  9	  9	# (unused) Tab
+	#10	 10	 10	# (unused) Linefeed
+	#11	 11	 11	# (unused) Psuedo-blank
+	#12	 12	 12	# (unused) Formfeed
+	#13	 13	 13	# (unused) Carriage return 
 	14	223	225	# Beta mark
 	15	182	 20	# Paragraph mark
 	16	226	131	# a + circumflex

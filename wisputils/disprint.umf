@@ -1,4 +1,7 @@
 #
+#	Copyright (c) 1998 NeoMedia Technologies, All rights reserved.
+#	$Id:$
+#
 #	disprint.umf
 #
 #	Usage: make -f disprint.umf {acu|mf}
@@ -7,10 +10,13 @@ WISP=wisp
 
 default:
 	@echo
-	@echo 'Usage: make -f disprint.umf {acu|mf}'
+	@echo 'Usage: make -f disprint.umf {acu|acn|mf}'
 	@echo
 	@echo 'To make DISPRINT for Acucobol enter the command:'
 	@echo '    $$ make -f disprint.umf acu'
+	@echo
+	@echo 'To make DISPRINT for Acucobol Native Screens enter the command:'
+	@echo '    $$ make -f disprint.umf acn'
 	@echo
 	@echo 'To make DISPRINT for Micro Focus enter the command:'
 	@echo '    $$ make -f disprint.umf mf'
@@ -19,6 +25,11 @@ default:
 acu:	disprint.wcb
 	rm -f disprint.cob DISPRINT
 	$(WISP) -VACU disprint.wcb
+	ccbl -da4 -o DISPRINT disprint.cob
+
+acn:	disprint.wcb
+	rm -f disprint.cob DISPRINT
+	$(WISP) -VACN disprint.wcb
 	ccbl -da4 -o DISPRINT disprint.cob
 
 mf:	disprint.wcb

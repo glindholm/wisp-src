@@ -39,7 +39,7 @@ static char lit1[]= "The primary key is";
 static char ek_msg[]="Enter the key path to use.";
 /*static long int4[81],long4[81]; */
 static int intx;
-static char text_01[]="Enter the key path for reading the data file and press ENTER, or";
+static char text_01[]="Enter the key path for reading the data file and press (ENTER), or";
 static char text_02[]="press the PFkey relating to the desired path number.";
 static char text_03[]="Use (17) to define the Primary key as the path.";
 static char text_05[]="      Path   Dups         Path   Dups         Path   Dups         Path   Dups";
@@ -263,6 +263,9 @@ void set_gp_pf(uint4 *mask,int pf,int onoff)
 /*
 **	History:
 **	$Log: dtekey.c,v $
+**	Revision 1.6  1998-11-02 16:21:50-05  gsl
+**	Fix (ENTER) tag
+**
 **	Revision 1.5  1997-10-02 09:49:13-04  gsl
 **	Fix warnings
 **

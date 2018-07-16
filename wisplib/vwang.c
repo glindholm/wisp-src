@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		vwang.c
@@ -99,6 +99,10 @@ static char rcsid[]="$Id:$";
 **	Structures and Defines
 */
 
+#define W4W_HOTSPOT_VMODE		(VMODE_REVERSE)
+#define W4W_TABSTOP_VMODE		(VMODE_REVERSE | VMODE_BLINK)
+
+
 #define SIZEOF_SCREEN_MAP	(WS_MAX_LINES_PER_SCREEN * WS_MAX_COLUMNS_ON_A_LINE)	
 
 #define TAB_NORMAL	0
@@ -161,7 +165,9 @@ struct EDIT
 #define FAC_EDIT_UPLOW 0xfc
 
 #define DEFAULT_ATTR	(FAC_PROTECTED_ON | FAC_RENDITION_DIM)				/* Default attr_map value		*/
-#define IS_PRINTABLE_CHAR(the_char) (the_char > 0 && the_char < max_data_range)
+#define IS_PRINTABLE_CHAR(the_char,the_max) \
+        (   (EIGHT_BIT_DATA==the_max && the_char > 0 && the_char <= the_max) \
+         || (SEVEN_BIT_DATA==the_max && the_char > 0 && the_char <= the_max && is_printable[the_char]) )
 
 #define IS_WANG_CHAR(x) ((x)>0 && (x)<128)
 #define IS_8BIT_CHAR(x)	((x)>0 && (x)<256)
@@ -186,6 +192,7 @@ static unsigned char tt_ansi2wang[256];		/* Ansi character set to Wang character
 static unsigned char tt_wang2ansi[128];		/* Wang character set to Ansi character set translation table */
 static unsigned char tt_term2wang[256];		/* Terminal character set to Wang character set translation table */
 static unsigned char tt_wang2term[128];		/* Wang character set to Terminal character set translation table */
+static signed char is_printable[128];		/* Which Wang characters are printable 0=no -1=yes */
 
 static int wcurwidth = WS_DEFAULT_COLUMNS_PER_LINE;					/* Current screen width.		*/
 static struct wscrn_struct *wscrn_stack = 0;						/* Global storage for the addr of the	*/
@@ -265,7 +272,7 @@ static int vwang_tab_mode = 0;
 static int cursor_on_multibyte=0;							/* flag indicating cursor is sitting on */
 											/* a multibyte character		*/
 static int multi_input_pos=0;								/* index into current multibyte ideogram*/
-static int max_data_range;
+static int max_data_range = SEVEN_BIT_DATA;
 
 static struct EDIT *the_edit=NULL;
 
@@ -300,11 +307,13 @@ static char	*costar_before_write_api = NULL;
 static char	*costar_after_write_api = NULL;
 #endif /* COSTAR */
 
+static int	w4w_tabstop_vmode = W4W_TABSTOP_VMODE;
+
 /*
 **	Function Prototypes
 */
 
-static int ws_write(unsigned char *wsb, unsigned char lines, int selected, unsigned char *no_mod, int do_pseudo);
+static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, unsigned char *no_mod, int do_pseudo);
 static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned char *terminate_list,unsigned char *pfkey,
 			unsigned char *no_mod,int do_pseudo,int pseudo2space);
 static int mod_pb(unsigned char c,unsigned char last_atr,int do_pseudo);
@@ -320,8 +329,7 @@ static int next_mp(int start_row, int start_col, int the_char, int do_pseudo);		
 static int ws_insert(int cursor_row, int cursor_col, int alt_read, unsigned char *no_mod, int do_pseudo);
 static int ws_remove(int cursor_row, int cursor_col, int alt_read, unsigned char *no_mod, int do_pseudo);
 static int tab_fac(int row, int col);							/* Determine if start of field fac.	*/
-static int menu_pick_combo(int row, int col);						/* Determine if LOW PROT NUM fac or	*/
-static int ws_tab_stop(unsigned char atr);						/* Check for a tab stop position.	*/
+static int menu_pick_combo_fac(int row, int col);					/* Determine if LOW PROT NUM fac or	*/
 static int ws_trans_atr(fac_t ch);							/* Translate from Wang to VIDEO		*/
 static int ws_bloff(int do_pseudo);							/* Turn blinking off.			*/
 static void ws_echo(int the_char,int cursor_row,int cursor_col,int alt_read,unsigned char *no_mod,int do_pseudo);
@@ -355,11 +363,11 @@ static void edit_main(int input,int row,int col,int *filling,unsigned char *term
 		unsigned char *pfkey,unsigned char *no_mod);
 static void edit_compute_pos(int row, int col);
 static void edit_putchar(int input);
-static int edit_wrap(int lineno, int direction, int line_space);
+static void edit_wrap(int lineno, int direction, int line_space);
 static void edit_tab(int row, int col);
 static void edit_clear_before(int row, int col);
 static void edit_clear_after(int row, int col);
-static int edit_delleft(void);
+static void edit_delleft(void);
 static int edit_chk_wrap_back(int row);
 static void edit_delright(void);
 static void edit_redraw(void);
@@ -386,7 +394,7 @@ static int wsmove(int line,int column);							/* Move to a location on the scree
 static int check_scrn(void);
 
 static int vwputc(int c);
-
+static int mousenonmod(void);
 
 
 
@@ -424,6 +432,8 @@ unsigned char *no_mod;
 			costar_after_read_api   = (ptr = getenv("W4WPOSTREAD"))  ? wstrdup(ptr) : NULL;
 			costar_before_write_api = (ptr = getenv("W4WPREWRITE"))  ? wstrdup(ptr) : NULL;
 			costar_after_write_api  = (ptr = getenv("W4WPOSTWRITE")) ? wstrdup(ptr) : NULL;
+
+			w4w_tabstop_vmode = costar_tabstop_vmode();
 		}
 #endif
 		first = 0;
@@ -452,7 +462,7 @@ unsigned char *no_mod;
 	vgeterr();									/* Clear any pre-existing video error	*/
 
 #ifdef unix
-	if (vsharedscreen())
+	if (!ishelpactive() && vsharedscreen())
 	{
 		/*
 		**	This saves the current stty values so it can be restored by vstate(VSTATE_RESTORE_STTY);
@@ -566,7 +576,7 @@ unsigned char *no_mod;
 			else ws_write(wsb,*lines,0,no_mod,1);				/* Output the data.			*/
 			break;
 		}
-		case WRITE_SELECTED:							/* Write selected fields.		*/
+		case WRITE_SELECTED:							/* Write selected (modified only) fields*/
 		{
 			if (terminal_error) wsdmp_scrn(wsb,0);				/* Dump screen on errors.		*/
 			else ws_write(wsb,*lines,1,no_mod,0);				/* Output the data.			*/
@@ -639,7 +649,7 @@ unsigned char *no_mod;
 	}
 
 #ifdef unix
-	if (vsharedscreen())
+	if (!ishelpactive() && vsharedscreen())
 	{
 		vstate(VSTATE_RESTORE_STTY);						/* Restore the debugger term state.	*/
 	}
@@ -663,7 +673,7 @@ unsigned char *no_mod;
 **	Arguments:
 **	wsb		Work station I/O buffer.
 **	lines		Number of lines to write.
-**	selected	Flag indicates selected field write.
+**	do_mod_only	Flag indicates selected (modified only) field write.
 **	no_mod		Pointer to no-modification flag.
 **	do_pseudo	Do Pesudo blank processing
 **
@@ -675,7 +685,7 @@ unsigned char *no_mod;
 **	mm/dd/yy	Written by xxx
 **
 */
-static int ws_write(unsigned char *wsb, unsigned char lines, int selected, unsigned char *no_mod, int do_pseudo)
+static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, unsigned char *no_mod, int do_pseudo)
 {
 	int start_row;									/* Row for single line or scrolling.	*/
 	int wcc;									/* Write control character.		*/
@@ -695,7 +705,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int selected, unsig
 	int use_w4w_flag = 0;
 
 #ifdef DEBUG_GEN_WSB_FILES
-{
+        {
 	/*
 	**	This is some debugging code which dumps the WSB out to a file.
 	*/
@@ -713,7 +723,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int selected, unsig
 			close(fh);
 		}
 	}
-}
+        }
 #endif /* DEBUG_GEN_WSB_FILES */
 
 	start_row = wsb[OA_ROW];							/* get the row				*/
@@ -763,9 +773,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int selected, unsig
 	}
 
 #ifdef W4W
-#ifdef WIN32
-	use_w4w_flag = 1;
-#endif
+	use_w4w_flag = use_w4w();
 #ifdef COSTAR
 	if (use_costar_flag = use_costar())
 	{
@@ -958,6 +966,10 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int selected, unsig
 					{
 						c_mapfac = FAC_CLEAR_MODIFIED(c_mapfac);/* Clear any altered bits that are set. */
 					}
+
+					/*
+					**	The attribute map (am) value for a FAC is the FAC value.
+					*/
 					
 					if (c_mapfac != *am)				/* Different only by altered bits?	*/
 					{
@@ -975,11 +987,21 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int selected, unsig
 						*dm = c_orig;				/* Record the data.			*/
 						*am = c_mapfac;				/* Record the attributes.		*/
 					}
+
+					/*
+					**	The last attribute is the last FAC value with the x80 bit stripped off.
+					*/
 					last_atr = FAC_CLEAR_FAC(c_mapfac);		/* Remember the other attributes.	*/
 					last_mode = ws_trans_atr(c_mapfac);		/* Remember the last rendition.		*/
 				}
-				else if (!selected || FAC_MODIFIED(last_atr))		/* Not FAC character, write if approp.	*/
+				else if (!do_mod_only || FAC_MODIFIED(last_atr))
 				{
+					/*
+					**	Not a FAC character.
+					**
+					**	This is done if we are processing all fields or
+					**	if only processing mod field (selected) and this field is modifiable
+					*/
 
 					/*
 					**	If ERASE_FIELDS flag then erase modifiable fields
@@ -1002,8 +1024,16 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int selected, unsig
 					*dm = c_orig;					/* Record the character.		*/
 
 
-					if (FAC_BLANK(last_atr))			/* Should this field be invisible?	*/
+					/*
+					**	Write out the individual character.
+					**
+					**	Handle special cases first.
+					*/
+					if (FAC_BLANK(last_atr))
 					{
+						/*
+						**	If the BLANK attribute is on then always display a space.
+						*/
 						if (use_costar_flag)
 						{
 							/*
@@ -1016,65 +1046,86 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int selected, unsig
 							ws_putbuff(' ',row_x,col_x,VMODE_CLEAR,VCS_DEFAULT);
 						}
 					}
-					else if (c_orig == 0)				/* Is it a null?			*/
+					else if (0 == c_orig)				/* Is it a null?			*/
 					{
-						if (opt_nulldisplay)	ws_putbuff('.',row_x,col_x,last_mode,VCS_DEFAULT);
-						else			ws_putbuff(' ',row_x,col_x,last_mode,VCS_DEFAULT); 
-					}
-					else if (c_orig == PSEUDO_BLANK_CHAR )		/* 0x0B - Wang solid box - pseudo blank.*/
-					{
-						if (FAC_PROTECTED(last_atr))
+						/*
+						**	NUL character is normally displayed as a space unless
+						**	the NULLISDOT option is set.
+						*/
+						if (opt_nulldisplay)	
 						{
-							ws_putbuff(PSEUDO_BLANK_CHAR,row_x,col_x, last_mode,VCS_DEFAULT);
+							ws_putbuff('.',row_x,col_x,last_mode,VCS_DEFAULT);
 						}
 						else
 						{
-							ws_putbuff(PSEUDO_BLANK_CHAR,row_x,col_x, last_mode|psb_rndt,VCS_DEFAULT);
+							ws_putbuff(' ',row_x,col_x,last_mode,VCS_DEFAULT); 
 						}
+					}
+					else if (FAC_PROTECTED(last_atr))
+					{
+						/*
+						**	In a protected area of the screen
+						*/
+						if (FAC_NUMERIC(last_atr) && col_x > 0 && tab_fac(row_x,col_x-1))
+						{
+							/*
+							**	NUMPROT MENU TAB-STOP (monkey bar)
+							*/
+							if (use_w4w_flag)
+							{
+								/*
+								**	Use the w4w tabstop rendition
+								**	and set the atrribute map to force a re-draw.
+								*/
+								ws_putbuff(c_orig,row_x,col_x,w4w_tabstop_vmode,VCS_DEFAULT);
+								*am = FAC_SET_UNDERSCORED(*am);
+							}
+							else if (PSEUDO_BLANK_CHAR == c_orig)
+							{
+								/*
+								**	Use the pseudo blank rendition
+								*/
+								ws_putbuff(c_orig,row_x,col_x, last_mode|psb_rndt,VCS_DEFAULT);
+							}
+							else
+							{
+								/*
+								**	No special redition
+								*/
+								ws_putbuff(c_orig,row_x,col_x,last_mode,VCS_DEFAULT);
+							}
+						}
+						else
+						{
+							/*
+						        **	In a protected area of the screen - no special processing
+							*/
+							ws_putbuff(c_orig, row_x, col_x, last_mode, VCS_DEFAULT);
+						}
+					}
+					else if (in_edit(row_x,col_x))
+					{
+						/*
+						**	In an edit box (modifiable field), use bold redition.
+						*/
+						ws_putbuff(c_orig,row_x,col_x,VMODE_BOLD,VCS_DEFAULT);
+					}
+					else if (do_pseudo || PSEUDO_BLANK_CHAR == c_orig)
+					{
+						/*
+						**	In a modifiable field.
+						**	Use the pseudo blank rendition because:
+						**	1) This is a pseudo blank character or
+						**	2) Doing pseudo blank processing which can mean underlining mod fields
+						*/
+						ws_putbuff(c_orig, row_x, col_x, last_mode|psb_rndt, VCS_DEFAULT);
 					}
 					else
 					{
-						if (in_edit(row_x,col_x))
-						{				
-							ws_putbuff(c_orig,row_x,col_x,VMODE_BOLD,VCS_DEFAULT);
-						}
-						else if (!FAC_PROTECTED(last_atr))	/* Is this a modifiable field ?		*/
-						{
-							int mode;
-							if (do_pseudo)	mode = psb_rndt|last_mode;
-							else		mode = last_mode;
-							ws_putbuff(c_orig,row_x,col_x,mode,VCS_DEFAULT); /* Put char.		*/
-						}
-#ifdef W4W
-						else if (FAC_NUMERIC(last_atr) && tab_fac(row_x,col_x-1) && use_w4w_flag)
-						{
-							/*
-							**	TAB-STOP (NUMPROT) positions with CoStar
-							*/
-							int mode;
-							mode = last_mode | COSTAR_TAB_STOP_VMODE;
-							ws_putbuff(c_orig,row_x,col_x,mode,VCS_DEFAULT);
-							*am = FAC_SET_UNDERSCORED(*am);
-						}
-#endif
-						else if ((c_orig != ' ') || 
-							 (last_mode & (VMODE_REVERSE|VMODE_UNDERSCORE)))	/* Visible?	*/
-						{
-							ws_putbuff(c_orig,row_x,col_x,last_mode,VCS_DEFAULT);
-						}
-						else
-						{
-							/*
-							**	A Space character:
-							**
-							**	Previously we removed the VMODE_BLINK attribute because
-							**	on real terminals a blinking space was invisible.
-							**	However, with PC terminal emulators and WIN32 and COSTAR
-							**	blink is represented with background colors which are
-							**	not invisible.
-							*/
-							ws_putbuff(' ', row_x, col_x, last_mode, VCS_DEFAULT);
-						}
+						/*
+						**	In a modifiable field - no special processing
+						*/
+						ws_putbuff(c_orig, row_x, col_x, last_mode, VCS_DEFAULT);
 					}
 				}
 			}
@@ -1095,12 +1146,22 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int selected, unsig
 					lbdangle = 0;					/* Visible whitespace too...		*/
 			}
 
-			if (((!FAC_FAC(*am)) && (lin_1st < 0) && (row_x >= crs_row) && ws_tab_stop(last_atr)) ||
-				((lin_1st <0) && ((fac(c_orig)==FAC_EDIT_UPPER) || (fac(c_orig)==FAC_EDIT_UPLOW))))
-												/* 1st tabstop?			*/
+			/*
+			**	Looking for first tabstop on the screen, check if this is it.
+			*/
+			if (lin_1st < 0 && col_x > 0)
 			{
-				lin_1st = row_x;						/* Yes, remember it.		*/
-				col_1st = col_x;						/* Column too.			*/
+				if ((row_x >= crs_row) && tab_fac(row_x,col_x-1) )
+				{
+					lin_1st = row_x;
+					col_1st = col_x;
+				}
+				else if ( (fac(c_orig)==FAC_EDIT_UPPER) || (fac(c_orig)==FAC_EDIT_UPLOW) )
+				{
+					lin_1st = row_x;
+					col_1st = col_x;
+				}
+				
 			}
 
 			if (FAC_FAC(*am) && (lin_err < 0) && FAC_BLINK(*am) && !FAC_PROTECTED(*am))
@@ -1210,9 +1271,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 	if (alt_read == 1) *no_mod = 'N';						/* Assume no modifications.		*/
 
 #ifdef W4W
-#ifdef WIN32
-	use_w4w_flag = 1;
-#endif
+	use_w4w_flag = use_w4w();
 #ifdef COSTAR
 	if (use_costar_flag = use_costar())
 	{
@@ -1354,15 +1413,15 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 			{
 				edit_main(the_meta_char,vcur_lin,vcur_col,&filling,terminate_list,pfkey,no_mod);
 			}
-			else if (menu_fl && IS_PRINTABLE_CHAR(the_meta_char))
+			else if (menu_fl && IS_PRINTABLE_CHAR(the_meta_char,max_data_range))
 			{								/* At menu pick and i is displayable.	*/
 				next_mp(vcur_lin,vcur_col,the_meta_char,do_pseudo);	/* Search next menu pick beg. with i.*/
 			}
-			else if (auto_move && IS_PRINTABLE_CHAR(the_meta_char) && !ws_mod(vcur_lin,vcur_col))
+			else if (auto_move && IS_PRINTABLE_CHAR(the_meta_char,max_data_range) && !ws_mod(vcur_lin,vcur_col))
 			{
 				ws_next(vcur_lin,vcur_col,TAB_NORMAL,do_pseudo);
 			}
-			else if (IS_PRINTABLE_CHAR(the_meta_char) && ws_mod(vcur_lin,vcur_col))
+			else if (IS_PRINTABLE_CHAR(the_meta_char,max_data_range) && ws_mod(vcur_lin,vcur_col))
 			{								/* Displayable char in mod pos?		*/
 				at_edge = FALSE;					/* Not at edge.				*/
 				if (FAC_NUMERIC(*attr_map_ptr(vcur_lin,vcur_col)))	/* Digits only?				*/
@@ -1616,7 +1675,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 						int	pfcode;
 
 						copy_clean_row(m_row, wcurwidth, the_row);
-						pfcode = w4w_click_row(m_row, m_col, the_row);
+						pfcode = w4w_click_row(m_col, the_row);
 						if (-1 != pfcode)
 						{
 							cached_meta_char = meta_pfkey(pfcode);
@@ -1624,6 +1683,15 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 						else
 						{
 							cached_meta_char = 0;
+
+							/*
+							**	If allowed to mouse position to a non-mod field
+							**	then position it.
+							*/
+							if (mousenonmod())
+							{
+								ws_posit((m_row-vcur_lin),(m_col-vcur_col),do_pseudo);
+							}
 						}
 					}
 				}
@@ -1963,7 +2031,7 @@ static void ws_clearfieldcols(int row, int first_col, int last_col, int do_pseud
 		ws_putbuff(blank_char, row, col, mode, VCS_DEFAULT);
 	}
 
-	ws_dumpbuff(row, TRUE);
+	ws_dumpbuff(row, FALSE);
 }
 
 /*
@@ -2012,7 +2080,7 @@ static void ws_clearbefore(int row,int col,int alt_read,unsigned char *no_mod,in
 			ws_putbuff(blank_char, row, i2, mode, VCS_DEFAULT);
 		}
 		
-		ws_dumpbuff(row, TRUE);
+		ws_dumpbuff(row, FALSE);
 
 		/*
 		**	Move to begining of field
@@ -2112,7 +2180,7 @@ static int ws_next(int start_row, int start_col, int tab_type, int do_pseudo)	/*
 			**		c) This was a NEWLINE and we are on a different line (or earlier on this line)
 			*/
 			if (	(tab_type == TAB_NORMAL) ||
-				(tab_type == TAB_SPACEBAR && menu_pick_combo(x_row,x_col)) ||
+				(tab_type == TAB_SPACEBAR && menu_pick_combo_fac(x_row,x_col)) ||
 				(tab_type == TAB_NEWLINE && (x_row != start_row || x_col < start_col))	)
 			{
 				check_mp(start_row,start_col,VMODE_CLEAR,do_pseudo);	/* Clear bold rend if current menu pick.*/
@@ -2272,10 +2340,10 @@ static int next_mp(int start_row, int start_col, int the_char, int do_pseudo)	/*
 	for(;;)
 	{
 		/*
-		**	Check if a tab stop
+		**	Check if a menu pick fac
 		*/
 
-		if (tab_fac(x_row,x_col))					/* if a tab_fac found then validate		*/
+		if (menu_pick_combo_fac(x_row,x_col))
 		{
 			/*
 			**	This TABSTOP is valid if the first character on the screen matches the_char pressed.
@@ -2512,11 +2580,14 @@ int ws_paste(int row, int col, int vr, int vc, int alt_read, unsigned char *no_m
 **	Function:	To determine if this is a FAC that starts a field that can be tabbed to.
 **
 **	Description:	Verify that this is a FAC.
-**			Verify that it is a tabstop.
 **			Verify it is not concatinated FAC's
+**			Verify that it is a tabstop. (MODIFIABLE or NUMPROT)
 **
-**	Input:		row		The row number
-**			col		The column number
+**			Valid tabstop fac column offsets are 0 - 78 (wcurwidth-2) 
+**
+**	Input:		
+**	row		The fac row number  	0-23
+**	col		The fac column number  	0-79  (wcurwidth-1))
 **			
 **
 **	Output:		None
@@ -2526,45 +2597,96 @@ int ws_paste(int row, int col, int vr, int vc, int alt_read, unsigned char *no_m
 **
 **	Warnings:	None
 **
-**	History:	mm/dd/yy	Written by OLD
-**			06/16/92	Documented by GSL
-**
 */
-
 static int tab_fac(int row, int col)							/* Determine if start of field fac.	*/
 {
-	if (col < 0) return(FAILURE);
-
-	if (the_edit && row==the_edit->top_row && col==the_edit->left_col-1)
-	  return SUCCESS;
+	fac_t	the_fac;
 	
-	if ( !FAC_FAC(*attr_map_ptr(row,col)) ) return(FAILURE);			/* Is this a FAC at all?		*/
-	if ( !ws_tab_stop(*attr_map_ptr(row,col)) ) return(FAILURE);			/* Is this a modifyable or tab field?	*/
-	if ( col+1 < wcurwidth )							/* Are we past the end of the line?	*/
+	if (col < 0 || col >= (wcurwidth-1)) 
 	{
-		if (tab_fac(row,col+1)) return(FAILURE);				/* No, then check for concat FAC.	*/
+		return(FAILURE);
 	}
 
-	return(SUCCESS);								/* Modifyable FAC is what we want.	*/
+	if (the_edit && row==the_edit->top_row && col==the_edit->left_col-1)
+	{
+		return SUCCESS;
+	}
+	
+	the_fac = *attr_map_ptr(row,col);
+	
+	if ( !FAC_FAC(the_fac) ) 
+	{
+		/* Not a FAC */
+		return(FAILURE);
+	}
+
+	if ( FAC_FAC(*attr_map_ptr(row,col+1)) ) 
+	{
+		/* The next char is a FAC so this is not a tabstop (Verified behaviour on the Wang) */
+		return(FAILURE);
+	}
+
+	if (!FAC_PROTECTED(the_fac))
+	{
+		/* Modifiable fields are tab stops */
+		return (SUCCESS);
+	}
+	
+	if (FAC_NUMERIC(the_fac))
+	{
+		/*
+		**	If protected numeric then a tab stop.
+		*/
+		return(SUCCESS);
+	}
+
+	return(FAILURE);
 }
 
-static int menu_pick_combo(int row, int col)						/* Determine if LOW PROT NUM fac or	*/
+/*
+**	ROUTINE:	menu_pick_combo_fac()
+**
+**	FUNCTION:	Test if this position is a FAC for a menu pick combo.
+**
+**	DESCRIPTION:	The FAC is either numeric protected or numeric protected bold.
+**			The following character is either x0B or x05.
+**
+**			Valid menu pick fac columns are 0 - 78 (wcurwidth-2)
+**
+**	ARGUMENTS:	
+**	row		The fac row offset 	0-23
+**	col		The fac column offset	0-79 (wcurwidth-1)
+**
+**	GLOBALS:	
+**	wcurwidth	The screen width 80 or 132.
+**
+**	RETURN:		
+**	FALSE		Not a menu pick combo
+**	TRUE		Is a menu pick combo fac.
+**
+**	WARNINGS:	none
+**
+*/
+static int menu_pick_combo_fac(int row, int col)					/* Determine if LOW PROT NUM fac or	*/
 {											/* HIGH PROT NUM fac and is followed by */ 
 	fac_t the_fac;									/* a WANG_MENU_PICK or PSEUDO BLANK_CHAR.*/
 	unsigned char the_char;
-	int fl;
 
-	fl = FALSE;									/* Set to assume is not a menu pick.	*/
+	if (col < 0 || col >= (wcurwidth-1))
+	{
+		return FALSE;
+	}
+
 	the_fac = *attr_map_ptr(row,col);						/* Point to the current entry.		*/
 	if (the_fac == NUMPROT_FIELD || the_fac == NUMPROT_BOLD_FIELD)			/* Is it the needed Fac?		*/
 	{
 		the_char = *data_map_ptr(row,col+1);
 		if (the_char == WANG_MENU_PICK || the_char == PSEUDO_BLANK_CHAR)  
 		{
-			fl = TRUE;							/* Is needed fac, WANG_MENU_PICK or	*/
+			return TRUE;							/* Is needed fac, WANG_MENU_PICK or	*/
 		}
 	}										/* PSEUDO_BLANK_CHAR combo.		*/
-	return(fl);
+	return FALSE;
 }
 
 /* Return the first column which is part of this field (0==Not a field) */
@@ -2585,31 +2707,6 @@ int ws_eof(int cursor_row, int cursor_col)						/* Get end of current field.		*/
 	return(cursor_col-1);								/* Return the end of the field.		*/
 }
 
-static int ws_tab_stop(unsigned char atr)						/* Check for a tab stop position.	*/
-{
-	int rc;
-
-	rc = FALSE;
-
-	if (!FAC_PROTECTED(atr))
-	{
-		/*
-		**	Modifiable is a tabstop
-		*/
-		rc = TRUE;
-	}
-	else if (FAC_NUMERIC(atr))
-	{
-		/*
-		**	Numeric & Protected is a tabstop
-		*/
-		rc = TRUE;
-	}
-
-	return rc;
-}
-
-
 /*
 **	ROUTINE:	ws_trans_atr()
 **
@@ -2627,13 +2724,21 @@ static int ws_tab_stop(unsigned char atr)						/* Check for a tab stop position.
 **	WARNINGS:	None
 **
 */
-static int ws_trans_atr(fac_t ch)							/* Translate from Wang to VIDEO		*/
+static int ws_trans_atr(fac_t the_fac)							/* Translate from Wang to VIDEO		*/
 {											/*     attribute formats.		*/
+	static int use_costar_flag = -1;
 	int v_mode;
 
+#ifdef COSTAR
+	if (-1 == use_costar_flag)
+	{
+		use_costar_flag = use_costar();
+	}
+#endif /* COSTAR */
+	
 	v_mode = 0;
 
-	switch(ch & FAC_MASK_RENDITION)
+	switch(the_fac & FAC_MASK_RENDITION)
 	{
 	case FAC_RENDITION_BRIGHT:	v_mode = VMODE_BOLD;			break;
 	case FAC_RENDITION_DIM:		v_mode = 0;				break;
@@ -2641,7 +2746,24 @@ static int ws_trans_atr(fac_t ch)							/* Translate from Wang to VIDEO		*/
 	case FAC_RENDITION_BLANK:	v_mode = 0;				break;
 	}
 
-	if (FAC_UNDERSCORED(ch)) v_mode = v_mode | VMODE_UNDERSCORE;			/* Or in underscore.			*/
+	if (FAC_UNDERSCORED(the_fac)) 
+	{
+		v_mode |= VMODE_UNDERSCORE;					/* Or in underscore.			*/
+	}
+
+#ifdef COSTAR
+	if (2==use_costar_flag)
+	{
+		/*
+		**	For COSTAR V2 mode add the REVERSE mode to modifiable fields.
+		*/
+		if (!FAC_PROTECTED(the_fac))
+		{
+			v_mode |= VMODE_REVERSE;
+		}
+	}
+#endif /* COSTAR */
+	
 	return(v_mode);									/* Send back the VIDEO attributes.	*/
 }
 
@@ -2693,6 +2815,9 @@ static void ws_echo(int the_char,int cursor_row,int cursor_col,int alt_read,unsi
 	if (do_pseudo)	mode = psb_rndt | ws_trans_atr(*attr_map_ptr(cursor_row,cursor_col));
 	else		mode = ws_trans_atr(*attr_map_ptr(cursor_row,cursor_col));
 	wsmode(mode);									/* Select the appropriate rendition.	*/
+
+	wscset(VCS_DEFAULT);						/* Echoing is always done in the default character set. */
+
 	ws_tag_alt(alt_read,cursor_row,cursor_col,no_mod);				/* Set flags.				*/
 
 	if (multi_input_pos==1)								/* is this echo part of a multibyte?	*/
@@ -3078,6 +3203,17 @@ int wpopscr(void)									/* A function to restore the screen and */
 	}
 	vpopscr();									/* Get the video structs.		*/
 	vwang_set_synch(FALSE);								/* Synch is not required now.		*/
+
+#ifdef COSTAR
+	if (use_costar())
+	{
+		if (costar_after_write_api)
+		{
+			costar_ctrl_api(costar_after_write_api);
+		}
+	}
+#endif /* COSTAR */
+
 	return(SUCCESS);
 }
 
@@ -3206,7 +3342,7 @@ static void set_cl_fl(void)								/* Set console logging flag.		*/
 
 static int check_mp(int row,int col,int rend,int do_pseudo)				/* See if it is a menu pick item.	*/
 {
-	if ( menu_pick_combo(row,col-1) )						/* Is it a menu pick item?	*/
+	if ( menu_pick_combo_fac(row,col-1) )						/* Is it a menu pick item?	*/
 	{
 		if (cursor_on_flag)							/* If cursor is on then turn off while	*/
 		{									/*  rewriting the line.			*/
@@ -3227,6 +3363,26 @@ static int check_mp(int row,int col,int rend,int do_pseudo)				/* See if it is a
 	}
 }
 
+/*
+**	ROUTINE:	rewrite_mp()
+**
+**	FUNCTION:	Rewrite the "menu pick" to either CLEAR it or BOLD it.
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	
+**	row		Row position
+**	col		Col position
+**	rend		The new rendition: either 0=VMODE_CLEAR or 1=VMODE_BOLD
+**	do_pseudo	Flag to change spaces into pseudo blanks in modifiable fields.
+**
+**	GLOBALS:	?
+**
+**	RETURN:		?
+**
+**	WARNINGS:	?
+**
+*/
 static void rewrite_mp(int line, int col, int rend, int do_pseudo)			/* Rewrite line or until next FAC.	*/
 {
 	unsigned char c;								/* Working character.			*/
@@ -3237,17 +3393,8 @@ static void rewrite_mp(int line, int col, int rend, int do_pseudo)			/* Rewrite 
 	int	use_costar_flag = 0;
 	int	use_w4w_flag = 0;
 
-#ifdef W4W
-#ifdef WIN32
-	use_w4w_flag = 1;
-#endif
-#ifdef COSTAR
-	if (use_costar_flag = use_costar())
-	{
-		use_w4w_flag = 1;
-	}
-#endif /* COSTAR */
-#endif /* W4W */
+	use_w4w_flag = use_w4w();
+	use_costar_flag = use_costar();
 
 	last_atr = DEFAULT_ATTR;							/* Reset attributes at start of line.	*/
 	dm = data_map_ptr(line,col);							/* Point to the current line.		*/
@@ -3265,48 +3412,47 @@ static void rewrite_mp(int line, int col, int rend, int do_pseudo)			/* Rewrite 
 		if (FAC_FAC(last_atr))							/* Is this character a FAC?		*/
 		{
 			col_idx = wcurwidth;						/* Get out of loop.			*/
+			break;
 		}
 		else
 		{
+			/*
+			**	This is a condensed subset of ws_write() and maybe should be combined
+			*/
 			if (FAC_BLANK(last_atr) || c == 0)				/* Should this field be invisible?	*/
 			{
 				ws_putbuff(' ',line,col_idx,VMODE_CLEAR,VCS_DEFAULT);	/* Put in output buffer.		*/
 			}
 			else
 			{
+				mode = last_mode|rend;
+
 				if (!FAC_PROTECTED(last_atr))				/* Is this a modifiable field ?		*/
 				{
-					if (do_pseudo)	mode = last_mode|rend|psb_rndt;
-					else		mode = last_mode|rend;
+					if (do_pseudo || PSEUDO_BLANK_CHAR == c)
+					{
+						mode |= psb_rndt;
+					}
+
 					ws_putbuff(c,line,col_idx,mode,VCS_DEFAULT);	/* Put char.				*/
 				}
-				else if ((c != ' ') || (last_mode & (VMODE_REVERSE|VMODE_UNDERSCORE)))	/* Visible?		*/
+				else
 				{
-					mode = last_mode;				/* If in the printable range.		*/
 					if (col_idx == col && rend == VMODE_BOLD)	/* Is current item so put defined symbol*/
 					{
 						c = CURRENT_MENU_PICK;			/* Defined in vwang.h			*/
 					}
-#ifdef W4W
+
 					if (col_idx == col && use_w4w_flag)
 					{
-						mode |= COSTAR_TAB_STOP_VMODE;
+						mode = w4w_tabstop_vmode;
 					}
-#endif /* W4W */
-					ws_putbuff(c,line,col_idx,mode|rend,VCS_DEFAULT);
-				}
-				else
-				{
-					/*
-					**	A Space character:
-					**
-					**	Previously we removed the VMODE_BLINK attribute because
-					**	on real terminals a blinking space was invisible.
-					**	However, with PC terminal emulators and WIN32 and COSTAR
-					**	blink is represented with background colors which are
-					**	not invisible.
-					*/
-					ws_putbuff(c,line,col_idx,last_mode,VCS_DEFAULT);
+					else if (PSEUDO_BLANK_CHAR == c)
+					{
+						mode |= psb_rndt;
+					}
+
+					ws_putbuff(c,line,col_idx,mode,VCS_DEFAULT);
 				}
 			}
 			dm++;								/* Incrememt the buffer pointers.	*/
@@ -3326,6 +3472,33 @@ static unsigned char *data_map_ptr(int row, int col)
 	return &data_map[ (row * wcurwidth) + col ];
 }
 
+/*
+**	ROUTINE:	attr_map_ptr()
+**
+**	FUNCTION:	Return a ptr into the attribute map for a given row and col location.
+**
+**	DESCRIPTION:	The attribute map contains the attributes for each position on the screen.
+**			The values are the Wang FAC values.
+**			The position of FAC's contain the FAC value.
+**			All other positions contain the corresponding FAC bits with the high x80 bit
+**			stripped off.
+**
+**			In other words:
+**			- The attribute of a FAC is the FAC value. (x80 - xFF)
+**			- The attribute of a non-FAC is previous FAC with the x80 bit stripped (x00-x7F)
+**
+**	ARGUMENTS:	
+**	row		The row offset (0-23)
+**	col		The colume offset (0-79) or (0-131)
+**
+**	GLOBALS:	
+**	wcurwidth	The current width of the screen 80 or 132.
+**
+**	RETURN:		Pointer into the attribute map for the given row and col.
+**
+**	WARNINGS:	No checking is done.
+**
+*/
 static fac_t *attr_map_ptr(int row, int col)
 {
 	static fac_t attr_map[SIZEOF_SCREEN_MAP];					/* Wang attributes for each char pos.	*/
@@ -4375,7 +4548,7 @@ static void edit_main(int input,int row,int col,int *filling,unsigned char *term
 		the_edit->mark_row = the_edit->edit_row;
 		the_edit->mark_col = the_edit->edit_col;
 	}
-	else if (IS_PRINTABLE_CHAR(input))					/* its a valid data character */
+	else if (IS_PRINTABLE_CHAR(input,max_data_range))			/* its a valid data character */
 	{
 		edit_unmark();							/* unmark if marked */
 		if (the_edit->upper == TRUE)					/* COMPUTRON needed UPPERONLY capability */
@@ -4710,7 +4883,7 @@ static void edit_putchar(int input)
 **	07/04/93	written by JEC 
 **
 */
-static int edit_wrap(int lineno, int direction, int line_space)
+static void edit_wrap(int lineno, int direction, int line_space)
 {
 	int scanidx,copyidx,space_found,cutidx;
 	char *dest,*src;
@@ -4720,7 +4893,7 @@ static int edit_wrap(int lineno, int direction, int line_space)
 	
 	if (lineno >= the_edit->height-1)
 	{
-		return(0);
+		return;
 	}
 #ifdef EDITWRAPDBG
 	if (foo==NULL)
@@ -4736,11 +4909,11 @@ static int edit_wrap(int lineno, int direction, int line_space)
 	
 	switch (direction)
 	{
-	      case WRAP_UP:
+	case WRAP_UP:
 		if (the_edit->wrap_flag[lineno] || the_edit->line_size[lineno+1]==0)
 		{
 			edit_chk_wrap_back(lineno+1);
-			return(0);
+			return;
 		}
 		free_space=line_space;
 		newsize = the_edit->line_size[lineno];
@@ -4760,7 +4933,7 @@ static int edit_wrap(int lineno, int direction, int line_space)
 		}
 		if (free_space<=0)
 		{
-			return(0);
+			return;
 		}
 #ifdef EDITWRAPDBG
 		fprintf(foo,"	 Free space adjusted to %d.  Line size adjusted to %d:\n",free_space,newsize);
@@ -4791,10 +4964,10 @@ static int edit_wrap(int lineno, int direction, int line_space)
 			{
 				if (copyidx == -1)
 				{
-					return(0);
+					return;
 				}
 				else
-				  break;
+					break;
 			}
 			copyidx=scanidx;
 			if (scanidx==the_edit->line_size[lineno+1])
@@ -4815,7 +4988,7 @@ static int edit_wrap(int lineno, int direction, int line_space)
 		}
 		if (copyidx==0)
 		{
-			return(0);
+			return;
 		}
 		--copyidx;
 		while (the_edit->data_buf[lineno+1][copyidx]==' ')
@@ -4829,7 +5002,7 @@ static int edit_wrap(int lineno, int direction, int line_space)
 #endif
 		if ((copyidx+1) > free_space)
 		{
-			return(0);
+			return;
 		}
 		scanidx = copyidx;
 		while (scanidx>=0)
@@ -4878,7 +5051,7 @@ static int edit_wrap(int lineno, int direction, int line_space)
 		edit_chk_wrap_back(lineno+1);  /* this is recursive.. edit_chk_wrap_back calls edit_wrap */
 		break;
 		
-	      case WRAP_DOWN:
+	case WRAP_DOWN:
 		space_needed=line_space;
 		scanidx=the_edit->line_size[lineno]-1;
 		space_found = the_edit->width -	 the_edit->line_size[lineno];
@@ -4890,7 +5063,7 @@ static int edit_wrap(int lineno, int direction, int line_space)
 #endif		
 		if (space_found > space_needed)
 		{
-			return(0);
+			return;
 		}
 		while (space_found < space_needed)
 		{
@@ -5004,7 +5177,7 @@ static int edit_wrap(int lineno, int direction, int line_space)
 			}
 			the_edit->wrap_flag[lineno]=TRUE;
 		}
-		return(0);
+		return;
 		
 	}
 }
@@ -5115,7 +5288,7 @@ static void edit_clear_after(int row, int col)
 **	02/04/93	written by JEC 
 **
 */
-static int edit_delleft(void)
+static void edit_delleft(void)
 {
 	int row,col;
 	
@@ -5132,7 +5305,7 @@ static int edit_delleft(void)
 		if (row==0)
 		{
 			ws_bad_char();
-			return(0);
+			return;
 		}
 		--row;
 		col = the_edit->line_size[row];
@@ -5952,28 +6125,31 @@ void vwang_noclear_on_shut(void)
 
 void vwang_synch(void)
 {
-	vsynch();
+	if (!wbackground())
+	{
+		vsynch();
+	}
 }
 
 #ifdef unix
 void vwang_stty_save(void)
 {
-	vraw_stty_save();
+	if (!wbackground()) vraw_stty_save();
 }
 
 void vwang_stty_restore(void)
 {
-	vraw_stty_restore();
+	if (!wbackground()) vraw_stty_restore();
 }
 
 void vwang_stty_sane(void)
 {
-	vraw_stty_sane();
+	if (!wbackground()) vraw_stty_sane();
 }
 
 void vwang_stty_sync(void)
 {
-	vraw_stty_sync();
+	if (!wbackground()) vraw_stty_sync();
 }
 #endif
 
@@ -6055,7 +6231,7 @@ void vwang_set_videocap(void)
 {
 	static int first = 1;
 	
-	if (first)
+	if (first && !wbackground())
 	{
 		vcap_set_vcapfile(wisptermfilepath(NULL), wispterm(NULL));
 		first = 0;
@@ -6088,8 +6264,19 @@ void vwang_set_videocap(void)
 */
 static void mark_hotspots(int row_x, int numcols)
 {
+	static int first=1;
+	static int hotspot_vmode = W4W_HOTSPOT_VMODE;
 	char	the_row[WS_MAX_COLUMNS_ON_A_LINE+1];
 	char	the_mask[WS_MAX_COLUMNS_ON_A_LINE+1];
+
+	if (first)
+	{
+		first = 0;
+		if (use_costar())
+		{
+			hotspot_vmode = costar_hotspot_vmode();
+		}
+	}
 
 	/*
 	**	Take a copy of the row and replace all non-ascii char with spaces.
@@ -6099,7 +6286,7 @@ static void mark_hotspots(int row_x, int numcols)
 	/*
 	**	Create a mask of the hotspot positions
 	*/
-	if (w4w_mask_row(row_x, the_row, the_mask))
+	if (w4w_mask_row(the_row, the_mask))
 	{
 		fac_t 	*am;
 		int	col;
@@ -6113,8 +6300,11 @@ static void mark_hotspots(int row_x, int numcols)
 				/*
 				**	Change the attribute to reversed for each char in hotspot
 				*/
-				ws_putbuff(the_row[col], row_x, col, COSTAR_HOTSPOT_VMODE, VCS_DEFAULT);
+				ws_putbuff(the_row[col], row_x, col, hotspot_vmode, VCS_DEFAULT);
 
+				/*
+				**	Change the attribute map to prevent optimization from not redrawing
+				*/
 				am[col] = FAC_SET_UNDERSCORED(am[col]);
 			}
 		}
@@ -6313,7 +6503,8 @@ static int check_scrn(void)
 **
 **	FUNCTION:	set the title (if appropriate) for the screen
 **
-**	DESCRIPTION:	currently only implemented for WIN NT/95 console titles
+**	DESCRIPTION:	currently implemented for WIN32 console titles
+**			and Costar.
 **
 **	ARGUMENTS:	const char *   the_title       desired title
 **
@@ -6326,7 +6517,7 @@ static int check_scrn(void)
 */
 void vwang_title(const char *the_title)
 {
-	if (!wbackground() && !nativescreens())
+	if (!wbackground() && !nativescreens() && !use_costar())
 	{
 		vtitle(the_title);
 	}
@@ -6361,7 +6552,16 @@ void WTITLE(char *the_title)
 	{
 		title[i] = (char)0;
 	}
-	vwang_title(title);
+
+	if (use_costar())
+	{
+		costar_title(the_title);
+	}
+	else
+	{
+	        vwang_title(title);
+	}
+	
 }
 
 /*
@@ -6416,6 +6616,12 @@ void vwang_load_charmap(int force)
 		for(i=0; i<128; i++) { tt_wang2ansi[i] = i; }
 		for(i=0; i<256; i++) { tt_term2wang[i] = i; }
 		for(i=0; i<128; i++) { tt_wang2term[i] = i; }
+
+		/*
+		**	Default printable is 32-126 (space - '~')
+		*/
+		memset(is_printable, 0, 128);
+		for(i=32; i<=126; i++) { is_printable[i] = -1; }
 
 		/*
 		**	Load the CHARMAP values
@@ -6504,6 +6710,11 @@ void vwang_load_charmap(int force)
 						*/
 						stable[wangchar].sub_value = wangchar;
 						stable[wangchar].char_set  = VCS_DEFAULT;
+
+						/*
+						**	The WangChar is printable
+						*/
+						is_printable[wangchar] = -1;
 					}
 				}
 			}
@@ -6592,10 +6803,102 @@ static int vwputc(int c)
 	return vputc((char)WANG2TERM(c));
 }
 
+static int mousenonmod(void)
+{
+	static int rc = -1;
+
+	if (-1 == rc)
+	{
+		if (get_wisp_option("MOUSENONMOD"))
+		{
+			rc = 1;
+		}
+		else
+		{
+			rc = 0;
+		}
+	}
+
+	return rc;
+}
+
 
 /*
 **	History:
 **	$Log: vwang.c,v $
+**	Revision 1.100  1999-09-13 15:55:19-04  gsl
+**	Fix return codes from the edit_xxx() routines
+**
+**	Revision 1.99  1999-08-30 12:50:09-04  gsl
+**	Fix the earlier changes to WTITLE() and vwang_title().
+**	Moved the conditional call to costar_title() from vwang_title() to WTITLE().
+**	WTITLE is only used from COBOL.
+**	vwang_title() is used internally for Windows and titles and should not
+**	be used for Co*STAR titles.
+**
+**	Revision 1.98  1999-07-06 10:44:56-04  gsl
+**	Fixed Tracker item #305. With videocap files that used a graphics mode
+**	for pseudo-blank processing (e.g. vt220) in lowercase fields, the backspace
+**	processing would turn-on graphics mode and the ws_echo() would not restore
+**	it to the default character set wscset(VSC_DEFAULT). Change ws_echo() to
+**	always set the charset to default.
+**
+**	Revision 1.97  1999-05-11 12:51:01-04  gsl
+**	Change vwang_title() to call costar_title() if using costar.
+**
+**	Revision 1.96  1998-12-14 16:03:48-05  gsl
+**	Redo the last change to use thw use_w4w() routine
+**
+**	Revision 1.95  1998-12-14 15:41:54-05  gsl
+**	On WIN32 use w4w only if using direct I/O (not telnet)
+**
+**	Revision 1.94  1998-10-16 13:37:56-04  gsl
+**	Fixed bug trk#725 The clear field and clear after logic was passing
+**	the EOL flag to dump so dump was erasing to EOL when it should not be.
+**	This only effected READ and REWRITE logic because pseudo blank processing
+**	changed the dangle logic in the dump routine.
+**
+**	Revision 1.93  1998-09-30 17:12:06-04  gsl
+**	fix calls to w4w_xxx_row()
+**
+**	Revision 1.92  1998-06-22 11:38:30-04  gsl
+**	Removed the ws_tab_stop() and replace it's use with tab_fac().
+**	Rewrote and documented tab_fac().
+**	Documented attr_map_ptr()
+**	Fixed next_mp() to use menu_pick_combo() instead of tab_fac()
+**
+**	Revision 1.91  1998-06-18 18:36:48-04  gsl
+**	Trk 516 & 534.
+**	The NUMPROT tab-stop fields that used a pseudo blank (x0b) instead of
+**	a menu-pick (x05) were broken in 4.2.
+**	The rendition of the pseudo blank was not being used when in a protected
+**	field. When an underlined space was the pseudo blank (default) the
+**	space was displayed without the underline rendition (just a space).
+**	Fixed ws_write() and rewrite_mp() to handle numprot-pseudo-blank tabstops.
+**
+**	Revision 1.90  1998-05-21 13:25:58-04  gsl
+**	Add support for COSTARV2 attribute mode
+**
+**	Revision 1.89  1998-05-13 15:27:34-04  gsl
+**	Change the IS_PRINTABLE_CHAR() macro logic to use the is_printable[] table.
+**	The printable range for wangchars is 32-126 plus the wang chars in CHARMAP.
+**	This fixes the problem #526 where not using CHARMAP and vwang thinks
+**	the ESC char is a valid entry.
+**
+**	Revision 1.88  1998-04-13 17:08:23-04  gsl
+**	Added MOUSENONMOD option to allow mouse positioning to a nonmodifiable location
+**	on the screen
+**
+**	Revision 1.87  1998-04-13 13:16:07-04  gsl
+**	For synch and stty first check not in background
+**
+**	Revision 1.86  1998-03-16 11:45:32-05  gsl
+**	Now that HELP has been converted for Native screens, re-add the
+**	tests for ishelpactive() to the vsharedscreen() test
+**
+**	Revision 1.85  1998-03-06 11:41:28-05  gsl
+**	Add the costar_after_write_api following a wpopscr()
+**
 **	Revision 1.84  1998-01-15 15:58:52-05  gsl
 **	Fix ws_insert() to allow you to push a NULL off the end of a line
 **

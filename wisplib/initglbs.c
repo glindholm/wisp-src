@@ -19,6 +19,7 @@ static char rcsid[]="$Id:$";
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #if defined(unix) || defined(WIN32)
 #include <signal.h>
@@ -35,6 +36,7 @@ static char rcsid[]="$Id:$";
 #include "wperson.h"
 #include "level.h"
 #include "vwang.h"
+#include "wispvers.h"
 
 /*
 **	Structures and Defines
@@ -69,15 +71,15 @@ int initglbs(char *wisprunname)								/* Init GLOBALS				*/
 	newlevel();									/* Increment the link-level		*/
 	wgetpgrp();									/* Call to Set the Process Group ID.	*/
 
-	wtrace("INITGLBS","ENTRY","RUNNAME=[%8.8s] LINKLEVEL=[%d] GID=[%d][0x%08X]",
-	       wisprunname, linklevel(), wgetpgrp(), wgetpgrp());
+	wtrace("INITGLBS","ENTRY","RUNNAME=[%8.8s] VERSION=[%s] LINKLEVEL=[%d] GID=[%d][0x%08X]",
+	       wisprunname, wisp_version(), linklevel(), wgetpgrp(), wgetpgrp());
 
 	memcpy(WISPRUNNAME,wisprunname,8);
 	setprogid(wisprunname);
 	memset(WISPFILEXT,' ',39);							/* Set file extension to spaces.	*/
 	memset(WISPRETURNCODE,'0',3);							/* Set RETURN-CODE to zero.		*/
 	strcpy(WISPTRANVER,"INITGLBS");							/* Set the translator version		*/
-
+	
 	load_options();									/* Load the opt_xxxx variables		*/
 
 	if (opt_errflag_found)
@@ -85,6 +87,8 @@ int initglbs(char *wisprunname)								/* Init GLOBALS				*/
 		w_err_flag = opt_errflag;
 	}
 	werrset();									/* get runtime w_err_flag override.	*/
+
+	wtrace_timestamp("INITGLBS");
 
 	return 0;
 }
@@ -207,6 +211,15 @@ void wisp_signal_handler(void)
 /*
 **	History:
 **	$Log: initglbs.c,v $
+**	Revision 1.20  1998-05-14 15:04:36-04  gsl
+**	Add version to trace
+**
+**	Revision 1.19  1998-05-12 10:53:12-04  gsl
+**	change to use wtrace_timestamp()
+**
+**	Revision 1.18  1998-05-05 11:14:23-04  gsl
+**	Add datestamp to trace message
+**
 **	Revision 1.17  1997-07-16 15:07:05-04  gsl
 **	Change to match initwisp2() order
 **	Add wtrace()

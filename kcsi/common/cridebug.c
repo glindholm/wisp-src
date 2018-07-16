@@ -4,6 +4,7 @@ static char rcsid[]="$Id:$";
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <time.h>
 
 #include "kcsifunc.h"
@@ -271,7 +272,7 @@ static char *sys_hms(void)
 
 static char *sys_date_time(void)
 {
-	long some_time;
+	time_t some_time;
 
 	time(&some_time);
 	return((char*) ctime(&some_time));
@@ -279,6 +280,9 @@ static char *sys_date_time(void)
 /*
 **	History:
 **	$Log: cridebug.c,v $
+**	Revision 1.7  1998-01-20 11:45:34-05  gsl
+**	fix time reference to be type time_t
+**
 **	Revision 1.6  1996-10-09 12:47:56-04  gsl
 **	Add include stdlib
 **

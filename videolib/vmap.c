@@ -93,7 +93,7 @@ int vmp_x(action,i,j) int action,i,j;							/* Perform the requested action.	*/
 	if (action == TAG_AS_OLD)
 	{
 		if (!visible(vchr_map[k][j],vatr_map[k][j])) vmap_cng[k][j] = 0;	/* If not visible, all is ok...		*/
-		else vmap_cng[k][j] = -1;						/*    else flag as old data.		*/
+		else vmap_cng[k][j] = VMAP_CNG_OLDDATA;					/*    else flag as old data.		*/
 	}
 	return(SUCCESS);								/* Return to the caller.		*/
 }
@@ -182,6 +182,9 @@ static void vmp_express()
 /*
 **	History:
 **	$Log: vmap.c,v $
+**	Revision 1.11  1998-10-13 14:51:14-04  gsl
+**	Change to use VMAP_CNG_OLDDATA
+**
 **	Revision 1.10  1997-07-08 17:16:11-04  gsl
 **	Removed the line attribure logic as double width never used
 **	and not supported on must terminals.

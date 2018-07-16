@@ -1,0 +1,83 @@
+/*=========================================================================*/
+/*                         Co*Star Script Language                         */
+/*                            MOUSE Script Macro                           */
+/*                                                                         */
+/*                                                                         */
+/*  FILENAME:  MOUSE.SCR                                                   */
+/*                                                                         */
+/*    INPUTS:  Prefix character for return flag.                           */
+/*                                                                         */
+/*                                                                         */
+/*    OUTPUT:  The prefix character specified when calling the macro       */
+/*             followed by the row,column coordinates of the mouse click.  */
+/*                                                                         */
+/*    NOTES:   Do not use the following in the prefix string:              */
+/*                 - control characters ( characters below 32 )            */
+/*                 - the magic character                                   */
+/*                 - the INTR or Break key values ( usually 3 or 127 )     */
+/*                 - commas                                                */
+/*                 - the prefix string must be less than 15 chars in len.  */
+/*                                                                         */
+/*   EXAMPLE:  <127>UWSCRIPTsdk/mouse.scr,@<127>                           */
+/*                                                                         */
+/*             Starts the mouse macro and sets the prefix character        */
+/*             to @.   When the mouse is clicked in the Co*Star window     */
+/*             the following sample string is returned to the host:        */
+/*                                                                         */
+/*                                 @12,34                                  */
+/*                                                                         */
+/*            Where 12 would be the row and 34 would be the column.        */
+/*                                                                         */
+/*               Copyright CLEARVIEW Software Inc., 1992, 1993             */
+/*                            All Rights Reserved                          */
+/*                                                                         */
+/*=========================================================================*/
+
+char szBuf[80];
+char szPrefix[15];
+
+/* ---------------------------------------------*/
+/* Set the manifest constants (see globals.inc) */
+/* ---------------------------------------------*/
+int MOUSE = 3;
+long WM_LBUTTONUP = 0x0202;
+
+/*=========================================================================*/
+/* main -- Entry point for the macro.  Copies the prefix string parameter  */
+/*         to a global string and starts the watch for mouse clicks.       */
+/*=========================================================================*/
+main(char szPrefixString )
+{
+   if( strlen( szPrefixString ) ) {
+      strncpy( szPrefix, szPrefixString, 15 );   
+      SetWatch(MOUSE, MouseWatch( ) ); 
+   } else {
+     SetErrorText("MOUSE.SCR -- No prefix specified.");
+     ExitScript();
+   }
+   
+}
+
+/*=========================================================================*/
+/* MouseWatch -- Callback routine for mouse clicks, receives the row and   */
+/*               column of the click.                                      */
+/*=========================================================================*/
+MouseWatch( int r, int c, int wMsg, int bIsHotspot )
+{ 
+	/* backward compatibility */
+	if( wMsg != WM_LBUTTONUP )
+		return;
+	
+	if( bIsHotspot )
+		return;		
+  
+  /* prepare the return string */
+  sprintf( szBuf,"%s%u,%u\r", szPrefix, r,c );   
+  
+  /* hide the output on row 26 */
+/*  setcursorpos( 26, 1 ); */
+  
+  /* send the mouse string to the host */
+   WriteComm( szBuf );  
+  
+}

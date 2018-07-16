@@ -54,7 +54,8 @@ WISPQA=$WISP/wisp.QA
 
 if [ ! -d $SHIPWISP ]
 then
-	echo '$SHIPWISP does not exist'
+	echo '$SHIPWISP' "=$SHIPWISP"
+	echo '$SHIPWISP does not exist, run bldshipkit.sh'
 	echo installqa.sh Aborting!
 	exit
 fi
@@ -107,11 +108,55 @@ echo
 echo 'Adding ACUCOBOL runtime systems'
 cp $SHIP/rts/wruncbl  $WISPQA/bin
 cp $SHIP/rts/wruncble $WISPQA/bin
+cp $ACUDIR/bin/runcbl.alc $WISPQA/bin/wruncbl.alc
+cp $ACUDIR/bin/runcbl.alc $WISPQA/bin/wruncble.alc
 
 echo
 echo 'Adding Micro Focus runtime systems'
 cp $WISP/src/mf/wrunmf  $WISPQA/bin
 cp $WISP/src/mf/wrunmfe $WISPQA/bin
+
+echo
+echo 'Adding CRID for Acucobol'
+CRIDSHIP=$WISP/src/kcsi/crid/cridacu*.ship
+if [ -d $CRIDSHIP ]
+then
+	cd $WISPQA
+	uncompress -c $CRIDSHIP/cridacu.*.tar.Z|tar -xvf -
+	ln -s cridacu.* cridacu
+	cp $WISP/src/kcsi/crid/wruncblk $WISPQA/bin
+	cp $ACUDIR/bin/runcbl.alc $WISPQA/bin/wruncblk.alc
+fi
+
+echo
+echo 'Adding CRID for Micro Focus'
+CRIDSHIP=$WISP/src/kcsi/crid/cridmfx*.ship
+if [ -d $CRIDSHIP ]
+then
+	cd $WISPQA
+	uncompress -c $CRIDSHIP/cridmfx.*.tar.Z|tar -xvf -
+	ln -s cridmfx.* cridmfx
+fi
+
+echo
+echo 'Adding CREATE for Acucobol'
+CREATESHIP=$WISP/src/kcsi/create/createacu*.ship
+if [ -d $CREATESHIP ]
+then
+	cd $WISPQA
+	uncompress -c $CREATESHIP/createacu.*.tar.Z|tar -xvf -
+	ln -s createacu.* createacu
+fi
+
+echo
+echo 'Adding CREATE for Micro Focus'
+CREATESHIP=$WISP/src/kcsi/create/createmfx*.ship
+if [ -d $CREATESHIP ]
+then
+	cd $WISPQA
+	uncompress -c $CREATESHIP/createmfx.*.tar.Z|tar -xvf -
+	ln -s createmfx.* createmfx
+fi
 
 echo
 echo '*** DONE ***'

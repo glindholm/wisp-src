@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1988-1999 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		link.c
@@ -77,6 +77,7 @@ static char rcsid[]="$Id:$";
 #include "wmalloc.h"
 #include "wispcfg.h"
 #include "setprgid.h"
+#include "wfiledis.h"
 
 #ifdef WIN32
 #include "win32spn.h"
@@ -107,6 +108,12 @@ static char rcsid[]="$Id:$";
 /*
 **	Structures and Defines
 */
+#ifndef MAX
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef MIN
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
 
 #define MAX_LINKLEVELS	16								/* Maximum call depth			*/
 #define	MAX_VARGS	128								/* MAX_LINK_PARMS + control params too	*/
@@ -117,6 +124,8 @@ static char rcsid[]="$Id:$";
 /*
 **	Globals and Externals
 */
+extern void call_acucobol(char* name, int parmcnt, char* parms[], int lens[], int* rc);
+extern void call_mfcobol(char* name, int parmcnt, char* parms[], int lens[], int* rc);
 
 /*
 **	Static data
@@ -130,8 +139,33 @@ static struct
 	*/
 	char	progvol[SIZEOF_VOL];
 	char	proglib[SIZEOF_LIB];
+	fstruct	*temp_file_list;
+	pstruct	*print_file_list;
 } linklevel_stack[MAX_LINKLEVELS];
 
+static void prelink_save_state(int linklevel)
+{
+	/*
+	**	Save soft link level stuff
+	*/
+	get_defs(DEFAULTS_PV, linklevel_stack[linklevel].progvol);
+	get_defs(DEFAULTS_PL, linklevel_stack[linklevel].proglib);
+	linklevel_stack[linklevel].temp_file_list = g_temp_file_list;
+	linklevel_stack[linklevel].print_file_list = g_print_file_list;
+	g_temp_file_list = NULL;
+	g_print_file_list = NULL;
+}
+static void postlink_restore_state(int linklevel)
+{
+	/*
+	**	Restore soft link level stuff
+	*/
+	g_print_file_list = linklevel_stack[linklevel].print_file_list;
+	g_temp_file_list = linklevel_stack[linklevel].temp_file_list;
+	set_defs(DEFAULTS_PV, linklevel_stack[linklevel].progvol);
+	set_defs(DEFAULTS_PL, linklevel_stack[linklevel].proglib);
+	save_defaults();
+}
 
 
 /*
@@ -139,7 +173,9 @@ static struct
 */
 
 static void do_link();
-static int searchpath();
+static int searchnative(const char* nativename, char* filespec);
+static int searchpath(const char* wangfilename, char* filespec);
+
 extern void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *link_filespec);
 
 
@@ -426,13 +462,20 @@ static	void do_link(
 	char	linkkey[80];								/* Key to link parm area		*/
 	int4	exit_code;
 	char	*cobol_frontend;
-	char 	link_filespec[256];							/* Native program path			*/
-	char 	link_callspec[256];							/* the "CALL" spec			*/
-	char	progname_str[16] ;							/* string version of progname		*/
+	char 	link_filespec[WISP_FILEPATH_LEN];					/* Native program path			*/
+	char 	link_callspec[WISP_FILEPATH_LEN];					/* the "CALL" spec			*/
+	char	progname_str[WISP_FILEPATH_LEN];					/* string version of progname		*/
+	char	display_filename[COB_FILEPATH_LEN + 1];					/* Needs same scope as parm_list	*/
+	int	native_substitute = 0;
+	int	link_separate_window = 0;
+	char	tracemsg[1024];
+	char	tracebuf[256];
+	int	tlen;
+	int	soft_link;
 
-
-	wtrace("LINK","ENTRY","Progname=[%8.8s] Linktype=[%1.1s] (level=%d)", 
-	       varg_pointer[0], varg_pointer[1], linklevel());
+	wtrace("LINK","ENTRY","Progname=[%8.8s] Linktype=[%1.1s] (level=%d) Argcnt=[%d]", 
+	       varg_pointer[0], varg_pointer[1], linklevel(), varg_count);
+	tracemsg[0] = '\0';
 
 	if (lnk_depth == MAX_LINKLEVELS)
 	{
@@ -483,6 +526,7 @@ static	void do_link(
 /* ARG1: PROGRAM	Alpha(8) */
 	progname = varg_pointer[va_i++] ;						/* Get the program name.		*/
 	to_do--;
+	sprintf(tracemsg,"Progname(1)=[%8.8s]",progname);
 
 	memcpy(l_file,progname,SIZEOF_FILE);
 	leftjust(l_file,SIZEOF_FILE);
@@ -511,6 +555,8 @@ static	void do_link(
 ARG2:	/* LINK TYPE 	Alpha(1) */
 	ltype = varg_pointer[va_i++] ;							/* Get the link type info.		*/
 	to_do--;
+	sprintf(tracebuf," Type(2)=[%c]",*ltype);
+	strcat(tracemsg,tracebuf);
 
 	if (to_do == 0) goto ARGEND;
 	if (to_do == 1) goto ARG16;
@@ -524,10 +570,14 @@ ARG2:	/* LINK TYPE 	Alpha(1) */
 ARG3:	/* LIBRARY	Alpha(8) */
 	libname = varg_pointer[va_i++] ;						/* Get the library name.		*/
 	to_do--;
+	sprintf(tracebuf," Lib(3)=[%8.8s]",libname);
+	strcat(tracemsg,tracebuf);
 
 /* ARG4:   VOLUME	Alpha(6) */
 	volname = varg_pointer[va_i++] ;						/* Get the volume name.			*/
 	to_do--;
+	sprintf(tracebuf," Vol(4)=[%6.6s]",volname);
+	strcat(tracemsg,tracebuf);
 
 	if (to_do == 0) goto ARGEND;
 	if (arg_length_known)
@@ -560,6 +610,8 @@ ARG5:	/* SPECIAL	Alpha(1) */
 	{
 		arg_special=dummy_char;
 		arg_used = 1;
+		sprintf(tracebuf," Special(5)=[%c]",*arg_special);
+		strcat(tracemsg,tracebuf);
 	}
 	if ( arg_used )									/* If arg is used then get next one.	*/
 	{
@@ -590,6 +642,8 @@ ARG6:	/* EXT OPTS	Alpha(2) */
 	{
 		arg_ext_opt=dummy_char;
 		arg_used = 1;
+		sprintf(tracebuf," Extopt(6)=[%c]",*arg_ext_opt);
+		strcat(tracemsg,tracebuf);
 	}
 	if ( arg_used )									/* If arg is used then get next one.	*/
 	{
@@ -636,6 +690,9 @@ ARG7:	/* PARM COUNT	Int(4) */
 		}
 	}
 
+	sprintf(tracebuf," Parmcnt(7)=[%d]",parmcnt);
+	strcat(tracemsg,tracebuf);
+
 	if ( parmcnt > MAX_LINK_PARMS )
 	{
 		werrlog(ERRORCODE(8),MAX_LINK_PARMS,parmcnt,0,0,0,0,0,0);
@@ -657,6 +714,8 @@ ARG7:	/* PARM COUNT	Int(4) */
 			{
 				arg_len = varg_length[va_i] ;				/* Get the argument length.		*/
 				len_list.len[i] = arg_len;				/* Save length in a table.		*/
+				sprintf(tracebuf," Arg%d(8)=[len=%d]",i+1,arg_len);
+				strcat(tracemsg,tracebuf);
 			}
 			va_i++;								/* this time increment after assignment	*/
 			to_do--;
@@ -674,6 +733,8 @@ ARG7:	/* PARM COUNT	Int(4) */
 /* ARG9:   CANCELEXIT	Alpha(1) */
 	can_exit = varg_pointer[va_i++] ;						/* Get the cancel exit flag.		*/
 	to_do--;
+	sprintf(tracebuf," Canexit(9)=[%c]",*can_exit);
+	strcat(tracemsg,tracebuf);
 	if (	*can_exit != ' ' && 
 	    	*can_exit != 'C' && 
 	    	*can_exit != 'N' && 
@@ -697,9 +758,13 @@ ARG10:	/* MESSAGE	Alpha(var) */
 	to_do--;
 
 /* ARG11:  MESS LENGTH	Int(4) */
-	messlen = *(varg_pointer[va_i++]) ;						/* Get the pf16 message length.		*/
-	wswap(&messlen);
+	messlen = get_swap((int4*)varg_pointer[va_i++]);				/* Get the pf16 message length.		*/
 	to_do--;
+
+	tlen=MIN(messlen,20);
+	tlen=MAX(0,tlen);
+	sprintf(tracebuf," Mess(10)=[%*.*s%s]  Messlen(11)=[%d]", tlen, tlen, mess, (messlen>tlen?"...":""),messlen);
+	strcat(tracemsg,tracebuf);
 
 	if (to_do == 0) goto ARGEND;
 	if (to_do != 2) goto ARG12;
@@ -713,6 +778,8 @@ ARG10:	/* MESSAGE	Alpha(var) */
 ARG12:	/* HELP DISABLE	Alpha(1) */
 	helpflg = varg_pointer[va_i++] ;						/* Get the help disable flag.		*/
 	to_do--;
+	sprintf(tracebuf," Helpflag(12)=[%c]",*helpflg);
+	strcat(tracemsg,tracebuf);
 
 	if (to_do == 0) goto ARGEND;
 	if (to_do != 2) goto ARG13;
@@ -726,6 +793,8 @@ ARG12:	/* HELP DISABLE	Alpha(1) */
 ARG13:	/* reserved	Alpha(2) */
 	pfkey = varg_pointer[va_i++] ;							/* Get the pfkey flag mask		*/
 	to_do--;
+	sprintf(tracebuf," Reserved(13)=[%2.2s]",pfkey);
+	strcat(tracemsg,tracebuf);
 
 	if (to_do == 0) goto ARGEND;
 	if (to_do == 1) goto ARG16;
@@ -741,22 +810,30 @@ ARG14:	/* CANCEL RCVR	Alpha(var) */
 	to_do--;
 
 /* ARG15:  CANCEL RCVR LEN  Int(4) */
-	canlen = *(varg_pointer[va_i++]) ;						/* Get the text receiver length.	*/
-	wswap(&canlen);
+	canlen = get_swap((int4*)varg_pointer[va_i++]);					/* Get the text receiver length.	*/
 	to_do--;
+
+	tlen=MIN(canlen,20);
+	tlen=MAX(0,tlen);
+	sprintf(tracebuf," Cantext(14)=[%*.*s%s] Canlen(15)=[%d]",tlen,tlen,cantext,(canlen>tlen?"...":""),canlen);
+	strcat(tracemsg,tracebuf);
 
 	if (to_do == 0) goto ARGEND;
 
 ARG16:	/* COMP-CODE	Int(4) */
 	comcode = (int4 *)varg_pointer[va_i++] ;					/* Get the completion code from link.	*/
 	to_do--;
+	strcat(tracemsg," Compcode(16)=[]");
 
 	if (to_do == 0) goto ARGEND;
 
 /* ARG17:  RETURN-CODE	Int(4) */
 	retcod = (int4 *)varg_pointer[va_i++] ;						/* Get the program return code.		*/
+	strcat(tracemsg," Retcode(17)=[]");
 
 ARGEND:	/* END OF ARGUMENTS */
+
+	wtrace("LINK","ARGS","%s",tracemsg);
 
 	if ( *ltype == ' ' )								/* Use Program vol & lib.		*/
 	{
@@ -790,12 +867,6 @@ ARGEND:	/* END OF ARGUMENTS */
 	l_lib[SIZEOF_LIB] = '\0';
 
 	/*
-	**	Save soft link level stuff
-	*/
-	get_defs(DEFAULTS_PV, linklevel_stack[linklevel()].progvol);
-	get_defs(DEFAULTS_PL, linklevel_stack[linklevel()].proglib);
-
-	/*
 	**	Vector a "LINK" to a VSSUB into a call
 	*/
 	if (islinkvector(l_file))
@@ -822,40 +893,6 @@ ARGEND:	/* END OF ARGUMENTS */
 	}
 
 	/*
-	**	Internal soft-link to DISPLAY utility
-	*/
-	if (use_internal_display() && 0==memcmp(l_file,"DISPLAY ",SIZEOF_FILE))		/* If they are calling DISPLAY, then	*/
-	{										/* call WFILE_DISP.			*/
-		char	save_progid[9];
-		
-#ifdef unix
-		if (vsharedscreen())							/* If screen is shared			*/
-		{
-			vwang_stty_save();						/* Save the current stty values		*/
-		}
-#endif
-		strcpy(save_progid, getprogid());
-		newlevel();								/* Increment the link-level		*/
-		setprogid("DISPLAY ");
-
-		wfile_disp();								/* Soft-link to DISPLAY			*/
-
-		setprogid(save_progid);
-		oldlevel();								/* Decrement the link-level		*/
-		ppunlink(linklevel());							/* Putparm UNLINK			*/
-
-#ifdef unix
-		if (vsharedscreen())							/* If screen is shared			*/
-		{
-			vwang_stty_restore();						/* Restore the saved stty values	*/
-		}
-#endif
-		swap_put ( comcode, (int4)0 ) ;						/* swap and set the completion code.	*/
-		swap_put ( retcod, (int4)0 ) ;						/* swap and set the return code.	*/
-		return;
-	}
-
-	/*
 	**	Do internal translations
 	*/
 	if (0==memcmp(l_file,"COPY    ",SIZEOF_FILE)) 
@@ -864,6 +901,138 @@ ARGEND:	/* END OF ARGUMENTS */
 		memcpy(l_file,"WSORT   ",SIZEOF_FILE);					/* 		SORT --> WSORT		*/
 
 	unloadpad( progname_str, l_file, SIZEOF_FILE );					/* make progname a string		*/
+
+	if (0==memcmp(l_file,"VSEDIT  ",SIZEOF_FILE))
+	{
+		if (utils_in_windows())
+		{
+			link_separate_window = 1;
+		}
+	}
+
+	if (0==memcmp(l_file,"DISPLAY ",SIZEOF_FILE))
+	{
+		if (utils_in_windows())
+		{
+			link_separate_window = 1;
+		}
+
+		/*
+		**	If using a custom display utility (DISPLAYUTIL option) then substitute the program name.
+		*/
+		if (custom_display_utility())
+		{
+			native_substitute = 1;
+			strcpy(progname_str,custom_display_utility());
+		}
+		else if (link_separate_window)
+		{
+			/*
+			**	Using the WISP DISPLAY utility into a separate window (WIN32 only).
+			**	Must use the native substitute logic to avoid pitfalls.
+			**	- one of the problems is the the GETPARM will be issued then not find DISPLAY.
+			*/
+			native_substitute = 1;
+#ifdef unix
+			strcpy(progname_str,"display");
+#endif
+#ifdef WIN32
+			strcpy(progname_str,"display.exe");
+#endif
+		}
+		
+		/*
+		**	If using a custom display utility then we may need to issue the DISPLAY getparms
+		**	because we assume it doesn't issue getparms.
+		**	Likewise if using DISPLAY but running in a separate window we need to issue
+		**	the DISPLAY getparms because it will not have access to this session's PUTPARMS.
+		*/
+		if (custom_display_utility() || link_separate_window)
+		{
+			/*
+			**	If no arguments then issue the DISPLAY GETPARMS to get the filename.
+			*/
+			if (0 == parmcnt)
+			{
+				int bGotFile;
+				
+				newlevel();
+
+				bGotFile = display_util_getparms(display_filename);
+
+				oldlevel();						/* Decrement the link-level		*/
+				ppunlink(linklevel());					/* Putparm UNLINK			*/
+				
+				if (bGotFile)
+				{
+					parmcnt = 1;
+					parm_list.parm[0] = display_filename;		/* NOTE: pointer to local variable	*/
+					len_list.len[0] = strlen(display_filename);
+				}
+				else
+				{
+					/* No filename from getparm - PF16 pressed - bail */
+
+					swap_put( comcode, (int4)0 );
+					swap_put( retcod, (int4)16 );
+
+					wtrace("LINK", "RETURN", "FILE=DISPLAY compcode=0 retcode=16 (level=%d)", linklevel());
+
+					return;
+				}
+			}
+
+		}
+		else if (use_internal_display())
+		{
+			char	save_progid[9];
+
+			/*
+			**	Internal soft-link to DISPLAY utility
+			*/
+		
+#ifdef unix
+			if (vsharedscreen())						/* If screen is shared			*/
+			{
+				vwang_stty_save();					/* Save the current stty values		*/
+			}
+#endif
+			strcpy(save_progid, getprogid());
+			newlevel();							/* Increment the link-level		*/
+			setprogid("DISPLAY ");
+
+
+			/*
+			**	Issues the getparms and if a file was supplied then display it.
+			*/
+			if (display_util_getparms(display_filename))
+			{
+				/*
+				**	Do the DISPLAY
+				*/
+				wpushscr();
+			
+				internal_display(display_filename);
+
+				wpopscr();
+			}
+
+			setprogid(save_progid);
+			oldlevel();							/* Decrement the link-level		*/
+			ppunlink(linklevel());						/* Putparm UNLINK			*/
+
+#ifdef unix
+			if (vsharedscreen())						/* If screen is shared			*/
+			{
+				vwang_stty_restore();					/* Restore the saved stty values	*/
+			}
+#endif
+			swap_put ( comcode, (int4)0 ) ;					/* swap and set the completion code.	*/
+			swap_put ( retcod, (int4)0 ) ;					/* swap and set the return code.	*/
+			return;
+		}
+	}
+
 
 #ifdef VMS
 /*************************************************  Start of VMS section  *******************************************************/
@@ -1202,7 +1371,35 @@ vmsagain:
 	wang_retcode = 0;
 	wang_compcode = 0;
 
-	if ( *ltype == ' ' || *ltype == 'P' )
+	if (native_substitute)
+	{
+		if ( isafile(progname_str) )
+		{
+			strcpy(link_filespec, progname_str);
+			not_found = 0;
+		}
+
+		if (not_found)
+		{
+			not_found = searchnative(progname_str,link_filespec);
+		}
+		
+#ifdef WIN32
+		if (not_found)
+		{
+			not_found = whichenvpath(progname_str,link_filespec);
+		}
+#endif
+		if (not_found)
+		{
+			swap_put( comcode, (int4)8 );
+			swap_put( retcod, (int4)20 );
+			werrlog(ERRORCODE(5),progname_str,0,0,0,0,0,0,0);
+			return;
+		}
+	}
+
+	if ( not_found && (*ltype == ' ' || *ltype == 'P') )
 	{
 		mode = IS_SUBMIT;
 		p = wfname(&mode,l_vol,l_lib,l_file,link_filespec);
@@ -1242,7 +1439,10 @@ vmsagain:
 		/*
 		**	Scan along the $PATH
 		*/
-		not_found = searchpath(progname_str,link_filespec);
+		if (not_found)
+		{
+			not_found = searchpath(progname_str,link_filespec);
+		}
 
 		if (not_found)
 		{
@@ -1346,6 +1546,75 @@ vmsagain:
 #ifdef unix
 /*************************************************  Start of UNIX section  ******************************************************/
 
+	parm_file_written = 0;
+	exit_code = 0;
+	pid = 0;
+	soft_link = 0;
+	
+	/*
+	**	Handle SOFTLINK case first.
+	*/
+	if (softlink() && 
+	    ((RUN_ACUCOBOL == ftyp && acu_cobol) ||
+	     ((RUN_MFINT == ftyp || RUN_MFGNT == ftyp) && mf_cobol)))
+	{
+		/*
+		**	Already in a COBOL runtime so do a "soft" link.
+		**
+		**	NOTE: This code must be re-entrant.
+		*/
+		int	rc;
+		char	saverunname[8];
+
+		soft_link = 1;
+		
+		/*
+		**	Save soft link level stuff.
+		**	Must be done before PROGLIB/PROGVOL are changed.
+		*/
+		prelink_save_state(linklevel());
+
+		/*
+		**	Handle PROGLIB/PROGVOL processing
+		*/
+		setprogdefs(l_vol,l_lib);
+		clearprogsymb();
+		
+		memcpy(saverunname, WISPRUNNAME, 8);
+		memcpy(WISPRUNNAME, l_file, 8);
+		
+		savelevel = linklevel();
+		newlevel();
+
+		if (acu_cobol)
+		{
+			wtrace("LINK","SOFTLINK", "call_acucobol() softlink to [%s] parmcnt=%d", link_filespec, parmcnt);
+
+			call_acucobol( link_filespec, parmcnt, parm_list.parm, len_list.len, &rc );
+			call_acucobol_error(rc, &wang_retcode, &wang_compcode, link_filespec);
+		}
+		else /* MF COBOL */
+		{
+			wtrace("LINK","SOFTLINK", "call_mfcobol() softlink to [%s] parmcnt=%d", link_filespec, parmcnt);
+			
+			call_mfcobol( link_filespec, parmcnt, parm_list.parm, len_list.len, &rc );
+
+			/*
+			**	The RC is not reliable, it always seems to return 1
+			*/
+			wang_compcode = 0;
+			wang_retcode  = atol ( WISPRETURNCODE );
+		}
+
+		setlevel(savelevel);
+
+		memcpy(WISPRUNNAME, saverunname, 8);
+
+		/*
+		**	Bypass all the hardlink code and go to the cleanup code.
+		*/
+		goto done_soft_link;
+	}
 
 	if ( arg_length_known || 0 == parmcnt )
 	{
@@ -1355,36 +1624,38 @@ vmsagain:
 		writeunixlink(link_callspec, parmcnt, &parm_list, &len_list, linkkey);
 		parm_file_written = 1;
 	}
-	else
+
+	/*
+	**	If not in background then take care of shutting down screen handling.
+	*/
+	if (!wbackground())
 	{
-		parm_file_written = 0;
+		if (ftyp == RUN_ACUCOBOL || ftyp == RUN_MFINT || ftyp == RUN_MFGNT ||
+		    ftyp == RUN_PROC || ftyp == RUN_PROCOBJ )			
+		{
+			/*
+			**	If going to COBOL or PROC don't clear screen
+			*/
+			vwang_noclear_on_shut();
+		} 
+
+		if (vsharedscreen())							/* If screen is shared			*/
+		{
+			vwang_stty_save();						/* Save the current stty values		*/
+		}
+
+		vwang_shut();								/* Reset the terminal.			*/
+
+		if (vsharedscreen())							/* If screen is shared			*/
+		{
+			/*
+			**	Force the stty into a SANE state.
+			**	If there has been no screen I/O then vwang_shut() will have done nothing.
+			*/
+			vwang_stty_sane();
+		}
 	}
-
-	if ( ftyp == RUN_ACUCOBOL || ftyp == RUN_MFINT || ftyp == RUN_MFGNT ||
-	     ftyp == RUN_PROC || ftyp == RUN_PROCOBJ )			
-	{
-		/*
-		**	If going to COBOL or PROC don't clear screen
-		*/
-		vwang_noclear_on_shut();
-	} 
-
-	if (vsharedscreen())								/* If screen is shared			*/
-	{
-		vwang_stty_save();							/* Save the current stty values		*/
-	}
-
-	vwang_shut();									/* Reset the terminal.			*/
-
-	if (vsharedscreen())								/* If screen is shared			*/
-	{
-		/*
-		**	Force the stty into a SANE state.
-		**	If there has been no screen I/O then vwang_shut() will have done nothing.
-		*/
-		vwang_stty_sane();
-	}
-
+	
 	old_SIGINT  = signal(SIGINT,  SIG_IGN);						/* Ignore signals			*/
 	old_SIGQUIT = signal(SIGQUIT, SIG_IGN);
 	old_SIGCLD  = signal(SIGCLD,  SIG_DFL);						/* Use Default DEATH-OF-CHILD signal	*/
@@ -1568,7 +1839,7 @@ vmsagain:
 				if ( debug_ptr && *debug_ptr )				/* Check for debug flags		*/
 				{
 					sh_parm[arg++] = debug_ptr;			/* Add the debug flags			*/
-					freopen("wproc.trace","w",stdout);		/* Redirect stdout			*/
+				/*	freopen("wproc.trace","w",stdout); */		/* Redirect stdout			*/
 				}
 				sh_parm[arg++] = "-p";					/* Use parameter file			*/
 				sh_parm[arg++] = link_filespec;				/* argv[2] in the filespec	 	*/
@@ -1602,9 +1873,7 @@ vmsagain:
 	default: /* PARENT PROCESS */
 
 		wwaitpid(pid,&exit_code);						/* Wait for linked process to complete	*/
-		vwang_synch();								/* Resynch video			*/
 		load_defaults();							/* Reload defaults: may have changed	*/
-		vwang_set_reinitialize(TRUE);						/* Return from link re-inits screen	*/
 		break;
 	}
 
@@ -1612,14 +1881,34 @@ vmsagain:
 	signal(SIGQUIT, old_SIGQUIT);
 	signal(SIGCLD,  old_SIGCLD);							/* Ignore DEATH-OF-CHILD signal		*/
 
-	if (vsharedscreen())								/* If screen is shared			*/
+done_soft_link:
+
+	/*
+	**	If not in background then take care of resetting screen handling.
+	*/
+	if (!wbackground())
 	{
-		vwang_stty_restore();							/* Restore the saved stty values	*/
+		vwang_synch();								/* Resynch video			*/
+		vwang_set_reinitialize(TRUE);						/* Return from link re-inits screen	*/
+
+		if (vsharedscreen())							/* If screen is shared			*/
+		{
+			vwang_stty_restore();						/* Restore the saved stty values	*/
+		}
+
+		vwang_clear_on_shut();							/* Reset onexit status to clear screen	*/
 	}
-
-	vwang_clear_on_shut();								/* Reset onexit status to clear screen	*/
-
+	
 	ppunlink(linklevel());								/* Putparm UNLINK			*/
+
+	if (soft_link)
+	{
+		/*
+		**	Restore soft link level stuff.
+		**	Needs to be done before any wexit() because it restores the temp file list.
+		*/
+		postlink_restore_state(linklevel());
+	}
 
 	if ( parm_file_written )							/* If parm file written then clean up	*/
 	{
@@ -1651,7 +1940,7 @@ vmsagain:
 			}
 		}
 	} 
-	else
+	else if (!soft_link)
 	{
 		wang_compcode = 0;
 		wang_retcode = exit_code;
@@ -1721,6 +2010,13 @@ vmsagain:
 
 	parm_file_written = 0;
 	exit_code = 0;
+	soft_link = 0;
+
+	/*
+	**	Save soft link level stuff.
+	**	Must be done before PROGLIB/PROGVOL are changed.
+	*/
+	prelink_save_state(linklevel());
 
 	/*
 	**	Handle PROGLIB/PROGVOL processing
@@ -1736,9 +2032,17 @@ vmsagain:
 		**	NOTE: This code must be re-entrant.
 		*/
 		int	rc;
+		char	saverunname[8];
 
+		soft_link = 1;
+		
+		memcpy(saverunname, WISPRUNNAME, 8);
+		memcpy(WISPRUNNAME, l_file, 8);
+		
 		savelevel = linklevel();
 		newlevel();
+
+		wtrace("LINK","SOFTLINK", "Acucobol softlink to [%s] parmcnt=%d", link_filespec, parmcnt);
 
 		call_acucobol( link_filespec, parmcnt, parm_list.parm, len_list.len, &rc );
 
@@ -1746,6 +2050,7 @@ vmsagain:
 
 		call_acucobol_error(rc, &wang_retcode, &wang_compcode, link_filespec);
 
+		memcpy(WISPRUNNAME, saverunname, 8);
 	}
 	else if ((RUN_MFINT == ftyp || RUN_MFGNT == ftyp) && mf_cobol && softlink())
 	{
@@ -1762,7 +2067,6 @@ vmsagain:
 		**	This involves writing parmameters out to the temp parm file
 		**	and setting up context via environment variables.
 		*/
-		char	*save_cancelexit_env = NULL;
 
 		if ( arg_length_known || 0 == parmcnt )
 		{
@@ -1775,7 +2079,7 @@ vmsagain:
 			**	Store the linkkey in env
 			*/
 			sprintf(buff,"%s=%s",WISP_LINK_ENV,linkkey);
-			setenvstr(buff);
+			win32SetNewEnv(buff);
 
 			parm_file_written = 1;
 		}
@@ -1786,20 +2090,16 @@ vmsagain:
 			**	Mark the cancel-exit in a shell var so it is available
 			** 	even if we go across a script etc.
 			*/
-			char	*ptr;
-			if (ptr = getenv(WISP_CANCELEXIT_ENV))
-			{
-				/* If CANCEL EXIT set then save current settings */
-				save_cancelexit_env = wstrdup(ptr);
-			}
-			
 			sprintf(buff,"%s=%d",WISP_CANCELEXIT_ENV,getpid());
-			setenvstr(buff);
+			win32SetNewEnv(buff);
 		}
 
 		savelevel = linklevel();
 
-		vwang_shut();
+		if (!wbackground() && !link_separate_window)
+		{
+			vwang_shut();
+		}
 
 		/*
 		**	Type specific spawn logic
@@ -1951,12 +2251,12 @@ vmsagain:
 				werrlog(ERRORCODE(20),"Parmameter lengths unknown",0,0,0,0,0,0,0);
 			}
 
-			wtrace("LINK", "SYSTEM", "Command = [%s]", command);
+			wtrace("LINK", "WSYSTEM", "Command = [%s]", command);
 			
 			savelevel = linklevel();
 			newlevel();
 
-			exit_code = system(command);
+			exit_code = wsystem(command);
 			
 			setlevel(savelevel);
 
@@ -1976,7 +2276,7 @@ vmsagain:
 			if ( debug_ptr && *debug_ptr )				/* Check for debug flags		*/
 			{
 				sh_parm[arg++] = debug_ptr;			/* Add the debug flags			*/
-			/*	freopen("wproc.trace","w",stdout);		/* Redirect stdout			*/
+			/*	freopen("wproc.trace","w",stdout);	*/	/* Redirect stdout			*/
 			}
 			sh_parm[arg++] = "-p";					/* Use parameter file			*/
 			sh_parm[arg++] = link_filespec;				/* argv[2] in the filespec	 	*/
@@ -2003,20 +2303,79 @@ vmsagain:
 		/*
 		**	SPAWN the new process
 		*/
-		if (RUN_ACUCOBOL == ftyp ||
-		    RUN_MFINT    == ftyp || 
-		    RUN_MFGNT    == ftyp   )
+		if (wbackground())
 		{
-			/*
-			** specify HIDE PARENT so that the new console will open over the current
-			** one.  There is no way to get ACUCOBOL to reuse the current console;
-			** a new one is always created
+			exit_code = win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
+		}
+		else if (RUN_ACUCOBOL == ftyp ||
+			 RUN_MFINT    == ftyp || 
+			 RUN_MFGNT    == ftyp   )
+		{
+			
+			/*	
+			**  
+			**	If NATIVESCREENS and linking to a COBOL program then don't HIDE CHILD
+			**	because Acucobol doesn't un-hide it's window.
+			**	Don't call nativescreens() because will be false if called from wshell.
+			**
+			**	if (get_wisp_option("NATIVESCREENS"))
+			**		exit_code = win32spawnvp(sh_parm, SPN_HIDE_PARENT|SPN_WAIT_FOR_CHILD);
 			*/
-			exit_code = win32spawnvp(sh_parm, SPN_HIDE_PARENT|SPN_WAIT_FOR_CHILD);
+
+			/*
+			** 	Specify HIDE PARENT so that the new console will open over the current
+			** 	one.  There is no way to get ACUCOBOL to reuse the current console;
+			** 	a new one is always created
+			** 	HIDE CHILD will start the console hidden so it can be moved.
+			**
+			** 	exit_code = win32spawnvp(sh_parm, SPN_HIDE_PARENT|SPN_HIDE_CHILD|SPN_WAIT_FOR_CHILD); 
+			*/
+
+			/*
+			**	Removed the HIDE CHILD because it was causing Acucobol's message boxes
+			**	to be hidden and then hang.  Also it wasn't doing any good.
+			**	On 95 the console was not being created hidden. (95 ignored it)
+			**	On NT the console didn't need to be moved because it gets created in the 
+			**	correct location.
+			*/
+
+			/*
+			 *	If using a console version of the acucobol runtime then don't hide the parent
+			 *	because we will inherit the console.
+			 */
+			if (get_wisp_option("CONSOLEACU"))
+			{
+				exit_code = win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
+			}
+			else
+			{
+				exit_code = win32spawnvp(sh_parm, SPN_HIDE_PARENT|SPN_WAIT_FOR_CHILD);
+			}
 		}
 		else
 		{
-			exit_code = win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
+			/*
+			**	Linking to an executable.
+			**
+			**	Could be WPROC or WSORT or some other exe.
+			*/
+			
+			if (link_separate_window)
+			{
+				exit_code = win32spawnvp(sh_parm, SPN_STANDALONE_CHILD);
+			}
+			else
+			{
+				/*
+				**	We do NOT hide the parent because if child is a console app
+				**	then it will inherit the same console (hide parent would 
+				**	also hide the child since they are the same).
+				**
+				**	In the future should test what child is and if a Windows app
+				**	then we should hide the parent or do standalone.
+				*/
+				exit_code = win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
+			}
 		}			
 		save_errno = errno;
 		/*
@@ -2026,8 +2385,11 @@ vmsagain:
 		
 		setlevel(savelevel);
 
-		vwang_synch();
-		vwang_set_reinitialize(TRUE);
+		if (!wbackground() && !link_separate_window)
+		{
+			vwang_synch();
+			vwang_set_reinitialize(TRUE);
+		}
 
 		if (-1 == exit_code)
 		{
@@ -2055,23 +2417,6 @@ vmsagain:
 			}
 		}
 		
-
-		if (*can_exit != ' ')
-		{
-			if (save_cancelexit_env)
-			{
-				/*
-				**	Restore the previous CANCEL EXIT env
-				*/
-				sprintf(buff,"%s=%s",WISP_CANCELEXIT_ENV,save_cancelexit_env);
-				free(save_cancelexit_env);
-			}
-			else
-			{
-				sprintf(buff,"%s=0",WISP_CANCELEXIT_ENV);
-			}
-			setenvstr(buff);
-		}
 	}
 	
 
@@ -2125,6 +2470,15 @@ vmsagain:
 		}
 	} 
 
+	/* Reload defaults: may have changed	*/
+	load_defaults(); 
+
+	/*
+	**	Restore soft link level stuff.
+	**	Needs to be done before any wexit() because it restores the temp file list.
+	*/
+	postlink_restore_state(linklevel());
+
 	/*
 	**	Post-prcessing for CANCEL EXIT
 	*/
@@ -2136,6 +2490,7 @@ vmsagain:
 		*/
 		if ( LOGOFFFLAG )
 		{
+			wtrace("LINK", "CANEXIT", "A lower link level called LOGOFF (level=%d)", linklevel());
 			wexit(32);
 		}
 	}
@@ -2149,21 +2504,14 @@ vmsagain:
 		LOGOFFFLAG = 0;
 	}
 
-	/* Reload defaults: may have changed	*/
-	load_defaults(); 
-
-	/*
-	**	Restore soft link level stuff
-	*/
-	set_defs(DEFAULTS_PV, linklevel_stack[linklevel()].progvol);
-	set_defs(DEFAULTS_PL, linklevel_stack[linklevel()].proglib);
-	save_defaults();
-
 	/*
 	**	Restore vwang
 	*/
-	vwang_synch();
-	vwang_set_reinitialize(TRUE);
+	if (!wbackground() && !link_separate_window)
+	{
+		vwang_synch();
+		vwang_set_reinitialize(TRUE);
+	}
 
 	wtrace("LINK", "RETURN", "FILE=%s compcode=%ld retcode=%ld (level=%d)", 
 	       l_file, (long)wang_compcode, (long)wang_retcode, linklevel());
@@ -2437,7 +2785,7 @@ void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *
 **			and try different extensions.
 **
 **	Arguments:	
-**		filename	(I)	The filename to look for.
+**		wangfilename	(I)	The filename to look for.
 **		filespec	(O)	The resultant full file spec.
 **
 **	Return:	
@@ -2450,21 +2798,21 @@ void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *
 **
 */
 
-static int searchpath(char* filename, char* filespec)
+static int searchpath(const char* wangfilename, char* filespec)
 {
 	char	testname[80];
-	char	upname[9];
+	char	upname[80];
 	int	pathcnt;
 	int	not_found;
 #ifdef unix
-	char	lowname[9];
+	char	lowname[80];
 #endif
-
+	
 #ifdef unix
-	strcpy(lowname,filename);
+	strcpy(lowname,wangfilename);
 	lower_string(lowname);
 #endif
-	strcpy(upname,filename);
+	strcpy(upname,wangfilename);
 	upper_string(upname);
 
 	not_found = 1;
@@ -2497,14 +2845,45 @@ static int searchpath(char* filename, char* filespec)
 
 	if (not_found)
 	{
-		wtrace("SEARCHPATH", "RETURN", "FILE=%s NOT FOUND ON SEARCH PATH", filename);
+		wtrace("SEARCHPATH", "RETURN", "FILE=%s NOT FOUND ON SEARCH PATH", wangfilename);
 	}
 	else
 	{
-		wtrace("SEARCHPATH", "RETURN", "FILE=%s PATH=%s", filename, filespec);
+		wtrace("SEARCHPATH", "RETURN", "FILE=%s PATH=%s", wangfilename, filespec);
 	}
 	
 	return(not_found);
+}
+
+/*
+**	Search the path for a native style file name (e.g. "Notepad.exe").
+*/
+static int searchnative(const char* nativename, char* filespec)
+{
+	int	pathcnt;
+
+	for(pathcnt=1; link_path_seg(pathcnt); pathcnt++)
+	{
+		if (fexists(link_path_seg(pathcnt)))
+		{
+			char	testname[256];
+
+			buildfilepath( testname, link_path_seg(pathcnt), nativename);
+
+			if (fexists(testname))
+			{
+				strcpy(filespec,testname);
+
+				wtrace("SEARCHNATIVE", "RETURN", "FILE=%s PATH=%s", nativename, filespec);
+				return 0;
+			}
+			
+		}
+	}
+
+	wtrace("SEARCHNATIVE", "RETURN", "FILE=%s NOT FOUND ON SEARCH PATH", nativename);
+	
+	return 1;
 }
 #endif /* unix || MSFS */
 
@@ -2653,6 +3032,76 @@ int firstproc(char* filepath)
 /*
 **	History:
 **	$Log: link.c,v $
+**	Revision 1.58  1999-03-04 09:41:46-05  gsl
+**	fix warning
+**
+**	Revision 1.57  1999-02-24 20:29:52-05  gsl
+**	For WIN32 add CONSOLEACU option support for using a Acucobol console
+**	application runtime system.  This is for NT telnet support.
+**
+**	Revision 1.56  1998-12-14 13:40:25-05  gsl
+**	Add the SOFTLINK code to UNIX for both ACU & MF
+**
+**	Revision 1.55  1998-12-09 15:01:38-05  gsl
+**	Fix the WIN32 logic for win98 to use win32SetNewEnv() instead of setenvstr()
+**	for the WISP_LINK_ENV and WISP_CANCELEXIT_ENV.
+**	Removed the cancelexit cleanup env logic since it is no longer needed.
+**
+**	Revision 1.54  1998-11-02 11:20:52-05  gsl
+**	Remove the HIDE CHILD flag on WIN32 for Acucobol
+**
+**	Revision 1.53  1998-11-02 10:22:35-05  gsl
+**	Change WIN32 BAT file processing to use wsystem().
+**	This was failing when costar was used.
+**
+**	Revision 1.52  1998-10-29 11:02:02-05  gsl
+**	Fixed the SOFTLINK changes. Only applies to NT.
+**
+**	Revision 1.51  1998-10-22 14:10:01-04  gsl
+**	For softlink levels store the g_temp_file_list and g_print_file_list
+**	in the softlink stack. Then restore upon return.
+**	Fix TRK#763 where linklevel were incorrectly sharing the temp file list.
+**	,
+**
+**	Revision 1.50  1998-09-08 14:56:39-04  gsl
+**	Link to WPROC with debugging nolonger redirects stdout to wproc.trace.
+**	This is now handled in WPROC, it writes debugging output to the
+**	file wprocdebug.log instead of to stdout.
+**
+**	Revision 1.49  1998-08-03 16:50:27-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
+**	Revision 1.48  1998-07-20 16:15:20-04  gsl
+**	Fix WIN32 link to DISPLAY.EXE in a separate window
+**
+**	Revision 1.47  1998-07-08 17:49:53-04  gsl
+**	Split searchpath into two, searchpath() and searchnative()
+**
+**	Revision 1.46  1998-06-30 18:27:42-04  gsl
+**	Fix problem on WIN32 when using UTILSWINDOWS with the WISP DISPLAY utility.
+**	The child DISPLAY process does not have access to the parents PUTPARMS,
+**	need to use the custom_display_utility() GETPARM logic for DISPLAY.
+**
+**	Revision 1.45  1998-05-28 09:14:24-04  gsl
+**	Fix the args tracing logic to correctly get the messlen and the canlen
+**
+**	Revision 1.44  1998-05-27 11:46:22-04  gsl
+**	Enhanced trace logic to show args
+**
+**	Revision 1.43  1998-05-05 17:34:46-04  gsl
+**	WIN32 don't hide child if native screens
+**	On softlink save and restore the WISPRUNNAME
+**
+**	Revision 1.42  1998-05-05 13:32:25-04  gsl
+**	Change the processing of DISPLAY and VSEDIT to support UTILSWINDOWS option
+**	and to support DISPLAYUTIL option. Most changes affect WIN32 only
+**
+**	Revision 1.41  1998-04-13 13:17:08-04  gsl
+**	Only do the screen handler shutdown and reset if not in background
+**
+**	Revision 1.40  1998-01-22 10:20:02-05  gsl
+**	for WIN32 if in background don't use the SPN_HIDE_PARENT flag on the spawn.
+**
 **	Revision 1.39  1997-12-04 18:10:55-05  gsl
 **	change osd_path() to link_path_seg()
 **

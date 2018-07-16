@@ -1,0 +1,256 @@
+000100* Copyright (c) 1995 DevTech Migrations, All rights reserved.
+000200* $Id:$
+000300*
+000400* FILE:   T_DELETE.WCB
+000500*
+000600* RCS:    $Source:$
+000700*
+000800* FUNCTION: Test DELETE statements.
+000900*
+001000* DESCRIPTION:
+001100*
+001200*
+001300*
+001400
+001500/*****************************************************************
+001600*                                                                *
+001700*                       IDENTIFICATION DIVISION                  *
+001800*                                                                *
+001900******************************************************************
+002000*
+002100 IDENTIFICATION DIVISION.
+002200 PROGRAM-ID.
+002300     T-DELETE.
+002400 AUTHOR.
+002500     QA.
+002600/*****************************************************************
+002700*                                                                *
+002800*                         ENVIRONMENT DIVISION                   *
+002900*                                                                *
+003000******************************************************************
+003100*
+003200 ENVIRONMENT DIVISION.
+003300 CONFIGURATION SECTION.
+003400 SOURCE-COMPUTER.
+003500     WANG-VS.
+003600 OBJECT-COMPUTER.
+003700     WANG-VS.
+003800 FIGURATIVE-CONSTANTS.
+003900     BLINK-BIT IS "10"
+004000     PROTECT-BIT IS "04"
+004100     DIM-BIT IS "08"
+004200     TAB-STOP IS "86"
+004300     BLINKING-DISPLAY IS "94"
+004400     NO-ECHO IS "98".
+004500
+004600/*****************************************************************
+004700*                                                                *
+004800*                         INPUT-OUTPUT SECTION                   *
+004900*                                                                *
+005000******************************************************************
+005100*
+005200 INPUT-OUTPUT SECTION.
+005300 FILE-CONTROL.
+005400
+005500     SELECT CRT
+005600         ASSIGN TO "CRT",      "DISPLAY",
+005700         ORGANIZATION    IS SEQUENTIAL
+005800         ACCESS MODE     IS RANDOM
+005900         RELATIVE KEY    IS CRT-RELKEY
+006000         PFKEY           IS CRT-PFKEY
+006100         CURSOR POSITION IS CRT-CURSOR-POS
+006200         FILE STATUS     IS CRT-FILE-STATUS.
+006300
+006400     SELECT SEQ-SEQ-FILE
+006500         ASSIGN TO "SEQSEQ", "DISK", NODISPLAY, NORESPECIFY.
+006600
+008800
+008900*$OPENIOEXCLUSIVEFILE
+009000     SELECT IDX-SEQ-FILE
+009100         ASSIGN TO "IDXSEQ", "DISK", NODISPLAY,
+009200         ORGANIZATION    IS INDEXED
+009300         ACCESS          IS SEQUENTIAL
+009400         RECORD KEY      IS IDX-SEQ-KEY
+009500         FILE STATUS     IS IDX-SEQ-STATUS.
+009600
+009700     SELECT IDX-DYN-FILE
+009800         ASSIGN TO "IDXDYN", "DISK", NODISPLAY,
+009900         ORGANIZATION    IS INDEXED
+010000         ACCESS          IS DYNAMIC
+010100         RECORD KEY      IS IDX-DYN-KEY
+010200         ALTERNATE RECORD KEY IDX-DYN-ALT WITH DUPLICATES.
+010300
+010400     SELECT REL-SEQ-FILE
+010500         ASSIGN TO "RELSEQ", "DISK", NODISPLAY,
+010600         ORGANIZATION    IS RELATIVE
+010700         ACCESS          IS SEQENTIAL
+010800         RELATIVE KEY    IS REL-SEQ-KEY.
+010900
+011000     SELECT REL-DYN-FILE
+011100         ASSIGN TO "RELDYN", "DISK", NODISPLAY,
+011200         ORGANIZATION    IS RELATIVE
+011300         ACCESS          IS DYNAMIC
+011400         RELATIVE KEY    IS REL-DYN-KEY.
+011500
+011600     SELECT PRINTER-FILE
+011700         ASSIGN TO "PRT", "PRINTER", NODISPLAY.
+011800
+011900     SELECT PRINT2-FILE
+012000         ASSIGN TO "PRT2", "PRINTER", NODISPLAY.
+012100
+012200     SELECT TAPE-FILE
+012300         ASSIGN TO "TAPE", "TAPE", NODISPLAY.
+012400
+012500
+012600/*****************************************************************
+012700*                                                                *
+012800*                      DATA DIVISION - FILE SECTION              *
+012900*                                                                *
+013000******************************************************************
+013100*
+013200 DATA DIVISION.
+013300 FILE SECTION.
+013400
+013500 FD  CRT
+013600     LABEL RECORDS ARE OMITTED.
+013700 01  CRT-RECORD                         PIC X(1924).
+013800
+013900 FD  SEQ-SEQ-FILE
+014000     VALUE OF FILENAME IS "SEQSEQ"
+014100              LIBRARY  IS SEQ-SEQ-LIB.
+014200 01  SEQ-SEQ-RECORD              PIC X(80).
+014300
+015700 FD  IDX-SEQ-FILE.
+015800 01  IDX-SEQ-RECORD.
+015900     05  IDX-SEQ-KEY             PIC X(20).
+016000     05  IDX-SEQ-DATA            PIC X(60).
+016100
+016200 FD  IDX-DYN-FILE
+016300     VALUE OF FILENAME IS "IDXDYN"
+016400              LIBRARY  IS "DATA"
+016500              VOLUME   IS IDX-DYN-VOL.
+016600 01  IDX-DYN-RECORD.
+016700     05  IDX-DYN-KEY             PIC X(20).
+016800     05  IDX-DYN-ALT             PIC X(20).
+016900     05  IDX-DYN-DATA            PIC X(40).
+017000
+017100 FD  REL-SEQ-FILE.
+017200 01  REL-SEQ-RECORD              PIC X(80).
+017300
+017400 FD  REL-DYN-FILE.
+017500 01  REL-DYN-RECORD              PIC X(80).
+017600
+017700
+017800 FD  PRINTER-FILE.
+017900 01  PRINTER-RECORD              PIC X(133).
+018000
+018100 FD  PRINT2-FILE
+018200             VALUE OF FILENAME IS "PRINT2".
+018300 01  PRINT2-RECORD              PIC X(133).
+018400
+018500 FD  TAPE-FILE.
+018600 01  TAPE-RECORD                 PIC X(80).
+018700
+018800
+018900/*****************************************************************
+019000*                                                                *
+019100*                         WORKING STORAGE                        *
+019200*                                                                *
+019300******************************************************************
+019400*
+019500 WORKING-STORAGE SECTION.
+019600
+019700*
+019800*   CRT FILE VARIABLES
+019900*
+020000 77  CRT-RELKEY  PIC 9(02) VALUE 1.
+020100 77  CRT-PFKEY   PIC X(02) VALUE ZERO.
+020200 01  CRT-CURSOR-POS.
+020300     03  CRT-CURSOR-POS-COL  BINARY.
+020400     03  CRT-CURSOR-POS-ROW  BINARY.
+020500 01  CRT-FILE-STATUS.
+020600     03  CRT-FILE-STATUS-ERR        PIC X(01).
+020700     03  CRT-FILE-STATUS-AID        PIC X(01).
+020800
+020900 01  SEQ-SEQ-INTO            PIC X(80).
+021000 01  IDX-SEQ-INTO            PIC X(80).
+021100 01  IDX-DYN-INTO            PIC X(80).
+021200 01  REL-SEQ-INTO            PIC X(80).
+021300 01  REL-DYN-INTO            PIC X(80).
+021400 01  CRT-INTO                PIC X(1924).
+021500
+021600 01  REL-SEQ-KEY             PIC 9(8).
+021700 01  REL-DYN-KEY             PIC 9(8).
+021800 01  SEQ-RANKEY-KEY          PIC 9(8).
+021900 01  SEQ-DYNKEY-KEY          PIC 9(8).
+022000
+022100 01  IDX-SEQ-STATUS          PIC 9(2).
+022200 01  SEQ-SEQ-LIB             PIC X(8).
+022300 01  IDX-DYN-VOL             PIC X(6).
+022400
+022500
+022600 01  TIME-CNT                PIC 9999.
+022700 01  HID                     PIC X(40).
+022800
+022900******************************************************************
+023000
+023100
+023200/*****************************************************************
+023300*                                                                *
+023400*                         PROCEDURE DIVISION                     *
+023500*                                                                *
+023600******************************************************************
+023700*
+023800 PROCEDURE DIVISION.
+023900
+024000 P01-IDX-SEQ.
+024100
+024200*    DELETE IDX-SEQ-FILE
+024300     DELETE IDX-SEQ-FILE
+024400
+024500*    DELETE IDX-SEQ-FILE RECORD END-DELETE.
+024600     DELETE IDX-SEQ-FILE RECORD END-DELETE.
+024700
+024800
+024900 P02-IDX-DYN.
+025000
+025100*    DELETE IDX-DYN-FILE
+025200     DELETE IDX-DYN-FILE
+025300
+025400*    DELETE IDX-DYN-FILE
+025500*        INVALID KEY DISPLAY "INVALID KEY".
+025600     DELETE IDX-DYN-FILE
+025700         INVALID KEY DISPLAY "INVALID KEY".
+025800
+025900*    DELETE IDX-DYN-FILE
+026000*        NOT INVALID KEY DISPLAY "NOT INVALID KEY".
+026100     DELETE IDX-DYN-FILE
+026200         NOT INVALID KEY DISPLAY "NOT INVALID KEY".
+026300
+026400*    DELETE IDX-DYN-FILE END-DELETE
+026500     DELETE IDX-DYN-FILE END-DELETE
+026600
+026700*    DELETE IDX-DYN-FILE
+026800*        INVALID KEY DISPLAY "INVALID KEY"
+026900*        NOT INVALID KEY DISPLAY "NOT INVALID KEY"
+027000*    END-DELETE
+027200     DELETE IDX-DYN-FILE
+027300         INVALID KEY DISPLAY "INVALID KEY"
+027400         NOT INVALID KEY DISPLAY "NOT INVALID KEY"
+027500     END-DELETE
+027510*    DISPLAY "DELETE".
+027600     DISPLAY "DELETE".
+027700
+027800
+027900
+028000
+028100
+028200******************************************************************
+028300* ALL DONE.
+028400******************************************************************
+028500
+028600 EXIT-PROGRAM.
+028700     EXIT PROGRAM.
+028800
+028900 STOP-RUN.
+029000     STOP RUN.

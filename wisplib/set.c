@@ -132,7 +132,58 @@ va_dcl
 
 			case 'J':
 
-				NOT_YET
+				switch(keyword[1])
+				{
+				case 'C':
+					set_defs(DEFAULTS_JC,value);
+					break;
+
+				case 'L':
+					{
+						/*
+					        **	Int(4) number of seconds.
+						**	set_defs() wants an PIC 9(6) with format HHMMSS
+						*/
+						int4 jl_hours, jl_mins, jl_secs;
+						char jl_buff[20];
+						
+						memcpy(&long_value,value,4);
+						wswap(&long_value);
+
+						if (long_value < 0)
+						{
+							long_value = 0;
+						}
+
+						jl_hours = long_value / (60*60);
+						long_value -= jl_hours * 60 * 60;
+						jl_mins  = long_value / 60;
+						jl_secs  = long_value - (jl_mins * 60);
+						
+						if (jl_hours > 99)
+						{
+							jl_hours = 99;
+						}
+						
+						sprintf(jl_buff,"%02d%02d%02d", jl_hours, jl_mins, jl_secs);
+						
+						set_defs(DEFAULTS_JL,jl_buff);
+					}
+					break;
+					
+				case 'S':
+					if ('R' == value[0] || 'H' == value[0])
+					{
+						set_defs(DEFAULTS_JS,value);
+					}
+					
+					break;
+
+				default:
+					NOT_SUPP;
+					break;
+				}
+				
 				break;
 
 			case 'L':
@@ -259,6 +310,9 @@ va_dcl
 /*
 **	History:
 **	$Log: set.c,v $
+**	Revision 1.14  1998-08-26 17:25:41-04  gsl
+**	Add support for SET JC,JL,JS
+**
 **	Revision 1.13  1997-07-16 15:07:57-04  gsl
 **	Improve wtrace() to report the value for LIB and VOL
 **

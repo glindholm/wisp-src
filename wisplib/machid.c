@@ -102,6 +102,7 @@ int getmachineid(char* machineid)
 **	FUNCTION:	Return the computer name.
 **
 **	DESCRIPTION:	Get the computer name from uname().
+**			The name will be trucated at the first period.
 **
 **	ARGUMENTS:	
 **	cname		Location to store the name or NULL 
@@ -124,7 +125,20 @@ char *computername(char *cname)
 
 		if ( -1 != uname(&unix_name) )
 		{
+			char	*ptr;
+
 			tmp_name = unix_name.nodename;
+
+			/*
+			**	Some systems return a fully qualified name 
+			**	(e.g. ozone.fortmyers.neom.com) instead of just the 
+			**	computer name. So truncate the name at the first period.
+			*/
+			ptr = strchr(tmp_name,'.');
+			if (NULL != ptr)
+			{
+				*ptr = '\0';
+			}
 		}
 
 		if (!tmp_name || !*tmp_name)
@@ -555,6 +569,9 @@ main()
 /*
 **	History:
 **	$Log: machid.c,v $
+**	Revision 1.14  1998-07-08 09:26:37-04  gsl
+**	Fix computername() to truncate the name at the first period.
+**
 **	Revision 1.13  1997-12-04 18:13:20-05  gsl
 **	changed to wispnt.h
 **

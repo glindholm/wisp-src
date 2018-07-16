@@ -19,20 +19,81 @@ static char rcsid[]="$Id:$";
 */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <time.h>
 #include <errno.h>
+#ifdef unix
 #include <grp.h>
+#endif
+#ifdef WIN32
+#include <io.h>
+#endif
 
 #include "wlicense.h"
+#include "prompt.h"
+#include "platsubs.h"
+#include "idsisubs.h"
+#include "wisplib.h"
 
 extern char	*sys_errlist[];
 
 #define DOCTEMPLATE	"license.template"
 
-static 	void printkeydoc(char* custname, int4 custnum, char platform[2], int lictype, char licdate[8], char expdate[8],
-			 char lickey[LICENSE_KEY_SIZE], char* machid, char* valcode);
+static int g_bCGI = 0;	/* Flag, are we running in a CGI ? */
+static const char *g_cgi_query_string = NULL;
 
+static void gen_key(void);
+static void gen_val(int useglobals);
+static void test_codes(void);
+static void putheader(void);
+static void putkeyinfo(const char *custname,
+		       int4 custnum,
+		       const char platform[2],
+		       int lictype,
+		       const char licdate[8],
+		       const char expdate[8]);
+static void logkeyinfo(const char *custname,
+		       int4 custnum,
+		       const char platform[2],
+		       int lictype,
+		       const char licdate[8],
+		       const char expdate[8],
+		       const char lickey[LICENSE_KEY_SIZE]);
+static void logvalinfo(const char* custname,
+		       int4 custnum,
+		       const char platform[2],
+		       int lictype,
+		       const char licdate[8],
+		       const char expdate[8],
+		       const char lickey[LICENSE_KEY_SIZE],
+		       const char* machineid,
+		       const char* valcode);
+static 	void printkeydoc(const char* custname, 
+			 int4 custnum, 
+			 const char platform[2], 
+			 int lictype, 
+			 const char licdate[8], 
+			 const char expdate[8],
+			 const char lickey[LICENSE_KEY_SIZE], 
+			 const char* machid, 
+			 const char* valcode);
+static void logtabfile(const char* r_type,		/* "VALCODE" or "LICKEY" */
+		       const char* f_time,
+		       const char* f_custname,
+		       int4 custnum,
+		       const char* f_platform,
+		       int lictype,
+		       const char licdate[8],
+		       const char expdate[8],
+		       const char* f_lickey,
+		       const char* f_machid,
+		       const char* f_valcode);
+static void clean_text(char *text);
+
+static int isCgi(void);
+static int cgi_main(void);
 
 /*
 **	Routine:	main()		[xauthorize]
@@ -63,36 +124,45 @@ static 	void printkeydoc(char* custname, int4 custnum, char platform[2], int lic
 **
 */
 
-
-main(argc,argv)
-int	argc;
-char	*argv[];
+int main(int argc, char* argv[])
 {
 	char	*help;
 	int	rc;
-	struct group *grp;
-	char	groupname[80];
 	int	done;
+
+	if (isCgi())
+	{
+		return cgi_main();
+	}
+	
 
 	putheader();
 
-	grp = getgrgid((int)getegid());
-	if (grp)
+#ifdef unix
+	if (1)
 	{
-		strcpy(groupname,grp->gr_name);
-		upper_string(groupname);
-		if (0 != strcmp(groupname,"DEVTECH") &&
-		    0 != strcmp(groupname,"NEOMEDIA"))
+		struct group *grp;
+		char	groupname[80];
+
+		grp = getgrgid((int)getegid());
+		if (grp)
 		{
-			printf("\n\n**** Invalid Group ****\n");
+			strcpy(groupname,grp->gr_name);
+			upper_string(groupname);
+			if (0 != strcmp(groupname,"DEVTECH") &&
+			    0 != strcmp(groupname,"NEOMEDIA"))
+			{
+				printf("\n\n**** Invalid Group ****\n");
+				exit(1);
+			}
+		}
+		else
+		{
+			printf("\n\n**** Unable to validate Group ****\n");
 			exit(1);
 		}
 	}
-	else
-	{
-		printf("\n\n**** Unable to validate Group ****\n");
-		exit(1);
-	}
+#endif /* unix */
 
 	for(;;)
 	{
@@ -104,9 +174,9 @@ char	*argv[];
 		printf("\n");
 		
 		help = "Enter K to generate a LICENSE KEY.\n"
-		       "Enter V to generate a VALIDATION CODE.\n"
-		       "Enter T to TEST either.\n"
-		       "Enter Q to Quit.";
+			"Enter V to generate a VALIDATION CODE.\n"
+			"Enter T to TEST either.\n"
+			"Enter Q to Quit.";
 		
 		rc = prompt_list("Generate a Key, Validation, Test, or Quit",NULL,"k,v,t,q",help);
 		switch(rc)
@@ -118,9 +188,9 @@ char	*argv[];
 			gen_key();
 			printf("\n");
 			help = "Enter Y to generate a VALIDATION CODE using the the LICENSE KEY information\n"
-			       "you just entered.\n"
-			       "Enter N to continue.\n"
-			       "Enter . (period) to Exit";
+				"you just entered.\n"
+				"Enter N to continue.\n"
+				"Enter . (period) to Exit";
 			rc = prompt_list("Generate a VALIDATION CODE for this LICENSE KEY","n","y,n",help);
 			if (rc == -1) exit(0);
 			if (rc == 1)
@@ -159,6 +229,7 @@ char	*argv[];
 		}
 
 	}
+	return 0;
 }
 
 
@@ -200,7 +271,7 @@ static	char	licensedate[20];
 static	char	expdate[20];
 static	char	licensekey[20];
 
-static gen_key()
+static void gen_key(void)
 {
 
 	char	buff[256];
@@ -217,6 +288,7 @@ static gen_key()
 	help = "Enter the customer's name for whom your generating this LICENSE KEY.";
 	rc = prompt_text("CUSTOMER NAME",NULL,0,help,custname);
 	if (rc == -1) exit(0);
+	clean_text(custname);
 
 	help = "Enter the customers account number. This is an up to 6 digit number.";
 	rc = prompt_num("CUSTOMER NUMBER",NULL,help,&custnum);
@@ -382,13 +454,6 @@ static gen_key()
 		return;
 	}
 
-#ifdef OLD
-	printf("\nThe above LICENSE KEY decodes to the following values:\n\n");
-	putkeyinfo(NULL,custnum,platform,licensetype,licensedate,expdate);
-
-	printf("\n");
-	printf("**** ENSURE THIS INFOMATION IS CORRECT BEFORE ISSUEING THE KEY ****\n");
-#endif
 	logkeyinfo(custname,custnum,platform,licensetype,licensedate,expdate,licensekey);
 
 	printkeydoc(custname,custnum,platform,licensetype,licensedate,expdate,licensekey,"___","___");
@@ -421,7 +486,7 @@ static gen_key()
 **
 */
 
-static gen_val(int useglobals)
+static void gen_val(int useglobals)
 {
 	char	machineid[80];
 	char	valcode[20];
@@ -430,10 +495,6 @@ static gen_val(int useglobals)
 	int	rc;
 	char	*help;
 	int	done;
-	struct tm *l_tm;
-	char	today[20];
-	time_t	now;
-	int	t_year, t_month, t_day;
 
 	if (useglobals) goto get_machine_id;
 	
@@ -443,6 +504,7 @@ static gen_val(int useglobals)
 	help = "Enter the customer's name for whom your generating this VALIDATION CODE.";
 	rc = prompt_text("CUSTOMER NAME",NULL,0,help,custname);
 	if (rc == -1) exit(0);
+	clean_text(custname);
 
 	help = "Enter the LICENSE KEY.\n"
 	       "This was sent to the customer with the kit.  If the customer doesn't \n"
@@ -453,6 +515,7 @@ static gen_val(int useglobals)
 		rc = prompt_text("LICENSE KEY",NULL,0,help,buff);
 		if (rc == -1) exit(0);
 
+		clean_text(buff);
 		upper_string(buff);
 		unformatkey(licensekey,buff);
 
@@ -495,6 +558,7 @@ get_machine_id:
 	       "The wlicense utility will display this for the customer.";
 	rc = prompt_text("MACHINE ID",NULL,0,help,machineid);
 	if (rc == -1) exit(0);
+	clean_text(machineid);
 
 	formatkey(licensekey,buff);
 	upper_string(machineid);						/* Shift to upper just in case there is alphas	*/
@@ -555,7 +619,7 @@ get_machine_id:
 **
 */
 
-static test_codes()
+static void test_codes(void)
 {
 	int4	custnum;
 	char	platform[3];
@@ -564,7 +628,6 @@ static test_codes()
 	char	expdate[20];
 	char	licensekey[20];
 	char	machineid[80];
-	char	valcode[20];
 
 	char	buff[256];
 	int	rc;
@@ -576,6 +639,7 @@ static test_codes()
 	rc = prompt_text("LICENSE KEY",NULL,0,help,buff);
 	if (rc == -1) exit(0);
 
+	clean_text(buff);
 	upper_string(buff);
 	unformatkey(licensekey,buff);
 
@@ -600,12 +664,14 @@ static test_codes()
 	rc = prompt_text("MACHINE ID",NULL,1,help,machineid);
 	if (rc == -1) exit(0);
 	if (rc == 0) return;
+	clean_text(machineid);
 	upper_string(machineid);
 
 	help = "Enter the VALIDATION CODE for the above LICENSE KEY.";
 	rc = prompt_text("VALIDATION CODE",NULL,1,help,buff);
 	if (rc == -1) exit(0);
 	if (rc == 0) return;
+	clean_text(buff);
 	upper_string(buff);
 
 	if (VALIDATION_CODE_SIZE != strlen(buff) ||
@@ -639,12 +705,12 @@ static test_codes()
 **
 */
 
-static putheader()
+static void putheader(void)
 {
 /*		123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567890				*/
 	printf("\n");
 	printf("                   **** %s LICENSE AUTHORIZATION TOOL ****\n",product_name());
-	printf("         Copyright (c) 1992-1997 by NeoMedia Technologies Incorporated.\n");
+	printf("         Copyright (c) 1992-1999 by NeoMedia Technologies Incorporated.\n");
 	printf("\n");
 	printf("This program will generate %s license keys and validation codes for use with\n",product_name());
 	printf("the wlicense program.  This program is for use by NeoMedia personnel only!\n");
@@ -688,17 +754,16 @@ static putheader()
 **
 */
 
-static putkeyinfo(custname,custnum,platform,lictype,licdate,expdate)
-char	*custname;
-int4	custnum;
-char	platform[2];
-int	lictype;
-char	licdate[8];
-char	expdate[8];
+static void putkeyinfo(const char *custname,
+		       int4 custnum,
+		       const char platform[2],
+		       int lictype,
+		       const char licdate[8],
+		       const char expdate[8])
 {
 	char	platname[80];
 
-	if (plat_code(platform,platname,NULL))					/* expand the platform code			*/
+	if (plat_code((char*)platform,platname,NULL))				/* expand the platform code			*/
 	{
 		strcpy(platname,"??");
 	}
@@ -741,20 +806,30 @@ char	expdate[8];
 **	History:	05/21/92	Written by GSL
 **
 */
+static void formatPlatform(const char pPlatform[2], char* pFPlatform)
+{
+	char	szPlatName[80];
 
-static 	logkeyinfo(custname,custnum,platform,lictype,licdate,expdate,lickey)
-char	*custname;
-int4	custnum;
-char	platform[2];
-int	lictype;
-char	licdate[8];
-char	expdate[8];
-char	lickey[LICENSE_KEY_SIZE];
+	if (plat_code((char*)pPlatform,szPlatName,NULL))	/* expand the platform code			*/
+	{
+		strcpy(szPlatName,"??");
+	}
+	sprintf(pFPlatform,"%2.2s - %s", pPlatform, szPlatName);
+}
+
+static void logkeyinfo(const char *custname,
+		       int4 custnum,
+		       const char platform[2],
+		       int lictype,
+		       const char licdate[8],
+		       const char expdate[8],
+		       const char lickey[LICENSE_KEY_SIZE])
 {
 	FILE	*fp;
-	char	platname[80];
+	char	f_platform[80];
 	time_t	now;
-	char	buff[80];
+	char	f_lickey[80];
+	char	f_time[40];
 
 	fp = fopen(authlogfile(),"a");
 	if (!fp)
@@ -764,26 +839,29 @@ char	lickey[LICENSE_KEY_SIZE];
 		return;
 	}
 
-	if (plat_code(platform,platname,NULL))					/* expand the platform code			*/
-	{
-		strcpy(platname,"??");
-	}
-	formatkey(lickey,buff);							/* format the key				*/
+	formatPlatform(platform,f_platform);
+
+	formatkey(lickey,f_lickey);						/* format the key				*/
 	now = time(NULL);
+	strcpy(f_time,ctime(&now));
+	f_time[strlen(f_time)-1] = '\0'; /* Remove newline */
 
 	fprintf(fp,"*******************\n");
 	fprintf(fp,"<LICENSE-KEY-ENTRY>\n");
 	fprintf(fp,"OPERATOR           %s\n",cuserid(NULL));
-	fprintf(fp,"TIME               %s",ctime(&now));			/* Note the newline is in the ctime() string	*/
+	fprintf(fp,"TIME               %s\n",f_time);
 	fprintf(fp,"CUSTOMER-NAME      %s\n",custname);
 	fprintf(fp,"CUSTOMER-NUMBER    %06d\n",custnum);
-	fprintf(fp,"PLATFORM           %2.2s - %s\n",platform,platname);
+	fprintf(fp,"PLATFORM           %s\n",f_platform);
 	fprintf(fp,"LICENSE-TYPE       %s [%d]\n",lictypename(lictype),lictype);
 	fprintf(fp,"LICENSE-DATE       %8.8s\n",licdate);
 	fprintf(fp,"EXPIRATION-DATE    %8.8s\n",expdate);
-	fprintf(fp,"LICENSE-KEY        %s\n\n",buff);
+	fprintf(fp,"LICENSE-KEY        %s\n\n",f_lickey);
 
 	fclose(fp);
+
+	logtabfile("LICKEY", f_time, custname, custnum, f_platform, lictype, licdate, expdate, f_lickey,"","");
+
 }
 
 
@@ -812,21 +890,21 @@ char	lickey[LICENSE_KEY_SIZE];
 **
 */
 
-static logvalinfo(custname,custnum,platform,lictype,licdate,expdate,lickey,machineid,valcode)
-char	*custname;
-int4	custnum;
-char	platform[2];
-int	lictype;
-char	licdate[8];
-char	expdate[8];
-char	lickey[LICENSE_KEY_SIZE];
-char	*machineid;
-char	*valcode;
+static void logvalinfo(const char* custname,
+		       int4 custnum,
+		       const char platform[2],
+		       int lictype,
+		       const char licdate[8],
+		       const char expdate[8],
+		       const char lickey[LICENSE_KEY_SIZE],
+		       const char* machineid,
+		       const char* valcode)
 {
 	FILE	*fp;
-	char	platname[80];
+	char	f_platform[80];
 	time_t	now;
-	char	buff[80];
+	char	f_lickey[80];
+	char	f_time[40];
 
 	fp = fopen(authlogfile(),"a");
 	if (!fp)
@@ -836,29 +914,33 @@ char	*valcode;
 		return;
 	}
 
-	if (plat_code(platform,platname,NULL))					/* expand the platform code			*/
-	{
-		strcpy(platname,"??");
-	}
-	formatkey(lickey,buff);							/* format the key				*/
+	formatPlatform(platform,f_platform);
+	formatkey(lickey,f_lickey);						/* format the key				*/
 	now = time(NULL);
+	strcpy(f_time,ctime(&now));
+	f_time[strlen(f_time)-1] = '\0'; /* Remove newline */
 
 	fprintf(fp,"*******************\n");
 	fprintf(fp,"<VALIDATION-CODE-ENTRY>\n");
 	fprintf(fp,"OPERATOR           %s\n",cuserid(NULL));
-	fprintf(fp,"TIME               %s",ctime(&now));			/* Note the newline is in the ctime() string	*/
+	fprintf(fp,"TIME               %s\n",f_time);
 	fprintf(fp,"CUSTOMER-NAME      %s\n",custname);
 	fprintf(fp,"CUSTOMER-NUMBER    %06d\n",custnum);
-	fprintf(fp,"PLATFORM           %2.2s - %s\n",platform,platname);
+	fprintf(fp,"PLATFORM           %s\n",f_platform);
 	fprintf(fp,"LICENSE-TYPE       %s [%d]\n",lictypename(lictype),lictype);
 	fprintf(fp,"LICENSE-DATE       %8.8s\n",licdate);
 	fprintf(fp,"EXPIRATION-DATE    %8.8s\n",expdate);
-	fprintf(fp,"LICENSE-KEY        %s\n",buff);
+	fprintf(fp,"LICENSE-KEY        %s\n",f_lickey);
 	fprintf(fp,"MACHINE-ID         %s\n",machineid);
 	fprintf(fp,"VALIDATION-CODE    %s\n\n",valcode);
 
 	fclose(fp);
+
+	logtabfile("VALCODE", f_time, custname, custnum, f_platform, lictype, licdate, expdate, f_lickey,
+		   machineid, valcode);
+
 }
+
 
 
 
@@ -891,8 +973,15 @@ char	*valcode;
 **
 */
 
-static 	void printkeydoc(char* custname, int4 custnum, char platform[2], int lictype, char licdate[8], char expdate[8],
-			 char lickey[LICENSE_KEY_SIZE], char* machid, char* valcode)
+static 	void printkeydoc(const char* custname, 
+			 int4 custnum, 
+			 const char platform[2], 
+			 int lictype, 
+			 const char licdate[8], 
+			 const char expdate[8],
+			 const char lickey[LICENSE_KEY_SIZE], 
+			 const char* machid, 
+			 const char* valcode)
 {
 	FILE	*tp, *fp;
 	char	platname[80];
@@ -910,7 +999,7 @@ static 	void printkeydoc(char* custname, int4 custnum, char platform[2], int lic
 
 	sprintf(platform_s,"%2.2s",platform);					/* string out the platform code			*/
 
-	if (plat_code(platform,platname,NULL))					/* expand the platform code			*/
+	if (plat_code((char*)platform,platname,NULL))				/* expand the platform code			*/
 	{
 		strcpy(platname,"??");
 	}
@@ -972,20 +1061,921 @@ static 	void printkeydoc(char* custname, int4 custnum, char platform[2], int lic
 	system(buff);
 }
 
+static const char* tabfilepath()
+{
+	static int first=1;
+	static char	tabfile[256];
+
+	/*
+	**	Create tab file name by replacing .log with .tab
+	*/
+	if (first)
+	{
+		first = 0;
+
+		strcpy(tabfile,authlogfile());
+		tabfile[strlen(tabfile)-4] = '\0';
+		strcat(tabfile,".tab");
+	}
+
+	return tabfile;
+}
+
+
+static void logtabfile(const char* r_type,		/* "VALCODE" or "LICKEY" */
+		       const char* f_time,
+		       const char* f_custname,
+		       int4 custnum,
+		       const char *f_platform,
+		       int lictype,
+		       const char licdate[8],
+		       const char expdate[8],
+		       const char* f_lickey,
+		       const char* f_machid,
+		       const char* f_valcode)
+{
+	FILE	*fp;
+	
+	fp = fopen(tabfilepath(),"a");
+	if (!fp)
+	{
+		printf("\n**** ERROR ****\n");
+		printf("Unable to open tab file %s [errno=%d %s]\n\n",tabfilepath(),errno,sys_errlist[errno]);
+		return;
+	}
+
+	fprintf(fp, "%s\t%s\t%s\t%s\t%06d\t%s\t%s [%d]\t%8.8s\t%8.8s\t%s\t%s\t%s\n",
+			       r_type,
+			       cuserid(NULL),
+			       f_time,
+			       f_custname,
+			       custnum,
+			       f_platform,
+			       lictypename(lictype), lictype,
+			       licdate,
+			       expdate,
+			       f_lickey,
+			       f_machid,
+			       f_valcode);
+	fclose(fp);
+}
+
+static int readtabfile(FILE* fp, 
+		       char *pType,
+		       char *pUserId,
+		       char *pTime,
+		       char *pCustName,
+		       char *pCustNum,
+		       char *pPlatform,
+		       char *pLicType,
+		       char *pLicDate,
+		       char *pExpDate,
+		       char *pLicKey,
+		       char *pMachId,
+		       char *pValCode)
+{
+#define NUMARGS 12
+	char buff[1024];
+	char *args[NUMARGS];
+	int i;
+	char *bptr, *eptr;
+	
+
+	args[0] = pType;
+	args[1] = pUserId;
+	args[2] = pTime;
+	args[3] = pCustName;
+	args[4] = pCustNum;
+	args[5] = pPlatform;
+	args[6] = pLicType;
+	args[7] = pLicDate;
+	args[8] = pExpDate;
+	args[9] = pLicKey;
+	args[10] = pMachId;
+	args[11] = pValCode;
+
+	if (NULL == fgets(buff, sizeof(buff), fp))
+	{
+		return 1;
+	}
+	buff[strlen(buff)-1] = '\0';
+
+	bptr = buff;
+	for(i=0; i<NUMARGS; i++)
+	{
+		if (eptr = strchr(bptr,'\t'))
+		{
+			*eptr = '\0';
+		}
+		strcpy(args[i],bptr);
+
+		if (NULL==eptr)
+		{
+			break;
+		}
+		
+		bptr = eptr+1;
+	}
+	
+	return 0;
+}
+
+
+static void clean_text(char *text)
+{
+	char *ptr;
+	int len;
+	
+	/* Replace tabs by a space char */
+	while(ptr = strchr(text,'\t'))
+	{
+		*ptr = ' ';
+	}
+
+	/* Remove trailing spaces */
+	len = strlen(text);
+	while(len > 0 && ' ' == text[len-1])
+	{
+		len--;
+		text[len] = '\0';
+	}
+}
+
+static const char* tmpupper(const char* instr)
+{
+	static char *tbuf = NULL;
+	if (tbuf)
+	{
+		free(tbuf);
+		tbuf = NULL;
+	}
+	tbuf = strdup(instr);
+	upper_string(tbuf);
+	return tbuf;
+}
+
+static char hex2char(const char *hex)
+{
+	char *mask = "0123456789ABCDEF";
+	char *h1, *h2;
+	
+	h1 = strchr(mask, toupper(hex[0]));
+	h2 = strchr(mask, toupper(hex[1]));
+	if (NULL==h1 || NULL==h2)
+	{
+		return '?';
+	}
+	return (char)((h1-mask)*16 + (h2-mask));
+}
+
+static void cgi_process_arg(char *the_arg)
+{
+	char *pS, *pD;
+	
+	pS = the_arg;
+	pD = the_arg;
+	for(;;)
+	{
+		switch(*pS)
+		{
+		case '\0':
+			*pD = '\0';
+			return;
+			
+		case '+':
+			*pD = ' ';
+			break;
+		case '%':
+			pS++;
+			*pD = hex2char(pS);
+			pS++;
+			break;
+		default:
+			*pD = *pS;
+			break;
+		}
+		pD++;
+		pS++;
+	}
+	
+}
+
+/* cname=maxwell&cnum=&lickey=&platform=SC&machid=&cmd=Search */
+
+static char* get_cgi_arg(const char* arg)
+{
+	char *qstring = strdup(g_cgi_query_string);
+	char *ptr;
+	char *value = NULL;
+	char *cmparg = NULL;
+
+	cmparg = (char*)malloc(strlen(arg)+2);
+	sprintf(cmparg,"%s=",arg);
+	upper_string(cmparg);
+    
+	ptr = strtok(qstring,"&");
+	while(NULL!=ptr)
+	{
+		if (0==memcmp(cmparg, tmpupper(ptr), strlen(cmparg)))
+		{
+			value = strdup(ptr + strlen(cmparg));
+			cgi_process_arg(value);
+			break;
+		}
+		ptr = strtok(NULL,"&");
+	}
+
+	ptr = NULL;
+	free(qstring);
+	free(cmparg);
+	return value;
+}
+
+static void cgi_error(const char* pszTitle, const char* pszErrMess)
+{
+	printf("Content-type: text/html\n");
+	printf("\n");
+	printf("<html>\n");
+	printf("<head>\n");
+	printf("<title>%s</title>\n",pszTitle);
+	printf("</head>\n");
+	printf("<body>\n");
+
+	printf("<hr width=80%% align=center size=10 color=grey>\n");
+	printf("<h2 align=\"center\">WISP LICENSING - ERROR</h2>\n");
+	printf("<hr width=80%% align=center size=10 color=grey>\n");
+
+	printf("<p>&nbsp</p>\n");
+	printf("<h3 align=center>%s</h3>\n",pszTitle);
+	printf("<p>&nbsp</p>\n");
+
+	printf("<hr width=80%% align=center size=20 color=red>\n");
+	printf("<p align=center><big><big><em>%s</em></big></big></p>\n",pszErrMess);
+	printf("<hr width=80%% align=center size=20 color=red>\n");
+
+	printf("<p>&nbsp</p>\n");
+	printf("<p align=center>Use the browser Back button to return.</p>\n");
+
+
+	printf("</body>\n");
+	printf("</html>\n");
+}
+
+
+static int cgi_search(void)
+{
+	FILE 	*fp;
+	char 	szType[80],
+		szUserId[80],
+		szTime[80],
+		szCustName[80],
+		szCustNum[80],
+		szPlatform[80],
+		szLicType[80],
+		szLicDate[80],
+		szExpDate[80],
+		szLicKey[80],
+		szMachId[80],
+		szValCode[80];
+	const char *cptr;
+	char	*pScriptName = NULL;
+	char	*pTstCname, *pTstCnum, *pTstLicKey, *pTstPlatform, *pTstMachId;
+	int	rownum;
+	
+	if (NULL==(pTstCname = get_cgi_arg("CNAME")))
+	{
+		pTstCname = "";
+	}
+	if (NULL==(pTstCnum = get_cgi_arg("CNUM")))
+	{
+		pTstCnum = "";
+	}
+	if (NULL==(pTstLicKey = get_cgi_arg("LICKEY")))
+	{
+		pTstLicKey = "";
+	}
+	if (NULL==(pTstPlatform = get_cgi_arg("PLATFORM")))
+	{
+		pTstPlatform = "";
+	}
+	else if ('*' == pTstPlatform[0])
+	{
+		pTstPlatform[0] = '\0';
+	}
+	if (NULL==(pTstMachId = get_cgi_arg("MACHID")))
+	{
+		pTstMachId = "";
+	}
+	upper_string(pTstCname);
+	upper_string(pTstCnum);
+	upper_string(pTstLicKey);
+	upper_string(pTstPlatform);
+	upper_string(pTstMachId);
+
+	if (cptr = getenv("SCRIPT_NAME"))
+	{
+		pScriptName = strdup(cptr);
+	}
+	else
+	{
+		pScriptName = "wauthorize.exe";
+	}
+	
+	
+	printf("Content-type: text/html\n");
+	printf("\n");
+	printf("<html>\n");
+	printf("<head>\n");
+	printf("<title>WISP License Lookup - Results</title>\n");
+	printf("</head>\n");
+
+	printf("<body>\n");
+	printf("<h2 align=\"center\">WISP LICENSE LOOKUP - RESULTS</h2>\n");
+
+	printf("<h3 align=\"center\">\n");
+	if (strlen(pTstCname))
+	{
+		printf("Customer Name = %s<br>\n",pTstCname);
+	}
+	if (strlen(pTstCnum))
+	{
+		printf("Customer Number = %s<br>\n",pTstCnum);
+	}
+	if (strlen(pTstLicKey))
+	{
+		printf("License Key = %s<br>\n",pTstLicKey);
+	}
+	if (strlen(pTstPlatform))
+	{
+		printf("Platform = %s<br>\n",pTstPlatform);
+	}
+	if (strlen(pTstMachId))
+	{
+		printf("Machine Id = %s<br>\n",pTstMachId);
+	}
+	printf("</h3>\n");
+	
+
+	fp = fopen(tabfilepath(),"r");
+	if (!fp)
+	{
+		printf("<p>Unable to open tab file %s\n",tabfilepath());
+		goto endbody;
+	}
+
+	printf("<table border cols=8>\n");
+
+	printf("<tr>\n");
+	printf("<th>ROW</th>\n");
+	printf("<th width=\"20%%\">CUSTNAME</th>\n");
+	printf("<th>CUSTNUM</th>\n");
+	printf("<th>PLATFORM</th>\n");
+	printf("<th>LICTYPE</th>\n");
+	printf("<th nowrap>LICENSEKEY</th>\n");
+	printf("<th>MACHID</th>\n");
+	printf("<th>VALCODE</th>\n");
+	printf("</tr>\n");
+
+	rownum = 0;
+	
+	while( 0==readtabfile(fp, 
+			      szType,
+			      szUserId,
+			      szTime,
+			      szCustName,
+			      szCustNum,
+			      szPlatform,
+			      szLicType,
+			      szLicDate,
+			      szExpDate,
+			      szLicKey,
+			      szMachId,
+			      szValCode))
+	{
+		rownum++;
+		
+		if ((NULL!=strstr(tmpupper(szCustName),pTstCname)) &&
+		    (NULL!=strstr(tmpupper(szCustNum),pTstCnum)) &&
+		    (NULL!=strstr(tmpupper(szLicKey),pTstLicKey)) &&
+		    (0==memcmp(tmpupper(szPlatform),pTstPlatform,strlen(pTstPlatform))) &&
+		    (NULL!=strstr(tmpupper(szMachId),pTstMachId))
+			)
+		{
+			printf("<tr>\n");
+
+			printf("<td><a href=%s?CMD=SHOW&ROW=%d>%d</a></td>\n",pScriptName, rownum, rownum);
+			printf("<td>%s</td>\n",szCustName);
+			if (szCustNum[0])
+			{
+				printf("<td><a href=%s?CMD=SEARCH&CNUM=%s>%s</a></td>\n",pScriptName, szCustNum, szCustNum);
+			}
+			else
+			{
+				printf("<td>&nbsp</td>\n");
+			}
+			printf("<td>%s</td>\n",szPlatform[0] ? &szPlatform[5] : "&nbsp");
+			if (szLicType[0])
+			{
+				char *ptr;
+				
+				if (ptr = strchr(szLicType,' '))
+				{
+					*ptr = '\0';
+				}
+				
+				printf("<td>%s</td>\n",szLicType);
+			}
+			else
+			{
+				printf("<td>&nbsp</td>\n");
+			}
+			
+			printf("<td nowrap><a href=%s?CMD=SEARCH&LICKEY=%s><kbd>%s</kbd></a></td>\n",pScriptName, szLicKey, szLicKey);
+			printf("<td>%s</td>\n",szMachId[0] ? szMachId : "&nbsp");
+			printf("<td>%s</td>\n",szValCode[0] ? szValCode : "&nbsp");
+		
+			printf("</tr>\n");
+		}
+	}
+	printf("</table>\n");
+	
+	fclose(fp);
+
+  endbody:
+	printf("</body>\n");
+	printf("</html>\n");
+    
+	return 0;
+}
+
+static void cgi_display_license_sheet(
+	char* pszCustName,
+	char* pszCustNum,
+	char* pszPlatform,
+	char* pszLicType,
+	char* pszLicDate,
+	char* pszExpDate,
+	char* pszLicKey,
+	char* pszMachId,
+	char* pszValCode)
+{
+	printf("Content-type: text/html\n");
+	printf("\n");
+	printf("<html>\n");
+	printf("<head>\n");
+	printf("<title>WISP Runtime License Key</title>\n");
+	printf("</head>\n");
+
+	printf("<body>\n");
+
+	/*
+	 * Display the record.
+	 */
+	printf("<h3 align=center>NeoMedia Technologies Inc.</h3>\n");
+	printf("<p>&nbsp</p>\n");
+
+	printf("<hr width=40%% align=center>\n");
+	printf("<h2 align=center>WISP<br>Runtime License Key</h2>\n");
+	printf("<hr width=40%% align=center>\n");
+
+	printf("<p>&nbsp</p>\n");
+	printf("<p align=center>This is an important document,<br>please keep it in a safe location.</p>\n");
+	printf("<p>&nbsp</p>\n");
+
+	printf("<hr width=40%% align=center>\n");	
+	printf("<p>&nbsp</p>\n");
+	
+	printf("<table cols=2 align=center cellpadding=5>\n");
+
+	printf("<tr>\n");
+	printf("<td align=right>Licensee</td>\n");
+	printf("<td align=left>%s</td>\n",pszCustName);
+	printf("</tr>\n");
+
+	printf("<tr>\n");
+	printf("<td align=right>Customer Number</td>\n");
+	printf("<td align=left>%s</td>\n",pszCustNum);
+	printf("</tr>\n");
+
+	printf("<tr>\n");
+	printf("<td align=right>License Key</td>\n");
+	printf("<td align=left>%s</td>\n",pszLicKey);
+	printf("</tr>\n");
+
+	printf("<tr>\n");
+	printf("<td align=right>Platform</td>\n");
+	printf("<td align=left>%s</td>\n",pszPlatform);
+	printf("</tr>\n");
+
+	printf("<tr>\n");
+	printf("<td align=right>License Type</td>\n");
+	printf("<td align=left>%s</td>\n",pszLicType);
+	printf("</tr>\n");
+
+	printf("<tr>\n");
+	printf("<td align=right>License Date</td>\n");
+	printf("<td align=left>%4.4s/%2.2s/%2.2s</td>\n",pszLicDate, &pszLicDate[4], &pszLicDate[6]);
+	printf("</tr>\n");
+
+	printf("<tr>\n");
+	printf("<td align=right>Expiration Date</td>\n");
+	if (0==strcmp(pszExpDate,"00000000") || 0!=memcmp(pszLicType,"TIMED",5))
+	{
+		printf("<td align=left>None</td>\n");
+	}
+	else
+	{
+		printf("<td align=left>%4.4s/%2.2s/%2.2s</td>\n",pszExpDate, &pszExpDate[4], &pszExpDate[6]);
+	}
+	printf("</tr>\n");
+
+	printf("<tr>\n");
+	printf("<td align=right>Machine Id</td>\n");
+	printf("<td align=left>%s</td>\n",pszMachId);
+	printf("</tr>\n");
+
+	printf("<tr>\n");
+	printf("<td align=right>Validation Code</td>\n");
+	printf("<td align=left>%s</td>\n",pszValCode);
+	printf("</tr>\n");
+	
+	printf("</table>\n");
+
+	printf("<p>&nbsp</p>\n");
+	printf("<hr width=40%% align=center>\n");
+	printf("<p>&nbsp</p>\n");
+
+	printf("<table align=center width=80%%>\n");
+	printf("To license a machine for the WISP runtime run the program \"wlicense\" "
+	       "and enter the LICENSE KEY as written above. "
+	       "<br><br>"
+	       "If you have any questions, please contact NeoMedia Technical support "
+	       "at (941)&nbsp337-3434.");
+	printf("</table>");
+
+	printf("</body>\n");
+	printf("</html>\n");
+
+}
+
+static int cgi_show(void)
+{
+	char *pRow;
+	int nRow, rownum;
+	FILE *fp;
+	char 	szType[80],
+		szUserId[80],
+		szTime[80],
+		szCustName[80],
+		szCustNum[80],
+		szPlatform[80],
+		szLicType[80],
+		szLicDate[80],
+		szExpDate[80],
+		szLicKey[80],
+		szMachId[80],
+		szValCode[80];
+	char 	errmess[256];
+	
+
+	if (NULL==(pRow = get_cgi_arg("ROW")))
+	{
+		pRow = "";
+	}
+	if (1 != sscanf(pRow,"%d",&nRow))
+	{
+		sprintf(errmess, "Unable to determine ROW to display.");
+		goto displayerr;
+	}
+	
+	fp = fopen(tabfilepath(),"r");
+	if (!fp)
+	{
+		sprintf(errmess, "Unable to open tab file %s",tabfilepath());
+		goto displayerr;
+	}
+
+	rownum = 0;
+	
+	while( 0==readtabfile(fp, 
+			      szType,
+			      szUserId,
+			      szTime,
+			      szCustName,
+			      szCustNum,
+			      szPlatform,
+			      szLicType,
+			      szLicDate,
+			      szExpDate,
+			      szLicKey,
+			      szMachId,
+			      szValCode))
+	{
+		rownum++;
+		if (rownum >= nRow)
+		{
+			break;
+		}
+	}
+
+	fclose(fp);
+	
+	if (rownum == nRow)
+	{
+		cgi_display_license_sheet(
+			szCustName,
+			szCustNum,
+			szPlatform,
+			szLicType,
+			szLicDate,
+			szExpDate,
+			szLicKey,
+			szMachId,
+			szValCode);
+	
+
+		return 0;
+	}
+	else
+	{
+		sprintf(errmess, "ROW=%d not found.", nRow);
+		goto displayerr;
+	}
+
+  displayerr:
+
+	cgi_error("WISP Runtime License Key", errmess);
+
+	return 1;
+}
+
+static int cgi_genkey(void)
+{
+	char 	*pszCustName,
+		*pszCustNum,
+		*pszLicType,
+		*pszPlatform;
+	int4 	nCustNum;
+	int 	nLicType;
+	char    szPlatform[80];
+	char    szFormatPlatform[80];
+	char    szLicKey[20];
+	char    szFormatLicKey[20];
+	char	szFormatCustNum[10];
+	char 	errmess[256];
+	struct tm *ptmNow;
+	time_t	timeNow;
+	int	t_year, t_month, t_day;
+	char	szLicDate[20], szExpDate[20];
+
+	/*
+	 * Initialization
+	 */
+	timeNow = time(NULL);
+	ptmNow = localtime(&timeNow);
+	t_year  = ptmNow->tm_year+1900;
+	t_month = ptmNow->tm_mon+1;
+	t_day   = ptmNow->tm_mday;
+	sprintf(szLicDate,"%04d%02d%02d",t_year,t_month,t_day);
+	strcpy(szExpDate,"00000000");
+	
+	/*
+	 * Get the arguments
+	 */
+	pszCustName = get_cgi_arg("CNAME");
+	pszCustNum = get_cgi_arg("CNUM");
+	pszLicType = get_cgi_arg("LICTYPE");
+	pszPlatform = get_cgi_arg("PLATFORM");
+	
+	if (NULL==pszCustName || '\0' == *pszCustName)
+	{
+		strcpy(errmess,"Customer Name must be supplied.");
+		goto displayerr;
+	}
+	if (NULL==pszCustNum || '\0' == *pszCustNum)
+	{
+		strcpy(errmess,"Customer Number must be supplied.");
+		goto displayerr;
+	}
+	if (NULL==pszLicType || '\0' == *pszLicType)
+	{
+		strcpy(errmess,"License type must be supplied.");
+		goto displayerr;
+	}
+	if (NULL==pszPlatform || '\0' == *pszPlatform)
+	{
+		strcpy(errmess,"Platform must be supplied.");
+		goto displayerr;
+	}
+
+	if (1 != sscanf(pszCustNum, "%u", &nCustNum))
+	{
+		strcpy(errmess,"Customer number is invalid.");
+		goto displayerr;
+	}
+
+	if (2 != strlen(pszPlatform))
+	{
+		strcpy(errmess,"Platform is invalid.");
+		goto displayerr;
+	}
+
+	upper_string(pszLicType);
+	switch(pszLicType[0])
+	{
+	case 'S':
+		nLicType = LICENSE_SINGLE;
+		break;
+		
+	case 'N':
+		nLicType = LICENSE_NETWORK;
+		break;
+
+	case 'C':
+		nLicType = LICENSE_CLUSTER;
+		break;
+
+	case 'D': /* D14 D30 D60 D90 D180 */
+		nLicType = LICENSE_TIMED;
+		if (0==strcmp(pszLicType,"D14"))
+		{
+			t_day += 14;
+		}
+		else if (0==strcmp(pszLicType,"D30"))
+		{
+			t_month += 1;
+		}
+		else if (0==strcmp(pszLicType,"D60"))
+		{
+			t_month += 2;
+		}
+		else if (0==strcmp(pszLicType,"D90"))
+		{
+			t_month += 3;
+		}
+		else if (0==strcmp(pszLicType,"D180"))
+		{
+			t_month += 6;
+		}
+		else
+		{
+			sprintf(errmess,"License type [%s] is invalid.", pszLicType);
+			goto displayerr;
+		}
+
+		while(t_day > 28)
+		{
+			t_day -= 28;
+			t_month += 1;
+		}
+		while(t_month > 12)
+		{
+			t_month -= 12;
+			t_year += 1;
+		}
+
+		sprintf(szExpDate,"%04d%02d%02d",t_year,t_month,t_day);
+		break;
+
+	default:
+		sprintf(errmess,"License type [%s] is invalid.", pszLicType);
+		goto displayerr;
+	}
+	
+
+	if (mklickey(nCustNum,pszPlatform,nLicType,szLicDate,szExpDate,szLicKey))
+	{
+		strcpy(errmess, "Unable to generate key with given information");
+		goto displayerr;
+	}
+
+	/* Reset all the values except the key		*/
+	nCustNum = 0;
+	szPlatform[0] = '\0';
+	nLicType = 0;
+	szLicDate[0] = '\0';
+	szExpDate[0] = '\0';
+
+	if (bklickey(&nCustNum,szPlatform,&nLicType,szLicDate,szExpDate,szLicKey))
+	{
+		strcpy(errmess, "Unable to decode the generated key");
+		goto displayerr;
+	}
+
+	logkeyinfo(pszCustName,nCustNum,szPlatform,nLicType,szLicDate,szExpDate,szLicKey);
+
+	formatkey(szLicKey,szFormatLicKey);
+	sprintf(szFormatCustNum, "%06d", nCustNum);
+	formatPlatform(szPlatform,szFormatPlatform);
+	
+	cgi_display_license_sheet(
+			pszCustName,
+			szFormatCustNum,
+			szFormatPlatform,
+			lictypename(nLicType),
+			szLicDate,
+			szExpDate,
+			szFormatLicKey,
+			"",
+			"");
+
+	return 0;
+
+  displayerr:
+
+	cgi_error("WISP Runtime License Key", errmess);
+
+	return 1;
+}
+
+
+static int isCgi(void)
+{
+	if (NULL != (g_cgi_query_string = getenv("QUERY_STRING")))
+	{
+		g_bCGI = 1;
+	}
+	return g_bCGI;
+}
+
+/*
+  TODO
+  - GENVAL
+ */
+static int cgi_main(void)
+{
+	char *pszArgCmd = NULL;
+
+	if (NULL == (pszArgCmd = get_cgi_arg("CMD")))
+	{
+		pszArgCmd = "(nil)";
+	}
+	else
+	{
+		upper_string(pszArgCmd);
+	}
+	
+	if (0==strcmp(pszArgCmd,"SEARCH"))	/* CMD=SEARCH&CNAME=x&CNUM=x&LICKEY=x&PLATFORM=xx&MACHID=x */
+	{
+		return cgi_search();
+	}
+	if (0==strcmp(pszArgCmd,"SHOW"))	/* CMD=SHOW&ROW=n */
+	{
+		return cgi_show();
+	}
+	if (0==strcmp(pszArgCmd,"GENKEY"))	/* CMD=GENKEY&CNAME=x&CNUM=x&LICTYPE=x&PLATFORM=xx */
+	{
+		return cgi_genkey(); 
+	}
+	if (0==strcmp(pszArgCmd,"GENVAL"))
+	{
+/*		return cgi_genval(); */
+	}
+	
+    
+	printf("Content-type: text/html\n");
+	printf("\n");
+	printf("<html>\n");
+	printf("<head>\n");
+	printf("<title>wauthorize results</title>\n");
+	printf("</head>\n");
+
+	printf("<body>\n");
+	printf("<p>QUERY_STRING=%s\n",g_cgi_query_string);
+	printf("<p>CMD=%s\n",pszArgCmd);
+	printf("</body>\n");
+	printf("</html>\n");
+    
+	return 0;
+}
+
+
 /*
 **	DUMMY routines to prevent the whole WISPLIB from being included
 */
+#ifdef OLD
 wexit(int code)
 {
 	exit(code);
+    return 0;
 }
 werrlog()
 {
+    return 0;
 }
+#endif
+#include "wutils.h"
 
 /*
 **	History:
 **	$Log: wauthorize.c,v $
+**	Revision 1.11  1999-05-20 09:42:37-04  gsl
+**	Add the first pass of CGI enabling.
+**	This is a work in progress and is not complete.
+**
+**	Revision 1.10  1998-12-18 14:35:33-05  gsl
+**	Added logging to the wauthorize.tab file
+**
 **	Revision 1.9  1997-03-17 11:09:14-05  gsl
 **	Add support for NETWORK license for WISP/NT
 **	Change to NeoMedia Technologies

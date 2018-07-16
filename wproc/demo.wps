@@ -31,7 +31,7 @@ prompt
    pfkey  = &pfkey,
    row 3
    center "Today is " !! &date(&format);;
-   center reverse " DevTech Procedure Interpreter Demo Menu ";;
+   center reverse " WISP Procedure Interpreter Demo Menu ";;
    center "Select a demo by pressing the space bar, TAB, arrow keys";
    center "or the ", line "f",
           "irst letter of the demo name and then press ENTER";;

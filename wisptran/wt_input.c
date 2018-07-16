@@ -1,20 +1,19 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+**	File:		wt_input.c
+**
+**	Project:	WISP/TRAN
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	INPUT-OUTPUT SECTION
+*/
 
 /*
-	wisp_input.c		Handle the INPUT-OUTPUT SECTION.
-
-				This is mainly the SELECT statement, all else is just passed thru unchanged.
-
+**	Includes
 */
+
 
 #include <string.h>
 
@@ -29,10 +28,9 @@ static char rcsid[]="$Id:$";
 #include "wmalloc.h"
 #include "statment.h"
 
-static	int	ioc_found;								/* Was I-O-CONTROL found		*/
-
-static	int	mf_compress = 0;
-
+/*
+**	Structures and Defines
+*/
 #define MAX_ALT_KEYS	64
 
 #define RELATIVE	0x0001
@@ -41,17 +39,31 @@ static	int	mf_compress = 0;
 #define RANDOM		0x0008
 #define DYNAMIC		0x0010
 
-static int write_sel();
-static int del_sel();
-static NODE get_record_key();
 
-NODE get_statement();
+/*
+**	Globals and Externals
+*/
 
-NODE input_output_section();
-NODE file_control_para();
-NODE io_control_para();
+/*
+**	Static data
+*/
 
-NODE parse_selects();
+
+static	int	ioc_found;								/* Was I-O-CONTROL found		*/
+
+static	int	mf_compress = 0;
+
+/*
+**	Static Function Prototypes
+*/
+
+static write_sel(int printer, int this_file, int org, int accmod, int optional_found);	/* Write initial part of SELECT.	*/
+static int del_sel(char* the_file);							/* Determine if delete current SELECT.	*/
+static NODE get_record_key(NODE curr_node, char* reckey, char* reckeyqual, char** splitkey);
+static int add2buff(char *buff, char *addstr, int col, int newline);
+static int chk_sort(const char* fname);							/* Check list of SORT files.		*/
+static int gen_io_control(void);
+
 
 /*
 **	Routine:	input_output_section()
@@ -76,8 +88,7 @@ NODE parse_selects();
 **	06/01/93	Written by GSL
 **
 */
-NODE input_output_section(the_statement)
-NODE the_statement;
+NODE input_output_section(NODE the_statement)
 {
 	if (!eq_token(the_statement->next->token,KEYWORD,"INPUT-OUTPUT"))
 	{
@@ -132,8 +143,7 @@ NODE the_statement;
 **	06/01/93	Written by GSL
 **
 */
-NODE file_control_para(the_statement)
-NODE the_statement;
+NODE file_control_para(NODE the_statement)
 {
 	if (!eq_token(the_statement->next->token,KEYWORD,"FILE-CONTROL"))
 	{
@@ -185,8 +195,7 @@ NODE the_statement;
 **			This was to fix Sterling code problems. GSL
 **
 */
-NODE io_control_para(the_statement)
-NODE the_statement;
+NODE io_control_para(NODE the_statement)
 {
 	NODE	curr_node;
 
@@ -280,8 +289,7 @@ NODE the_statement;
 **	mm/dd/yy	Written by xxx
 **
 */
-NODE parse_selects(next_statement)
-NODE next_statement;
+NODE parse_selects(NODE next_statement)
 {
 	int 	i;
 	char	reckey[40],								/* The RECORD KEY.			*/
@@ -368,8 +376,11 @@ get_next_statement:
 	{
 		if (KEYWORD == name_node->token->type)
 		{
-			write_tlog(name_node->token,"WISP",'W',"FILENAME","Reserved word [%s] used as filename in SELECT.",
-				token_data(name_node->token));
+			write_tlog(name_node->token,"WISP",'W',"KEYWORD",
+				   "Keyword [%s] used as filename in SELECT, adding to keyword list",
+				   token_data(name_node->token));
+			add_change_word(token_data(name_node->token));
+			do_change_word_token(name_node->token);
 		}
 		else
 		{
@@ -377,6 +388,11 @@ get_next_statement:
 				token_data(name_node->token));
 		}
 	}
+
+	/*
+	**	Add the SELECT name to the symbol table
+	*/
+	add_user_symbol(token_data(name_node->token));
 
 	if (sortfile)
 	{
@@ -598,11 +614,35 @@ get_next_statement:
 			}
 			noautolockfile = 0;					/* Clear the flag.			*/
 		}
-		prog_vnames[this_file][0] = 0;					/* clear volume name			*/
-		prog_lnames[this_file][0] = 0;					/* clear library name			*/
-		prog_fnames[this_file][0] = 0;					/* clear file name			*/
-		prog_fstats[this_file][0] = 0;					/* clear file status field		*/
+		prog_vnames[this_file][0] = '\0';				/* clear volume name			*/
+		prog_lnames[this_file][0] = '\0';				/* clear library name			*/
+		prog_fnames[this_file][0] = '\0';				/* clear file name			*/
+		prog_fstats[this_file][0] = '\0';				/* clear file status field		*/
 		prog_ref[this_file] = 0;					/* not opened yet.			*/
+
+
+		/*
+		**	Add the generated file field names to the symbol table 
+		**	and to the reserved keywords list to prevent conflicts with user data items.
+		**
+		**	Note: We add the F-, L-, V- names even though they may not be needed because
+		**	we won't know until we process the FD which may be too late. The prog values
+		**	are are null at this point so the get_prog_Xname() routines will generate
+		**	the desired names.
+		*/
+		add_user_symbol(get_prog_nname(this_file));
+		add_user_symbol(get_prog_fname(this_file));
+		add_user_symbol(get_prog_lname(this_file));
+		add_user_symbol(get_prog_vname(this_file));
+		add_user_symbol(get_prog_prname(this_file));
+		add_user_symbol(get_prog_status(this_file));
+
+		add_change_word(get_prog_nname(this_file));
+		add_change_word(get_prog_fname(this_file));
+		add_change_word(get_prog_lname(this_file));
+		add_change_word(get_prog_vname(this_file));
+		add_change_word(get_prog_prname(this_file));
+		add_change_word(get_prog_status(this_file));
 
 		strcpy(buff,token_data(prname_node->token));
 		if (vax_cobol && (strpos(buff,"#") != -1))			/* found a # symbol in the name		*/
@@ -618,6 +658,13 @@ get_next_statement:
 		{
 			*ptr = (char)0;
 		}
+		if (strlen(buff) > 8)
+		{
+			write_tlog(prname_node->token,"WISP",'W',"PRNAME",
+				   "Long PRNAME \"%s\" truncated to 8 characters.", buff);
+			buff[8] = '\0';
+		}
+		
 		strcpy(prog_prname[this_file],buff);				/* Save the prname.			*/
 
 
@@ -854,6 +901,17 @@ get_next_statement:
 				accmod = DYNAMIC;
 			}
 
+			if (org == SEQUENTIAL && relkey[0]) 			/* Is it SEQUENTIAL with RELATIVE KEY	*/
+			{
+				write_log("WISP",'E',"SEQRELKEY", 
+					  "RELATIVE KEY invalid on SEQUENTIAL file [%s], changed to ORGANIZATION RELATIVE",
+					  prog_files[this_file]);
+				tput_scomment("*%%WISP-I-CHANGED File [%s] ORGANIZATION changed to RELATIVE",
+					  prog_files[this_file]);
+
+				org = RELATIVE;
+			}
+
 			if (org == SEQUENTIAL && accmod == SEQUENTIAL) 
 			{
 				prog_ftypes[this_file] |= SEQ_FILE;
@@ -861,21 +919,17 @@ get_next_statement:
 			}
 
 			was_seq_dyn = 0;
-			if (org == SEQUENTIAL && accmod == DYNAMIC && !relkey[0]) /* Is it SEQUENTIAL/DYNAMIC/no key?	*/
+			if (org == SEQUENTIAL && accmod != SEQUENTIAL && !relkey[0]) /* Is it SEQUENTIAL/DYNAMIC/no key?	*/
 			{
 				write_log("WISP",'W',"CHANGTOSEQ",
-					"Changed SEQUENTIAL-DYNAMIC with no relative key to SEQUENTIAL-SEQUENTIAL for %s."
-													,prog_files[this_file]);
-				tput_scomment("%s","*%WISP-I-CHANGED SEQUENTIAL-DYNAMIC TO SEQUENTIAL-SEQUENTIAL");
+					  "Invalid ACCESS mode for SEQUENTIAL file [%s], changed to SEQUENTIAL access.",
+					  prog_files[this_file]);
+				tput_scomment("*%%WISP-I-CHANGED File [%s] ACCESS mode changed to SEQUENTIAL",
+					  prog_files[this_file]);
 				accmod = SEQUENTIAL;				/* Change to SEQUENTIAL.		*/
 				prog_ftypes[this_file] |= SEQ_FILE;
 				prog_ftypes[this_file] |= SEQ_DYN;		/* set the flag bit			*/
 				was_seq_dyn = 1;
-			}
-			if (org == SEQUENTIAL && accmod == DYNAMIC && relkey[0]) /* Is it SEQUENTIAL/DYNAMIC/RELATIVE KEY	*/
-			{
-				write_log("WISP",'E',"SEQDYNKEY", 
-					"Invalid SELECT for %s, SEQUENTIAL-DYNAMIC with a RELATIVE KEY.", prog_files[this_file]);
 			}
 
 			write_sel(printer,this_file,org,accmod,optional_found);		/* Write the SELECT statement		*/
@@ -907,11 +961,25 @@ get_next_statement:
 			else if (accmod == DYNAMIC)
 				tput_line_at(16, "ACCESS MODE  IS DYNAMIC");
 
-			if (multiplelock || (mf_aix && (org == INDEX || was_seq_dyn)))
-				tput_line_at(16, "LOCK MODE IS AUTOMATIC");
-			if (multiplelock)
-				tput_line_at(16, "WITH LOCK ON MULTIPLE RECORDS");
-			multiplelock = 0;
+			if (mf_aix)
+			{
+				/*
+				**	MF: The LOCK clause comes before the KEY clauses.
+				*/
+				if (manual_locking)
+				{
+					tput_line_at(16, "LOCK MODE MANUAL WITH LOCK ON MULTIPLE RECORDS");
+				}
+				else if (multiplelock)
+				{
+					tput_line_at(16, "LOCK MODE AUTOMATIC WITH LOCK ON MULTIPLE RECORDS");
+				}
+				else if (org == INDEX || was_seq_dyn)
+				{
+					tput_line_at(16, "LOCK MODE AUTOMATIC");
+				}
+				multiplelock = 0;
+			}
 
 			if (reckey[0]) 	tput_line_at(16, "RECORD KEY   IS %s",reckey);
 			if (reckeyq[0]) tput_clause (20, "OF %s",reckeyq);
@@ -950,6 +1018,22 @@ get_next_statement:
 				strcpy(altkey[num_alt++],reckey);
 			}
 
+			if (acu_cobol)
+			{
+				/*
+				**	ACU: The LOCK clause comes after the KEY clauses.
+				*/
+				if (manual_locking)
+				{
+					tput_line_at(16, "LOCK MODE MANUAL WITH LOCK ON MULTIPLE RECORDS");
+				}
+				else if (multiplelock)
+				{
+					tput_line_at(16, "LOCK MODE AUTOMATIC WITH LOCK ON MULTIPLE RECORDS");
+				}
+				multiplelock = 0;
+			}
+
 			if (prog_fstats[this_file][0])				/* was there STATUS?			*/
 			{
 				tput_line_at(16, "FILE STATUS  IS %s",prog_fstats[this_file]);
@@ -971,9 +1055,7 @@ get_next_statement:
 }
 
 
-int key_name( the_name, the_qual )							/* Change the name if on key_list	*/
-char	*the_name;
-char	*the_qual;
+int key_name(char* the_name, const char* the_qual)					/* Change the name if on key_list	*/
 {
 	char tstr[40];
 	int i;
@@ -993,8 +1075,7 @@ char	*the_qual;
 	return(-1);
 }
 
-static write_sel(printer,this_file,org,accmod,optional_found)				/* Write initial part of SELECT.	*/
-int printer,this_file,org,accmod, optional_found;
+static write_sel(int printer, int this_file, int org, int accmod, int optional_found)	/* Write initial part of SELECT.	*/
 {
 #ifdef OLD
 	if (prog_ftypes[this_file] & AUTOLOCK)
@@ -1035,9 +1116,7 @@ int printer,this_file,org,accmod, optional_found;
 
 	if (acu_cobol || mf_aix)
 	{										/* If it's acucobol, write the gen name.*/
-		char	fnbuff[80];
-		make_fld(fnbuff,prog_files[this_file],"N-");
-		tput_line_at(16, "ASSIGN TO %s",fnbuff);
+		tput_line_at(16, "ASSIGN TO %s", get_prog_nname(this_file));
 		if ( compressfile && acu_cobol )
 		{
 			tput_clause(16, "WITH COMPRESSION");
@@ -1061,8 +1140,7 @@ int printer,this_file,org,accmod, optional_found;
 	return 0;
 }
 
-static int del_sel(the_file)								/* Determine if delete current SELECT.	*/
-char	*the_file;
+static int del_sel(char* the_file)							/* Determine if delete current SELECT.	*/
 {
 	int	i;
 
@@ -1080,8 +1158,7 @@ char	*the_file;
 	return(0);							/* Didn't find it.			*/
 }
 
-chk_sort(fname)										/* Check list of SORT files.		*/
-char *fname;
+static int chk_sort(const char* fname)							/* Check list of SORT files.		*/
 {
 	int i;
 
@@ -1097,7 +1174,7 @@ char *fname;
 }
 
 
-gen_io_control()									/* Add an I-O-CONTROL section and insert*/
+static int gen_io_control(void)								/* Add an I-O-CONTROL section and insert*/
 											/* APPLY LOCK-HOLDING statements to do	*/
 											/* manual record locking.		*/
 {
@@ -1137,7 +1214,7 @@ gen_io_control()									/* Add an I-O-CONTROL section and insert*/
 **			It can handle qualified keys and split keys.
 **
 **				IS key-name
-**				IS key-name OF qual-name
+**				IS key-name {OF|IN} qual-name
 **				IS split-key = s1 s2 s3
 **
 **	Arguments:
@@ -1155,11 +1232,7 @@ gen_io_control()									/* Add an I-O-CONTROL section and insert*/
 **	06/03/93	Changed to use curr_node. GSL
 **
 */
-static NODE get_record_key(curr_node,reckey,reckeyqual,splitkey)
-NODE	curr_node;
-char	*reckey;
-char	*reckeyqual;
-char	**splitkey;
+static NODE get_record_key(NODE curr_node, char* reckey, char* reckeyqual, char** splitkey)
 {
 	char	buff[80];
 
@@ -1172,7 +1245,8 @@ char	**splitkey;
 
 	if (curr_node->next && PERIOD != curr_node->next->token->type)
 	{
-		if (eq_token(curr_node->next->token,KEYWORD,"OF"))		/* If next token is "OF" then is qualified	*/
+		if (eq_token(curr_node->next->token,KEYWORD,"OF")||		/* If next token is "OF" then is qualified	*/
+		    eq_token(curr_node->next->token,KEYWORD,"IN")  )		/* If next token is "IN" then is qualified	*/
 		{
 			curr_node = curr_node->next;
 			curr_node = curr_node->next;
@@ -1214,8 +1288,7 @@ char	**splitkey;
 /*
 	crt_index:	Search the list of crt files and returns the position in the list, -1 == not found
 */
-int crt_index(name)
-char	*name;
+int crt_index(const char* name)
 {
 	int	i;
 
@@ -1233,8 +1306,7 @@ char	*name;
 /*
 	file_index:	Search the list of files and returns the position in the list, -1 == not found
 */
-int file_index(name)
-char	*name;
+int file_index(const char* name)
 {
 	int	i;
 
@@ -1249,8 +1321,7 @@ char	*name;
 	return(-1);
 }
 
-int is_file_status(dataname)
-char	*dataname;
+int is_file_status(const char* dataname)
 {
 	int	i;
 
@@ -1263,9 +1334,87 @@ char	*dataname;
 	}
 	return(0);
 }
+
+/*
+	add2buff:	Add a string to a buffer keeping track of the last line size (from newline) and spliting the line
+			if it would go over 72.  If the size is less then col it will pad out to col. The addstr does not 
+			need to have spaces surrounding it, they are added automatically.
+*/
+static int add2buff(
+	     char	*buff,					/* The buffer -- it can hold multiple lines.			*/
+	     char	*addstr,				/* The string to add to buffer.					*/
+	     int	col,					/* The column to start in if line is split.			*/
+	     int	newline)				/* Force to a new line.						*/
+{
+	char	spaces[80];
+	int	size, i, len;
+
+	len = strlen(addstr);
+
+	if (len < 1) return 0;
+
+	for ( size = 0, i = strlen(buff)-1; i >= 0 && buff[i] != '\n'; size++, i--);
+
+	if ( col + len > 71 )
+	{
+		col = 12;
+	}
+
+	if ( newline || (size + len + 1 > 71) )
+	{
+		strcat(buff,"\n");							/* Start a new line			*/
+		memset(spaces,' ',col-1);
+		spaces[col-1] = '\0';
+	}
+	else if ( size < col-1 )
+	{
+		i = col - 1 - size;							/* pad out to col			*/
+		memset(spaces, ' ', i);
+		spaces[i] = '\0';
+	}
+	else
+	{
+		strcpy(spaces," ");							/* A one space between tokens		*/
+	}
+
+	strcat(buff,spaces);
+
+	strcat(buff,addstr);								/* Append the string			*/
+
+	return 0;
+}
+
 /*
 **	History:
 **	$Log: wt_input.c,v $
+**	Revision 1.17  1998-07-07 09:40:29-04  gsl
+**	Fix typo in warning message
+**
+**	Revision 1.16  1998-06-09 13:12:39-04  gsl
+**	Add support for manual record locking
+**
+**	Revision 1.15  1998-03-27 10:37:44-05  gsl
+**	change_words
+**
+**	Revision 1.14  1998-03-26 09:27:15-05  gsl
+**	Add the get_prog_xxx() values to the symbol table and to the reserved
+**	words list to prevent generated names from conflicting with
+**	user defined names.
+**
+**	Revision 1.13  1998-03-23 13:22:53-05  gsl
+**	Add select name to user symbols.
+**	change to use get_prog_nname()
+**	change to allow IN or OF in qualified key name.
+**	Make proto's const
+**
+**	Revision 1.12  1998-03-04 15:55:31-05  gsl
+**	Truncate PRNAME to 8 characters
+**
+**	Revision 1.11  1998-02-10 09:46:58-05  gsl
+**	Fix the SEQ-DYN/RAN and SEQ with RELATIVE key processing.
+**	SEQ file with RELATIVE key is now changes to a RELATIVE file.
+**	SEQ file without a RELATIVE key is changed to ACCESS SEQUENTIAL.
+**
 **	Revision 1.10  1996-08-30 21:56:20-04  gsl
 **	drcs update
 **

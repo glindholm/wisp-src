@@ -32,9 +32,10 @@
 002200         07  CTL-FIELDS-TYPE         PIC X(01) OCCURS 80 TIMES.           
 002300     05  CTL-EDIT-TABLE.                                                  
 002400         07  CTL-FIELDS-EDIT         PIC 9(02) OCCURS 80 TIMES.           
-002500     05  CTL-FIELDS-TO-EDIT          PIC 9(02).                           
-002600     05  CTL-AKA-TABLE.                                                   
-002700         07  CTL-FIELDS-AKA          PIC X(08) OCCURS 80 TIMES.           
+002500     05  CTL-FIELDS-TO-EDIT          PIC 9(02).
+      *    The AKA table has been moved to the RPT-RECORDS.
+002600*    05  CTL-AKA-TABLE.                                                   
+002700*        07  CTL-FIELDS-AKA          PIC X(08) OCCURS 80 TIMES.           
 002800     05  CTL-DECIMAL-TABLE.                                               
 002900         07  CTL-FIELDS-DECIMAL      PIC 9(01) OCCURS 80 TIMES.           
 003000                                                                          

@@ -1,14 +1,16 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
+/*
+**	File:		message.c
+**
+**	Project:	WISPLIB
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	VSSUB MESSAGE
+**
+*/
 
 
 #include <stdio.h>
@@ -55,6 +57,7 @@ static char rcsid[]="$Id:$";
 #include "wperson.h"
 #include "movebin.h"
 #include "wisplib.h"
+#include "osddefs.h"
 
 #define		ROUTINE		35000
 
@@ -65,6 +68,7 @@ static char rcsid[]="$Id:$";
 #define MAX_MSG_BUFSIZE 2014
 #define DEF_MSG_BUFSIZE 2014
 
+#define MIN_ARGS  3
 
 
 #ifdef VMS
@@ -98,7 +102,6 @@ static int4 conval;									/* A place to hold the condition value	*/
 #define DE_nargs  3
 #define XM_nargs  5
 #define CH_nargs  7
-#define MIN_ARGS  3
 #define TIMR_REQID 39
 
 /* Various field length defn's */
@@ -995,7 +998,7 @@ void MESSAGE( va_alist )
 va_dcl
 {
 	va_list arg_list;
-	int 	arg_count;
+	int 	arg_count, original_arg_count;
 	char 	*chptr;
 	char 	funcstr[3], portname[5];
 	int4 	wait, ourret, *retcode;
@@ -1006,6 +1009,15 @@ va_dcl
 	va_start(arg_list);
 	arg_count = va_count(arg_list);
 	va_start(arg_list);
+
+	if (arg_count < MIN_ARGS)
+	{
+		werrlog(ERRORCODE(2),arg_count,0,0,0,0,0,0,0);
+		va_end(arg_list);
+		return;
+	}
+	
+	original_arg_count = arg_count;
 
 	/*
 	**	Get the Function
@@ -1038,7 +1050,7 @@ va_dcl
 	}
 #endif
 
-	wtrace("MESSAGE","ENTRY","Function=[%2.2s] Port=[%4.4s]", funcstr, portname);
+	wtrace("MESSAGE","ENTRY","Function=[%2.2s] Port=[%4.4s] argcnt=%d", funcstr, portname, original_arg_count);
 
 	switch(functype(funcstr))
 	{
@@ -1047,6 +1059,11 @@ va_dcl
 			int4	l_bufsize;
 			char	l_keep;
 			int4	*buffer_size;
+
+			if (original_arg_count > 5)
+			{
+				wtrace("MESSAGE","ARGS","Too many arguments [%d], maximum is 5", original_arg_count);
+			}
 
 			l_bufsize = DEF_MSG_BUFSIZE;
 			l_keep = 'N';
@@ -1059,6 +1076,8 @@ va_dcl
 
 				if (l_bufsize < MIN_MSG_BUFSIZE || l_bufsize >MAX_MSG_BUFSIZE)
 				{
+					wtrace("MESSAGE","CREATE","Invalid Bufsize=[%d] using default Bufsize=[%d]", 
+					       l_bufsize, DEF_MSG_BUFSIZE);
 					l_bufsize = DEF_MSG_BUFSIZE;
 				}
 			}
@@ -1074,13 +1093,15 @@ va_dcl
 				}
 			}
 
-			retcode	= va_arg(arg_list,int4 *);
 			ourret	= create_message_port(portname,l_bufsize,l_keep);
 		}
 		break;
 
 	case M_DELETE:
-		retcode	= va_arg(arg_list,int4 *);				/* get retcode pointer			*/
+		if (original_arg_count != 3)
+		{
+			wtrace("MESSAGE","ARGS","Invalid number of arguments [%d], expected is 3", original_arg_count);
+		}
 		ourret	= destroy_message_port(portname);			/* dispatch to handler			*/
 		break;
 
@@ -1091,10 +1112,24 @@ va_dcl
 			char 	*mtext;
 			int4 	mess_len, *mess_len_p;
 
+			if (original_arg_count < 5)
+			{
+				werrlog(ERRORCODE(2),original_arg_count,0,0,0,0,0,0,0);
+				va_end(arg_list);
+				return;
+			}
+			if (original_arg_count > 5)
+			{
+				wtrace("MESSAGE","ARGS","Invalid number of arguments [%d], expected is 5", original_arg_count);
+			}
+
 			mtext = va_arg(arg_list,char *); 			/* get text pointer			*/
+			arg_count--;
+			
 			mess_len_p = va_arg(arg_list,int4 *);			/* and length				*/
+			arg_count--;
 			mess_len = get_swap(mess_len_p);
-			retcode	= va_arg(arg_list,int4 *);			/* and retcode				*/
+
 			ourret = transmit_message(portname,mtext,mess_len,wait);/* call handler for message send op	*/
 		}
 		break;	
@@ -1106,15 +1141,34 @@ va_dcl
 			int4 	time_int, *time_int_p;
 			int4 	mess_len, *mess_len_p;
 
+			if (original_arg_count < 7)
+			{
+				werrlog(ERRORCODE(2),original_arg_count,0,0,0,0,0,0,0);
+				va_end(arg_list);
+				return;
+			}
+	
+			if (original_arg_count > 8)
+			{
+				wtrace("MESSAGE","ARGS","Too many arguments [%d], maximum is 8", original_arg_count);
+			}
+
 			check_t    = *va_arg(arg_list,char*);			/* get check type			*/
+			arg_count--;
 			time_int_p = va_arg(arg_list,int4 *);			/* and timeout value			*/
+			arg_count--;
 			time_int   = get_swap(time_int_p);
 			receiver   = va_arg(arg_list,char*);			/* pointer to receiving area		*/
+			arg_count--;
 			mess_len_p = va_arg(arg_list,int4 *); 			/* pointer to message len		*/
+			arg_count--;
 			mess_len   = get_swap(mess_len_p);
-			arg_count -= 4;
-			if (arg_count == 2) chptr = va_arg(arg_list,char*);	/* if two args left ignore first	*/
-			retcode    = va_arg(arg_list,int4 *);
+			if (arg_count > 1) 
+			{
+				chptr = va_arg(arg_list,char*);			/* if two args left ignore first	*/
+				arg_count--;
+			}
+			
 			ourret     = check_message(portname,check_t,time_int,&mess_len,receiver);	/* get the message	*/
 
 			if (SUCCESS == ourret)
@@ -1126,15 +1180,29 @@ va_dcl
 		break;
 
 	case M_INV:
-		ourret = FAILURE;
-		break;
-
 	default:
-		break;
+		werrlog(ERRORCODE(4),funcstr,0,0,0,0,0,0,0);
+		va_end(arg_list);
+		return;	
 	}
 
+	wtrace("MESSAGE","RETURN","Return code = [%d]", ourret);
+	
+	if (arg_count > 1)
+	{
+		wtrace("MESSAGE","ARGS", "Too many args remaining, expecting 1 (retcode) found [%d]", arg_count);
+	}
+	else if (arg_count < 1)
+	{
+		wtrace("MESSAGE","ARGS", "Too few args, retcode not found");
+		va_end(arg_list);
+		return;
+	}
+
+	retcode	= va_arg(arg_list,int4 *);
 	PUTBIN(retcode,&ourret,sizeof(int4));						/* copy our ret code to their area*/
 	wswap(retcode);									/* swap bytes if necessary	*/
+	va_end(arg_list);
 }
 
 static int create_message_port(char port_name[PORTNAME_SIZE], int4 buf_size, char keep_flag)
@@ -1143,6 +1211,8 @@ static int create_message_port(char port_name[PORTNAME_SIZE], int4 buf_size, cha
 	char	keyfilepath[256];
 	int    	msqid;
 
+	wtrace("MESSAGE","CREATE","Port=[%4.4s] bufsize=[%d] keep=[%c]", port_name, buf_size, keep_flag);
+	
 try_again:
 	makemsgkeyfile(port_name,keyfilepath);
 	if ( fexists(keyfilepath) )
@@ -1225,7 +1295,9 @@ static int destroy_message_port(char port_name[PORTNAME_SIZE])
 	key_t 	port_key;
 	char 	keyfilepath[256];
 	int 	msqid;
-	
+
+	wtrace("MESSAGE","DELETE","Delete port=[%4.4s]", port_name);
+
 	makemsgkeyfile(port_name,keyfilepath);
 	if ( !fexists(keyfilepath) )
 	{
@@ -1324,6 +1396,26 @@ static int transmit_message(char portname[PORTNAME_SIZE], char* mtext, int4 mlen
 	key_t 	port_key;
 	int 	msqid;
 
+	if (wtracing())
+	{
+		char message[24];
+		
+		if (mlen > sizeof(message)-4)
+		{
+			memcpy(message, mtext, sizeof(message)-4);
+			message[sizeof(message)-4] = '\0';
+			strcat(message,"...");
+		}
+		else
+		{
+			memcpy(message, mtext, mlen);
+			message[mlen] = '\0';
+		}
+		
+		wtrace("MESSAGE","TRANSMIT","Port=[%4.4s] Message=[%s] Messlen=[%d] %s",
+		       portname, message, mlen, (wait)?"WAIT":"NO WAIT"); 
+	}
+
 	port_key = keyval(portname,0);
 	if (port_key == (key_t) -1)
 	{
@@ -1378,6 +1470,8 @@ static int check_message(char port_name[PORTNAME_SIZE],
 	char	keyfilepath[256];
 	int msqid;
 
+	wtrace("MESSAGE","CHECK", "Port=[%4.4s] Checktype=[%c], Time=[%d]", port_name, check_t, time_int);
+	
 	timeout = gotkey = gotmsg = 0;
 
 	makemsgkeyfile(port_name,keyfilepath);
@@ -1691,32 +1785,43 @@ static key_t keyval(char p[PORTNAME_SIZE], int create)
 	key_t 	wftok();
 	char 	keypath[256];
 	FILE 	*keyfile;
+	key_t	return_key;
 #ifdef WIN32
 	int4   thekey;
 #endif
+
+	return_key = (key_t) -1;
 		
 	makemsgkeyfile(p,keypath);
-	if (!create && !fexists(keypath)) return (key_t) -1;
+	if (!create && !fexists(keypath))
+	{
+		wtrace("MESSAGE","KEYVAL", "Keypath [%s] doesn't exists for Port=[%4.4s]  Keyval=-1", keypath, p);
+		return (key_t) -1;
+	}
 	
 	if (create)
 	{
-		keyfile=fopen(keypath,"w");
+		keyfile=fopen(keypath,FOPEN_WRITE_TEXT);
 		if( !keyfile )
 		{
 			werrlog(ERRORCODE(16),"create",keypath,0,0,0,0,0,0);
-			return( -1 );
+			return (key_t) -1;
 		}
 		fprintf(keyfile,"%d\n",wgetpgrp());
 		fclose(keyfile);
 		chmod(keypath,0666);
 	}
 #ifdef unix
-	return wftok(keypath);
+	return_key =  wftok(keypath);
 #endif
 #ifdef WIN32
 	memcpy((void *)&thekey,(void *)p,sizeof(thekey));
-	return (key_t)thekey;
+	return_key = (key_t)thekey;
 #endif
+
+	wtrace("MESSAGE","KEYVAL", "Port=[%4.4s] Keyval=[0x%08X]", p, (int)return_key);
+
+	return return_key;
 }
 
 static void makemsgkeyfile(char port[PORTNAME_SIZE], char* path)
@@ -1745,6 +1850,7 @@ static void makemsgkeyfile(char port[PORTNAME_SIZE], char* path)
 		mkdir(msgdir,0777);
 		chmod(msgdir,0777);
 	}
+	wtrace("MESSAGE","KEYFILE","Port=[%4.4s] Keyfile=[%s]",port,path);
 }
 
 /*
@@ -1781,7 +1887,7 @@ static int portownergid(char port[PORTNAME_SIZE])
 
 	if ( fexists(path) )
 	{
-		keyfile=fopen(path,"r");
+		keyfile=fopen(path,FOPEN_READ_TEXT);
 		if( !keyfile )
 		{
 			return( -1 );
@@ -1815,6 +1921,12 @@ void MESSAGE()
 /*
 **	History:
 **	$Log: message.c,v $
+**	Revision 1.26  1998-12-09 09:39:31-05  gsl
+**	Use FOPEN mode defines
+**
+**	Revision 1.25  1998-10-28 11:18:21-05  gsl
+**	Added argument error checking and tracing
+**
 **	Revision 1.24  1997-12-04 18:12:59-05  gsl
 **	changed to wispnt.h
 **

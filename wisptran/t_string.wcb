@@ -1,0 +1,106 @@
+000100**   Copyright (c) 1997 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       T-STRING.wcb
+000500**
+000600**   Project:    WISP/TRAN
+000700**
+000800**   Purpose:
+000900**
+001000**   Example:
+001100**
+001200 IDENTIFICATION DIVISION.
+001300 PROGRAM-ID. TSTRING.
+001400
+001500 ENVIRONMENT DIVISION.
+001600 CONFIGURATION SECTION.
+001700 INPUT-OUTPUT SECTION.
+001800 FILE-CONTROL.
+001900
+002000 DATA DIVISION.
+002100 FILE SECTION.
+002200
+002300
+002400
+002500 WORKING-STORAGE SECTION.
+002600
+002700
+002800 01  NUM1    PIC 9(10).
+002900 01  NUM2    PIC 9(10).
+003000 01  NUM3    PIC 9(10).
+003100 01  NUM4    PIC 9(10).
+003200 01  NUM5    PIC 9(10).
+003300
+003400 01  ARG1    PIC x(10).
+003500 01  ARG2    PIC x(10).
+003600 01  ARG3    PIC x(10).
+003700 01  ARG4    PIC x(10).
+003800 01  ARG5    PIC x(10).
+003900 01  bigarg  pic x(100).
+004000
+004100
+004200
+004300 PROCEDURE DIVISION.
+004400
+004500 0000-MAIN SECTION.
+004600
+004700
+004800
+004900 P01-STRING.
+005000
+005100
+005200
+005300*    string arg1 delimited by "X" into bigarg
+005400     string arg1 delimited by "X" into bigarg
+005500
+005600*    string arg1, arg2 delimited by size into bigarg
+005700     string arg1, arg2 delimited by size into bigarg
+005800
+005900*    string arg1, arg2 delimited by size into bigarg
+006000*        with pointer num1
+006100*        overflow display "overflow".
+006200     string arg1, arg2 delimited by size into bigarg
+006300         with pointer num1
+006400         overflow display "overflow".
+006500
+006600*    string arg1, arg2 delimited by size into bigarg
+006700*        with pointer num1
+006800*        on overflow display "overflow"
+006900*        not on overflow display "not overflow".
+007000     string arg1, arg2 delimited by size into bigarg
+007100         with pointer num1
+007200         on overflow display "overflow"
+007300         not on overflow display "not overflow".
+007400
+007500*    string arg1, arg2 delimited by size into bigarg
+007600*        with pointer num1
+007700*        on overflow display "overflow"
+007800*        not on overflow display "not overflow"
+007900*        end-string
+008000     string arg1, arg2 delimited by size into bigarg
+008100         with pointer num1
+008200         on overflow display "overflow"
+008300         not on overflow display "not overflow"
+008400         end-string
+008500
+008600*    string arg1, arg2 delimited by size into bigarg
+008700*        not on overflow display "not overflow"
+008800*        end-string
+008900     string arg1, arg2 delimited by size into bigarg
+009000         not on overflow display "not overflow"
+009100         end-string
+009200
+009300*    string arg1 delimited by "X" into bigarg end-string.
+009400     string arg1 delimited by "X" into bigarg end-string.
+009500
+009600
+009700
+009800
+009900 9999-END SECTION.
+010000 9999-EXIT.
+010100     EXIT PROGRAM.
+010200 9999-STOP.
+010300     STOP RUN.
+010400**
+010500**   End of T-STRING
+010600**

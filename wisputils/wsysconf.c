@@ -120,6 +120,11 @@ DEV_ENTRY *devhead, *devp;
 #define WSPATH  "/dev/pts"
 #endif
 
+#ifdef DGUX_INTEL
+#define WSNAME  ".*"
+#define WSPATH  "/dev/pts"
+#endif
+
 #ifdef UNISYS
 #define WSNAME	".*"
 #define WSPATH	"/dev/pts"
@@ -243,9 +248,10 @@ char *argv[];
 	process_args(argc,argv);
 	init_stuff();
 
+	/* CHANGE-COPYRIGHT-DATE */
 	printf("\n\n");
 	printf("        *** WISP SYSTEM CONFIGURATION TOOL ***\n");
-	printf("Copyright (c) 1992-1996 NeoMedia Migrations Incorporated\n\n");
+	printf("Copyright (c) 1992-1999 NeoMedia Technologies Incorporated\n\n");
 	printf("This program will create the file \"$WISPCONFIG/wsysconfig\".\n");
 	printf("It contains hardware and logical volume configuration information.\n");
 	printf("Wsysconf will prompt you for certain configuation information as it\n");
@@ -784,6 +790,15 @@ increment_devnum()
 /*
 **	History:
 **	$Log: wsysconf.c,v $
+**	Revision 1.15  1999-09-23 13:39:12-04  gsl
+**	change copyright
+**
+**	Revision 1.14  1998-10-09 10:15:53-04  gsl
+**	Update for DGUS_INTEL
+**
+**	Revision 1.13  1998-03-31 13:28:37-05  gsl
+**	update copyright
+**
 **	Revision 1.12  1998-01-19 15:45:45-05  gsl
 **	Fix autoconfig for SOLARIS
 **	bye

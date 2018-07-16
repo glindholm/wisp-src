@@ -21,7 +21,7 @@ else
 fi
 WISPCONFIG=$QA/config
 A_CONFIG=$WISPCONFIG/ACUCONFIG
-PATH=$WISPDIR/bin:$QA/volrun/onpath:$PATH:$ACUDIR/bin:$ACUDIR
+PATH=$WISPDIR/bin:$WISPDIR/cridacu:$WISPDIR/createacu:$QA/volrun/onpath:$PATH:$ACUDIR/bin
 export QA WISPCONFIG A_CONFIG PATH WISPDIR
 echo
 echo "**** SETTING UP FOR ACUCOBOL ****"

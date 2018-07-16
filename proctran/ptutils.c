@@ -782,7 +782,7 @@ static void convert_to_dbl(void)							/* Convert ' within string to ".	*/
 				tptr = laptr;
 				tptr++;
 				while (*tptr == ' ') tptr++;
-				if (*tptr != ';') *laptr == '"';
+				if (*tptr != ';') *laptr = '"';
 			}
 			else *laptr = '"';
 			i++;
@@ -808,6 +808,9 @@ int is_backref(void)									/* Determine if field is backwards	*/
 /*
 **	History:
 **	$Log: ptutils.c,v $
+**	Revision 1.7  1999-09-13 15:50:41-04  gsl
+**	fix "==" vs. "="
+**
 **	Revision 1.6  1997-04-21 11:24:50-04  scass
 **	Corrected copyright.
 **

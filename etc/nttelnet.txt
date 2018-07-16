@@ -1,0 +1,452 @@
+Copyright (c) 1999 by NeoMedia Technologies Inc. All Rights Reserved.
+
+====================================================================
+
+Title:          WISP NT Telnet Support
+
+Document:       nttelnet.txt
+Last Updated:   $Date:$
+Products:       WISP for WIN32
+Versions:       4.3.04
+
+Summary:        Usage and configuration for running WISP migrated
+		applications on a Windows NT server within a telnet
+		session. 
+
+====================================================================
+
+Overview
+========
+The WISP NT telnet support allows WISP migrated applications to be run
+remotely on a Windows NT server within a telnet session.  This
+functionality may be used to improve performance of applications for
+users that use a slow Dial-up Networking connection to the server.
+
+Windows applications are normally designed to run on a desktop client
+machine that is connected to a server using a high-speed LAN
+connection.  The server is normally used as a "file server" where the
+data files and sometime the executable files are stored.  When you run
+your applications on your desktop client all the data from the server
+is moved across the network as it is needed.  
+
+COBOL applications that use Indexed files can cause a lot of network
+traffic because every IO operation on an indexed file typically
+requires 5-8 (or more) physical IO operations.  Each of these physical
+IO operations causes data records to move back and forth across the
+network.   On a high-speed LAN this is not a problem but on a
+low-speed dial-up connection the performance may not be acceptable.
+
+The WISP NT telnet support allows the dial-up user to connect to the
+NT server via a telnet session and run their WISP migrated
+applications on the NT server instead of on the client.  By running
+the applications on the server instead of the client the only data
+traveling across the network is the screen images and the keyboard
+keystrokes.  This is the same configuration used on UNIX where the
+applications always run on the server.
+
+Windows NT server does not currently come with telnet services. To
+allow your NT server to support telnet connections you must use third
+party software that provides telnet services.  We recommend you use
+the ATRLS package by Ataman Software, Inc.  This is the package we
+used for testing.
+
+The WISP NT telnet support was designed so that it can be used in
+conjunction with Co*STAR for WISP to add a GUI frontend to the telnet
+session interface.  If Co*STAR is not used then the applications will
+have a standard telnet interface with no GUI or mouse support.
+
+The WISP NT telnet support was designed so that one server can be
+configured to run migrated applications in all networking modes.  A
+single server can be configured to run applications locally at the
+workstation, and from a WIN32 client on the LAN using Windows
+networking, and from a remote telnet client.  The same configuration
+will work for all modes of connection.
+
+
+Requirements
+============
+The following software is required to use the WISP NT telnet support. 
+
+- WISP for WIN32 version 4.3.04 or later.
+- Acucobol-GT version 4.1 or later.
+- A Microsoft Windows NT server (Intel) version 4.0 or later.
+  NOTE: WISP NT telnet support requires that the server be a real
+	Windows NT server it can not be a Windows 95 or 98 machine.
+- A telnet services software package for Windows NT that is compatible
+  with ATRLS version 2.5 by Ataman Software, Inc. 
+- A standard telnet client program (this comes with Windows 95/98/NT
+  and UNIX).
+
+- Co*STAR for WISP is optional but recommended for GUI and mouse
+  support.   Note that Co*STAR is a telnet client.
+
+
+Restrictions
+============
+The following restrictions apply for running WISP migrated
+applications in a telnet session.
+
+- Only console application may be run within a telnet session.
+
+  Windows support two types of applications, they are "console"
+  applications and "windows" applications.  A console application
+  performs all it's screen IO within a windows console (MS-DOS style
+  command box). All WISP applications use console IO. A windows
+  application expects to use the windows GUI to create a user
+  interface.  Windows applications can not run within a telnet
+  session.  The Notepad.exe is a windows application and cannot be
+  run from within a telnet session.
+
+- You must use a console version of the Acucobol runtime system.
+
+  The standard Acucobol runtime system is a windows application.  You
+  must build a console version of the runtime.  Acucobol refers to
+  this as the "Alternate Terminal Manager" version.  See configuration
+  step 2 below for instructions.
+
+- Support for Native Acucobol Screen IO is undetermined.
+
+  No attempt has been made to be compatible with native Acucobol
+  screen IO.  It is unknown whether native Acucobol screen IO works
+  correctly in a telnet session.  Applications migrated by WISP
+  default to using the WISP screen handler and do not use the Acucobol
+  screen handler.
+
+- The DISPLAYUTIL option is disabled from within a telnet session.
+
+  The DISPLAYUTIL option is usually used to set Notepad.exe as the
+  display utility.  Since Notepad.exe is a windows application and it
+  can not be used within a telnet session the DISPLAYUTIL option is
+  disabled in a telnet session.  The standard WISP DISPLAY utility
+  will always be used when running within a telnet session.
+
+- The UTILSWINDOWS option is disabled from within a telnet session.
+
+  The UTILSWINDOWS option allows utilities like DISPLAY to run in a
+  separate window.  A telnet session has no concept of multiple
+  windows, it only maintains a single session connection. The
+  UTILSWINDOWS option will be ignored for a telnet session.
+
+- There is no mouse support with telnet unless Co*STAR is used.
+
+- There is no color support unless Co*STAR is used.
+
+  Some telnet clients allow color mapping based on character
+  attributes.  This is a facility of the telnet client and not
+  controllable by WISP.
+
+- The Workstation numbers returned by EXTRACT "W#" are not unique. 
+
+  On the WIN32 the workstation number is looked up in the WSYSCONF.CFG
+  file based on the computer name.  This means that every program
+  running on the server in a telnet session will have the same
+  workstation number.  If your applications require a unique session
+  number you should use the process group id "G#" instead.
+
+- The WRUN utility can not be run in a telnet session.
+
+  The WRUN utility is a windows application so it can not be run in a
+  telnet session.  A console version named WRUNT.EXE has been provided
+  for use with the console version of the Acucobol runtime system.
+  When running in a telnet session you must use the WRUNT.EXE console
+  version.  You can rename WRUNT.EXE to WRUN.EXE if desired.
+
+- The WCONFIG utility can not be run in a telnet session.
+
+  The WCONFIG utility is a windows application so it can not be run in
+  a telnet session.  The WCONFIG utility must be run from the server's
+  workstation directly.  
+
+  Also note that the configuration entries WCONFIG makes to the
+  windows registry affect all users that run on the server, this
+  includes local users as well as remote telnet users.
+
+- The WISPTRAN utility can not be run in a telnet session.
+
+  The WISPTRAN utility is a windows application so it can not be run
+  in a telnet session.  Further, the WISP NT telnet support is for
+  running migrated applications, it was not intended to be used for
+  translating and compiling development tasks.
+
+- Only telnet services compatible with ATRLS "simple mode" are
+  supported. 
+
+  There are a number of different Windows NT telnet services
+  available. Only those that are compatible with ATRLS "simple mode"
+  are supported. Specifically InterAccess by Pragma Systems is not
+  compatible and not supported.
+
+
+Configuration
+=============
+Follow these steps to configure your NT server for running WISP
+migrated applications from within a telnet session.
+
+
+Step 1) Install WISP.
+
+  Perform a normal installation of WISP version 4.3.04 or later.
+  Follow all the installation and configuration steps except for
+  building the Acucobol runtime system as you will be building a
+  console version of the runtime system in step 2.
+
+
+Step 2) Build a console version of the Acucobol runtime system.
+
+  To build the console version of the Acucobol runtime system you use
+  the same makefile (wwruncbl.mak) with a target of "rtst".  The
+  default name of the console runtime is "run32w.exe".
+
+    C:\wisp4304\acu> nmake /f wwruncbl.mak rtst
+
+  The runtime can them be moved or renamed as needed.
+
+  You may need to change your WISPCONFIG\WRUN.CFG file to use the new
+  runtime.
+
+  You will also want to uncomment the CONSOLEACU option in the
+  WISPCONFIG\OPTIONS file.  The CONSOLEACU option is used on WIN32
+  when using NT telnet support to instruct the runtime that the
+  Acucobol RTS is a "Console" application instead of the default
+  "Windows" application.  This will prevent window flashing on the
+  CALL "LINK" when using the console runtime outside of telnet and
+  without Co*STAR.
+
+
+Step 3) Install WISP migrated applications.
+
+  Perform a normal installation and configuration of your WISP
+  migrated applications onto your Windows NT server.  Test your
+  applications to ensure that they run correctly from both a WIN32
+  client on the LAN and from the server workstation.  This ensures
+  that the applications are configured correctly for network access
+  and that all file paths are being properly constructed for network
+  access.
+
+  Be certain your applications are working correctly in both
+  configurations before proceeding.
+
+
+Step 4) Install Windows NT telnet services.
+
+  Install and configure the Windows NT telnet services (ATRLS) onto
+  the NT server.  This step will vary depending on the package you
+  select.  The instructions given here are for ATRLS from Ataman
+  Software Inc.
+
+  a) Download ATRLS from http://www.ataman.com.
+  b) Print out and read the documentation. (Userman.doc)
+  c) Follow the section "4. Installation" instructions.
+  d) Follow the section "9.1 Configuring ATRLS" instructions with the
+     following additions.
+
+     From the Prompts tab, change the "Mode Prompt" default response
+     to be "Simple".  The WISP runtime will not function in the
+     "Advanced" mode, it must be set to "Simple".
+
+     Be sure to add user accounts.
+
+  Test your telnet service by going to another machine and telnet to
+  the server. 
+
+    - Use SET to see the environment variables.
+    - Use CD to change directory
+    - Use DIR to list contents of the directory
+    - Use PATH to set your PATH settings
+    - Use ECHO %TERM% to see your TERM setting
+    - Use EXIT to end your telnet session
+
+
+Step 5) Configure WISP for running in telnet.
+
+  There are a number of environment variables that you may need to set
+  while in a telnet session so that WISP migrated applications behave
+  properly.  Most of these variable are not required and should not be
+  set when running outside of telnet.  For this reason it is
+  recommended you use the ATRLS facility described in section "9.1.1.6
+  Environment File" of the ATRLS documentation.
+
+  A typical environment file for a user that uses Co*STAR will look
+  like this:
+
+    WISPTELNET=1
+    WISPTERM=wincon
+
+  The environment file for a user that does not use Co*STAR will look
+  similar to this:
+
+    WISPTELNET=1
+    W4W=0
+    WISPTERM=ansi
+
+  The descriptions of these variables follows.
+
+  The WISP runtime can normally automatically determine if it is
+  running in a telnet session by checking the environment variable
+  REMOTEADDESS that is automatically set by ATRLS.  If you are using a
+  different telnet service or if you need to override the automatic
+  detection you can by setting the variable WISPTELNET=1 if in telnet
+  (or WISPTELNET=0 if not in telnet).
+
+    WISPTELNET=1 
+
+  In a telnet session WISP will assume you are using Co*STAR, if you
+  are not using Co*STAR then you must tell WISP by setting the
+  variable W4W=0.  If you are using Co*STAR then you do not need to
+  set this variable but you can set it to W4W=2.
+
+    W4W=0
+
+  In a telnet session the videocap terminal type is retrieved from the
+  environment variables WISPTERM or TERM in that order.  The registry
+  is not used to determine the videocap type when running in a telnet
+  session.  ATRLS will automatically set the TERM variable, this value
+  can be overridden by setting the WISPTERM variable.  If using
+  Co*STAR for WISP with telnet then set the WISPTERM=wincon variable.
+  
+    WISPTERM=wincon
+
+  In a telnet session you start programs from the command line so you
+  should set the PATH variable to include the WISP bin directory. This
+  should be done for all users and all processes through the Control
+  Panel --> System --> Environment Tab --> System Variables.  Set PATH
+  to include C:\WISPxxxx\BIN.  
+
+
+Step 6) Test WISP in a telnet session (without Co*STAR).
+
+  Now we are going to test WISP in a telnet session. We will first
+  test without Co*STAR, in the following step we will add Co*STAR.
+
+  Telnet to the server from another machine and logon.
+
+  Tell WISP that you are not using Co*STAR by setting W4W=0.
+
+    C:\users\me> SET W4W=0
+
+  If you do not plan on using Co*STAR in your production environment
+  then you will need to setup or create the videocap file that matches
+  your telnet terminal type.  If you do plan on using Co*STAR then the
+  WINCON videocap file will work.  
+
+    C:\users\me> SET WISPTERM=WINCON
+
+  NOTE: Until you switch to using Co*STAR in step 7 or until you
+  customize your videocap file your functions keys will not work
+  correctly.  However, you can still use the generic function key
+  method of pressing Control-F followed by the two digit number
+  sequence of the key (e.g. "Ctrl-F" "0" "1" for PF1).
+
+  Use SET to check that the environment variables are configured
+  properly. 
+
+    C:\users\me> SET
+  
+  Run WDIAG and carefully inspect the results. If WDIAG is not found
+  then correct your PATH setting from step 5.  Fix all problems
+  reported by WDIAG.  You can use the redirect operator (">") to
+  redirect the output to a file.
+
+    C:\users\me> wdiag
+    C:\users\me> wdiag > wdiag.txt
+    C:\users\me> type wdiag.txt
+
+  Run the WSHELL utility and see that it is working correctly. Check
+  "Manage FILES/LIBRARIES" to ensure your volumes are correct.
+
+    C:\users\me> wshell
+
+  Test your application. If you normally start your application with
+  the WRUN utility then be sure to use the WRUNT utility instead.
+
+    C:\users\me> wrunt MAINMENU
+  
+  If you start your applications with a Procedure then use WPROC.
+
+    C:\users\me> wproc MAINPROC
+
+  You should be able to verify that your applications are working
+  correctly before going to the next step.
+
+  If you are not using Co*STAR then you are done.
+
+
+Step 7) Setup Co*STAR for WISP.
+
+  If you are using Co*STAR for WISP then there is a couple additional
+  configuration actions.
+
+  If you are using a version of Co*STAR prior to version 2.1 then you
+  will need to get an updated "mouse.scr" file.  This file can be
+  downloaded from our support ftp site.
+
+    ftp://support.neom.com/public/wisp/patches/costar/mouse.scr
+  
+  This file should replace the mouse.scr file in your costar folder in
+  the sub-folder w4w.  The default location of this file is
+  C:\W4W\w4w\mouse.scr, if Co*STAR was installed in a different
+  location then change the base location ("C:\W4W") to be correct.
+
+  Next you will want to configure Co*STAR to use telnet to connect to
+  the NT server.  
+
+  Run Co*STAR for WISP and select "Commands" --> "Configure
+  Terminal..." --> "Communications tab". In the "Network or port"
+  field select "TCP/IP" then press the "Network..." button.  In the
+  "Host name or address" field enter the name of the NT server then
+  click "OK" all the way out.
+
+  
+
+Windows NT Telnet Services
+==========================
+
+WISP support for NT telnet was developed and tested using ATRLS by
+Ataman Software Inc.  You can download a demo version of ATRLS from
+their web site.  http://www.ataman.com
+
+ATRLS provides a "Simple mode" for IO that WISP requires.  The simple
+mode allows a program to read and write to standard input and standard
+output without any filtering.
+
+ATRLS also provides a mechanism for setting users and session specific
+environment variables.  This is important because WISP depends on
+certain variables being set while in a telnet session and these same
+variables must not be set when running outside of telnet.
+
+There are other telnet services available but we recommend ATRLS and
+we will only support services that are compatible with ATRLS.
+
+
+Printing On A Mixed NT and 95/98 Network
+========================================
+
+There are certain printing considerations when you are running WISP
+migrated applications on a network that contains both Windows 95/98
+and Windows NT machines.  This does not only apply to telnet but is
+included here because with telnet you are running on NT.
+
+This discussion applies only if you are using the default WISP
+printing mechanism.  It does not apply if using the UniQue print queue
+or another third party print queue.
+
+The considerations arise because all applications share the same LPMAP
+and PRMAP configuration files but the way Windows NT and Windows 95/98
+identify printers are incompatible.  Windows NT identifies a printer
+by a network location (e.g. "\\MYSERVER\HP4SI") and Windows 95/98 uses
+a local driver name (e.g. "HP LaserJet 4Si").
+
+LPMAP Example:
+
+  A \\MYSERVER\HP4SI
+  B HP LaserJet 4Si
+
+With this example, programs running on a NT machine must use
+PRTCLASS=A and programs running on a 95/98 machine must use
+PRTCLASS=B. 
+
+You may need to change your usage constants to set the PRTCLASS or
+PRINTER number to the correct class based on what machine the
+applications are running on.
+
+========================= END OF DOCUMENT ==========================

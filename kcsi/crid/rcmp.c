@@ -189,6 +189,7 @@ int comp_zero(DTYPE *lop)
 	left = doubleit(lop);
 	if(left == 0.0)
 		return(1);
+	return 0;
 }
 
 int comp_space(DTYPE *lop)
@@ -395,6 +396,9 @@ static mc(char* mem1,char* mem2,int len)
 /*
 **	History:
 **	$Log: rcmp.c,v $
+**	Revision 1.5  1999-09-13 15:51:35-04  gsl
+**	fix missing return codes
+**
 **	Revision 1.4  1997-10-02 15:24:21-04  gsl
 **	fix warnings
 **

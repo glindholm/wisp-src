@@ -1,0 +1,132 @@
+;=====================================================================
+;						 Install.inf
+;  Sample install file used for custom costar installations.
+;  This file must reside on the first disk of the setup disks
+;
+;  You must complete the following sections:
+; [Custom]
+; [Disk]
+; [Folders]
+;
+; Each section is described below.  It is recommended that all
+; entries be enclosed in quotes.
+;=====================================================================
+
+;=====================================================================
+;The [Custom] section defines various setup initialization strings.
+;If an entry is missing then the default will be used.
+;=====================================================================
+
+[Custom]
+exename="costar.exe"		;name of executable, default costar.exe 
+defdir="C:\W4W"			;default installation directory
+title="Co*STAR 2.1 for WISP"	;title appearing in the setup window
+product_name="Co*STAR 2.1 for WISP"	;for dialogs and uninstall
+folder_name="Co*STAR 2.1 for WISP"	;program or desktop folder name
+
+;=====================================================================
+;The [Disk] section defines the custom files to be copied.  The format
+;for this section is defined as:
+; 
+; File1=filename,subdirectory,copymethod,destdirectory,copy if client install
+;
+; where:
+;
+; File1= is the keyname for this section.  Each entry must be consecutively
+; numbered.  For example:  File1=, File2=, File3=
+;
+; 
+; Filename is the full name of the file to be copied.  Wildcards will
+; work but are not recommended.
+;
+; Subdirectory is the directory(s) beneath the destination directory.  
+; Directories will be created as needed.  Note that the file must reside
+; in the same subdirectory structure on the installation floppy.  IE if 
+; the subdirectory is \IMAGES then the file must be in the A:\IMAGES
+; directory.
+;
+; CopyMethod defines how the source file should update the target file if 
+; it exists. The following values are supported.
+;
+;	0 = always overwrite target
+;	1 = never overwrite	target
+;	2 = overwrite target if newer version
+;	4 = file is self registering -- this entry may be combined with other copy methods
+;  
+; Destination Directory is the target directory for the file.  The following
+; values are supported.
+;
+;	0 = target dir
+;	1 = windows dir
+;	2 = system dir
+;
+; Copy if client install is used when installing the server version of CoSTAR
+; to a client PC.  Normally, only files that are customizable by the end user
+; such as configuration and color files, are copied to the client PC.  
+;
+;	 1 = client copy
+;
+;	Examples,
+;
+; copy to sub dir Images in target dir, never overwrite, don't copy if client install
+; File1="logo.bmp,\images,1,0,0"	
+;
+; copy to windows system dir if newer version and register, copy if client install
+; File2="my.ocx,,6,2,1"
+;=====================================================================
+[Disk]
+File1="w4w.cnf      ,,1,0,1"
+File2="color.ini    ,,1,0,1"
+File3="vt220.kbd    ,,1,0,0"
+File4="w4w.lis      ,,0,0,0"
+
+File5="mouse.scr    ,\w4w,0,0,0"
+File6="w4w.hsf      ,\w4w,1,0,1"
+File7="w4w.key      ,\w4w,1,0,1"
+File8="w4w.tbf      ,\w4w,1,0,1"
+
+File9="arwdn.ico     ,\w4w\icons,1,0,0"
+File10="arwlt.ico    ,\w4w\icons,1,0,0"
+File11="arwrt.ico    ,\w4w\icons,1,0,0"
+File12="arwup.ico    ,\w4w\icons,1,0,0"
+File13="enter.ico    ,\w4w\icons,1,0,0"
+File14="help.ico     ,\w4w\icons,1,0,0"
+
+
+;=====================================================================
+; The [Folders] section defines the items to be added to the desktop
+; or program manager folder.  Like the [Disk] section, the Folder1=
+; entries must be consecutively numbered.  The format is below:
+;
+; Folder1=description,program name,commandline,options
+;
+; Folder1=	The keyname for the section.
+;
+; Description is the text that will appear with the icon.
+;
+; Program name is the name of the executable.
+;
+; Command line is the arguments for the program.
+;
+; Options defines how the program exe is qualified and to what folder
+; the icon is added to.  Options include the following values:
+;
+;  0 =  normal don't qualify -- use with programs on the DOS path ie WINHELP.EXE
+;  1 =  qualify program name -- required for icon, ie Use with Co*STAR, not with WinHelp.EXE
+;  2 =  Adds the icon to the Desktop folder.
+;  4 =  Adds the icon to the Start Menu folder.
+;  8 =  Adds the icon to the Startup menu folder.
+; 16 =  Adds the icon to the Start Menu\Programs folder.
+;
+;  Values 2 and higher are ignored with 16-bit and WinNT 3.x installations.  Values
+;  maybe combined.
+;
+; Examples:
+;
+; Folder1="My App,costar.exe,costar.cnf,13"
+; Folder2="Release Notes,write.exe,release.wri,0"
+;=====================================================================
+[Folders]
+Folder1="CoSTAR for WISP,costar.exe,w4w.cnf,17"
+Folder2="CoSTAR for WISP Doc,notepad.exe,w4w.lis,0"
+

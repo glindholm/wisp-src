@@ -1129,7 +1129,7 @@
        PRINT-SCREEN.
            move spaces to print-recvr.
            CALL "SCREEN" USING PRINT-STATUS,
-                               PRINT-UFB-ADD,
+                               CRT,
                                PRINT-FUNC,
                                PRINT-RECVR.
            display "Print file =" PRINT-RECVR.
@@ -1296,7 +1296,7 @@
 
       *** CLEAR THE POSITION CURSOR BIT IN WCC.
 
-           MOVE DEC-BYTE-128 TO WSXIO-O-A-2.
+           MOVE HEX-80 TO WSXIO-O-A-2.
 
            PERFORM READ-WSXIO-SCREEN WITH TEST AFTER UNTIL
                    WSXIO-CODE IS NOT = HEXFF.

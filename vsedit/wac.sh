@@ -1,16 +1,11 @@
 #!/bin/sh
+########################################################################
 #
-#	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+#	Copyright (c) 1995-1999 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 ########################################################################
 #
-#               WISP - Wang Interchange Source Pre-processor
-#             Copyright (c) 1988,1989,1990,1991,1992,1993,1994
-#        An unpublished work of International Digital Scientific Inc.
-#                           All rights reserved.
-#
-########################################################################
 #
 #       wac     WISP and COMPILE
 #
@@ -123,8 +118,8 @@ WISP=wisp
 #COBOL=ccbl
 #OBJFILE=$objectdir/$FILENAME
 #TARGET=$OBJFILE
-#COBFLAGS="-da4 -Zi -Za -o $OBJFILE"
-#DEBUG_COBFLAGS="-da4 -Zd -Zi -Za -o $OBJFILE"
+#COBFLAGS="-Da4 -Di -Lwo \@.lst -o $OBJFILE"
+#DEBUG_COBFLAGS="-Zd -Za -Da4 -Di -Lwo \@.lst -o $OBJFILE"
 
 ### *** Micro Focus ***
 #WISPTYPE="-VMF"
@@ -132,8 +127,8 @@ WISP=wisp
 #COBOL=cob
 #IDYFILE=./$filename.idy
 #COBFILE=./$filename.cob
-#COBFLAGS="-i -C LIST"
-#DEBUG_COBFLAGS="-i -a -C LIST"
+#COBFLAGS="-i -P"
+#DEBUG_COBFLAGS="-i -a -P -C BOUND"
 #OBJFILE=./$filename.int
 #TARGET=$objectdir/$FILENAME.int
 #IDYTARGET=$objectdir/$FILENAME.idy

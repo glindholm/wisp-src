@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : tables.cpp
 // Author : George Soules
@@ -109,3 +116,53 @@ void table::set_none_seen() {
 
 
 
+
+//
+//	History:
+//	$Log: tables.cpp,v $
+//	Revision 1.7  1998-08-31 15:14:21-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/tables.cpp,v
+//	Working file: tables.cpp
+//	head: 1.6
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 6;	selected revisions: 6
+//	description:
+//	----------------------------
+//	revision 1.6
+//	date: 1997-10-01 09:29:39-04;  author: gsl;  state: V4_3_00;  lines: +1 -1
+//	Fix warnings
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:16:28-04;  author: gsl;  state: V4_1_02;  lines: +0 -0
+//	Renamed from tables.cc to tables.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:29-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:44-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:29-05;  author: gsl;  state: V3_3x12;  lines: +3 -3
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:30-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

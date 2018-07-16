@@ -2361,7 +2361,7 @@ static char compiler[]=
 
 
 static char logoformat[]=
-"     %-9s %s.%s%s - (c) 1989-97 KCSI/NEOM";
+"     %-9s %s.%s%s - (c) 1989-98 KCSI/NEOM";
 
 static char logo[80];
 
@@ -2432,6 +2432,9 @@ void init_report_style(char *style)
 /*
 **	History:
 **	$Log: cridvers.c,v $
+**	Revision 2.88  1998-03-25 14:00:36-05  gsl
+**	change copyright date
+**
 **	Revision 2.87  1997-08-18 17:23:52-04  scass
 **	Added NEOM to header display
 **

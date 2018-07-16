@@ -451,7 +451,7 @@ va_dcl
 	else
 		strcpy(templine,"Information Required by ");
 
-	memcpy(prid,getprogid(),8);						/* Copy prog id from global to local.		*/
+	memcpy(prid,WISPRUNNAME,8);
 	strncpy(templine+strlen(templine),prid,8);
 	gdisp_put(4,23,PLAIN_TEXT,templine);
 	sprintf(templine,"----------------------------------------");
@@ -1888,7 +1888,7 @@ static void gdisp_getparm(char* keylist, unsigned char *aid_char)
 			/*
 			**	Convert the term key to an aid char
 			*/
-			if (term_key < 0 || term_key > 32) 
+			if (term_key > 32)   /* term_key is unsigned */
 			{
 				wtrace("GETPARM","TERMKEY","Invalid term_key [%d]",term_key);
 				term_key = 0;
@@ -1901,6 +1901,7 @@ static void gdisp_getparm(char* keylist, unsigned char *aid_char)
 	{
 		unsigned char	function, lines, term[2], no_mod[2];
 
+		no_mod[0] = no_mod[1] = ' ';
 		function = DISPLAY_AND_READ_ALTERED;
 		lines = 24;
 
@@ -1955,6 +1956,16 @@ static void gdisp_get(int row, int col, char *val, int4 len)
 /*
 **	History:
 **	$Log: getparm.c,v $
+**	Revision 1.25  1999-05-21 10:49:29-04  gsl
+**	Change getprogid() to WISPRUNNAME as the program name shown on the
+**	getparm screen.
+**
+**	Revision 1.24  1998-10-13 14:55:59-04  gsl
+**	Fix test of term_key since it is unsigned it can't be neg.
+**
+**	Revision 1.23  1998-07-09 16:56:31-04  gsl
+**	initialize the no_mod arg to vwang()
+**
 **	Revision 1.22  1997-12-18 20:58:40-05  gsl
 **	Fix CHARMAP handling
 **

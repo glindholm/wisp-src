@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.
+	Copyright (c) 1988-1995 NeoMedia Technologies, Inc., All rights reserved.
 	$Id:$
 */
 
@@ -37,7 +37,11 @@
 #define SIZEOF_LIB	8
 #define SIZEOF_VOL	6
 
-#define COB_FILEPATH_LEN	80		/* Max file path len in COBOL for wfopen/wfname/wfilechk/wdellock/wfclose */
+#define SIZEOF_CMD	256
+#define SIZEOF_MESS	256
+
+#define MAX_SCREEN_FIELD_SIZE	79		/* Max file path len handling a COBOL file name in a screen			*/
+#define COB_FILEPATH_LEN	80		/* Max file path len in COBOL for wfopen/wfname/wfilechk/wdellock/wfclose	*/
 #define WISP_FILEPATH_LEN	256		/* Internal file path lengths */
 
 #define 	WISP_ERROR_FILE			"wisperr.log"
@@ -86,20 +90,6 @@
 #define 	AQM_QUEUE      			(const char *)"AQM_QUEUE"
 #endif /* WIN32 */
 
-#define NOTFOUND	-1
-#define DOTEXE 		0								/* filename needs .exe 			*/
-#define DOTCOM 		1								/* filename needs .com 			*/
-#define DOTSH 		2								/* filename needs .sh 			*/
-#define DOTGNT 		3								/* filename needs .gnt 			*/
-#define DOTINT 		4								/* filename needs .int 			*/
-#define NOEXT 		5								/* no extension (use fname as passed) 	*/
-
-
-#define ACCERR -1
-#define ISEXEC 	0
-#define NOTEXEC 1
-#define ISACU 	2
-#define ISMFINT	3
 
 /* The following 2 defines were in borderscrn.h or BORDER_SCREEN.H which has been deleted.					*/
 /*		 ... An include file defining constants for the bordering of screens.  These values represent the added lines	*/
@@ -122,6 +112,12 @@
 /*
 **	History:
 **	$Log: wdefines.h,v $
+**	Revision 1.19  1998-10-14 14:01:30-04  gsl
+**	Move isexec() defines to runtype.h
+**
+**	Revision 1.18  1998-08-03 16:33:26-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
 **	Revision 1.17  1997-10-23 15:23:55-04  gsl
 **	Add WISP_FILEPATH_LEN for internal file path lengths
 **

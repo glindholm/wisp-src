@@ -1,6 +1,5 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
 */
 
 /*
@@ -40,6 +39,12 @@
 /*
 **	History:
 **	$Log: envs.h,v $
+**	Revision 1.5  1998-08-31 15:50:33-04  gsl
+**	drcs update
+**
+**	Revision 1.4  1998-08-31 15:13:46-04  gsl
+**	drcs update
+**
 **	Revision 1.3  1995-10-16 09:50:23-04  gsl
 **	Removed the GLOBALS & RESET environment varibals and add the TOPGID var.
 **	The TOPGID is the GID for the top file in the chain, this should remain
@@ -54,3 +59,4 @@
  *
 **
 */
+

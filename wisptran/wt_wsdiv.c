@@ -1,36 +1,45 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
-
 /*
-**	wisp_wsdiv.c
+**	File:		wt_wsdiv.c
+**
+**	Project:	WISP/TRAN
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Working Storage Division
+**
 */
 
+/*
+**	Includes
+*/
 #define EXT extern
 #include "wisp.h"
 #include "keylist.h"
 #include "token.h"
 #include "node.h"
 #include "statment.h"
+#include "wt_datad.h"
 
-char *next_filler();
 
-NODE get_statement();
+/*
+**	Structures and Defines
+*/
 
-NODE working_storage_section();
-NODE linkage_section();
+/*
+**	Globals and Externals
+*/
 
-NODE parse_data_description();
+/*
+**	Static data
+*/
 
-void unexpected_eof(char *location)
+/*
+**	Static Function Prototypes
+*/
+
+static void unexpected_eof(const char *location)
 {
 	write_log("WISP",'F',"EOF","Unexpected End-Of-File in %s.",location);
 	exit_with_err();
@@ -59,8 +68,7 @@ void unexpected_eof(char *location)
 **	06/01/93	Written by GSL
 **
 */
-NODE working_storage_section(the_statement)
-NODE the_statement;
+NODE working_storage_section(NODE the_statement)
 {
 	fd_check();
 
@@ -114,6 +122,7 @@ NODE the_statement;
 				"WISP",'F',"PARSEWS","Expecting LINKAGE SECTION, or PROCEDURE DIVISION found %s.",
 				token_data(the_statement->next->token));
 		exit_with_err();
+		exit(0);
 	}
 }
 
@@ -140,8 +149,7 @@ NODE the_statement;
 **	06/01/93	Written by GSL
 **
 */
-NODE linkage_section(the_statement)
-NODE the_statement;
+NODE linkage_section(NODE the_statement)
 {
 
 	if (eq_token(the_statement->next->token,KEYWORD,"LINKAGE"))
@@ -178,11 +186,11 @@ NODE the_statement;
 				"WISP",'F',"PARSELINK","Expecting PROCEDURE DIVISION found %s.",
 				token_data(the_statement->next->token));
 		exit_with_err();
+		exit(0);
 	}
 }
 
-NODE parse_data_description(next_statement)
-NODE next_statement;
+NODE parse_data_description(NODE next_statement)
 {
 	static	int	binary_cleanup_mode = 0;
 	static	int	binary_group_level = 1;
@@ -269,11 +277,49 @@ get_next_statement:
 			else if ( IDENTIFIER == curr_node->token->type )
 			{
 				data_name_node = curr_node;
+				add_user_symbol(token_data(data_name_node->token));
 			}
-			else							/* No data name supplied.			*/
+			else 
 			{
-				reuse = 1;
+				if (dd_keyword(token_data(curr_node->token)))
+				{
+					/* 
+					** 	Found a valid data description keyword.
+					**	Assume then no data name was supplied.
+					*/
+					reuse = 1;
+				}
+				else if (cobol_keyword(token_data(curr_node->token)))
+				{
+					/*
+					**	Found an invalid cobol keyword.
+					**	Assume that this was not a keyword in COBOL-74
+					**	and was used as a data name.
+					**	Add to reserved keywords list.
+					*/
+					
+					write_tlog(curr_node->token,"WISP",'W',"KEYWORD", 
+						   "Keyword [%s] being used as a data name, adding to keyword list",
+						   token_data(curr_node->token));
+
+					add_change_word(token_data(curr_node->token));
+					do_change_word_token(curr_node->token);
+
+					data_name_node = curr_node;
+					add_user_symbol(token_data(data_name_node->token));
+				}
+				else
+				{
+					/*
+					**	PARSE ERROR
+					*/
+					write_tlog(curr_node->token,"WISP",'E',"PARSE", 
+						   "Error parsing Data Description Entry, expecting data-name-1 found [%s]",
+						   token_data(curr_node->token));
+				}
+				
 			}
+				    
 			parse_phase = 3;
 		}
 		else if ( eq_token(curr_node->token, KEYWORD, "DISPLAY-WS") )
@@ -861,23 +907,18 @@ binary_add_picture:
 	goto get_next_statement;
 }
 
-char *next_filler()
+
+/*
+**	next_filler()	Return the next value (WISP-FILL-xx) to name a FILLER field.
+**			Previously used WISP00 - WISPZZ but this would wrap back to WISP00
+**			and would conflict with WISPX1 - 4 used in screen processing.
+*/
+char *next_filler(void)
 {
-	static char 	chr1 = '0';
-	static char 	chr2 = '0';
-	static char 	filler[] = "WISPxx";
-
-	filler[4] = chr1;
-	filler[5] = chr2;
-
-	if (++chr2 > 'Z')								/* increment lower byte.		*/
-	{
-		chr2 = '0';								/* set to a zero.			*/
-
-		if (++chr1 > 'Z') chr1 = '0';						/* Increment the tens digit.		*/
-		if (chr1 == ':') chr1 = 'A';						/* Use alphabetic.			*/
-	}
-	else if (chr2 == ':') chr2 = 'A';						/* Use alphabetic			*/
+	static int	value = 0;
+	static char	filler[20];
+	
+	sprintf(filler,"WISP-FILL-%02d",++value);
 
 	return(filler);
 }
@@ -885,6 +926,23 @@ char *next_filler()
 /*
 **	History:
 **	$Log: wt_wsdiv.c,v $
+**	Revision 1.17  1999-09-07 10:42:22-04  gsl
+**	fix compiler warning becuase of not "exit" after call to exit_with_err()
+**
+**	Revision 1.16  1998-08-28 10:40:07-04  gsl
+**	Fixed next_filler() to allow more then ZZ fields.
+**	Change to WISP-FILL-xx format
+**
+**	Revision 1.15  1998-06-09 10:09:52-04  gsl
+**	fixed header and added missing include
+**
+**	Revision 1.14  1998-03-27 10:36:51-05  gsl
+**	change_words
+**
+**	Revision 1.13  1998-03-23 13:28:58-05  gsl
+**	Add auto handling of reserved keywords in a data description.
+**	Add data description to symbol table
+**
 **	Revision 1.12  1997-08-29 18:14:17-04  gsl
 **	Fix the gen_screens() call
 **

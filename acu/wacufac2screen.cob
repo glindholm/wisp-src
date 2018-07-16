@@ -42,6 +42,10 @@
 004200*
 004300 WORKING-STORAGE SECTION.
 004400
+004401* The COLOR-xxx constants are used to set the display attributes
+004402* of a field based on the FAC values.  The numberic values
+004403* below can be looked up in the ACUCOBOL-GT reference manual
+004404* (book 3) under "COLOR phrase".
 004500 78  COLOR-DIM              value 2048.
 004600 78  COLOR-BRIGHT           value 4096.
 004700 78  COLOR-BLANK            value 33.

@@ -17,8 +17,8 @@ static char rcsid[]="$Id:$";
 **	Includes
 */
 
-#include <varargs.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -69,63 +69,59 @@ static void build_lib_list( char* vol, char* vol_path, char* lspec, char* fspec)
 static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec);
 static void pass_back( char* vol, char* lib, char* fil);
 
-
-
-void FIND(va_alist)
-va_dcl
-{
 #define		ROUTINE		19000
 
+
+void FIND(char* the_file, char* the_lib, char* the_vol, int4 *starter, int4 *counter, char* receiver, ...)
+{
 	va_list	the_args;
+
 	int	arg_count;
-	char	*the_file,*the_lib,*the_vol,*receiver,*receiver_type;
-	int4	*starter,*counter,*file_count;
+	char	*receiver_type;
+	int4	*file_count;
 	int4	l_starter,l_counter,l_file_count;
 
 	l_starter = l_counter = l_file_count = 0;
-	va_start(the_args);								/* Point to the top of the stack.	*/
-	arg_count = va_count(the_args);							/* How many args are there ?		*/
-	va_start(the_args);								/* Go back to the top.			*/
-
-	the_file = va_arg(the_args, char*);						/* Get the file name address.		*/ 
-	arg_count--;
-	the_lib = va_arg(the_args, char*);						/* Get the library name address.	*/
-	arg_count--;
-	the_vol = va_arg(the_args, char*);						/* Get the volume name address.		*/
-	arg_count--;
-	starter = va_arg(the_args, int4*);						/* Get address of the start count.	*/
-	arg_count--;
-	counter = va_arg(the_args, int4*);						/* Get address of the number to list.	*/
-	arg_count--;
-	receiver = va_arg(the_args, char*);						/* Get address of the receiver area.	*/
-	arg_count--;
-
-	file_count = 0;									/* Set the pointer to never never land.	*/
+	file_count = NULL;
 	l_file_count = -1;
-	if (arg_count)									/* Are there any more out there ?	*/
+	receiver_type = NULL;
+
+	va_start(the_args, receiver);							/* Point to the top of the stack.	*/
+
+	arg_count = va_count(the_args);							/* How many args are there ?		*/
+	if (arg_count < 6 || arg_count > 8)
+	{
+		char buff[80];
+		
+		sprintf(buff, "%%FIND-F-ARGS Invalid number of arguments [%d] expecting 6-8", arg_count);
+		werrlog(104,buff,0,0,0,0,0,0,0);
+
+		va_end(the_args);
+		wexit(ROUTINE+4);
+	}
+	
+
+
+	if (arg_count > 6)								/* Are there any more out there ?	*/
 	{
 		file_count = va_arg(the_args, int4*);					/* Get address of the file count.	*/
-		arg_count--;
 		l_file_count = 0;
 	}
-	receiver_type = NULL;
-	if (arg_count)
+	if (arg_count == 8)
 	{
 		receiver_type = va_arg(the_args, char*);				/* Get receiver type if specified.	*/
 
 		if ( *receiver_type=='F' )
 		{
+			va_end(the_args);
 			werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);				/* Not yet supported.			*/
 			wexit(ERRORCODE(2));
 		}
 	}
+	va_end(the_args);
 
-
-	GETBIN(&l_starter,starter,4);							/* copy to local values			*/
-	GETBIN(&l_counter,counter,4);
-	
-	wswap(&l_starter);								/* swap order of the words		*/
-	wswap(&l_counter);								/* swap order of the words		*/
+	l_starter = get_swap(starter);
+	l_counter = get_swap(counter);
 
 	wtrace("FIND","ARGS","File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] Start=%ld Cnt=%ld",
 	       the_file, the_lib, the_vol, (long)l_starter, (long)l_counter);
@@ -141,15 +137,19 @@ va_dcl
 		l_counter = 0;
 		l_file_count = 0;
 	}
-	else osd_find( the_file, the_lib, the_vol, l_starter, &l_counter, receiver, &l_file_count );
+	else 
+	{
+		osd_find( the_file, the_lib, the_vol, l_starter, &l_counter, receiver, &l_file_count );
+	}
 
 	wtrace("FIND","RETURN", "Files returned=%ld  Files found=%ld", (long)l_counter, (long)l_file_count); 
 
-	wswap(&l_counter);								/* swap order of the words		*/
-	wswap(&l_file_count);								/* swap order of the words		*/
-
-	PUTBIN(counter,&l_counter,4);
-	if ( file_count ) PUTBIN(file_count,&l_file_count,4);				/* If supplied this argument in list.	*/
+	put_swap(counter,l_counter);
+	
+	if ( file_count )								/* If supplied this argument in list.	*/
+	{
+		put_swap(file_count,l_file_count);
+	}
 }
 
 
@@ -511,7 +511,7 @@ static void osd_find(char* the_file,char* the_lib,char* the_vol,
 }
 
 											/* Build the list starting by matching	*/
-static void build_list(char* vspec, char* lspec, char* fspec)							/* the VOLUMES.				*/
+static void build_list(char* vspec, char* lspec, char* fspec)				/* the VOLUMES.				*/
 {
 	logical_id *p;
 	char	*vol, *vol_path;
@@ -675,10 +675,26 @@ static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec)
 		ptr = osd_ext(file_noext);						/* Point to the ext (after the dot (.))	*/
 		if ( ptr ) 
 		{
+#ifdef OLD
+			/*
+			 *	Don't need this anymore as we are removing duplicates
+			 *	once the extension has been removed.
+			 */
 			if (strcmp(ptr,"idx")==0 && find_ext[0] == NULL_CHAR)
 			{
 				continue;						/* Don't find .idx files (for cisam)	*/
 			}
+			if (strcmp(ptr,"vix")==0 && find_ext[0] == NULL_CHAR)
+			{
+				continue;						/* Don't find .vix files (for Vision4)	*/
+			}
+#ifdef WIN32
+			if (strcmp(ptr,"VIX")==0 && find_ext[0] == NULL_CHAR)
+			{
+				continue;						/* Don't find .vix files (for Vision4)	*/
+			}
+#endif /* WIN32 */
+#endif /* OLD */
 			*(--ptr) = NULL_CHAR;
 		}
 
@@ -836,6 +852,18 @@ int4	*total;										/* Total number of wildcard matches.	*/
 /*
 **	History:
 **	$Log: find.c,v $
+**	Revision 1.17  1999-08-20 12:37:33-04  gsl
+**	Removed the logic that was ignoring .idx and .vix files. This was done
+**	in a attempt to stop duplicate file names from being returned. However
+**	it prevented an idx file from being found if the dat portion was missing.
+**	Also, there is other logic that eliminates duplicates.
+**
+**	Revision 1.16  1998-11-02 14:56:39-05  gsl
+**	change to use <stdarg.h> variable arguments plus extra error checking
+**
+**	Revision 1.15  1998-05-15 10:19:55-04  gsl
+**	Add support for Vision4 file with .vix extensions
+**
 **	Revision 1.14  1997-04-15 23:11:13-04  gsl
 **	Update to use wtrace()
 **

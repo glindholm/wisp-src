@@ -55,6 +55,7 @@ $(THE_LIB): $(THE_LIB)(acpmap.o) \
 	$(THE_LIB)(closeacp.o) \
 	$(THE_LIB)(coblink.o) \
 	$(THE_LIB)(cobpic.o) \
+	$(THE_LIB)(cobscrn.o) \
 	$(THE_LIB)(costar.o) \
 	$(THE_LIB)(customvw.o) \
 	$(THE_LIB)(date.o) \
@@ -102,6 +103,7 @@ $(THE_LIB): $(THE_LIB)(acpmap.o) \
 	$(THE_LIB)(menuread.o) \
 	$(THE_LIB)(menuscan.o) \
 	$(THE_LIB)(message.o) \
+	$(THE_LIB)(mfstubs.o) \
 	$(THE_LIB)(mngfile.o) \
 	$(THE_LIB)(mount.o) \
 	$(THE_LIB)(msdosfns.o) \
@@ -268,7 +270,8 @@ $(THE_LIB)(coblink.o): $(WC)/wisplib.h $(WC)/setenvst.h
 $(THE_LIB)(cobpic.o): cobpic.c $(WC)/idsistd.h
 $(THE_LIB)(cobpic.o): $(WC)/intdef.h cobrun.h cobpic.h
 $(THE_LIB)(cobpic.o): $(WC)/wisp_pic.h
-$(THE_LIB)(costar.o): costar.c costar.h $(VC)/video.h
+$(THE_LIB)(cobscrn.o): cobscrn.c cobscrn.h
+$(THE_LIB)(costar.o): costar.c $(WC)/costar.h $(VC)/video.h
 $(THE_LIB)(costar.o): $(WC)/vwang.h $(WC)/idsistd.h
 $(THE_LIB)(costar.o): $(WC)/intdef.h $(WC)/wperson.h
 $(THE_LIB)(costar.o): $(WC)/werrlog.h $(WC)/idsisubs.h
@@ -480,6 +483,7 @@ $(THE_LIB)(message.o): $(WC)/wdefines.h $(WC)/vwang.h
 $(THE_LIB)(message.o): $(WC)/wmalloc.h $(WC)/wperson.h
 $(THE_LIB)(message.o): movebin.h $(WC)/wisplib.h
 $(THE_LIB)(message.o): $(WC)/setenvst.h
+$(THE_LIB)(mfstubs.o): mfstubs.c $(WC)/idsistd.h
 $(THE_LIB)(mngfile.o): mngfile.c $(WC)/idsistd.h
 $(THE_LIB)(mngfile.o): $(WC)/intdef.h runtype.h
 $(THE_LIB)(mngfile.o): $(WC)/wcommon.h $(WC)/vwang.h
@@ -689,7 +693,7 @@ $(THE_LIB)(vdisplay.o): $(VC)/vcap.h $(WC)/idsistd.h
 $(THE_LIB)(vdisplay.o): $(WC)/intdef.h $(WC)/werrlog.h
 $(THE_LIB)(vdisplay.o): $(WC)/wperson.h $(WC)/scnfacs.h
 $(THE_LIB)(vdisplay.o): $(WC)/wanguid.h
-$(THE_LIB)(vdisplay.o): $(WC)/idsisubs.h costar.h
+$(THE_LIB)(vdisplay.o): $(WC)/idsisubs.h $(WC)/costar.h
 $(THE_LIB)(vdisplay.o): $(WC)/vwang.h osddefs.h
 $(THE_LIB)(vdisplay.o): $(WC)/wexit.h $(WC)/wisplib.h
 $(THE_LIB)(vdisplay.o): $(WC)/setenvst.h $(WC)/filext.h
@@ -714,7 +718,7 @@ $(THE_LIB)(vwang.o): $(WC)/wglobals.h $(WC)/wfiles.h
 $(THE_LIB)(vwang.o): $(WC)/scnfacs.h $(WC)/wisplib.h
 $(THE_LIB)(vwang.o): $(WC)/setenvst.h $(WC)/wexit.h
 $(THE_LIB)(vwang.o): assert.h wsfns.h menu.h $(WC)/wmalloc.h
-$(THE_LIB)(vwang.o): costar.h $(WC)/wispcfg.h
+$(THE_LIB)(vwang.o): $(WC)/costar.h $(WC)/wispcfg.h
 $(THE_LIB)(vwang.o): $(WC)/werrlog.h
 $(THE_LIB)(waccept.o): waccept.c $(WC)/idsistd.h
 $(THE_LIB)(waccept.o): $(WC)/intdef.h $(WC)/wisplib.h
@@ -1010,6 +1014,15 @@ $(VALLIST): $(THE_LIB)
 
 #	History:
 #	$Log: libwisp.umf,v $
+#	Revision 1.36  1998-12-14 11:32:52-05  gsl
+#	add mfstubs
+#
+#	Revision 1.35  1998-10-02 15:23:24-04  gsl
+#	Moved costar.h to wispcommon
+#
+#	Revision 1.34  1998-03-13 16:43:53-05  gsl
+#	Add cobscrn.c
+#
 #	Revision 1.33  1997-12-04 18:09:12-05  gsl
 #	Rename winnt.h to wispnt.h
 #

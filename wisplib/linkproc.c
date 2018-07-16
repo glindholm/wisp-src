@@ -133,7 +133,7 @@ va_dcl
 	short		parmlen[MAX_LINKPROC_PARMS];
 	char		parmtext[MAX_LINKPROC_PARMS][256];
 	int4		*retcode, *compcode;
-	char 		filespec[NAME_LENGTH+1];
+	char 		filespec[COB_FILEPATH_LEN+1];
 	int4 		mode;
 	int 		i;
 	char 		*p;
@@ -430,6 +430,9 @@ static fixerr(int code)
 /*
 **	History:
 **	$Log: linkproc.c,v $
+**	Revision 1.16  1998-07-31 15:41:48-04  gsl
+**	change NAME_LENGTH to COB_FILEPATH_LEN.
+**
 **	Revision 1.15  1997-11-21 16:36:19-05  gsl
 **	Fixed the vsharedscreen() logic to work from help and add the sync logic.
 **

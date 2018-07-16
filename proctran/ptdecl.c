@@ -85,8 +85,8 @@ void p_declare(int tndx,int *num_val,int *num_var,int *num_asn)
 					{
 						if (*aptr == '*')
 						{					/* If defined &func as an initial.	*/
-							if ((pos=strpos(aptr,"&DATE")) >= 0) *aptr == '6';
-							else if ((pos=strpos(aptr,"&TIME")) >= 0) *aptr == '8';
+							if ((pos=strpos(aptr,"&DATE")) >= 0) *aptr = '6';
+							else if ((pos=strpos(aptr,"&TIME")) >= 0) *aptr = '8';
 							else
 							{
 								write_log(util,'E','R',"NOINITIAL",
@@ -334,6 +334,9 @@ void save_declare_var(int *num_asn,int *num_var,int *num_val, int *num_cmds)		/*
 /*
 **	History:
 **	$Log: ptdecl.c,v $
+**	Revision 1.8  1999-09-13 15:50:20-04  gsl
+**	fix "==" vs. "="
+**
 **	Revision 1.7  1997-04-21 11:05:19-04  scass
 **	Corrected copyright.
 **

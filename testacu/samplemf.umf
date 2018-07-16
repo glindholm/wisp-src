@@ -45,7 +45,7 @@ int: 	sample.int qafileio.int qafile2.int qanetcap.int qaprint.int \
 	qabckgrd.int qadpcoma.int qawsxio.int mflink.int \
 	wl0000.int wl0010.int wl0011.int wl0012.int wl0013.int wl0014.int \
 	wl0015.int wl0016.int wl0017.int wl0018.int wl0018a.int wl0018b.int wl0019.int wl0020.int \
-	wl0021.int wl0022.int wl0023.int wl0024.int wl0025.int wl0026.int
+	wl0021.int wl0022.int wl0023.int wl0024.int wl0025.int wl0026.int wl0027.int
 	@echo
 	@echo 'All sample (INT) are up-to-date'
 	@echo

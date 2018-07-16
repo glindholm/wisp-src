@@ -712,8 +712,7 @@ int show_parm_area(void)								/* Display the available PUTPARMs.	*/
 		if (pp->reflbl[0] && 0 != memcmp(pp->reflbl,"        ",LABEL_SIZE))	/* If there is a reference label then	*/
 		{
 			char	tbuf[20];
-
-			unloadpad(tbuf,pp->reflbl,LABEL_SIZE);				/* Display the reference label		*/
+			cobx2cstr(tbuf,pp->reflbl,LABEL_SIZE);				/* Display the reference label		*/
 			sprintf(bptr,"(%s) ",tbuf);
 			bptr += strlen(bptr);
 		}
@@ -1443,9 +1442,8 @@ int load_keywshm(KEYWSHM *keywshm_ptr, FMTLIST *p)
 	tmp = (int2)p->len;
 	memcpy(&(keywshm_ptr->value_len),&tmp,sizeof(int2));
 	keywshm_ptr->special = p->special;
-
 	data_ptr = (char *)keywshm_ptr + sizeof(KEYWSHM);
-	loadpad( data_ptr, p->keyword, KEYWORD_SIZE);				/* copy in keyword				*/
+	cstr2cobx( data_ptr, p->keyword, KEYWORD_SIZE);				/* copy in keyword				*/
 	memcpy( data_ptr+KEYWORD_SIZE, p->value, (int)p->len);			/* and value					*/
 	*(data_ptr+KEYWORD_SIZE+p->len) = '\0';					/* place a null at the end			*/
 	return(off);
@@ -2860,6 +2858,9 @@ static	int	first = 1;
 /*
 **	History:
 **	$Log: sharemem.c,v $
+**	Revision 1.21  1998-08-03 17:12:58-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
 **	Revision 1.20  1997-07-16 15:08:33-04  gsl
 **	Add wtrace() to report the control file name
 **

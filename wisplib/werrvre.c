@@ -42,8 +42,17 @@ void werr_message_box(char *instr)
 	char	wsb[WSB_LENGTH], function[1], lines[1];
 	int	len, row;
 
+	if (wbackground())
+	{
+		return;
+	}
+	
 #ifdef WIN32
-	if (!use_costar())
+	/*
+	**	This ensure the win32 message box is only used when running as a
+	**	normal windows client and not thru telnet or with costar.
+	*/
+	if (use_w4w() && !use_costar())
 	{
 		if (win32_message_box(instr))
 		{
@@ -162,6 +171,12 @@ void werr_message_box(char *instr)
 /*
 **	History:
 **	$Log: werrvre.c,v $
+**	Revision 1.22  1998-12-15 09:49:17-05  gsl
+**	Fix win32 logic to not use message box if telneting
+**
+**	Revision 1.21  1998-01-22 10:21:33-05  gsl
+**	In werr_message_box(), check if in background and return if so.
+**
 **	Revision 1.20  1998-01-09 16:53:21-05  gsl
 **	Changed the box drawing characters, because the '|' is mapped to
 **	the british pound sign in CHARMAP

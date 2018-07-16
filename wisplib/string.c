@@ -1,15 +1,20 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
-/* Subroutine STRING.C ... Performs string functions for VS to VMS conversion support.						*/
+/*
+**	File:		string.c
+**
+**	Project:	WISPLIB
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Wang VSSUB STRING
+**
+*/
+
+/*
+**	Includes
+*/
 
 #include <ctype.h> 
 #include <varargs.h>
@@ -63,6 +68,10 @@ static unsigned char ebcdic2ascii[256] =
 /* Fx */  0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x91, 0x1A, 0x8F, 0x80, 0x1A, 0xFF 
 };
 
+/*
+**	Static Function Prototypes
+*/
+
 void center_text(char *l_in_string, int4 l_len, char *l_out_string);
 void leftj_text(char *l_in_string, int4 l_len, char *l_out_string);
 void rightj_text(char *l_in_string, int4 l_len, char *l_out_string);
@@ -75,32 +84,53 @@ va_dcl											/* Parameter declaration.     		*/
 {
 #define		ROUTINE		63000
 	va_list the_args;								/* Declare variable to traverse list.	*/
-	char *the_item, *func_type, *in_string, *out_string;				/* Declare pointers for the indiv. 	*/
+	char *func_type, *in_string, *out_string;					/* Declare pointers for the indiv. 	*/
 	int4  ndx, ondx; 								/* items.				*/
         int  arg_count;									/* Number of int4words in arg. list.	*/
 	int4 len, olen, *plen, *pndx;							/* Local copy of lengths.		*/
 	char padc, *pc;
 	char *table;
 	
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
-
 	va_start(the_args);								/* Setup pointer to start of list.	*/
 	arg_count = va_count(the_args);							/* How many args are there ?		*/
 	va_start(the_args);								/* Reset the pointer.			*/
 	if (arg_count < 3)
 	{
 		werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);					/* Invalid number of parameters.	*/
+		va_end(the_args);							/* Done with the args.			*/
 		return;
 	}
 	func_type    = va_arg(the_args, char*);  					/* Get addr. of first arg.		*/
 	in_string = va_arg(the_args, char*);						/* Get addr. of string to manipulate.	*/
+
+
+	plen = va_arg(the_args, int4*);					/* Get addr. of length parameter.	*/
+	GETBIN(&len,plen,4);						/* Put aligned value into local var.	*/
+	wswap(&len);							/* Swap the word order.			*/
+
+	if (wtracing())
+	{
+		char	tbuf[44];
+
+		if (len < sizeof(tbuf)-4)
+		{
+			memcpy(tbuf,in_string, len);
+			tbuf[len] = '\0';
+		}
+		else
+		{
+			memcpy(tbuf,in_string, sizeof(tbuf)-4);
+			tbuf[sizeof(tbuf)-4] = '\0';
+			strcat(tbuf,"...");
+		}
+
+		wtrace("STRING","ENTER", "Function=[%2.2s] Instr=[%s] Arg3=[%d]", func_type, tbuf, len);
+	}
+
 	switch(*func_type)								/* Check first char in function type.	*/
 	{                                     
 		case 'C': case 'L': case 'R':
 		{
-			plen = va_arg(the_args, int4*);					/* Get addr. of length parameter.	*/
-			GETBIN(&len,plen,4);						/* Put aligned value into local var.	*/
-			wswap(&len);							/* Swap the word order.			*/
 			if (arg_count == 4)						/* Is there a fourth arg.		*/
 			{
 				out_string = va_arg(the_args, char*);			/* Get addr. of fourth arg.		*/
@@ -127,17 +157,23 @@ va_dcl											/* Parameter declaration.     		*/
 				if (arg_count < 5)
 				{
 					werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);		/* Invalid number of parameters.	*/
+					va_end(the_args);				/* Done with the args.			*/
 					return;
 				}
-				pndx = va_arg(the_args, int4*);				/* Get addr. of offset parameter.	*/
-				GETBIN(&ndx,pndx,4);					/* Put aligned value into local var.	*/
-				wswap(&ndx);						/* Swap the word order.			*/
+				/* The arg3 was actually the ndx not the len */
+				ndx = len;
+
+				/* Now get the len */
+				plen = va_arg(the_args, int4*);				/* Get addr. of length parameter.	*/
+				GETBIN(&len,plen,4);					/* Put aligned value into local var.	*/
+				wswap(&len);						/* Swap the word order.			*/
 			}
 			else if (func_type[1] == 'V')					/* Move string and pad with specified	*/
 			{								/*  character.				*/
 				if (arg_count < 4)
 				{
 					werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);		/* Invalid number of parameters.	*/
+					va_end(the_args);				/* Done with the args.			*/
 					return;
 				}
 				ndx = 0;						/* Set so no offset on move.		*/
@@ -146,11 +182,10 @@ va_dcl											/* Parameter declaration.     		*/
 			else
 			{
 				werrlog(ERRORCODE(2),func_type,0,0,0,0,0,0,0);		/* Function not implemented.		*/
+				va_end(the_args);					/* Done with the args.			*/
 				return;
 			}
-			plen = va_arg(the_args, int4*);					/* Get addr. of length parameter.	*/
-			GETBIN(&len,plen,4);						/* Put aligned value into local var.	*/
-			wswap(&len);							/* Swap the word order.			*/
+
 			out_string = va_arg(the_args, char*);				/* Get addr. of output location.	*/
 			if (func_type[1] == 'I')					/* Get all of the optional arguments.	*/
 			{
@@ -199,11 +234,10 @@ va_dcl											/* Parameter declaration.     		*/
 			if (arg_count < 3)
 			{
 				werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);			/* Invalid number of parameters.	*/
+				va_end(the_args);					/* Done with the args.			*/
 				return;
 			}
-			the_item=va_arg(the_args, char*);
-			GETBIN(&len,the_item,sizeof(int4));
-			wswap(&len);
+
 			if (arg_count==4) 
 			{
 				out_string=va_arg(the_args,char*);
@@ -224,6 +258,7 @@ va_dcl											/* Parameter declaration.     		*/
 			else
 			{
 				werrlog(ERRORCODE(2),func_type,0,0,0,0,0,0,0);		/* Function not implemented.		*/
+				va_end(the_args);					/* Done with the args.			*/
 				return;
 			}
 			
@@ -233,11 +268,10 @@ va_dcl											/* Parameter declaration.     		*/
 			if (arg_count < 4)
 			{
 				werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);			/* Invalid number of parameters.	*/
+				va_end(the_args);					/* Done with the args.			*/
 				return;
 			}
-			the_item=va_arg(the_args, char*);
-			GETBIN(&len,the_item,sizeof(int4));
-			wswap(&len);
+
 			table=va_arg(the_args, char*);
 			if (arg_count==5) 
 			{
@@ -400,6 +434,9 @@ void str_xlat(char func, char *in_string, char *out_string, int4 len, char *tabl
 /*
 **	History:
 **	$Log: string.c,v $
+**	Revision 1.13  1998-10-20 10:27:12-04  gsl
+**	Add tracing
+**
 **	Revision 1.12  1996-08-19 18:33:00-04  gsl
 **	drcs update
 **

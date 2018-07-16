@@ -47,6 +47,8 @@ static char rcsid[]="$Id:$";
 #include "werrlog.h"
 #include "wfname.h"
 #include "idsisubs.h"
+#include "wglobals.h"
+#include "wdefines.h"
 
 
 #define	KEYLIMIT    16									/* Maximum number of key values.	*/
@@ -56,7 +58,6 @@ static char rcsid[]="$Id:$";
 #define FORMNUMLEN   3									/* Length of passed form number.	*/
 #define NUMCOPLEN    5									/* Length of passed number of copies.	*/
 
-extern pstruct *plist;									/* pointer to printer files		*/
 
 void SETFILE(va_alist)	  								/* Function uses variable arguments.	*/
 
@@ -68,8 +69,8 @@ va_dcl
 	char *vol,*lib,*file,*status;							/* Input parameters, vol lib file stat.	*/
 	char *keyvalue;									/* Keyvalue arguments passed from COBOL.*/
 	char *keyword;									/* Keyword arguments passed from COBOL.	*/
-	char fname[80];									/* wfname constructed print file name.	*/
-	int  spos;									/* To indicate position of space char.	*/
+	char fname[COB_FILEPATH_LEN];							/* wfname constructed print file name.	*/
+	char *eoname;									/* needed due to trimming		*/
 	int4 mode=0;									/* wfname mode				*/
 	char string[8];									/* Used for atoi conversion.		*/
 	pstruct *lptr;									/* A local pointer into the structure.	*/
@@ -89,7 +90,8 @@ va_dcl
 	}
 	else
 	{
-		werr_message_box("%%SETFILE-E-ERROR Insufficient parameters supplied in call to SETFILE, call ignored.");
+		werrlog(104,"%%SETFILE-E-ERROR Insufficient parameters supplied in call to SETFILE, call ignored.",
+			0,0,0,0,0,0,0);
 		return;
 	}
 
@@ -104,28 +106,28 @@ va_dcl
 		    strncmp(keyword,"NC",2) == 0 ||				/* set number of copies or			*/
 		    strncmp(keyword,"PC",2) == 0)				/* set print class, then find the pstruct.	*/
 		{
-		    if (!plist)							/* If no print files are presently open.	*/
+		    if (!g_print_file_list)					/* If no print files are presently open.	*/
 		    {
-			werr_message_box("%%SETFILE-E-ERROR SETFILE called with no open print file, call ignored.");
+			werrlog(104,"%%SETFILE-E-ERROR SETFILE called with no open print file, call ignored.",0,0,0,0,0,0,0);
 			return;
 		    }
 		    mode = 2;							/* mode for wfname representing print file.	*/
 										/* Use wfname instead of wfopen because wfopen	*/
 										/* generates new pstruct elements.		*/
-		    wfname(&mode,vol,lib,file,fname);				/* Construct the print file name.		*/
-		    spos = strpos(fname," ");
-		    fname[spos] = '\0';						/* Put a null at the first space.		*/
+		    eoname = wfname(&mode,vol,lib,file,fname);			/* Construct the print file name.		*/
+		    *eoname = '\0';						/* fname is now a cstr				*/
 
-		    lptr = plist;						/* Start at head of print file list.		*/
+		    lptr = g_print_file_list;					/* Start at head of print file list.		*/
 		    do								/* Find the correct element of the list.	*/
 		    {
 			if (!strcmp(lptr->name,fname)) break;			/* If the name's right we're done.		*/
-			lptr = (pstruct *)lptr->nextfile;			/* Otherwise, look at the next element.		*/
+			lptr = lptr->nextfile;					/* Otherwise, look at the next element.		*/
 		    } while (lptr);
 
 		    if (!lptr)							/* If we never found the right name.		*/
 		    {
-			werr_message_box("%%SETFILE-E-ERROR SETFILE called to set print attributes for non print file, call ignored.");
+			werrlog(104,"%%SETFILE-E-ERROR SETFILE called to set print attributes for non print file, call ignored.",
+				0,0,0,0,0,0,0);
 			return;
 		    }
 		}								/* Here, lptr points to the correct pstruct.	*/
@@ -177,6 +179,13 @@ va_dcl
 /*
 **	History:
 **	$Log: setfile.c,v $
+**	Revision 1.13  1998-10-22 14:11:57-04  gsl
+**	change to use g_print_file_list
+**	fix werrlog processing
+**
+**	Revision 1.12  1998-08-03 17:11:39-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
 **	Revision 1.11  1996-08-19 18:32:54-04  gsl
 **	drcs update
 **

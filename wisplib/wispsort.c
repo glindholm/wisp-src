@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 
 /*
@@ -11,7 +11,6 @@ static char rcsid[]="$Id:$";
 **			unloadacu()		Unload a Acucobol VISION file to a flat file.
 **			unloadcisam()		Unload a CISAM file to a flatfile
 **			unloadfhisam()		Unload a Micro Focus FHISAM file to a flatfile
-**			isvision()		Check if file is a VISION file
 **			addseqnum()		Add a sequence number to each record in a file
 **			delseqnum()		Remove the added sequence number
 **			copyfile()		Copy a file
@@ -57,6 +56,7 @@ static char rcsid[]="$Id:$";
 							'T' Zoned decimal data, sign trailing separate
 							'O' Zoned decimal data, sign leading overpunched
 							'U' Packed decimal data, unsigned
+							'Y' YY PIC 99 two digit year
 					53	Sort order	Alpha(1)
 							'A' Ascending
 							'D' Descending
@@ -102,7 +102,7 @@ static char rcsid[]="$Id:$";
 					0	Success
 					4	Input file was empty
 					8	Insufficient buffer space (or other internal error)
-					12	Record size greater then 2024 bytes
+					12	Record size greater then 9999 bytes  (Was 2024 on the Wang)
 					16	Invalid sort key
 					20	Program check (see sortcode for reason).
 				(The following are extensions to SORTCALL)
@@ -143,6 +143,7 @@ static char rcsid[]="$Id:$";
 #include "wmalloc.h"
 #include "vwang.h"
 #include "wispcfg.h"
+#include "wfvision.h"
 #include "assert.h"
 
 #include "werrlog.h"
@@ -163,7 +164,6 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 static int unloadacu(char *inname, char *outname);
 static int unloadcisam(char *inname, char *outname, int4 recsize);
 static int unloadfhisam(char *inname, char *outname, int4 recsize);
-static int isvision(char *filename);
 static int addseqnum(char *infile, char *outfile, int recsize);
 static int delseqnum(char *infile, char *outfile, int recsize);
 static int copyfile(char *infile, char *outfile);
@@ -199,7 +199,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	GETBIN(&l_recsize,recsize,sizeof(int));
 	wswap(&l_recsize);
 
-	wtrace("WANGSORT", "ENTRY", "Infile=[%22s] Outfile=[%22s] Recsize=%d Filetype=%c", 
+	wtrace("WANGSORT", "ENTRY", "Infile=[%22.22s] Outfile=[%22.22s] Recsize=%d Filetype=%c", 
 	       &sortparms[0], &sortparms[22], l_recsize, *filetype);
 
 	/* 
@@ -223,7 +223,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		break;
 	case 'F':
 	case 'f':
-		if ( l_recsize < 1 || l_recsize > 2024 )
+		if ( l_recsize < 1 || l_recsize > 9999 ) /* Wang allows up to 2024 only */
 		{
 			sprintf(messstr,"Invalid record size [recsize = %d]",l_recsize);
 			werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
@@ -279,7 +279,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		**	For all Indexed files test against the actual file for the type.
 		*/
 
-		if ( 0 == isvision(infile) )
+		if ( visionversion(infile) > 0 )
 		{
 			v_filetype = 'A';
 		}
@@ -429,6 +429,9 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	while( numkeys < 8 )
 	{
 		int	p,l,i;
+		char	*keyptr;
+		
+		keyptr = ptr;
 
 		p=0;
 		l=0;
@@ -445,6 +448,12 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		{
 			break;
 		}
+
+		wtrace("WANGSORT","KEYS","POST%d=%4.4s LENGTH%d=%3.3s TYPE%d=%c ORDER%d=%c",
+		       numkeys+1, keyptr, 
+		       numkeys+1, keyptr+4, 
+		       numkeys+1, keyptr[7], 
+		       numkeys+1, keyptr[8]);
 		
 		for( i=0; i < 3; i++, ptr++)
 		{
@@ -505,6 +514,10 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		case 'U':						/* Packed decimal data, unsigned */
 		case 'u':
 			sortkeys[numkeys].type = KT_PACKED_UNSIGNED;
+			break;
+		case 'Y':						/* YY PIC 99 - based on YYPIVOTYEAR */
+		case 'y':
+			sortkeys[numkeys].type = KT_YY_PIVOTYEAR;
 			break;
 		default:											      
 			sprintf(messstr,"Invalid data type [%c]",*ptr);
@@ -751,7 +764,7 @@ static int unloadacu(char *inname, char *outname)			/* Unload the ACUCOBOL file 
 	sprintf(cmd, "%s -unload %s %s", acu_vutil_exe(), inname, outname);
 	ASSERT(strlen(cmd) < sizeof(cmd));
 	
-	rc = win32spawnlp(NULL, cmd, SPN_HIDE_CHILD|SPN_WAIT_FOR_CHILD|SPN_NO_INHERIT);
+	rc = win32spawnlp(NULL, cmd, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_NO_INHERIT);
 
 	return( rc );
 }
@@ -979,50 +992,6 @@ static int unloadfhisam(char *inname, char *outname, int4 recsize)
 }
 #endif /* unix */
 
-static int isvision(char *filename)					/* Test if file is an ACUCOBOL Vision file.		*/
-									/* 	ReturnCode:	 0	Vision file		*/
-									/*			 1	Not Vision file		*/
-									/*			-4	Can't open		*/
-									/*			-8	Can't read		*/
-{
-	int	fh;
-	char	buff[20];
-	int4	lg;
-	int	rc;
-
-	fh = open(filename,O_RDONLY|O_BINARY,0);
-	if ( fh == -1 )
-	{
-		rc = -4;
-		return(rc);
-	}
-	rc = read(fh,buff,4);
-	close(fh);
-	if (rc != 4)
-	{
-		if ( rc == -1 )
-		{
-			rc = -8;
-		}
-		else
-		{
-			rc = 1;
-		}
-		return(rc);
-	}
-
-	memcpy(&lg,buff,sizeof(int4));
-
-	if ( 0x10121416 == lg || 0x16141210 == lg )
-	{
-		return( 0 );
-	}
-	else
-	{
-		return( 1 );
-	}
-}
-
 /*
 	addseqnum	Copy records from infile to outfile adding a sequence number to the end of each record.
 			A non-zero return code indicates an error.
@@ -1170,6 +1139,22 @@ static int copyfile(char *infile, char *outfile)
 /*
 **	History:
 **	$Log: wispsort.c,v $
+**	Revision 1.30  1998-09-09 15:49:53-04  gsl
+**	Add trace of keys
+**
+**	Revision 1.29  1998-09-08 16:38:50-04  gsl
+**	Add support for key type="Y" for a YY based on YYPIVOTYEAR
+**
+**	Revision 1.28  1998-05-14 16:55:07-04  gsl
+**	Move isvision() to wfvision.c
+**	Fix wtrace
+**
+**	Revision 1.27  1998-05-05 17:40:10-04  gsl
+**	WIN32 change to new spawn flags
+**
+**	Revision 1.26  1998-04-17 14:53:14-04  gsl
+**	Change the max recsize to 9999, it was 2024 on the Wang
+**
 **	Revision 1.25  1997-12-04 18:13:43-05  gsl
 **	changed to wispnt.h
 **

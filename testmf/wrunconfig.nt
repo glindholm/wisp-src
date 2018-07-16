@@ -1,3 +1,0 @@
-cobol=ACU
-options=-b -c D:\projects\wisp\src\testacu\config\acuconfig
-runcbl=c:\wisp\acu\wwruncbl.exe
