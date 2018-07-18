@@ -59,6 +59,10 @@
 #include "vintdef.h"
 #include "vmodules.h"
 
+#ifdef WIN32
+#define access(file, mode) _access(file, mode)
+#endif
+
 static int4 strtometakey();
 static char *upstring(char *string);
 
@@ -389,6 +393,9 @@ char	*argv[];
 /*
 **	History:
 **	$Log: vkeymap.c,v $
+**	Revision 1.15  2011/10/28 01:42:03  gsl
+**	fix warnings
+**	
 **	Revision 1.14  2003/06/20 15:04:28  gsl
 **	VL_ globals
 **	

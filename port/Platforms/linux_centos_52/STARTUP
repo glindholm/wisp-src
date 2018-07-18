@@ -1,0 +1,22 @@
+export WISPDIR=/opt/wisp
+echo WISPDIR=$WISPDIR
+
+export WISPCONFIG=$HOME/config
+export ERR=$HOME/wisperr.log
+export PATH=$PATH:$WISPDIR/bin
+export WISPGID=$$
+
+export WISP=$HOME/work/wisp
+
+export ACUDIR=/opt/acu
+export A_CONFIG=$WISPCONFIG/ACUCONFIG
+export A_TERMCAP=$ACUDIR/etc/a_termcap
+export PATH=$PATH:$ACUDIR/bin
+
+#export COBDIR=/disk1/mf41
+#export COBSW=-F
+#export COBPATH=.:$WISP/src/testmf
+#export LIBPATH=/usr/lib:$COBDIR/coblib:$LIBPATH
+#/usr/lib/mflmf/lmfgetpv
+#echo "To start MF license manager /usr/lib/mflmf; sh mflmman"
+

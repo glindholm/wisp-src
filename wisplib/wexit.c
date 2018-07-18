@@ -77,7 +77,6 @@ extern void WL_shutexitcobol(int exit_code);
 void WL_wexit(int4 exit_code)
 {
 	WL_wtrace("WEXIT", "ENTRY", "wexit(%ld) linklevel=%d", (long)exit_code, WL_linklevel()); 
-	WL_wtrace_timestamp("WEXIT");
 
 	if (0 == exit_code)
 	{
@@ -90,6 +89,7 @@ void WL_wexit(int4 exit_code)
 	
 
 	WISPEXIT();
+	WL_wtrace_timestamp("WEXIT");
 
 	if (wisp_acu_cobol() || wisp_mf_cobol())
 	{
@@ -104,6 +104,9 @@ void WL_wexit(int4 exit_code)
 /*
 **	History:
 **	$Log: wexit.c,v $
+**	Revision 1.28  2011/08/25 23:39:30  gsl
+**	tracing
+**	
 **	Revision 1.27  2003/01/31 19:08:37  gsl
 **	Fix copyright header  and -Wall warnings
 **	

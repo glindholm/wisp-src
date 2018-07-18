@@ -65,6 +65,10 @@
 #include "werrlog.h"
 #include "vssubs.h"
 
+#ifdef WIN32
+#define rmdir(dir) _rmdir(dir)
+#endif
+
 #ifndef ETXTBSY
 #define ETXTBSY 26
 #endif
@@ -397,6 +401,9 @@ static int do_delete(char* file, int lib_flag, int* err_type)
 /*
 **	History:
 **	$Log: scratch.c,v $
+**	Revision 1.32  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.31  2003/02/04 16:02:02  gsl
 **	Fix -Wall warnings
 **	

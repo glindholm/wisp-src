@@ -29,6 +29,10 @@
 
 #include "envs.h"
 
+#ifdef WIN32
+#define putenv(var) _putenv(var)
+#endif
+
 process *the_process;
 
 
@@ -233,6 +237,9 @@ void process::load_from_env()
 /*
 **	History:
 **	$Log: process.cpp,v $
+**	Revision 1.16  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.15  2009/10/18 21:03:44  gsl
 **	Fixed strrchr() use bug, it returns a const char *
 **	
@@ -279,6 +286,9 @@ void process::load_from_env()
 //
 //	History:
 //	$Log: process.cpp,v $
+//	Revision 1.16  2011/10/29 20:09:14  gsl
+//	Fix ISO routine name warnins on WIN32
+//	
 //	Revision 1.15  2009/10/18 21:03:44  gsl
 //	Fixed strrchr() use bug, it returns a const char *
 //	

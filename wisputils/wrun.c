@@ -112,6 +112,10 @@
 #include "wispcfg.h"
 #include "platsubs.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 /*
 **	Structures and Defines
 */
@@ -179,7 +183,7 @@ int main	(int argc, char *argv[])
 
 #ifdef WIN32
 #ifndef WRUNT
-	if (wisptelnet())
+	if (wisptelnet() || wisp_winsshd())
 	{
 		printf("\nThis is the Windows version of WRUN.\n"
 		       "It can not be run within a telnet session.\n"
@@ -481,7 +485,7 @@ int main	(int argc, char *argv[])
 		}
 #endif /* unix */
 #if defined(WIN32)
-		rc = spawnvp(P_WAIT,(const char *)parm[0],(const char **)parm);
+		rc = _spawnvp(P_WAIT,(const char *)parm[0],(const char **)parm);
 		if (rc == -1)
 		{
 			switch(errno)
@@ -610,6 +614,12 @@ static void msgprintf(const char* format, ...)
 /*
 **	History:
 **	$Log: wrun.c,v $
+**	Revision 1.35  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
+**	Revision 1.34  2011/08/22 03:10:00  gsl
+**	Support for WinSSHd on Windows
+**	
 **	Revision 1.33  2003/02/12 18:17:17  gsl
 **	remove TEST code
 **	

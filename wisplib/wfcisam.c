@@ -139,6 +139,10 @@
 #include "vssubs.h"
 #include "wperson.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 #define CISAM_ROOT_BLOCKSIZE_S 		6
 #define CISAM_ROOT_NUM_KEYS_S 		8
 #define CISAM_ROOT_RECORD_LENGHT_S 	13
@@ -200,12 +204,12 @@ int4 WL_cisaminfo(				/* CISAM file system interface				*/
 	{
 		is_idx = 1;						/* Has .idx file					*/
 		/* Open the .idx file	*/
-		f = open( path_idx, O_RDONLY | O_BINARY | O_LARGEFILE);		
+		f = open( path_idx, O_RDONLY | O_BINARY | O_LARGEFILE, 0);		
 	}
 	else
 	{
 		is_idx = 0;
-		f = open( path, O_RDONLY | O_BINARY | O_LARGEFILE);
+		f = open( path, O_RDONLY | O_BINARY | O_LARGEFILE, 0);
 	}
 
 	if ( f == -1 )
@@ -802,6 +806,9 @@ int WL_unloadfhisam(const char *inname, const char *outname, int4 recsize)
 /*
 **	History:
 **	$Log: wfcisam.c,v $
+**	Revision 1.37  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.36  2003/02/04 16:02:02  gsl
 **	Fix -Wall warnings
 **	

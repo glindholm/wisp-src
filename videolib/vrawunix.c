@@ -853,10 +853,10 @@ static unsigned char vrawgetc(int wait)
    static FILE *padlog=NULL;
 #endif
 
-int vrawprint(char* buf)
+int vrawprint(const char* buf)
 	/* char	*buf;		IN -- pointer to the buffer. */
 {
-	register char *p;		/* Fast pointer */
+	const char *p;		/* Fast pointer */
 	
 	/*
 	 * If the vraw module isn't yet initialized, then do so now.
@@ -899,7 +899,6 @@ int vrawprint(char* buf)
 		  IVS_outctx->holdstart = IVS_outctx->holdpos;	   /* stuff that it thinks is part of a IVS sequence.       */
 								   /* a more object oriented approach would not allow this  */
 								   /* type of code.  but this is ok for now                 */
-
 		p=buf;						   /* and use the buffer "buf" with the original data in it */
 	}
 #ifdef VDBGPADST
@@ -1708,6 +1707,15 @@ static int xlat_read(int fd, unsigned char* callerbuf, int bufsize)
 /*
 **	History:
 **	$Log: vrawunix.c,v $
+**	Revision 1.44  2011/10/28 01:42:03  gsl
+**	fix warnings
+**	
+**	Revision 1.43  2011/10/20 01:02:47  gsl
+**	mark warnings
+**	
+**	Revision 1.42  2011/08/23 01:22:03  gsl
+**	vrawprint const
+**	
 **	Revision 1.41  2003/02/07 14:31:41  gsl
 **	fix warnings
 **	

@@ -84,6 +84,9 @@
 #include "filext.h"
 #include "wispcfg.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
 
 #ifdef unix
 #define  PRINT_FILE_EXT 	""
@@ -780,6 +783,9 @@ void wisp_mode2fileattr(int4 mode, char *attrstr)
 /*
 **	History:
 **	$Log: wfname.c,v $
+**	Revision 1.50  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.49  2009/10/18 20:57:07  gsl
 **	Fix bug with Vista/2008 where creat() was failing because of unsupported mode.
 **	

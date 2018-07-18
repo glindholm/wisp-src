@@ -1,7 +1,118 @@
 ----------------------------------------------------------------------------
-8.1.0
+9.1.0
+----------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Dev Sys Version: 9.1.0 For: x86 running Win XP, Vista, Windows 7, Server 2003, Server 2008 32 bit
+Licence Type: UPDATE
+Users/Devs: 1
+Serial: 333724
+Product Code: UAKLY4DYAV2AUCJB
+Product Key: SBFMW6DYAS7S
+End User : Neomedia Technologies
+
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 9.1.0 For: SPARC running Solaris 9 32-bit
+Licence Type: UPDATE
+Users/Devs: 2
+Serial: 118947
+Product Code: MTASJAA4UQWYAKSW
+Product Key: NNGBLGA4UNTF
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 9.1.0 For: IBM pSeries running AIX 5.3 32-bit
+Licence Type: UPDATE
+Users/Devs: 1
+Serial: 333725
+Product Code: MTAAS42L2NWQS4VY
+Product Key: F7ZTU62L2RMB
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 9.1.0 For: PA-RISC running HP-UX 11i 32-bit
+Licence Type: UPDATE
+Users/Devs: 2
+Serial: 392652
+Product Code: 2GELLGCS6MNFGKCP
+Product Key: 9UQMJACS6JC8
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 9.1.0 For: x86 running Linux (glibc 2.x) 32-bit
+Licence Type: UPDATE
+Users/Devs: 2
+Serial: 88446
+Product Code: 2WE4MFGA6MEGEKCN
+Product Key: 9AQMKDGA6JS2
+End User : Neomedia Technologies
+
+----------------------------------------------------------------------------
+9.0.0
+----------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 9.0.0 For: SPARC running Solaris 9 32-bit
+Licence Type: UPDATE
+Users/Devs: 2
+Serial: 118947
+Product Code: MSASJAA4U8WYAKAS
+Product Key: NFEBLGA4U6TH
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Dev Sys Version: 9.0.0 For: x86 running Win XP, Vista, Server 2003, Server 2008, Windows 7 32/64-bit
+Licence Type: UPGRADE
+Users/Devs: 1
+Serial: 333724
+Product Code: MSAESUWGAWNYS4DC
+Product Key: FW7XUWWGAZJL
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 9.0.0 For: IBM pSeries running AIX 5.3 32-bit
+Licence Type: UPDATE
+Users/Devs: 1
+Serial: 333725
+Product Code: MSAAS42L2NE8SLVU
+Product Key: P6XTU62L2R4F
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 9.0.0 For: PA-RISC running HP-UX 11i 32-bit
+Licence Type: UPDATE
+Users/Devs: 2
+Serial: 392652
+Product Code: TTAMGGBGJY2C2BNS
+Product Key: UCE4EABGJXYF
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 9.0.0 For: x86 running Linux (glibc 2.x) 32-bit
+Licence Type: UPGRADE
+Users/Devs: 2
+Serial: 88446
+Product Code: MASSSS24JQEGUKSC
+Product Key: N77BUY24JPSN
+End User : Neomedia Technologies
+
+----------------------------------------------------------------------------
+8.1.2
 ----------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 8.1.2 For: HP Itanium running HP-UX 11.23i v2 32-bit
+Licence Type: UPDATE
+Users/Devs: 25
+Serial: 378283
+Product Code: 3WNJFSEBPUBJGRLP
+Product Key: 7EGKHYEBPZCT
+End User : Cayenta Canada Corp.
+
+--------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------
+8.1.0
+----------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------------------------------------------
 Product Detail: ACUCOBOL-GT Dev Sys Version: 8.1.0 For: x86 running Win NT, 9x, 2000, XP, Server 2003 32-Bit

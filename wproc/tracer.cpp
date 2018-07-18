@@ -34,6 +34,9 @@
 #include "wangfile.hpp"
 
 #include "envs.h"
+#ifdef WIN32
+#define putenv(var)			_putenv(var)
+#endif
 
 Boolean continue_requested = false;
 
@@ -762,6 +765,9 @@ char *tracer::symbol_data(symbol &a_symbol, int array_index) {
 /*
 **	History:
 **	$Log: tracer.cpp,v $
+**	Revision 1.14  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.13  2010/02/10 03:55:04  gsl
 **	fix unrreachable code warning
 **	
@@ -797,6 +803,9 @@ char *tracer::symbol_data(symbol &a_symbol, int array_index) {
 //
 //	History:
 //	$Log: tracer.cpp,v $
+//	Revision 1.14  2011/10/29 20:09:14  gsl
+//	Fix ISO routine name warnins on WIN32
+//	
 //	Revision 1.13  2010/02/10 03:55:04  gsl
 //	fix unrreachable code warning
 //	

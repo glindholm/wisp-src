@@ -141,7 +141,7 @@
 83514   %%WIN32PRT-E-FORMS form %d bad syntax near position %d
 83516   %%WIN32PRT-E-SYS System error: %s
 85002	%%WSCREEN-F-SCRVERSION Screen version mismatch %d [Current=%d]
-85004	%%WSCREEN-F-LEVELNOTFND Expecting [L] found [%5.5s...]
+85004	%%WSCREEN-F-LEVELNOTFND Expecting [L] found [%5.5s...] at offset [%u]
 85006	%%WSCREEN-F-BADCONTROL Invalid control characters found [%5.5s...]
 85008	%%WSCREEN-F-BADPIC Expecting [P{...}] found [%9.9s...]
 85010	%%WSCREEN-F-MAXITEMS Too many screen items %d MAX=%d

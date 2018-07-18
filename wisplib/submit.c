@@ -88,6 +88,10 @@
 #include "runtype.h"
 #include "wispnt.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 /*
 **	Structures and Defines
 */
@@ -1324,6 +1328,9 @@ const char* WL_submit_err(int error)
 /*
 **	History:
 **	$Log: submit.c,v $
+**	Revision 1.65  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.64  2009/10/18 20:26:29  gsl
 **	Remove obsolete win32std.h
 **	

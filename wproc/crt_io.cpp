@@ -49,6 +49,12 @@ extern "C" {
 #include "costar.h"
 }
 
+#ifdef WIN32
+#define isatty(file) _isatty(file)
+#define fileno(file) _fileno(file)
+#endif
+
+
 #if DOS || DOS_HOST
 // Spontaneous Assembly routines
 extern "C" void console_init(void);
@@ -1129,6 +1135,9 @@ Boolean w4w_handler::w4w()
 //
 //	History:
 //	$Log: crt_io.cpp,v $
+//	Revision 1.27  2011/10/29 20:09:14  gsl
+//	Fix ISO routine name warnins on WIN32
+//	
 //	Revision 1.26  2003/06/20 15:37:44  gsl
 //	VL_ globals
 //	

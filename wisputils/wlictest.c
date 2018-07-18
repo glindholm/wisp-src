@@ -82,6 +82,10 @@
 #include "machid.h"
 #include "wispcfg.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 static int get_license_info(char* flickey, char* valcode);
 
 static void print_ckvalcode(char lickey[LICENSE_KEY_SIZE], char* machineid, char valcode[3])
@@ -505,6 +509,9 @@ int main(int argc, char *argv[])
 /*
 **	History:
 **	$Log: wlictest.c,v $
+**	Revision 1.15  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.14  2010/01/22 23:03:12  gsl
 **	Fix printf %lu size_t warnings
 **	

@@ -1,5 +1,4 @@
-	Copyright (c) 2002-2007 by NeoMedia Technologies Inc. All Rights Reserved.
-	
+	Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 	====================================================================
 	
 	Title:		PORTING WISP TO WIN32
@@ -7,7 +6,7 @@
 	Document:	portwin32.txt
 	Last Updated:	$Date:$
 	Products:	WISP/WIN32 EDE KCSI
-	Versions:	5.0.00 and later
+	Versions:	5.1.00 and later
 	
 	Summary:	Instructions on re-porting WISP to WIN32
 
@@ -25,6 +24,7 @@
 	-----------------------------
 
 	Check out wisp/src from CVS. 
+	CVSROOT=:pserver:gsl@devel.shellstream.net:/cvsdata/CVSROOT
 
             $ cd wisp
             $ cvs co -P -d src wisp/src
@@ -39,25 +39,58 @@
 	Edit makefiles and set the ACUDIR and COBOL value to
 	point to the location of Acucobol directory. 
 
-	[_] Set the enviroment variable ACUDIR=C:\acucorp\acucbl722\acugt
+	[_] Set the enviroment variable ACUDIR=C:\data\acucorp\acucbl910\acugt
 
 	or set ACUDIR in each of theses makefiles
 
+	[_] src\acu\wacu.mak
 	[_] src\kcsi\kcsicob.mak
 	[_] src\test\sampleacu.mak
 	[_] src\wisptran\wisptran_test.mak
+	[_] src\wisputils\disprint.mak
 
 	Build the Project
 	-----------------
-	Run the MSVS.NET 2003 using the wisp project solution
+	Run the MSVS 2005 using the wisp project solution
 	file "wisp\src\wisp.sln" . 
 
+	[_] Clean "SHIPKIT - Release" 
 
 	[_] Build "SHIPKIT - Release" 
 
-	[_] Build "TESTACU - Release"
+	[_] Rebuild "TESTACU - Release"
 
-	[_] Build Acucobol 722 KCSI runtime - see build_kcsi_acu72_rts.txt
+	[_] Build the Acucobol runtimes
+		   
+	   [_]	Build "acu91_prep_qa"
+	   
+	   [_]  Open folder src\acu\acu91\acu91_prep_qa and build each of 
+		the Acucobol runtimes 
+		
+		WISP only runtimes:
+		
+		[_] lib_acu91_wisp\wrun32.sln
+
+		[_] lib_acu91_wisp\run32.sln
+
+		[_] lib_acu91_wisp\crun32.sln
+		
+		WISP + KCSI runtimes:
+		
+		[_] lib_acu91_kcsi\wrun32.sln
+
+		[_] lib_acu91_kcsi\run32.sln
+
+		[_] lib_acu91_kcsi\crun32.sln
+		
+		WISP + EDE runtimes:
+		
+		[_] lib_acu91_ede\wrun32.sln
+
+		[_] lib_acu91_ede\run32.sln
+
+		[_] lib_acu91_ede\crun32.sln
+
 
 
 	The WISP Shipping Kits
@@ -69,26 +102,45 @@
 		wisp\src\kit\ede	The EDE kit
 		wisp\src\kit\kcsiacu	The KCSI/Acucobol kit
 
+	Detailed instructions for building Ship Kits
+	--------------------------------------------
+	
+	- Ensure Build SHIPKIT completes without error
+	- Check in any changes to source control
+	- Clean SHIPKIT
+	- Build SHIPKIT
+	- Remove the kits from C:\dev\wisp\src\kit
+	- CVS diff / revert acu changes
+	- Build SHIPKIT
+	- Rename src\kit\wisp to src\kit\wisp51xx
+	- Zip wisp51xx folder
 
-	Building InstallShield Disks
-	----------------------------
-
-	The InstallShield files are in "c:\dev\wisp\src\port".
-
-		wisp\src\port\wispXXXX.iwz
-		wisp\src\port\edeXXXX.iwz
-		wisp\src\port\kcsiXXXX.iwz
-
-	Double click on the ".iwz" file to start InstallShield.  Follow
-	the instructions to build diskettes.
-
-
+	
+	Save ACU QA Objects
+	-------------------
+	
+	- Clean TESTACU
+	- Build TESTACU
+	- mkdir acuqa.wisp5150.acu910
+	- copy *.acu tp acuqa.wispxxx.acuxxx (expect 72 items)
+	- zip folder
+	- check in to source control
+	
 	QA TEST WISP
 	------------
-
-	Install WISP in C:\WISPxxxx following the Quick Setup instructions.
 
 	Follow QAWISP.LIS instructions.
 
 	
+	CUT A WISP RELEASE
+	==================
+	
+	[ ]	See src\wispcommon\wcommon.h for WISPVER
+	[ ]	Build the Versions_xxxx.txt file:
+		cd src/port (ON UNIX)
+		versions.sh
+		cvs add -ko Versions_xxxx.txt
+		cvs commit Versions_xxxx.txt
+	[ ]	Tag the release in CVS
+
 	========================= END OF DOCUMENT ==========================

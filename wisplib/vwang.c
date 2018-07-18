@@ -536,6 +536,7 @@ int vwang(
 	}
 	
 	vwang_init_video();
+	vrawprint(0); /* Hack to force vrawinit() */
 	
 	if (use_custom_vwang())
 	{
@@ -6254,6 +6255,8 @@ void vwang_shut(void)
 {
 	if (!wbackground())
 	{
+		WL_wtrace("WVIDEO", "SHUT", "Shutting down screen handler");
+
 		costar_errtext("");
 
 		VL_vexit();
@@ -6312,6 +6315,7 @@ void vwang_pre_init(void)
 		This is called the first time into initwisp2() 
 		when not in background.
 	*/
+	WL_wtrace("WVIDEO", "PREPARE", "Prepare screen handler");
 	vwang_init_video();
 	VL_set_isdebug();
 }
@@ -6381,6 +6385,13 @@ void vwang_init_video(void)
 	
 	if (first)
 	{
+		WL_wtrace("WVIDEO", "PREP", "Prepare screen handler");
+
+		if(WL_wtracing())
+		{
+			VL_trace_enable();
+		}
+
 		VL_vre_set_logfile(WL_werrpath());	/* Set video to log errors to the wisperr.log file */
 		
 		if (!wbackground())
@@ -6682,8 +6693,6 @@ const char* vwang_title(const char *the_title)
 
 	if (NULL != the_title)
 	{
-		WL_wtrace("WTITLE","SET","Title=[%s]", the_title);
-
 		if (NULL != last_title)
 		{
 			free(last_title);
@@ -6695,10 +6704,12 @@ const char* vwang_title(const char *the_title)
 		{
 			if (use_costar())
 			{
+				WL_wtrace("WTITLE","SET","CoStar Title=[%s]", the_title);
 				costar_title(last_title);
 			}
-			else
+			else if (!wisp_winsshd() && !wisptelnet())
 			{
+				WL_wtrace("WTITLE","SET","Console Title=[%s]", the_title);
 				VL_vtitle(last_title);
 			}
 		}
@@ -6906,6 +6917,7 @@ void vwang_ansi2wang(unsigned char *buff, int len)
 	
 	for(i=0; i<len; i++)
 	{
+/*  warning: comparison is always true due to limited range of data type */
 		buff[i] = (unsigned char) ANSI2WANG(buff[i]);
 	}
 }
@@ -6926,6 +6938,7 @@ void vwang_term2wang(unsigned char *buff, int len)
 	
 	for(i=0; i<len; i++)
 	{
+/*  warning: comparison is always true due to limited range of data type */
 		buff[i] = (unsigned char) TERM2WANG(buff[i]);
 	}
 }
@@ -7002,6 +7015,12 @@ static int mousenonmod(void)
 /*
 **	History:
 **	$Log: vwang.c,v $
+**	Revision 1.140  2011/10/20 01:02:47  gsl
+**	mark warnings
+**	
+**	Revision 1.139  2011/08/22 03:09:59  gsl
+**	Support for WinSSHd on Windows
+**	
 **	Revision 1.138  2010/01/11 04:27:12  gsl
 **	fix warnings: comparing fac_t < 255
 **	

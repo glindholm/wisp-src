@@ -1,5 +1,5 @@
 #
-#	Copyright (c) 1988-2005 NeoMedia Migrations, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC. All Rights Reserved. 
 #	$Id:$
 #
 #
@@ -24,7 +24,11 @@ WISPTRAN  = ..\bin\wisp.exe
 WISPLANG  = ACU
 WISPFLAGS = -V $(WISPLANG) -u FORCEGENWISPCPY
 
-#ACUDIR=C:\acucorp\acucbl610\acugt
+#ACUDIR=C:\data\Acucorp\ACUCBL722\ACUGT
+#ACUDIR=C:\data\Acucorp\ACUCBL810\ACUGT
+#ACUDIR=C:\data\Acucorp\ACUCBL900\ACUGT
+#ACUDIR=C:\data\Acucorp\ACUCBL910\ACUGT
+
 COBOL=$(ACUDIR)\bin\ccbl32.exe
 COBFLAGS = -Da4 -Gd -Za -Te 800
 

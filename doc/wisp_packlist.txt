@@ -6,7 +6,7 @@ Title:          WISP PACKING LIST
 Document:       wisp_packlist.lis
 Last Updated:   $Date:$
 Products:       WISP
-Versions:       5.1.00
+WISPVER:        5.1.10
 
 Summary:        Packing list for the WISP shipping kit.
 
@@ -33,6 +33,8 @@ acu/sub85_acu60.c
 acu/sub85_acu62.c
 acu/sub85_acu72.c
 acu/sub85_acu81.c
+acu/sub85_acu90.c
+acu/sub85_acu91.c
 acu/wisp_sub85_inc.c
 acu/wacu.umf
 acu/WACUDISPLAY.cob
@@ -53,6 +55,10 @@ acu/wruncbl.umf
 acu/xterm.a_termcap
 acu/acu81/Makefile_aix53sh_32.mak
 acu/acu81/Makefile_hpux1123sh_32.mak
+acu/acu90/Makefile_aix53_32sh.mak
+acu/acu90/Makefile_hpux1123_ia_32sh.mak
+acu/acu91/Makefile_aix53_32sh.mak
+acu/acu91/Makefile_hpux1123_ia_32sh.mak
 bin
 bin/bldmf
 bin/display
@@ -227,6 +233,23 @@ acu\acu81\sub85.c
 acu\acu81\wisp.rc
 acu\acu81\wrundll.rc
 acu\acu81\wrundll.vcproj
+acu\acu90
+acu\acu90\build_wisp_acu90_atm_rts.txt
+acu\acu90\build_wisp_acu90_rts.txt
+acu\acu90\build_wisp_acu90_con_rts.txt
+acu\acu90\run32.vcproj
+acu\acu90\sub85.c
+acu\acu90\wisp.rc
+acu\acu90\wrundll.vcproj
+acu\acu91
+acu\acu91\build_wisp_acu91_atm_rts.txt
+acu\acu91\build_wisp_acu91_rts.txt
+acu\acu91\build_wisp_acu91_con_rts.txt
+acu\acu91\crun32.vcxproj
+acu\acu91\run32.vcxproj
+acu\acu91\sub85.c
+acu\acu91\wisp.rc
+acu\acu91\wrundll.vcxproj
 bin
 bin\display.exe
 bin\hexed.exe

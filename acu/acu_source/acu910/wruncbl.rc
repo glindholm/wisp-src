@@ -1,0 +1,9 @@
+WRunIcon1Simple		ICON		ACUCOBOL.ICO
+WRunIcon1Complex	ICON		ACUCOBOL2.ICO
+WRunIcon3DebugSimple	ICON		ACUDEBUG.ICO
+WRunIcon4DebugComplex	ICON		ACUDEBUG2.ICO
+AcuScrollArrows		BITMAP		ARROWS.BMP
+AcuDebugTools		BITMAP		ACUDBG.BMP
+AcuHelpCursor		CURSOR		HELP.CUR
+AcuGoCursor		CURSOR		GO.CUR
+AcuDividerCursor	CURSOR		DIVIDER.CUR

@@ -58,13 +58,17 @@ int VL_vmaskc(int cset);								/* Mask all but character set bits.	*/
 int VL_vmaskm(int mode);								/* Mask all but rendition bits.		*/
 void VL_varb(int row, int col, int rows, int cols);					/* Invalidate map section.		*/
 void VL_vtitle(const char *titlestr);
-
+void VL_trace_enable();
+void VL_trace(char* text, ...);
 
 #endif /* vutil_H */
 
 /*
 **	History:
 **	$Log: vutil.h,v $
+**	Revision 1.7  2011/08/22 03:10:00  gsl
+**	Support for WinSSHd on Windows
+**	
 **	Revision 1.6  2003/01/31 19:25:55  gsl
 **	Fix copyright header
 **	

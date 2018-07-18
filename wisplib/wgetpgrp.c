@@ -78,7 +78,7 @@ int WL_wgetpgrp(void)
 			**	ensure that this routine is called very early
 			**	in every process so gid gets set.
 			*/
-			gid = getpid();
+			gid = _getpid();
 			{
 				/*
 				**	Now that we have picked a gid - set it
@@ -105,6 +105,9 @@ int WL_wgetpgrp(void)
 /*
 **	History:
 **	$Log: wgetpgrp.c,v $
+**	Revision 1.19  2011/09/04 21:12:53  gsl
+**	fix win32 IOS C++ warnings
+**	
 **	Revision 1.18  2003/02/04 17:05:01  gsl
 **	Fix -Wall warnings
 **	

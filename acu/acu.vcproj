@@ -11,6 +11,9 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
@@ -38,9 +41,53 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="NMAKE /f wacu.mak WISPDIR=.. acu"
+				ReBuildCommandLine="NMAKE /f wacu.mak WISPDIR=.. acu /a"
+				CleanCommandLine=""
+				Output="acu.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
 			Name="Release|Win32"
 			OutputDirectory=".\Release\acu"
 			IntermediateDirectory=".\Release\acu"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="NMAKE /f wacu.mak WISPDIR=.. acu"
+				ReBuildCommandLine="NMAKE /f wacu.mak WISPDIR=.. clean acu"
+				CleanCommandLine="NMAKE /f wacu.mak WISPDIR=.. clean"
+				Output="ACU"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="0"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -89,6 +136,18 @@
 			</File>
 			<File
 				RelativePath="sub85_acu72.c"
+				>
+			</File>
+			<File
+				RelativePath=".\sub85_acu81.c"
+				>
+			</File>
+			<File
+				RelativePath=".\sub85_acu90.c"
+				>
+			</File>
+			<File
+				RelativePath=".\sub85_acu91.c"
 				>
 			</File>
 			<File
@@ -194,10 +253,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath="acu\acu.bsc"
-			>
-		</File>
 		<File
 			RelativePath="Acucobol6_notes.txt"
 			>

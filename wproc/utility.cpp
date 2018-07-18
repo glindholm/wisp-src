@@ -51,6 +51,10 @@
 #include "environ.hpp"
 #include "memory.hpp"
 
+#ifdef WIN32
+#define access(filename, mode)		_access(filename, mode)
+#endif
+
 
 #if DOS || DOS_HOST
 struct bytes_2 {
@@ -912,6 +916,9 @@ int parse_time(
 //
 //	History:
 //	$Log: utility.cpp,v $
+//	Revision 1.17  2011/10/29 20:09:14  gsl
+//	Fix ISO routine name warnins on WIN32
+//	
 //	Revision 1.16  2003/02/05 15:23:59  gsl
 //	Fix -Wall warnings
 //	

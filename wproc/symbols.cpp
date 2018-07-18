@@ -38,6 +38,10 @@
 #include "wang_os.hpp"
 #include "miscsubs.h"
 
+#ifdef WIN32
+#define access(filename, mode)		_access(filename, mode)
+#endif
+
 class builtin : public name_kind {
    public:
       builtin(
@@ -833,6 +837,9 @@ symbol *symbol_table::global_lookup(const char *a_name) {
 /*
 **	History:
 **	$Log: symbols.cpp,v $
+**	Revision 1.20  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.19  2003/02/11 19:12:44  gsl
 **	fix duplicate history
 **	

@@ -1,0 +1,86 @@
+Copyright (c) Shell Stream Software LLC
+All Rights Reserved.
+
+====================================================================
+
+Title:          Build WISP for Acucobol 9.1.x Runtime (WIN32)
+
+Document:       build_wisp_acu91_rts.txt
+Last Updated:   $Date:$
+Products:       WISP/WIN32
+Versions:       5.1.00
+
+Summary:        Instructions to build Acucobol 9.1.x runtime.
+
+====================================================================
+
+Required Software: 
+	Microsoft Visual Studio 2010
+	
+
+Follow these instructions carefully to build a custom Acucobol 
+runtime that includes the WISP runtime routines.  
+
+In these instructions these macros are used as follows:
+
+${ACUDIR}     - Acucobol-GT 9.1.x directory (C:\....\Micro Focus\acucbl91x\AcuGT)
+${ACUBLD}\lib - A copy of ${ACUDIR}\lib for performing the build (e.g. C:\data\acucbl91x\AcuGT\lib)
+${WISPDIR}    - WISP installation directory (C:\WISP5100)
+
+Acucobol 9.1.x requires that you rebuild the wrun32.dll file in order 
+to add C routines to the runtime.
+
+The build requires all of the files in the ${ACUDIR}\lib folder plus 
+additions. Newer versions of Windows may not allow you to modify files 
+that have been installed under folder "C:\Program Files\".  For these 
+reasons it is recommended that you install Acucobol in a custom location
+that is not under "C:\Program Files\" (or "C:\Program Files (x86)\").
+It is also highly recommended that you take a copy of ${ACUDIR}\lib 
+and perform the build in the copy folder. ${ACUBLD}\lib in the 
+instructions below refer to the copy of ${ACUDIR}\lib that will be used 
+for the build.
+
+
+1) Copy the following WISP files into the ${ACUBLD}\lib folder.
+
+    ${WISPDIR}\lib\wisp.lib
+    ${WISPDIR}\lib\video.lib
+    ${WISPDIR}\acu\wisp_sub85_inc.c
+    ${WISPDIR}\acu\wispicon.ico
+    ${WISPDIR}\acu\acu91\sub85.c
+    ${WISPDIR}\acu\acu91\wisp.rc
+    ${WISPDIR}\acu\acu91\wrundll.vcxproj
+    ${WISPDIR}\acu\acu91\wrun32.sln
+
+
+2)  Open the file ${ACUBLD}\lib\wrun32.sln in Microsoft Visual Studio/C++.  
+You should be able to simply double-click on ${ACUBLD}\lib\wrun32.sln.
+
+3) Select "Release" from the configuration manager, then from the Build 
+menu select "Rebuild Solution".  This will build wrun32.dll. 
+It should complete without errors (there may be warnings).
+
+4) In order to use the new runtime you will need to copy the new 
+${ACUBLD}\lib\wrun32.dll to ${ACUDIR}\bin\wrun32.dll and overwrite 
+the wrun32.dll that came with Acucobol.
+If you wish to preserve the original wrun32.dll then you will need 
+to rename it or copy it to a different location 
+
+You should notice that the new wrun32.dll is larger then the 
+original and has the current date.
+
+5) Edit ${WISPCONFIG}\wrun.cfg and change the path to the runtime.
+The path of the Acucobol runtime is ${ACUDIR}\bin\wrun32.exe.
+
+   RUNCBL=C:\....\Micro Focus\acucbl91x\AcuGT\bin\wrun32.exe
+   or 
+   RUNCBL=\\SERVER\ACUDIR\bin\wrun32.exe
+
+The file wrun32.exe is supplied by Acucobol and it can not be 
+renamed.  If you wish to move it to a different location then 
+you will also need to move all of the .dll files in the 
+${ACUDIR}\bin folder (or set the PATH correctly). You will 
+also need to move the wrun32.alc license file.
+
+
+========================= END OF DOCUMENT ==========================

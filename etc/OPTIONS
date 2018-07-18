@@ -113,7 +113,14 @@
 #PQHOLDOPT   -M hold
 #PQREQOPT    -M re
 #PQDELETELOCAL
-
+#
+# Example 4) Using WPRINT64 on Windows Server 2008 64-bit
+# 
+#PQCMD C:\wisp\bin\wprint64.exe -v -c %COPIES% %CLASSOPT% -a "%FORMMAP%" "%FILE%"
+#PQCLASSOPT -p "%LPMAP%"
+#PQNOHOLD
+#PQDELETELOCAL
+#
 # The PQMANAGER option allows you to specify the command that gets 
 # run when the "Manage Print Queue" option is selected from the WISP 
 # Command Processor.

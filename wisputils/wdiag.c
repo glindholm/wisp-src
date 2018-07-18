@@ -86,6 +86,10 @@
 #include "wfiledis.h"
 #include "platsubs.h"
 
+#ifdef WIN32
+#define access(filename, mode)	_access(filename, mode)
+#endif
+
 #ifndef false
 #define false 0;
 #define true !false;
@@ -1723,6 +1727,9 @@ static void test_int_sizes(void)
 /*
 **	History:
 **	$Log: wdiag.c,v $
+**	Revision 1.62  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.61  2010/01/10 00:26:07  gsl
 **	remove unused local var
 **	
