@@ -14,7 +14,7 @@
 ******************************************************************************
 */
 
-static char rcsid[]="$Id:$"; /* USED BELOW */
+static char rcsid[]="$Id: ptmain.c,v 1.19 2010/01/10 16:04:27 gsl Exp $"; /* USED BELOW */
 
 /*
 **	File:		ptmain.c
