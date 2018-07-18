@@ -25,7 +25,7 @@
 
 /* CHANGE-COPYRIGHT-DATE */
 static char vsx_copyright[]="Copyright (c) Shell Stream Software LLC";
-static char vsx_rcsid[]="$Id:$";
+static char vsx_rcsid[]="$Id: vsx.c,v 1.133 2011/10/29 20:09:14 gsl Exp $";
 
 /*
 **	File:		vsx.c
@@ -612,7 +612,7 @@ int main(int argc, char **argv)
 	**
 	*/
         memset(vsx_version,0,sizeof(vsx_version));
-        p=strchr(vsx_rcsid,' '); /* "$Id:$" */
+        p=strchr(vsx_rcsid,' '); /* "$Id: vsx.c,v 1.133 2011/10/29 20:09:14 gsl Exp $" */
         p=strchr(++p,' ');
         e=strchr(++p,' ');
         

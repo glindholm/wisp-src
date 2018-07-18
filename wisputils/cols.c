@@ -54,8 +54,8 @@
  **
  **/
 
-#define RCSVERS "$Revision:$"
-#define RCSDATE "$Date:$"
+#define RCSVERS "$Revision: 1.8 $"
+#define RCSDATE "$Date: 2003/02/04 18:50:26 $"
 
 static char *vers=RCSVERS;
 static char *date=RCSDATE;
