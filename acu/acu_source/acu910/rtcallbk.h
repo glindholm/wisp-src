@@ -5,13 +5,13 @@
  *
  *RMFILT%INCLUDE include/copyrit1.h
  *
- *	Version = @(#) $Revision:$ $Date:$
+ *	Version = @(#) $Revision: 59884 $ $Date: 2011-01-11 19:33:21 +0000 (Tue, 11 Jan 2011) $
  *
  *RMFILT%IF ! RELEASE_BUILD
  *
- *  $Id:$
+ *  $Id: rtcallbk.h 59884 2011-01-11 19:33:21Z merge $
  *  $URL: svn://sd-dev/acu/tags/v9-1-0-build-0-rc-4/cobolgt/lib/rtcallbk.h $
- *  $Date:$
+ *  $Date: 2011-01-11 19:33:21 +0000 (Tue, 11 Jan 2011) $
  *
  *  Implementation File: <../runtime/rmcallbk.c>
  *

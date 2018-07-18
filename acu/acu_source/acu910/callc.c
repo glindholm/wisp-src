@@ -1,5 +1,5 @@
 /* callc - directly call a 'C' subroutine with many parameters.  */
-/*  $Id:$  */
+/*  $Id: callc.c 57907 2010-04-19 18:56:40Z gary $  */
 
 /* Copyright (c) 1992-2007 by Micro Focus */
 
@@ -33,7 +33,7 @@
 #undef	ACU_SOURCE_FILENAME
 #endif	/* ACU_SOURCE_FILENAME */
 #define	ACU_SOURCE_FILENAME	"lib/callc.c"
-const char what_lib_callc_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date:$$Rev: 57907 $";
+const char what_lib_callc_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date: 2010-04-19 19:56:40 +0100 (Mon, 19 Apr 2010) $$Rev: 57907 $";
 
 #include <stdio.h>
 #if	defined(_WINDOWS) || defined(_WIN64)

@@ -1,5 +1,5 @@
 /* filetbl - table of available file systems */
-/*  $Id:$  */
+/*  $Id: filetbl.c 58927 2010-08-16 13:00:45Z gforseth $  */
 
 /* Copyright notice: Copyright (c) 1991-2007, Acucorp, Inc. */
 
@@ -13,7 +13,7 @@
 #undef	ACU_SOURCE_FILENAME
 #endif	/* ACU_SOURCE_FILENAME */
 #define	ACU_SOURCE_FILENAME	"lib/filetbl.c"
-const char what_lib_filetbl_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date:$$Rev: 58927 $";
+const char what_lib_filetbl_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date: 2010-08-16 14:00:45 +0100 (Mon, 16 Aug 2010) $$Rev: 58927 $";
 
 #include <stdio.h>
 

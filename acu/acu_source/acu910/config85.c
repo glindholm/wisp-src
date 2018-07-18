@@ -34,7 +34,7 @@
 #undef	ACU_SOURCE_FILENAME
 #endif	/* ACU_SOURCE_FILENAME */
 #define	ACU_SOURCE_FILENAME	"lib/config85.c"
-const char what_lib_config85_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date:$$Rev: 59627 $";
+const char what_lib_config85_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date: 2010-11-16 19:25:05 +0000 (Tue, 16 Nov 2010) $$Rev: 59627 $";
 
 #ifndef	NO_DEBUGGER
 #define	NO_DEBUGGER	0

@@ -1,5 +1,5 @@
 /* filetbl - table of available file systems */
-/*  $Id:$  */
+/*  $Id: filetbl.c 45102 2006-01-12 19:46:07Z merge $  */
 
 /* Copyright notice: Copyright (c) 1991-2006, Acucorp, Inc. */
 

@@ -1,5 +1,5 @@
 /* filetbl - table of available file systems */
-/*  $Id:$  */
+/*  $Id: filetbl.c,v 1.34.2.9.4.1 2004/10/04 22:56:02 dovid Exp $  */
 
 /* Copyright notice: Copyright (c) 1991-2004, Acucorp, Inc. */
 

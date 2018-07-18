@@ -1,5 +1,5 @@
 /*  mswinsub.c - modifications to the windows runtime should go here  */
-/*  $Id:$  */
+/*  $Id: mswinsub.c 57329 2010-01-13 21:05:11Z rzack $  */
 
 /* Copyright (c) 1995-2007 by Acucorp, Inc.  All rights reserved.	*/
 /* Users of the ACUCOBOL-GT runtime may freely modify and distribute	*/
@@ -10,7 +10,7 @@
 #undef	ACU_SOURCE_FILENAME
 #endif	/* ACU_SOURCE_FILENAME */
 #define	ACU_SOURCE_FILENAME	"lib/mswinsub.c"
-const char what_lib_mswinsub_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date:$$Rev: 57329 $";
+const char what_lib_mswinsub_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date: 2010-01-13 21:05:11 +0000 (Wed, 13 Jan 2010) $$Rev: 57329 $";
 
 #include <stdio.h>
 #include <windows.h>

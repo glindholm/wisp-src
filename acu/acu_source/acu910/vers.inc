@@ -2,7 +2,7 @@
 #define	Junkcmt00200	"and install.rul, so make sure you do not put"
 #define	Junkcmt00300	"anything in it that might cause problems for these."
 
-#define	Junkcmt00400	"$Id:$"
+#define	Junkcmt00400	"$Id: vers.inc 61155 2011-08-29 07:18:20Z mark $"
 
 #define	Junkcmt00500	"See Randy for details"
 

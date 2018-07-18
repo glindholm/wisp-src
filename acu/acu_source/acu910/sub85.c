@@ -31,7 +31,7 @@
 #undef	ACU_SOURCE_FILENAME
 #endif	/* ACU_SOURCE_FILENAME */
 #define	ACU_SOURCE_FILENAME	"lib/sub85.c"
-const char what_lib_sub85_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date:$$Rev: 59403 $";
+const char what_lib_sub85_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date: 2010-10-18 20:02:12 +0100 (Mon, 18 Oct 2010) $$Rev: 59403 $";
 
 int call_system(char *, int, Argument [], int);
 void wstoasc(Argument *, char *);

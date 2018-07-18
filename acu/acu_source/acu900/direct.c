@@ -38,7 +38,7 @@
 #undef	ACU_SOURCE_FILENAME
 #endif	/* ACU_SOURCE_FILENAME */
 #define	ACU_SOURCE_FILENAME	"lib/direct.c"
-const char what_lib_direct_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date:$$Rev: 57329 $";
+const char what_lib_direct_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date: 2010-01-13 21:05:11 +0000 (Wed, 13 Jan 2010) $$Rev: 57329 $";
 
 struct	EXTRNTABLE EXTDATA[] = {
 	{ NULL,			NULL }

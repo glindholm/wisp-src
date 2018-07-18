@@ -1,5 +1,5 @@
 /*  rmcbdefs.h: RM/COBOL CodeBridge definitions  */
-/*  $Id:$  */
+/*  $Id: rmcbdefs.h 54898 2008-12-30 18:31:06Z merge $  */
 
 #ifndef ACU_LIB_RMCBDEFS_H
 #define ACU_LIB_RMCBDEFS_H
