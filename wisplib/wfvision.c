@@ -199,14 +199,71 @@ int WL_visioninfo( const char* path, const char* code, void* raw_field )
 
 	if ( f == -1 )
 	{
+		WL_wtrace("WFVISION", "OPEN", "Open failed errno=[%d] path=[%s]", errno, path);
 		return READFDR_RC_44_IO_ERROR;
 	}
 
 	header_len = read( f, header, sizeof(header));
 	if (header_len == -1)
 	{
+#ifdef unix
+		WL_wtrace("WFVISION", "READ", "Read failed errno=[%d] path=[%s]", errno, path);
 		close(f);
 		return READFDR_RC_44_IO_ERROR;
+#endif
+
+#ifdef WIN32
+		long pos;
+		WL_wtrace("WFVISION", "READ", "Read failed (maybe locked) errno=[%d] path=[%s]", errno, path);
+
+		/*
+		* If a Vision file is opened Shared then the 1st by is locked during any I/O operation.
+		* On Windows these locks are "Hard Locks"  and cause the read to fail with errno=13 (Permission denied).
+		*
+		* Skip over the 1st byte and start reading at byte 2.
+		* All Vision magic numbers start "\x10\x12" or "\x16\x14".
+		* If byte 2 is 0x12 then assume byte 1 is 0x10.
+		* If byte 2 is 0x14 then assume byte 1 is 0x16.
+		*/
+		pos = _lseek(f,1L,SEEK_SET);
+		if (pos == -1L)
+		{
+			WL_wtrace("WFVISION", "LSEEK", "Seek failed errno=[%d] path=[%s]", errno, path);
+			close(f);
+			return READFDR_RC_44_IO_ERROR;
+		}
+
+		header_len = _read( f, &header[1], sizeof(header)-1);
+		if (header_len == -1)
+		{
+			WL_wtrace("WFVISION", "READ2", "Read failed errno=[%d] path=[%s]", errno, path);
+			close(f);
+			return READFDR_RC_44_IO_ERROR;
+		}
+
+		/*
+		* Fix the header info so it looks like we read from byte 1.
+		*/
+		header_len += 1;
+		if (header[1] == 0x12)
+		{
+			header[0] = 0x10;
+		}
+		else if (header[1] == 0x14)
+		{
+			header[0] = 0x16;
+		}
+		else
+		{
+			/*
+			* Not sure what is going on but not a Vision file.
+			*/
+			WL_wtrace("WFVISION", "READ2", "Unexpected byte 2 value=[0x%X] path=[%s]", header[1], path);
+			close(f);
+			return READFDR_RC_68_UNKNOWN_FILE_FORMAT;
+		}
+
+#endif
 	}
 
 	close(f);
@@ -524,6 +581,10 @@ int WL_unloadvision(const char *inname, const char *outname)		/* Unload the ACUC
 /*
 **	History:
 **	$Log: wfvision.c,v $
+**	Revision 1.34  2012/07/09 02:38:46  gsl
+**	WISP 5.1.11
+**	Patch READFDR bug with Shared Vision files on Windows.
+**	
 **	Revision 1.33  2011/10/29 20:09:14  gsl
 **	Fix ISO routine name warnins on WIN32
 **	

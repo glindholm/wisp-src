@@ -190,7 +190,7 @@
 		C:\dev\WISP\src\test\QA			as QA
 		C:\dev\WISP\src\test\QA\wisp		as WISP
 		C:\DEV\WISP\SRC\TEST			as TESTACU (with write permission)
-		C:\Acucorp\Acucbl910\AcuGT		as ACUDIR
+		C:\data\Acucorp\Acucbl910\AcuGT		as ACUDIR
 		C:\DEV\WISP				as WISPDEV
 		C:\Users				as USERS   (with write permission)
 	
@@ -276,6 +276,9 @@
 
 ################  This page is for all platforms  ####################
 
+		Windows: Open explorer 
+		to \\Zoomstar\qa\wisp\bin\
+		or C:\dev\WISP\src\test\QA\wisp\bin
 
 +	SETUP DEFAULT USAGE CONSTANTS
 
@@ -847,10 +850,11 @@
 
 	___		(8) Run the autotests.
 			- You'll be asked to check the creation date of IDXFIX.
-			- ALTVAR8 may be "NOT FOUND"
+			- MF: ALTVAR8 may be "NOT FOUND"
 			- You will get error:
 				%READFDR-E-NOTSUP Field ID of XX is NOT SUPPORTED
 			- All the rest of the tests are automatic.
+				*** PASSED *** ALL 0123 TESTS
 			(16) EXIT Test
 
 	___	(2) FIND

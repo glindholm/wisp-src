@@ -2,6 +2,9 @@ FILE-STATUS-CODES	74
 CODE_PREFIX		. \\SERVER\WISP\ACU \\SERVER\RUNVOL\RUNLIB
 #V-VERSION 3
 
+# On Windows uncomment for improved performance
+#V_LOCK_METHOD 1
+
 #
 # Map the HELP key (^e = 5) to exception code 33
 # Map the pfkey prompt (^f = 6) to exception code 34 

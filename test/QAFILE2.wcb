@@ -2641,7 +2641,7 @@
 
 	       OPEN OUTPUT FILE-HUGE
 	       CLOSE FILE-HUGE
-	       OPEN I-O FILE-HUGE
+	       OPEN SHARED FILE-HUGE
 
 	       DISPLAY "This can take a VERY LONG time. (+2GB)"
 

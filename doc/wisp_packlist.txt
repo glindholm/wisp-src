@@ -270,6 +270,8 @@ bin\wrunt.exe
 bin\wshell.exe
 bin\wsort.exe
 bin\wusage.exe
+bin\Microsoft.VC80.CRT\*
+bin\Microsoft.VC80.MFC\*
 config
 config\ACUCONFIG
 config\CHARMAP
@@ -298,7 +300,6 @@ demo\qabckgrd.wcb
 demo\screen.wps
 demo\test.wps
 demo\video.wps
-etc
 etc\aqmwisp.txt
 etc\disprint.mak
 etc\DISPRINT.wcb
@@ -306,9 +307,11 @@ etc\SOFTLINK.wcb
 etc\WISPPLAT.wcb
 etc\wisp_packlist.txt
 etc\wisp_relnotes.txt
+etc\WISP_WinSSHD.pdf
 etc\wispntdoc.txt
 etc\words.def
 etc\wproc.txt
+etc\
 lib
 lib\video.lib
 lib\wisp.lib
