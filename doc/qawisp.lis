@@ -130,11 +130,7 @@
 
 	***	If COBOL complier is not available
 	
-		Extract compiled ACU files
-		$ uncompress acuqa*.tar.Z
-		$ tar -xvf acuqa*.tar
-		$ touch *.acu
-		$ make -f sampleacu.umf test_dirs prtargs
+		$ make -f sampleacu.umf setup
 
 
 	___	Build the SAMPLE programs.  
@@ -186,22 +182,38 @@
 
 	___	Port WISP to this machine following the steps outlined in
 		the document "portwin32.txt".
+	
+	___	Build "Install_QA" to install in \src\test\QA
+
+	___	Share these directories: (Properties -> Sharing -> Advanced)
+	
+		C:\dev\WISP\src\test\QA			as QA
+		C:\dev\WISP\src\test\QA\wisp		as WISP
+		C:\DEV\WISP\SRC\TEST			as TESTACU (with write permission)
+		C:\Acucorp\Acucbl910\AcuGT		as ACUDIR
+		C:\DEV\WISP				as WISPDEV
+		C:\Users				as USERS   (with write permission)
+	
+	___	"Install" the Acucobol runtime(s)
+	
+		WISP + KCSI runtime(s)
+		
+		Regular runtime
+		___ Copy \src\acu\acu91\acu91_prep_qa\acu_lib_kcsi\wrun32.dll
+		    to \\SERVER\ACUDIR\bin
+
+		Console runtime
+		___ Copy \src\acu\acu91\acu91_prep_qa\acu_lib_kcsi\crun32.exe
+		    to \\SERVER\ACUDIR\bin
+		___ Copy ACU license file:
+			- C:\ProgramData\Micro Focus\extend\9.1.0\x86
+			- cp wrun32.3lc to crun32.3lc
+		
+		
+	-- OR --
 
 	___	Install WISP, build the RTS, and license the machine.
 
-		This is done following the "WISP Quick Setup" and then
-		WISP manual Appendix A.
-
-		___  Install WISP
-		___  Install EDE
-		___  Install KCSI
-
-		___  Build a COBOL Runtime system with WISP
-		___  Build a COBOL Runtime system with WISP & EDE
-		___  Build a COBOL Runtime system with WISP & KCSI
-
-		___  Share C:\WISPxxxx as share name "WISP"
-		___  Share C:\KCSIACUxxxx as share name "KCSI"
 
 		___  Run WCONFIG.EXE
 		     ___  (RESET) if already configured
@@ -209,87 +221,58 @@
 		     ___  Accept defaults...
 
 		___  Run WLICENSE.EXE
+		--OR--
+		___  Copy \src\test\wisp.license.zoomstar.txt \src\QA\wisp\wisp.license
 
 +	SETUP ${WISPCONFIG} DIRECTORY
 
-	___	Share these directories: 
-		C:\DEV\WISP\SRC\TEST			as TESTACU
-		C:\DEV\WISP				as WISPDEV
-		C:\Acucorp\Acucbl810\AcuGT		as ACUDIR
-
-	___   	Edit ...\TESTACU\SAMPLEACU.MAK
-
-		___ Set WISPDIR=C:\WISPxxxx
-		___ Set COBOL=C:\Acucorp\Acucbl810\Acugt\BIN\CCBL32.EXE
-
 	Copy the config files.
-	___	Run CONFIGACU.BAT
-		 (nmake -f sampleacu.mak wispconfigsetup testdirs)
+	___	Copy \test\config_nt to \test\config 
+	___	Remove CVS files from \test\config
+	
+	Configure which Acucobol runtime to use
+	___	Edit \src\test\config\wrun.cfg and uncomment correct runtime:
+		
+			#runcbl=\\ZOOMSTAR\ACUDIR\BIN\wrun32.exe
+			#runcbl=\\ZOOMSTAR\ACUDIR\BIN\run32.exe
+			#runcbl=\\ZOOMSTAR\ACUDIR\BIN\crun32.exe
 
-	___	LGMAP:	Edit it to ensure it is correct.
+	For Testing Console Runtime:
+	___	Edit config\OPTIONS: 
+			- Comment out #UTILSWINDOWS
+			- Uncomment CONSOLEACU
 
-	___	LPMAP:	Edit it to ensure it is correct
-
-	___	OPTIONS: 
-		___ Set VUTIL=\\SERVER\ACUDIR\BIN\VUTIL32.EXE
-		___ Set COSTARV2
-
-	___	ACUCONFIG: Edit CONFIG\ACUCONFIG and add the TESTACU share
-		name to the CODE_PREFIX.
-
-		    CODE_PREFIX . \\SERVER\TESTACU 
-				  \\SERVER\WISP\ACU
-				  \\SERVER\KCSI
-
-	___	WRUN.CFG: Edit CONFIG\WRUN.CFG and correct the locations
-		of ACUCONFIG and WRUN32.EXE (KCSI Version).
-
-		    option=-b +e \\SERVER\TESTACU\acuerr.log -c \\SERVER\TESTACU\CONFIG\ACUCONFIG
-		    runcbl=\\SERVER\ACUDIR\BIN\WRUN32.EXE
-
-	___	WSYSCONF.CFG: Edit CONFIG\WSYSCONF.CFG and add the machine
-		name as workstation 100.
-
-		    100  ws   WINDOWS  ZOOMSTAR
-
-	___	Run WCONFIG 
+	___     Run \src\test\setupqa.bat to setup environment variables
+		
+		-- OR --
+	
+		Run WCONFIG \\SERVER\QA\WISP\bin\wconfig.exe (RUN AS ADMINSTRATOR)
+		
+			Import test\config\testacu_zoomstar.reg
+		
+			-- OR --
+			
+		SERVER	  = \\ZOOMSTAR
+		WISP Dir  = \\ZOOMSTAR\QA\WISP
 		- GENERAL (TAB)
-		WISPCONFIG =\\SERVER\TESTACU\CONFIG 
-		PATH = \\SERVER\WISP\BIN;
-		       \\SERVER\WISP\ACU;
-		       \\SERVER\TESTACU;
-		       \\SERVER\TESTACU\VOLRUN\ONPATH;
-		       \\SERVER\KCSI;
-		       C:\WIN
+		WISPCONFIG =\\ZOOMSTAR\TESTACU\CONFIG 
+		PATH = \\ZOOMSTAR\QA\WISP\BIN;
+		       \\ZOOMSTAR\QA\WISP\ACU;
+		       \\ZOOMSTAR\TESTACU;
+		       \\ZOOMSTAR\TESTACU\VOLRUN\ONPATH;
+		       \\ZOOMSTAR\QA\KCSIACU;
+		       C:\Windows;
+
+		PATH = \\ZOOMSTAR\QA\WISP\bin;\\ZOOMSTAR\QA\WISP\ACU;\\ZOOMSTAR\TESTACU;\\ZOOMSTAR\TESTACU\VOLRUN\ONPATH;\\ZOOMSTAR\QA\KCSIACU;
 
 		- MESSAGE (TAB)
-		SHAREDIR = \\SERVER\TESTACU\MESSAGE
+		SHAREDIR = \\ZOOMSTAR\TESTACU\MESSAGE
 
 	___	Test configuration:
 
-		C:\WISPxxx\BIN> wdiag.bat
+		C:\dev\WISP\src\test\QA\wisp\bin\wdiag.bat
 
-
-+	BUILD SAMPLE
-
-	___	Build the SAMPLE programs.
-
-		SAMPLEACU.BAT
-		  (nmake /f sampleacu.mak)
-
-	___	Build DISPRINT.
-
-		___ Edit \\SERVER\WISP\ETC\DISPRINT.MAK
-
-		    ___ SET WISPTRAN=..\BIN\WISP.EXE
-		    ___ SET CCBL=\\SERVER\ACUDIR\BIN\CCBL32.EXE
-
-		___ Run NMAKE to build DISPRINT.acu
-		    C:...\ETC> nmake /f disprint.mak acu
-
-		___ Copy DISPRINT.acu to ..\ACU
-		    COPY DISPRINT.acu ..\ACU
-
+	
 
 ################  This page is for all platforms  ####################
 
@@ -301,7 +284,9 @@
 		Setup USAGE CONSTANTS
 	___	(1) RUN Program or Procedure
 			PROGRAM = QA0000
-			LIBRARY = TESTxxx	(ACU/MF)
+			LIBRARY = TEST		(WIN - ACU)
+			LIBRARY = TESTACU	(ACU)
+			LIBRARY = TESTMF	(MF)
 			VOLUME  = SOURCE
 
 		Setup test programs
@@ -324,6 +309,7 @@
 +	First check-out general functionality.
 
 	___     Run "wshell"
+		WIN:	(1) Run QASTART in TEST    on SOURCE
 		ACU:	(1) Run QASTART in TESTACU on SOURCE
 		MF:	(1) Run QASTART in TESTMF  on SOURCE
 
@@ -387,6 +373,8 @@
 	WIN32:
 	___	Create a Shortcut on the desktop using Command line:
 		   "C:\WISPxxx\BIN\WPROC \\SERVER\TESTACU\QASTART"
+		   
+		[ ] startqa.bat
 
 	___	Double click on icon to start.
 		
@@ -851,6 +839,7 @@
 		
 			*** PREREQUISITE ***
 			***(3) FILE I/O TESTS
+			***  (1)  CREATE FILE-A
 			***  (32) FILE 2 TESTS
 			***    (14) Create EMPTY Files
 			***    (15) Create LIBSAM Files
@@ -950,6 +939,7 @@
 		Link to a non-WISP program.
 +	___	UNIX:   VI			TYPE=S	(:q!) Exit vi
 		WIN32:  NOTEPAD
+		WIN32:  prtargs
 
 		Link to a shell/batch
 +	___	UNIX:  PRTARGSH		TYPE=(blank)
@@ -1094,8 +1084,9 @@
 		___	COBLINK to TRIGGER3 (16) (Type="S" on the PATH)
 
 
-+	___	(17) LOGOFF		This should really logoff.	
-
++	___	(17) LOGOFF		
+			UNIX: This should really logoff.	
+			WIN32: Terminate current process chain
 
 	___	Log back on and resetup you environment.
 

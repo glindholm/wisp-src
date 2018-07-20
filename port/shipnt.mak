@@ -33,6 +33,8 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\bin\wshell.exe	\
 		$(WISPKIT)\bin\wsort.exe	\
 		$(WISPKIT)\bin\wusage.exe	\
+		$(WISPKIT)\bin\Microsoft.VC80.CRT	\
+		$(WISPKIT)\bin\Microsoft.VC80.MFC	\
 		$(WISPKIT)\lib\video.lib	\
 		$(WISPKIT)\lib\wisp.lib		\
 		$(WISPKIT)\etc\words.def	\
@@ -45,6 +47,7 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\etc\wisp_relnotes.txt	\
 		$(WISPKIT)\etc\aqmwisp.txt	\
 		$(WISPKIT)\etc\wispntdoc.txt	\
+		$(WISPKIT)\etc\WISP_WinSSHD.pdf	\
 		$(WISPKIT)\config\ACUCONFIG	\
 		$(WISPKIT)\config\CHARMAP	\
 		$(WISPKIT)\config\CQMAP		\
@@ -60,6 +63,7 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\config\videocap\wincon.vcap 	\
 		$(WISPKIT)\config\videocap\xterm.vcap 	\
 		$(WISPKIT)\config\videocap\ansi.vcap 	\
+		$(WISPKIT)\config\videocap\winsshd.vcap 	\
 		$(WISPKIT)\acu\ACULINK.wcb	\
 		$(WISPKIT)\acu\ACULINK.acu		\
 		$(WISPKIT)\acu\ACUUSING.cob	\
@@ -117,6 +121,25 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\acu\acu81\wisp.rc			\
 		$(WISPKIT)\acu\acu81\wrundll.rc		\
 		$(WISPKIT)\acu\acu81\wrundll.vcproj		\
+		$(WISPKIT)\acu\acu90\build_wisp_acu90_rts.txt	\
+		$(WISPKIT)\acu\acu90\build_wisp_acu90_atm_rts.txt	\
+		$(WISPKIT)\acu\acu90\build_wisp_acu90_con_rts.txt	\
+		$(WISPKIT)\acu\acu90\run32.vcproj		\
+		$(WISPKIT)\acu\acu90\crun32.vcproj		\
+		$(WISPKIT)\acu\acu90\sub85.c			\
+		$(WISPKIT)\acu\acu90\wisp.rc			\
+		$(WISPKIT)\acu\acu90\wrundll.vcproj		\
+		$(WISPKIT)\acu\acu91\build_wisp_acu91_rts.txt	\
+		$(WISPKIT)\acu\acu91\build_wisp_acu91_atm_rts.txt	\
+		$(WISPKIT)\acu\acu91\build_wisp_acu91_con_rts.txt	\
+		$(WISPKIT)\acu\acu91\run32.sln			\
+		$(WISPKIT)\acu\acu91\run32.vcxproj		\
+		$(WISPKIT)\acu\acu91\crun32.sln			\
+		$(WISPKIT)\acu\acu91\crun32.vcxproj		\
+		$(WISPKIT)\acu\acu91\sub85.c			\
+		$(WISPKIT)\acu\acu91\wisp.rc			\
+		$(WISPKIT)\acu\acu91\wrun32.sln			\
+		$(WISPKIT)\acu\acu91\wrundll.vcxproj		\
 		$(WISPKIT)\demo\cursor.wps	\
 		$(WISPKIT)\demo\demo.wps	\
 		$(WISPKIT)\demo\dr.wps		\
@@ -132,12 +155,6 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 ede_dist_list=	$(EDEKIT)\good.exe		\
 		$(EDEKIT)\ede.lib		\
 		$(EDEKIT)\edentsetup.txt	\
-		$(EDEKIT)\wrun32wisp_ede_acu50.mak	\
-		$(EDEKIT)\wrun32wisp_ede_acu51.mak	\
-		$(EDEKIT)\wrun32wisp_ede_acu52.mak	\
-		$(EDEKIT)\wrundll_ede_acu60.mak		\
-		$(EDEKIT)\wrundll_ede_acu60.dsp		\
-		$(EDEKIT)\build_ede_acu60_rts.txt	\
 		$(EDEKIT)\demo\helpmap.dat	\
 		$(EDEKIT)\demo\mcbbld.wcb	\
 		$(EDEKIT)\demo\mcbcpy1.wcb	\
@@ -163,7 +180,36 @@ ede_dist_list=	$(EDEKIT)\good.exe		\
 		$(EDEKIT)\demo\mcbvalue.hlp	\
 		$(EDEKIT)\demo\mcbwidth.hlp	\
 		$(EDEKIT)\demo\menudemo.opt	\
-		$(EDEKIT)\demo\menudemo.mak
+		$(EDEKIT)\demo\menudemo.mak	\
+		$(EDEKIT)\acu5\wrun32wisp_ede_acu50.mak	\
+		$(EDEKIT)\acu5\wrun32wisp_ede_acu51.mak	\
+		$(EDEKIT)\acu5\wrun32wisp_ede_acu52.mak	\
+		$(EDEKIT)\acu60\wrundll_ede_acu60.mak		\
+		$(EDEKIT)\acu60\wrundll_ede_acu60.dsp		\
+		$(EDEKIT)\acu60\build_ede_acu60_rts.txt	\
+		$(EDEKIT)\acu62\build_ede_acu62_rts.txt	\
+		$(EDEKIT)\acu62\sub.c		\
+		$(EDEKIT)\acu62\wrundll.vcproj	\
+		$(EDEKIT)\acu72\build_ede_acu72_rts.txt	\
+		$(EDEKIT)\acu72\sub.c		\
+		$(EDEKIT)\acu72\wrundll.vcproj	\
+		$(EDEKIT)\acu90\build_ede_acu90_rts.txt		\
+		$(EDEKIT)\acu90\build_ede_acu90_atm_rts.txt		\
+		$(EDEKIT)\acu90\build_ede_acu90_con_rts.txt		\
+		$(EDEKIT)\acu90\sub.c		\
+		$(EDEKIT)\acu90\wrundll.vcproj	\
+		$(EDEKIT)\acu90\run32.vcproj	\
+		$(EDEKIT)\acu90\crun32.vcproj	\
+		$(EDEKIT)\acu91\build_ede_acu91_rts.txt		\
+		$(EDEKIT)\acu91\build_ede_acu91_atm_rts.txt		\
+		$(EDEKIT)\acu91\build_ede_acu91_con_rts.txt		\
+		$(EDEKIT)\acu91\sub.c		\
+		$(EDEKIT)\acu91\wrun32.sln	\
+		$(EDEKIT)\acu91\wrundll.vcxproj	\
+		$(EDEKIT)\acu91\run32.sln	\
+		$(EDEKIT)\acu91\run32.vcxproj	\
+		$(EDEKIT)\acu91\crun32.sln	\
+		$(EDEKIT)\acu91\crun32.vcxproj	\
 
 kcsiacu_dist_list= \
 		$(KCSIACUKIT)\CONTROL		\
@@ -175,16 +221,28 @@ kcsiacu_dist_list= \
 		$(KCSIACUKIT)\kcsi_sub85_inc.c	\
 		$(KCSIACUKIT)\ctlcnvrt.wcb	\
 		$(KCSIACUKIT)\rptcnvrt.wcb	\
-		$(KCSIACUKIT)\wrun32wisp_kcsi_acu50.mak	\
-		$(KCSIACUKIT)\wrun32wisp_kcsi_acu51.mak	\
-		$(KCSIACUKIT)\wrun32wisp_kcsi_acu52.mak	\
-		$(KCSIACUKIT)\build_kcsi_acu60_rts.txt	\
-		$(KCSIACUKIT)\wrundll_kcsi_acu60.mak	\
-		$(KCSIACUKIT)\wrundll_kcsi_acu60.dsp	\
-		$(KCSIACUKIT)\build_kcsi_acu62_rts.txt	\
+		$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu50.mak	\
+		$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu51.mak	\
+		$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu52.mak	\
+		$(KCSIACUKIT)\acu60\build_kcsi_acu60_rts.txt	\
+		$(KCSIACUKIT)\acu60\wrundll_kcsi_acu60.mak	\
+		$(KCSIACUKIT)\acu60\wrundll_kcsi_acu60.dsp	\
+		$(KCSIACUKIT)\acu62\build_kcsi_acu62_rts.txt	\
 		$(KCSIACUKIT)\acu62\wrundll.vcproj	\
-		$(KCSIACUKIT)\build_kcsi_acu72_rts.txt	\
+		$(KCSIACUKIT)\acu72\build_kcsi_acu72_rts.txt	\
 		$(KCSIACUKIT)\acu72\wrundll.vcproj	\
+		$(KCSIACUKIT)\acu90\build_kcsi_acu90_rts.txt	\
+		$(KCSIACUKIT)\acu90\build_kcsi_acu90_con_rts.txt	\
+		$(KCSIACUKIT)\acu90\wrundll.vcproj	\
+		$(KCSIACUKIT)\acu90\crun32.vcproj	\
+		$(KCSIACUKIT)\acu91\build_kcsi_acu91_rts.txt	\
+		$(KCSIACUKIT)\acu91\build_kcsi_acu91_con_rts.txt	\
+		$(KCSIACUKIT)\acu91\wrun32.sln	\
+		$(KCSIACUKIT)\acu91\wrundll.vcxproj	\
+		$(KCSIACUKIT)\acu91\crun32.sln	\
+		$(KCSIACUKIT)\acu91\crun32.vcxproj	\
+		$(KCSIACUKIT)\acu91\run32.sln	\
+		$(KCSIACUKIT)\acu91\run32.vcxproj	\
 		$(KCSIACUKIT)\kcsi_relnotes.txt	\
 		$(KCSIACUKIT)\kcsi_packlist.txt	\
 		$(KCSIACUKIT)\kcsintsetup.txt	
@@ -196,14 +254,23 @@ kcsiacu_dist_list= \
 #
 default: 	wispshipkit edeshipkit kcsiacushipkit
 
-clean:
-	-rmdir /q /s $(KITDIR)
+clean: clean_wisp clean_ede clean_kcsi
 
-wispshipkit:	header wispkitdirs configdirs $(wisp_dist_list)
+clean_wisp:
+	-rmdir /q /s $(WISPKIT)
 
-edeshipkit:	header edekitdirs $(ede_dist_list)
+clean_ede:
+	-rmdir /q /s $(EDEKIT)
 
-kcsiacushipkit:	header kcsiacukitdirs $(kcsiacu_dist_list)
+clean_kcsi:
+	-rmdir /q /s $(KCSIACUKIT)
+
+
+wispshipkit:	header clean_wisp wispkitdirs configdirs $(wisp_dist_list)
+
+edeshipkit:	header clean_ede edekitdirs $(ede_dist_list)
+
+kcsiacushipkit:	header clean_kcsi kcsiacukitdirs $(kcsiacu_dist_list)
 
 rtsshipkit:	rtskitdirs $(rts_dist_list)
 
@@ -233,6 +300,8 @@ wispkit_dir_list= \
 	$(WISPKIT)\acu\acu62		\
 	$(WISPKIT)\acu\acu72		\
 	$(WISPKIT)\acu\acu81		\
+	$(WISPKIT)\acu\acu90		\
+	$(WISPKIT)\acu\acu91		\
 	$(WISPKIT)\bin			\
 	$(WISPKIT)\config		\
 	$(WISPKIT)\config\videocap	\
@@ -240,7 +309,7 @@ wispkit_dir_list= \
 	$(WISPKIT)\etc			\
 	$(WISPKIT)\lib			
 
-wispkitdirs: $(KITDIR) $(wispkit_dir_list)
+wispkitdirs: $(wispkit_dir_list)
 
 $(wispkit_dir_list):
 	mkdir $@
@@ -248,20 +317,28 @@ $(wispkit_dir_list):
 edekit_dir_list= \
 	$(EDEKIT) \
 	$(EDEKIT)\demo \
+	$(EDEKIT)\acu5 \
+	$(EDEKIT)\acu60 \
 	$(EDEKIT)\acu62 \
-	$(EDEKIT)\acu72
+	$(EDEKIT)\acu72 \
+	$(EDEKIT)\acu90 \
+	$(EDEKIT)\acu91
 
-edekitdirs: $(KITDIR) $(edekit_dir_list)
+edekitdirs: $(edekit_dir_list)
 
 $(edekit_dir_list):
 	mkdir $@
 
 kcsiacu_dir_list= \
 	$(KCSIACUKIT) \
+	$(KCSIACUKIT)\acu5 \
+	$(KCSIACUKIT)\acu60 \
 	$(KCSIACUKIT)\acu62 \
-	$(KCSIACUKIT)\acu72
+	$(KCSIACUKIT)\acu72 \
+	$(KCSIACUKIT)\acu90 \
+	$(KCSIACUKIT)\acu91
 
-kcsiacukitdirs: $(KITDIR) $(kcsiacu_dir_list)
+kcsiacukitdirs: $(kcsiacu_dir_list)
 
 $(kcsiacu_dir_list):
 	mkdir $@
@@ -347,6 +424,12 @@ $(WISPKIT)\bin\wsort.exe:	$(BASEDIR)\bin\$(@F)
 $(WISPKIT)\bin\wusage.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
+$(WISPKIT)\bin\Microsoft.VC80.CRT	\
+$(WISPKIT)\bin\Microsoft.VC80.MFC	\
+:	$(BASEDIR)\nt\VS2005\x86\$(@F)
+	xcopy /S /I /Q  $** $@
+
+
 $(WISPKIT)\lib\video.lib:	$(BASEDIR)\lib\$(@F)
 	$(COPY) $** $@
 
@@ -368,19 +451,13 @@ $(WISPKIT)\etc\WISPPLAT.wcb:	$(BASEDIR)\wisputils\$(@F)
 $(WISPKIT)\etc\SOFTLINK.wcb:	$(BASEDIR)\wisputils\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\etc\wproc.txt:	$(BASEDIR)\doc\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\etc\wisp_packlist.txt:	$(BASEDIR)\doc\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\etc\wisp_relnotes.txt:	$(BASEDIR)\doc\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\etc\aqmwisp.txt:	$(BASEDIR)\doc\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\etc\wispntdoc.txt:	$(BASEDIR)\doc\$(@F)
+$(WISPKIT)\etc\wproc.txt \
+$(WISPKIT)\etc\wisp_packlist.txt \
+$(WISPKIT)\etc\wisp_relnotes.txt \
+$(WISPKIT)\etc\aqmwisp.txt \
+$(WISPKIT)\etc\wispntdoc.txt \
+$(WISPKIT)\etc\WISP_WinSSHD.pdf \
+:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\config\ACUCONFIG:	$(BASEDIR)\config\$(@F)
@@ -426,6 +503,9 @@ $(WISPKIT)\config\videocap\xterm.vcap: $(BASEDIR)\config\videocap\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\config\videocap\ansi.vcap: $(BASEDIR)\config\videocap\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\config\videocap\winsshd.vcap: $(BASEDIR)\config\videocap\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\acu\ACULINK.wcb:	$(BASEDIR)\acu\$(@F)
@@ -602,6 +682,34 @@ $(WISPKIT)\acu\acu81\wrundll.vcproj:	$(BASEDIR)\acu\acu81\$(@F)
 $(WISPKIT)\acu\acu81\run32.vcproj:		$(BASEDIR)\acu\acu81\$(@F)
 	$(COPY) $** $@
 
+$(WISPKIT)\acu\acu90\build_wisp_acu90_rts.txt \
+$(WISPKIT)\acu\acu90\build_wisp_acu90_atm_rts.txt \
+$(WISPKIT)\acu\acu90\build_wisp_acu90_con_rts.txt \
+$(WISPKIT)\acu\acu90\wisp.rc \
+$(WISPKIT)\acu\acu90\wrundll.vcproj \
+$(WISPKIT)\acu\acu90\run32.vcproj \
+$(WISPKIT)\acu\acu90\crun32.vcproj \
+:	$(BASEDIR)\acu\acu90\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu90\sub85.c:	$(BASEDIR)\acu\sub85_acu90.c
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu91\build_wisp_acu91_rts.txt \
+$(WISPKIT)\acu\acu91\build_wisp_acu91_atm_rts.txt \
+$(WISPKIT)\acu\acu91\build_wisp_acu91_con_rts.txt \
+$(WISPKIT)\acu\acu91\wisp.rc \
+$(WISPKIT)\acu\acu91\wrun32.sln \
+$(WISPKIT)\acu\acu91\wrundll.vcxproj \
+$(WISPKIT)\acu\acu91\run32.sln \
+$(WISPKIT)\acu\acu91\run32.vcxproj \
+$(WISPKIT)\acu\acu91\crun32.sln \
+$(WISPKIT)\acu\acu91\crun32.vcxproj \
+:	$(BASEDIR)\acu\acu91\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu91\sub85.c:	$(BASEDIR)\acu\sub85_acu91.c
+	$(COPY) $** $@
 
 $(WISPKIT)\demo\cursor.wps:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
@@ -655,24 +763,58 @@ $(EDEKIT)\edem.lib:		$(BASEDIR)\ede\$(@F)
 $(EDEKIT)\edentsetup.txt:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\wrun32wisp_ede_acu50.mak:	$(BASEDIR)\acu\$(@F)
+$(EDEKIT)\acu5\wrun32wisp_ede_acu50.mak \
+$(EDEKIT)\acu5\wrun32wisp_ede_acu51.mak \
+$(EDEKIT)\acu5\wrun32wisp_ede_acu52.mak \
+:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\wrun32wisp_ede_acu51.mak:	$(BASEDIR)\acu\$(@F)
+$(EDEKIT)\acu60\build_ede_acu60_rts.txt:	$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+	
+$(EDEKIT)\acu60\wrundll_ede_acu60.mak \
+$(EDEKIT)\acu60\wrundll_ede_acu60.dsp \
+:	$(BASEDIR)\acu\acu60\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\wrun32wisp_ede_acu52.mak:	$(BASEDIR)\acu\$(@F)
+$(EDEKIT)\acu62\build_ede_acu62_rts.txt:	$(BASEDIR)\acu\acu62\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\build_ede_acu60_rts.txt:	$(BASEDIR)\acu\acu60\$(@F)
+$(EDEKIT)\acu62\sub.c \
+$(EDEKIT)\acu62\wrundll.vcproj \
+:	$(BASEDIR)\acu\acu62\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\wrundll_ede_acu60.mak:	$(BASEDIR)\acu\acu60\$(@F)
+$(EDEKIT)\acu72\build_ede_acu72_rts.txt:	$(BASEDIR)\acu\acu72\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\wrundll_ede_acu60.dsp:	$(BASEDIR)\acu\acu60\$(@F)
+$(EDEKIT)\acu72\sub.c \
+$(EDEKIT)\acu72\wrundll.vcproj \
+:	$(BASEDIR)\acu\acu72\ede\$(@F)
 	$(COPY) $** $@
 
+$(EDEKIT)\acu90\sub.c \
+$(EDEKIT)\acu90\wrundll.vcproj \
+$(EDEKIT)\acu90\run32.vcproj \
+$(EDEKIT)\acu90\crun32.vcproj \
+$(EDEKIT)\acu90\build_ede_acu90_rts.txt \
+$(EDEKIT)\acu90\build_ede_acu90_atm_rts.txt \
+$(EDEKIT)\acu90\build_ede_acu90_con_rts.txt \
+:	$(BASEDIR)\acu\acu90\ede\$(@F)
+	$(COPY) $** $@
+
+$(EDEKIT)\acu91\sub.c \
+$(EDEKIT)\acu91\wrun32.sln \
+$(EDEKIT)\acu91\wrundll.vcxproj \
+$(EDEKIT)\acu91\run32.sln \
+$(EDEKIT)\acu91\run32.vcxproj \
+$(EDEKIT)\acu91\crun32.sln \
+$(EDEKIT)\acu91\crun32.vcxproj \
+$(EDEKIT)\acu91\build_ede_acu91_rts.txt \
+$(EDEKIT)\acu91\build_ede_acu91_atm_rts.txt \
+$(EDEKIT)\acu91\build_ede_acu91_con_rts.txt \
+:	$(BASEDIR)\acu\acu91\ede\$(@F)
+	$(COPY) $** $@
 
 $(EDEKIT)\demo\helpmap.dat:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
@@ -784,37 +926,48 @@ $(KCSIACUKIT)\ctlcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
 $(KCSIACUKIT)\rptcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(KCSIACUKIT)\wrun32wisp_kcsi_acu50.mak:	$(BASEDIR)\acu\$(@F)
+$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu50.mak \
+$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu51.mak \
+$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu52.mak \
+:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(KCSIACUKIT)\wrun32wisp_kcsi_acu51.mak:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(KCSIACUKIT)\wrun32wisp_kcsi_acu52.mak:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(KCSIACUKIT)\build_kcsi_acu60_rts.txt:		$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-$(KCSIACUKIT)\wrundll_kcsi_acu60.mak:		$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-$(KCSIACUKIT)\wrundll_kcsi_acu60.dsp:		$(BASEDIR)\acu\acu60\$(@F)
+$(KCSIACUKIT)\acu60\build_kcsi_acu60_rts.txt \
+$(KCSIACUKIT)\acu60\wrundll_kcsi_acu60.mak \
+$(KCSIACUKIT)\acu60\wrundll_kcsi_acu60.dsp \
+:	$(BASEDIR)\acu\acu60\$(@F)
 	$(COPY) $** $@
 
 
-$(KCSIACUKIT)\build_kcsi_acu62_rts.txt:		$(BASEDIR)\acu\acu62\$(@F)
+$(KCSIACUKIT)\acu62\build_kcsi_acu62_rts.txt:	$(BASEDIR)\acu\acu62\$(@F)
 	$(COPY) $** $@
 
 $(KCSIACUKIT)\acu62\wrundll.vcproj:		$(BASEDIR)\acu\acu62\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(KCSIACUKIT)\build_kcsi_acu72_rts.txt:		$(BASEDIR)\acu\acu72\$(@F)
+$(KCSIACUKIT)\acu72\build_kcsi_acu72_rts.txt:	$(BASEDIR)\acu\acu72\$(@F)
 	$(COPY) $** $@
 
 $(KCSIACUKIT)\acu72\wrundll.vcproj:		$(BASEDIR)\acu\acu72\kcsi\$(@F)
 	$(COPY) $** $@
 
+$(KCSIACUKIT)\acu90\build_kcsi_acu90_rts.txt \
+$(KCSIACUKIT)\acu90\build_kcsi_acu90_con_rts.txt \
+$(KCSIACUKIT)\acu90\wrundll.vcproj \
+$(KCSIACUKIT)\acu90\crun32.vcproj \
+:	$(BASEDIR)\acu\acu90\kcsi\$(@F)
+	$(COPY) $** $@
+
+$(KCSIACUKIT)\acu91\build_kcsi_acu91_rts.txt \
+$(KCSIACUKIT)\acu91\build_kcsi_acu91_con_rts.txt \
+$(KCSIACUKIT)\acu91\wrun32.sln \
+$(KCSIACUKIT)\acu91\wrundll.vcxproj \
+$(KCSIACUKIT)\acu91\crun32.sln \
+$(KCSIACUKIT)\acu91\crun32.vcxproj \
+$(KCSIACUKIT)\acu91\run32.sln \
+$(KCSIACUKIT)\acu91\run32.vcxproj \
+:	$(BASEDIR)\acu\acu91\kcsi\$(@F)
+	$(COPY) $** $@
 
 $(KCSIACUKIT)\kcsintsetup.txt:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
@@ -877,6 +1030,9 @@ $(BASEDIR)\config\videocap\xterm.vcap: $(BASEDIR)\videocap\$(@F)
 	$(COPY) $** $@
 
 $(BASEDIR)\config\videocap\ansi.vcap: $(BASEDIR)\videocap\$(@F)
+	$(COPY) $** $@
+
+$(BASEDIR)\config\videocap\winsshd.vcap: $(BASEDIR)\videocap\$(@F)
 	$(COPY) $** $@
 
 #

@@ -1793,7 +1793,7 @@ static void doload(FILE *vcfile, char* vcpath)
 	int type,cap,eval;
 	char *gmem();
 	
-	while (nextfield(vcfile,name,value))						/* load fields */
+	while (nextfield(vcfile,name,(char *)value))						/* load fields */
 	{
 		cap=matchcap(name);							/* match our vc_load_defs array */
 		if (cap<0)								/* capability unknown */
@@ -3044,6 +3044,12 @@ int VL_vexists(const char* name)
 /*
 **	History:
 **	$Log: vcap.c,v $
+**	Revision 1.55  2011/10/28 01:42:03  gsl
+**	fix warnings
+**	
+**	Revision 1.54  2011/10/20 01:02:47  gsl
+**	mark warnings
+**	
 **	Revision 1.53  2003/06/20 15:48:03  gsl
 **	VL_ globals
 **	

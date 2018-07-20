@@ -64,6 +64,11 @@
 #include "wmalloc.h"
 #include "input.h"
 
+#ifdef WIN32
+#define access(filename, mode)	_access(filename, mode)
+#endif
+
+
 static void gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *file, char *lib, char *vol);
 static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *file, char *lib, char *vol);
 static int handle_directives(char *the_line);
@@ -1659,6 +1664,9 @@ int set_end_of_input(void)
 /*
 **	History:
 **	$Log: input.c,v $
+**	Revision 1.29  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.28  2010/01/09 23:46:08  gsl
 **	use strerror() instead of sys_errlist
 **	

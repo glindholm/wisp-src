@@ -4,31 +4,22 @@
 # To relink the runtime, run: make runcbl
 # To relink the ESQL pre-compiler, run: make acusql
 #
-# Distributed with ACUCOBOL-GT version 8.1.0
+# Distributed with ACUCOBOL-GT version 8.1.3
 # PMK: 125
 
-VERSPATHNAME = 810
-ACUVERSPATH = /opt/acucorp/810
+VERSPATHNAME = 813
+ACUVERSPATH = /opt/acucorp/813
 ACUPATH = /opt/acu
 ACUSQL_MAIN_MODULE = 
 JAVA_FLAG =
-CC = cc -q32 -qlanglvl=extc89 -qarch=com -qmaxmem=16384 -bmaxdata:0x80000000 -D_THREAD_SAFE 
-CFLAGS = -O2 \
+CC = cc -q32 -qlanglvl=ansi -qarch=com -qmaxmem=16384 -bmaxdata:0x80000000 -D_THREAD_SAFE
+CFLAGS = -O1 \
 	$(ACUSERVER_FLAGS) $(ACUCONNECT_FLAGS) $(ACUSQL_FLAGS) $(EXTSM_FLAGS) \
 	$(JAVA_FLAG) $(XML_FLAGS) $(EXTFH_FLAGS)
-EXTRA_LDFLAG = -brtl -bnoipath -blibpath:$(ACUVERSPATH)/lib:$(ACUPATH)/lib:.:/usr/lib:/lib $(JAVA_LINK_FLAGS)
+EXTRA_LDFLAG = $(JAVA_LINK_FLAGS)
 EXEC_LDFLAG =
-EXPORT_LDFLAG = -bexpall -bautoexp -bE:runcbl.exp
+EXPORT_LDFLAG =
 LDFLAGS = -s $(EXTRA_LDFLAG)
-SHARED_FLAG = -G
-SONAME_FLAG =
-SHAREDLIB_LDFLAGS = $(SHARED_FLAG) $(SONAME_FLAG) $(LDFLAGS)
-SHARED_LIB_EXT = so
-SYS_C_LIBS = -lc
-NO_UNDEFS_LDFLAGS = -bernotok -brtllib
-LIBRUNCBL_LDFLAGS =
-# A sed script necessary for linking
-LIB_SED = sed -e 's/\([\.\/a-z]*\)\/lib\([a-z]*\)\.$(SHARED_LIB_EXT)/-L \1 -l\2/g'
 SHELL = /bin/sh
 
 # If your ACUCOBOL libraries are in another directory, change the value
@@ -65,11 +56,18 @@ COMPRESSION_LIB = $(ACU_LIBDIR)/libz.a
 #
 # What are our libraries
 #
-ACME_LIB = $(ACU_LIBDIR)/libacme.$(SHARED_LIB_EXT)
-CLIENT_LIB = 
-REGEX_LIB = $(ACU_LIBDIR)/libaregex.$(SHARED_LIB_EXT)
-TERMMGR_LIB = $(ACU_LIBDIR)/libacuterm.$(SHARED_LIB_EXT)
-VISION_LIB = $(ACU_LIBDIR)/libvision.$(SHARED_LIB_EXT)
+ACME_LIB = \
+	$(ACU_LIBDIR)/libsocks.a \
+	$(ACU_LIBDIR)/libmessage.a \
+	$(ACU_LIBDIR)/libcfg.a \
+	$(ACU_LIBDIR)/liblib.a \
+	$(ACU_LIBDIR)/libstdlib.a \
+	$(ACU_LIBDIR)/libmemory.a
+CLIENT_LIB = $(ACU_LIBDIR)/libclnt.a
+REGEX_LIB = $(ACU_LIBDIR)/libaregex.a
+TERMMGR_LIB = $(ACU_LIBDIR)/libacuterm.a
+AXML_LIB = $(ACU_LIBDIR)/libaxml.a
+VISION_LIB = $(ACU_LIBDIR)/libvision.a
 RUNTIME_LIBS = $(ACU_LIBDIR)/libruncbl.a
 
 
@@ -198,12 +196,13 @@ EXTSM_FLAGS = -DUSE_EXTSM=0
 # These subs/libs are for any extra file systems you want to link in.
 XML_FLAGS = -DUSE_XML=1
 FSI_SUBS =
-FSI_LIBS = $(EXTFH_LIB) $(ACU_LIBDIR)/libaxml.$(SHARED_LIB_EXT) $(ACU_LIBDIR)/libexpat.a
+FSI_LIBS = $(EXTFH_LIB) $(ACU_LIBDIR)/libexpat.a
 
 
 LIBS =  $(ACUSERVER_LIBS) \
 	$(ACU_LIBDIR)/libacvt.a \
 	$(ACU_LIBDIR)/libfsi.a \
+	$(AXML_LIB) \
 	$(REGEX_LIB) \
 	$(TERMMGR_LIB) \
 	$(FSI_LIBS) \
@@ -223,21 +222,13 @@ SYS_LIBS = \
 
 SUBS = callc.o sub.o filetbl.o $(FSI_SUBS)
 
-libruncbl.$(SHARED_LIB_EXT): libruncbl.a $(SUBS) $(RUNTIME_LIBS) runcbl.exp
-	-rm -f libruncbl.$(SHARED_LIB_EXT)
-	$(CC) $(SHAREDLIB_LDFLAGS) $(NO_UNDEFS_LDFLAGS) $(LIBRUNCBL_LDFLAGS) \
-		$(EXPORT_LDFLAG) $(SUBS) libruncbl.a \
-		-o libruncbl.$(SHARED_LIB_EXT) \
-		`echo $(LIBS) | $(LIB_SED)` \
-		$(SYS_LIBS) $(SYS_C_LIBS) $(EXTOBJS) $(EXTLIBS)
+runcbl: amain.o $(SUBS)
+	$(CC) $(EXEC_LDFLAG) $(LDFLAGS) -o runcbl amain.o $(SUBS) libruncbl.a \
+		$(LIBS) $(SYS_LIBS) $(SYS_C_LIBS) $(EXTOBJS) $(EXTLIBS)
 
 relinkrun:
-	-rm -f libruncbl.$(SHARED_LIB_EXT)
-	$(MAKE) libruncbl.$(SHARED_LIB_EXT)
-
-runcbl: amain.o libruncbl.$(SHARED_LIB_EXT)
-	$(CC) $(EXEC_LDFLAG) $(LDFLAGS) $(NO_UNDEFS_LDFLAGS) -o runcbl \
-		amain.o -L . -lruncbl -lacme $(SYS_C_LIBS)
+	-rm -f runcbl
+	$(MAKE) runcbl
 
 
 ALLOCA_LIBS =
@@ -250,7 +241,7 @@ PREPROC_LIBS =	$(ACU_LIBDIR)/libpreproc.a \
 acusql: $(PREPROC_LIBS)
 	$(CC) $(LDFLAGS) $(ALLOCA_CFLAGS) -o acusql \
 		$(ACUSQL_MAIN_MODULE) \
-		`echo $(PREPROC_LIBS) | $(LIB_SED)` \
+		$(PREPROC_LIBS) \
 		 $(COMPRESSION_LIB) \
 		 $(ALLOCA_LIBS) $(SYS_LIBS) $(EXTOBJS) $(EXTLIBS)
 
@@ -293,7 +284,7 @@ print-extfh-libs:
 
 clean:
 	-rm -f acusql callc.o filetbl.o sub.o
-	-rm -f libruncbl.$(SHARED_LIB_EXT)
+	-rm -f runcbl
 
 # object dependencies
 callc.o: callc.c sub.h Makefile

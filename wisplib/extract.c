@@ -78,6 +78,10 @@
 #include "setprgid.h"
 #include "vssubs.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 static char prid[8];
 
 static char *configfile();
@@ -1082,6 +1086,9 @@ static	int4	device_num;
 /*
 **	History:
 **	$Log: extract.c,v $
+**	Revision 1.49  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.48  2003/03/28 20:15:57  gsl
 **	Add EXTRACT2
 **	

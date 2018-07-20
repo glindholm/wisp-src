@@ -83,6 +83,10 @@
 #include "wmalloc.h"
 #include "vssubs.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 /*
 **	Structures and Defines
 */
@@ -3838,6 +3842,9 @@ int WL_wsystem_interactive(const char *cmd)
 /*
 **	History:
 **	$Log: wshelp.c,v $
+**	Revision 1.126  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.125  2009/10/18 20:44:47  gsl
 **	Copyright
 **	

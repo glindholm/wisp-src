@@ -45,6 +45,10 @@
 #include "wispcfg.h"
 #include "wispvers.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 static void get_validation(	char	licensekey[LICENSE_KEY_SIZE],
 				char	*machineid,
 				char	valcode[VALIDATION_CODE_SIZE]);
@@ -383,7 +387,7 @@ char	*argv[];
 		**	Make file writable first in case
 		**	we are overwriting an existing license file.
 		*/
-		chmod(WLIC_license_filepath(),0666);
+		_chmod(WLIC_license_filepath(),0666);
 #endif
 
 		if ( 0 != unlink(WLIC_license_filepath()))
@@ -888,6 +892,9 @@ void WL_wtrace()
 /*
 **	History:
 **	$Log: wlicense.c,v $
+**	Revision 1.54  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.53  2010/01/10 00:06:41  gsl
 **	use strerror() instead of sys_errlist
 **	

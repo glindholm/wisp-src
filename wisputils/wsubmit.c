@@ -59,7 +59,7 @@
 /*
 **	Static data
 */
-static char rcs_revision[] = "$Revision:$";
+static char rcs_revision[] = "$Revision: 1.18 $";
 
 
 static void badusage();

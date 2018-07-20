@@ -13,7 +13,7 @@
 #				$ make -f makewisp.umf
 #
 
-WISPVER=5100
+WISPVER=5110
 
 
 include $(WISPSRC)/port/make.include
@@ -175,7 +175,6 @@ rts_mf_ede:	wisplib videolib edelib
 clean:
 		@echo Making $@
 		(cd $(WISPSRC)/acu; 		$(MAKE) -f wruncbl.umf  WISPDIR=.. clean)
-		(cd $(WISPSRC)/acu;		$(MAKE) -f wacu.umf WISPDIR=.. clean)
 		(cd $(WISPSRC)/amu;		$(MAKE) -f amuunix.umf  clean)
 		(cd $(WISPSRC)/ede; 		$(MAKE) -f libede.umf   clean)
 		(cd $(WISPSRC)/ede; 		$(MAKE) -f good.umf     clean)

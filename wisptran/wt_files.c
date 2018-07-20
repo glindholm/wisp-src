@@ -16,7 +16,6 @@
 
 #ifdef WIN32
 #include <direct.h>
-#define chdir _chdir
 #endif
 
 #define EXT extern
@@ -28,6 +27,10 @@
 #include "wmalloc.h"
 #include "input.h"
 #include "ring.h"
+
+#ifdef WIN32
+#include "isonames.h"
+#endif
 
 
 
@@ -669,6 +672,9 @@ char	*select_name;
 /*
 **	History:
 **	$Log: wt_files.c,v $
+**	Revision 1.35  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.34  2009/10/18 20:22:58  gsl
 **	Copyright
 **	

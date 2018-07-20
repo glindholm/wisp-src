@@ -52,6 +52,10 @@
 #include "wispcfg.h"
 #include "wmalloc.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 /*
 **	Routine:	WL_link_path_seg()
 **
@@ -288,6 +292,9 @@ int WL_whichlinkpath(char *filename, char *fullpath)
 /*
 **	History:
 **	$Log: paths.c,v $
+**	Revision 1.15  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.14  2003/01/31 18:48:36  gsl
 **	Fix  copyright header and -Wall warnings
 **	

@@ -1,0 +1,37 @@
+umask 0007
+echo
+date
+uname -a
+id
+stty intr "^c" quit "^|" erase "^h" kill "^x" echoe echok
+
+export CVSROOT=:pserver:gsl@devel.shellstream.net:/cvsdata/CVSROOT
+
+export WISPDIR=/data/local/wisp_5100_32
+echo WISPDIR=$WISPDIR
+
+export WISPCONFIG=$HOME/config
+export ERR=$HOME/wisperr.log
+export WISPGID=$$
+export WISP=/data/work/wisp
+
+export ACUDIR=/data/local/acucobol901_32_st
+#export ACUDIR=/data/local/acucobol813_32_st
+# The shared lib verions of Acucobol needs LIBPATH set
+#export LIBPATH=/usr/lib:$ACUDIR/lib:$LIBPATH
+export A_CONFIG=$WISPCONFIG/ACUCONFIG
+export A_TERMCAP=$ACUDIR/etc/a_termcap
+export ACU=$ACUDIR
+
+# Uncomment for Micro Focus
+#export COBDIR=/disk1/mf41
+#export COBSW=-F
+#export COBPATH=.:$WISP/src/testmf
+#export LIBPATH=/usr/lib:$COBDIR/coblib:$LIBPATH
+
+#/usr/lib/mflmf/lmfgetpv
+#echo "To start MF license manager /usr/lib/mflmf; sh mflmman"
+
+export PATH=/usr/lpp/X11/bin:/usr/bin:/etc:/usr/sbin:/usr/ucb:/usr/bin/X11:/sbin:/usr/java14/jre/bin:/usr/java14/bin:/usr/vac/bin:/usr/vacpp/bin
+export PATH=${PATH}:/usr/local/bin:.:${WISPDIR}/bin:${ACUDIR}/bin
+export PS1=`whoami`@`uname`' [$PWD]'' > '

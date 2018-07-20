@@ -6,7 +6,7 @@ Title:          WISP EDE for Windows (WIN32) Setup
 Document:       edentsetup.txt
 Last Updated:   $Date:$
 Products:       WISP EDE for WIN32
-Versions:       5.1.00
+WISPVER:        5.1.10
 
 Summary:        Quick setup steps for WISP EDE on Windows.
 
@@ -40,8 +40,7 @@ The Steps
 
 2) Install WISP EDE for Windows.
 
-    a) Insert Disk 1 into floppy drive A:
-    b) Run A:SETUP
+    Unzip the distribution file ede5110.zip into your desired location.
 
     The following instructions refer the the EDE installation 
     directory as C:\EDExxxx.  Adjust the instructions accordingly for 
@@ -52,26 +51,20 @@ The Steps
     Follow the build instructions for your version of 
     Acucobol.
 
-       For Acucobol-GT 8.1 see:
-        - C:\EDExxxx\build_ede_acu81_rts.txt
+       For Acucobol-GT 9.1 see:
+        - C:\EDExxxx\acu91\build_ede_acu91_rts.txt
+
+       For Acucobol-GT 9.0 see:
+        - C:\EDExxxx\acu90\build_ede_acu90_rts.txt
 
        For Acucobol-GT 7.2 see:
-        - C:\EDExxxx\build_ede_acu72_rts.txt
+        - C:\EDExxxx\acu72\build_ede_acu72_rts.txt
 
        For Acucobol-GT 6.2 see:
-        - C:\EDExxxx\build_ede_acu62_rts.txt
+        - C:\EDExxxx\acu62\build_ede_acu62_rts.txt
 
        For Acucobol-GT 6.0 see:
-        - C:\EDExxxx\build_ede_acu60_rts.txt
-
-       For Acucobol-GT 5.2 see:
-        - C:\EDExxxx\wrun32wisp_ede_acu52.mak
-
-       For Acucobol-GT 5.1 see:
-        - C:\EDExxxx\wrun32wisp_ede_acu51.mak
-
-       For Acucobol-GT 5.0 see:
-        - C:\EDExxxx\wrun32wisp_ede_acu50.mak
+        - C:\EDExxxx\acu60\build_ede_acu60_rts.txt
 
 
 4) Setup the WRUN.CFG configuration file.

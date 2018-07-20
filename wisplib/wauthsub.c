@@ -67,6 +67,10 @@
 #include "machid.h"
 #include "wispcfg.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 
 
 /*
@@ -715,6 +719,9 @@ int WLIC_check_timeout(char lowdate[8], char highdate[8])
 /*
 **	History:
 **	$Log: wauthsub.c,v $
+**	Revision 1.27  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.26  2003/06/13 17:36:12  gsl
 **	ENTERPRISE License
 **	

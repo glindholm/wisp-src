@@ -72,6 +72,10 @@
 #include "wcommon.h"
 #include "wispcfg.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 /*
 **	Structures and Defines
 */
@@ -765,6 +769,9 @@ void xtab_log(const char* fileName, int lineNum, const char* xtype, const char *
 /*
 **	History:
 **	$Log: wisp.c,v $
+**	Revision 1.37  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.36  2005/12/02 15:22:47  gsl
 **	Keep track of the highest severity level reported.
 **	Ensure an non-zero exit status if severity is fatal or higher.

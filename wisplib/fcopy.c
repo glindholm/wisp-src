@@ -58,6 +58,10 @@
 #include "fcopy.h"
 #include "werrlog.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
@@ -102,7 +106,7 @@ int wisp_fcopy(const char* srcfile, const char* dstfile)
 	int	dstexists;
 	int	retcode = 0;
 
-	src = open(srcfile, O_RDONLY | O_BINARY |O_LARGEFILE);			/* Open the source file				*/
+	src = open(srcfile, O_RDONLY | O_BINARY |O_LARGEFILE, 0);			/* Open the source file				*/
 	if (src == -1)
 	{
 		retcode = errno;
@@ -186,6 +190,9 @@ char *argv[];
 /*
 **	History:
 **	$Log: fcopy.c,v $
+**	Revision 1.20  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.19  2003/01/31 17:23:48  gsl
 **	Fix  copyright header
 **	

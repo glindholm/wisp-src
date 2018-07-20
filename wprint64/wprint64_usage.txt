@@ -1,0 +1,51 @@
+
+Copyright 2010 (c) Shell Stream Software LLC, All rights reserved.
+WPRINT64: Version=[1.0]
+
+A 64-bit command line utility for sending a file to the Windows Print Queue.
+Use this utility on Server 2008 64-bit as a "Custom Print Queue" to work
+around 32-bit printing limitations.
+
+Usage: wprint64.exe [options] filename
+Options:
+   -c num-copies       Number of copies to print (default is 1)
+   -p "printer-name"   Printer name (enclose in quotes)
+   -a "form-attrs"     Form attributes (in quotes)
+   -v                  Verbose (turns on tracing)
+   -?                  Print help
+
+Form Attributes: (same as WISP FORMS file attributes)
+  cpi=10              Characters per inch
+  duplex=0            Duplex printing, 0=One sided, 1=horizontal, 2=vertical
+  face='Courier New'  Font face to use (enclode in single-quotes)
+  landscape=0         Use landscape mode, 0=portrait, 1=landscape
+  lm=0                Left margin
+  lpi=6               Lines per inch
+  lpp=60              Lines per page
+  points=0            Fonts size in points, 0=calculate from cpi and lpi
+  pw=80               Page width
+  raw=0               Use RAW print driver, 0=normal, 1=raw
+  tm=2                Top margin
+  wrap=0              Wrap long lines, 0=truncate, 1=wrap
+
+Examples:
+  wprint64.exe -c 2 -p "My Printer" -a "face='Courier New' cpi=9 landscape=1" "path\MyDocument.txt"
+
+Notes:
+  If the printer name or the file name contains spaces they must 
+  be enclosed in quotes.
+
+WISP OPTIONS File Configuration:
+  PQCMD "path\wisp\bin\wprint64.exe" -c %COPIES% %CLASSOPT% -a "%FORMMAP%" "%FILE%"
+  PQCLASSOPT -p "%LPMAP%"
+  PQNOHOLD
+  PQDELETELOCAL
+
+Exit codes:
+  0 Success
+ 20 File not found
+ 24 Empty file
+ 28 Access Denied
+ 40 Invalid parameter
+ 99 System error: see error message for details
+

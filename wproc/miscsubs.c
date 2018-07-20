@@ -63,6 +63,10 @@
 #include "wperson.h"
 #include "filext.h"
 
+#ifdef WIN32
+#define unlink(file)			_unlink(file)
+#endif
+
 /*
 **	Structures and Defines
 */
@@ -185,6 +189,9 @@ void tempproc(char *file, char *lib, char *vol, char *filepath)
 /*
 **	History:
 **	$Log: miscsubs.c,v $
+**	Revision 1.33  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.32  2009/10/18 21:04:46  gsl
 **	fix windows warnings
 **	

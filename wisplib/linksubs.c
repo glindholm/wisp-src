@@ -61,6 +61,10 @@
 
 #include "werrlog.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 
 /*
 	The following should be OK even though they are global 
@@ -474,6 +478,9 @@ void ACUNARGS( short* argcount )							/* Return the number of ARGs passed	*/
 /*
 **	History:
 **	$Log: linksubs.c,v $
+**	Revision 1.36  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.35  2003/07/02 18:06:15  gsl
 **	fix bug in LOGOFF flag passing across link levels
 **	

@@ -1,0 +1,37 @@
+stty intr "^c" quit "^|" erase "^h" kill "^x" echoe echok
+umask 0007
+
+echo
+echo TERM=$TERM
+if [ $TERM = vt100 -o $TERM = vt220 ]
+then
+        tset -e^?
+else
+        tset
+fi
+date
+uname -a
+id
+set -o vi
+
+export HOME=/home/work
+
+export WISPDIR=/opt/wisp
+echo WISPDIR=$WISPDIR
+
+export WISPCONFIG=$HOME/config
+export ERR=$HOME/wisperr.log
+export PATH=$PATH:$WISPDIR/bin
+export WISPGID=$$
+
+export WISP=/home/work/wisp
+
+export ACUDIR=/opt/acu
+export A_CONFIG=$WISPCONFIG/ACUCONFIG
+export A_TERMCAP=$ACUDIR/etc/a_termcap
+export PATH=$PATH:$ACUDIR/bin:.
+
+#export PS1=`hostname`" # "
+#export PS1=`whoami`@`hostname`'[$PWD]'' > '
+#export PS1=`uname`' [$PWD]'' > '
+export PS1=`whoami`@`uname`' [$PWD]'' > '

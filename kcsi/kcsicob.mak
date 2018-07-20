@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------
-#	Copyright (c) 1998-2003 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 #	$Id:$
 #
 #	File:		kcsicob.mak
@@ -63,10 +63,10 @@ WISPFLAGS= -VACU -u ACU50
 #
 # 	ACUCOBOL
 #
-#ACUDIR=C:\Acucorp\ACUCBL600\ACUGT
-#ACUDIR=C:\Acucorp\ACUCBL610\ACUGT
-#ACUDIR=C:\Acucorp\ACUCBL722\ACUGT
-#ACUDIR=C:\Acucorp\ACUCBL810\ACUGT
+#ACUDIR=C:\data\Acucorp\ACUCBL722\ACUGT
+#ACUDIR=C:\data\Acucorp\ACUCBL810\ACUGT
+#ACUDIR=C:\data\Acucorp\ACUCBL900\ACUGT
+#ACUDIR=C:\data\Acucorp\ACUCBL910\ACUGT
 
 ACU_COBOL = $(ACUDIR)\bin\ccbl32.exe
 ACU_COBFLAGS = -Da4 -Za -C50 -Z50

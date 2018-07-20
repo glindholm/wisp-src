@@ -4,7 +4,7 @@ REGEDIT4
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP]
 "SERVER"="(LOCAL)"
 "WISPDIR"="c:\\dev\\wisp\\src\\kit\\wisp"
-"WISPCONFIG"="c:\\dev\\wisp\\src\\test\\config_nt"
+"WISPCONFIG"="c:\\dev\\wisp\\src\\test\\config"
 "PATH"="C:\\dev\\WISP\\src\\kit\\wisp\\bin;C:\\dev\\WISP\\src\\kit\\wisp\\acu;C:\\dev\\WISP\\src\\test;C:\\dev\\WISP\\src\\test\\volrun\\ONPATH;C:\\dev\\WISP\\src\\kit\\kcsiacu;C:\\WINNT"
 "TMPDIR"="C:\\temp"
 "WISPSORTMEM"=""
@@ -12,7 +12,7 @@ REGEDIT4
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\VIDEOCAP]
 "WISPTERM"="wincon"
-"VIDEOCAP"="c:\\dev\\wisp\\src\\test\\config_nt\\videocap"
+"VIDEOCAP"="c:\\dev\\wisp\\src\\test\\config\\videocap"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\VSSUBS]
 
@@ -45,5 +45,5 @@ REGEDIT4
 "WPROCDEBUG"=""
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\ACP]
-"ACPCONFIG"="c:\\dev\\wisp\\src\\test\\config_nt"
+"ACPCONFIG"="c:\\dev\\wisp\\src\\test\\config"
 "ACPMAP"="ACPMAP"

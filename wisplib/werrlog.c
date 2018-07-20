@@ -50,6 +50,10 @@
 
 #include "werrlog.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 /*
 **	Structures and Defines
 */
@@ -724,8 +728,9 @@ static struct
 	{WERRCODE(83512), "%%WIN32PRT-E-FORMS form %d bad keyword '%s'"},
 	{WERRCODE(83514), "%%WIN32PRT-E-FORMS form %d bad syntax near position %d"},
 	{WERRCODE(83516), "%%WIN32PRT-E-SYS System error: %s"},
+	{WERRCODE(83700), "%%WPRINT64-E-SYS %s"},
 	{WERRCODE(85002), "%%WSCREEN-F-SCRVERSION Screen version mismatch %d [Current=%d]"},
-	{WERRCODE(85004), "%%WSCREEN-F-LEVELNOTFND Expecting [L] found [%5.5s...]"},
+	{WERRCODE(85004), "%%WSCREEN-F-LEVELNOTFND Expecting [L] found [%5.5s...] at offset [%u]"},
 	{WERRCODE(85006), "%%WSCREEN-F-BADCONTROL Invalid control characters found [%5.5s...]"},
 	{WERRCODE(85008), "%%WSCREEN-F-BADPIC Expecting [P{...}] found [%9.9s...]"},
 	{WERRCODE(85010), "%%WSCREEN-F-MAXITEMS Too many screen items %d MAX=%d"},
@@ -781,6 +786,15 @@ int wisp_unlink(const char *filename)
 /*
 **	History:
 **	$Log: werrlog.c,v $
+**	Revision 1.49  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
+**	Revision 1.48  2011/08/14 14:21:23  gsl
+**	Fix *pointer++ increment bug in IMB xlC compiler
+**	
+**	Revision 1.47  2010/10/03 18:36:37  gsl
+**	Add error code range for WPRINT64
+**	
 **	Revision 1.46  2010/01/09 23:56:49  gsl
 **	use strerror() instead of sys_errlist
 **	

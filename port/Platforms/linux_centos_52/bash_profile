@@ -1,0 +1,55 @@
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+	. ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+OLDPATH=$PATH
+PATH=.:$PATH:$HOME/bin:/usr/kerberos/sbin:/usr/local/sbin:/sbin:/usr/sbin
+
+export PATH
+export CVSROOT=:pserver:gsl@devel.shellstream.net:/cvsdata/CVSROOT
+export EDITOR=vi
+
+
+stty intr "^c" quit "^|" erase "^h" kill "^x" echoe echok
+
+#export PS1=`hostname`"|"`logname`" $ "
+#export PS1='($PWD)\
+#'`hostname`"|"`logname`" $ "
+#export PS1=`hostname`" "$PWD" # "
+
+umask 0007
+
+echo
+echo TERM=$TERM
+echo WISPTERM=$WISPTERM
+if [ $TERM = vt100 -o $TERM = vt220 ]
+then
+	tset -e^?
+else
+	tset
+fi
+echo 
+
+. $HOME/STARTUP
+date
+uname -a
+cat /etc/redhat-release
+id
+
+set -o vi
+#export LINES=24
+
+if [ "$BASEPATH" = "" ]
+then
+	export BASEPATH=$OLDPATH
+	export PROFILEPATH=$PATH
+fi
+echo BASE = $BASEPATH
+echo PATH = $PATH
+
+

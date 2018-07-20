@@ -26,6 +26,8 @@ WISPFLAGS= -V $(WISPLANG) -I$(WISPDIR)/etc -M
 COBOL = ccbl
 COBFLAGS = -Da4 -Gd -Za -Te 800
 
+ACUQA_TAR_Z = acuqa.wisp5100.acu81.tar.Z
+
 .SUFFIXES: .acu .cob .wcb
 
 .wcb.cob:
@@ -137,8 +139,13 @@ all:	all_cobol_objs test_dirs prtargs
 	@echo SAMPLE is up-to-date
 	@echo
 
+setup: extract_cobol_objs test_dirs prtargs
+	@echo
+	@echo SETUP complete
+	@echo
+
 clean:
-	rm -f $(ALL_COBOL_OBJS)
+	@echo #rm -f $(ALL_COBOL_OBJS)
 	rm -rf $(TEST_DIRS)
 	rm -f $(WISPACU_SRC) $(DISPRINT_SRC)
 	rm -f *.cob prtargs wc*.cpy *~ core *.log *.err 
@@ -147,6 +154,11 @@ clean:
 $(ALL_COBOL_COBS): $(WISPTRAN)
 
 all_cobol_objs: COMPILER_LICENSE $(ALL_COBOL_OBJS)
+
+extract_cobol_objs: $(ACUQA_TAR_Z)
+	rm -f $(ALL_COBOL_OBJS)
+	uncompress -c $(ACUQA_TAR_Z) | tar -xvf -
+	touch -c $(ALL_COBOL_OBJS)
 
 test_dirs: $(TEST_DIRS)
 

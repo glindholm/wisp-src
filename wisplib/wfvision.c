@@ -67,6 +67,10 @@
 
 #include "visint.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 struct vision3_struct
 {
 	char	magic[4];			/*	0	4	1-4	*/
@@ -191,7 +195,7 @@ int WL_visioninfo( const char* path, const char* code, void* raw_field )
 	int	header_len;
 	int	f;							/* File handle						*/
 
-	f = open( path, O_RDONLY | O_BINARY | O_LARGEFILE );		/* Open the file					*/
+	f = open( path, O_RDONLY | O_BINARY | O_LARGEFILE, 0 );		/* Open the file					*/
 
 	if ( f == -1 )
 	{
@@ -520,6 +524,9 @@ int WL_unloadvision(const char *inname, const char *outname)		/* Unload the ACUC
 /*
 **	History:
 **	$Log: wfvision.c,v $
+**	Revision 1.33  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.32  2003/05/28 19:34:44  gsl
 **	Acucobol 6.0, support
 **	

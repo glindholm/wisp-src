@@ -1,5 +1,6 @@
 FILE-STATUS-CODES	74
-CODE_PREFIX		. C:\dev\wisp\src\TEST C:\dev\wisp\src\kit\wisp\acu C:\dev\wisp\src\kit\kcsiacu
+#CODE_PREFIX		. C:\dev\wisp\src\TEST C:\dev\wisp\src\test\QA\wisp\acu C:\dev\wisp\src\test\QA\kcsiacu
+CODE-PREFIX		. \\ZOOMSTAR\TESTACU \\ZOOMSTAR\QA\wisp\acu \\ZOOMSTAR\QA\kcsiacu
 
 ALTVARV4-VERSION 4
 ALTVARV3-VERSION 3

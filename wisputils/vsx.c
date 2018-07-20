@@ -25,7 +25,7 @@
 
 /* CHANGE-COPYRIGHT-DATE */
 static char vsx_copyright[]="Copyright (c) Shell Stream Software LLC";
-static char vsx_rcsid[]="$Id:$";
+static char vsx_rcsid[]="$Id: vsx.c,v 1.133 2011/10/29 20:09:14 gsl Exp $";
 
 /*
 **	File:		vsx.c
@@ -129,7 +129,13 @@ static char vsx_moddate[20];
 #include <stdarg.h>
 
 #ifdef WIN32
-#define mkdir(dir,mode) _mkdir(dir)
+#define mkdir(dir,mode)		_mkdir(dir)
+#define read(file, buff, count) _read(file, buff, count)
+#define close(file)		_close(file)
+#define chmod(file, mode)	_chmod(file, mode)
+#define unlink(file)		_unlink(file)
+#define strdup(src)		_strdup(src)
+#define open(filename, oflag, pmode)	_open(filename, oflag, pmode)
 #endif
 
 
@@ -606,7 +612,7 @@ int main(int argc, char **argv)
 	**
 	*/
         memset(vsx_version,0,sizeof(vsx_version));
-        p=strchr(vsx_rcsid,' '); /* "$Id:$" */
+        p=strchr(vsx_rcsid,' '); /* "$Id: vsx.c,v 1.133 2011/10/29 20:09:14 gsl Exp $" */
         p=strchr(++p,' ');
         e=strchr(++p,' ');
         
@@ -965,7 +971,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 			**
 			*/
 			printlog("Opening tape archive [%s]\n", archive_filename);			
-                        tape_fd = open(archive_filename,O_RDONLY|O_BINARY|O_LARGEFILE);
+                        tape_fd = open(archive_filename,O_RDONLY|O_BINARY|O_LARGEFILE,0);
 			eotape=FALSE;
 			/*
 			** handle error condition
@@ -1131,7 +1137,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 					if (strlen(arch_file) > 0)
 					{
 						int  rwd;
-						rwd=open(arch_file,O_RDONLY|O_BINARY|O_LARGEFILE);
+						rwd=open(arch_file,O_RDONLY|O_BINARY|O_LARGEFILE,0);
 						close(rwd);
 					}
 					else
@@ -3588,6 +3594,9 @@ static void printdebug(const char* format, ... /* args */)
 
 /*
  * $Log: vsx.c,v $
+ * Revision 1.133  2011/10/29 20:09:14  gsl
+ * Fix ISO routine name warnins on WIN32
+ *
  * Revision 1.132  2010/01/16 02:04:28  gsl
  * new release
  * wisp 5.1.00

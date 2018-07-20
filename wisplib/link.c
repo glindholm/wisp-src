@@ -1682,7 +1682,7 @@ done_soft_link:
 			**	Mark the cancel-exit in a shell var so it is available
 			** 	even if we go across a script etc.
 			*/
-			sprintf(buff,"%s=%d",WISP_CANCELEXIT_ENV,getpid());
+			sprintf(buff,"%s=%d",WISP_CANCELEXIT_ENV,_getpid());
 			WL_win32SetNewEnv(buff);
 		}
 
@@ -1929,12 +1929,12 @@ done_soft_link:
 			**	correct location.
 			*/
 
-			/*
-			 *	If using a console version of the acucobol runtime then don't hide the parent
-			 *	because we will inherit the console.
-			 */
-			if (WL_get_wisp_option("CONSOLEACU"))
+			if (WL_get_wisp_option("CONSOLEACU") || WL_no_windows())
 			{
+				/*
+				 *	If using a console version of the acucobol runtime then don't hide the parent
+				 *	because we will inherit the console.
+				 */
 				exit_code = WL_win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
 			}
 			else
@@ -1964,7 +1964,18 @@ done_soft_link:
 				**	In the future should test what child is and if a Windows app
 				**	then we should hide the parent or do standalone.
 				*/
-				exit_code = WL_win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
+
+				if (wisp_winsshd())
+				{
+					/*
+					 * With winsshd the console is left in a "raw" state so do not inherit it
+					 */
+					exit_code = WL_win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD|SPN_NO_INHERIT);
+				}
+				else
+				{
+					exit_code = WL_win32spawnvp(sh_parm, SPN_WAIT_FOR_CHILD);
+				}
 			}
 		}			
 		save_errno = errno;
@@ -2453,6 +2464,15 @@ static int link_fixerr(int code)
 /*
 **	History:
 **	$Log: link.c,v $
+**	Revision 1.105  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
+**	Revision 1.104  2011/08/27 22:43:52  gsl
+**	fix winsshd issue with inherited handles
+**	
+**	Revision 1.103  2011/08/22 03:10:00  gsl
+**	Support for WinSSHd on Windows
+**	
 **	Revision 1.102  2005/10/11 15:22:01  gsl
 **	Merge in patch for Link-Type=P
 **	

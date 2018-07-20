@@ -1153,7 +1153,7 @@ const char *wispterm(char *the_term)
 #ifdef WIN32
 		if (NULL == ptr || '\0' == *ptr)
 		{
-			if (wisptelnet())
+			if (wisptelnet() || wisp_winsshd())
 			{
 				/*
 				**	If no windows then don't use the registry for WISPTERM.
@@ -1602,7 +1602,7 @@ int WL_no_windows(void)
 		/*
 		 *	If running in a telnet session then assume no windows.
 		 */
-		if (wisptelnet())
+		if (wisptelnet() || wisp_winsshd())
 		{
 			rc = 1;
 		}
@@ -1694,6 +1694,76 @@ int wisptelnet(void)
 		if (1 == rc)
 		{
 			wtrace("WISPCFG","TELNET","Running in a TELNET session.");
+		}
+		
+	}
+	return rc;
+
+#endif /* WIN32 */
+}
+
+/*
+**	ROUTINE:	wisp_winsshd()
+**
+**	FUNCTION:	Flag if running in a WinSSHd SSH session.
+**
+**	DESCRIPTION:	
+**			On WIN32 check if running under WinSSHd.
+**			On UNIX this is always false.
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	0	       	Not in a WinSSHd session.
+**	1		Running in a WinSSHd session
+**
+**	WARNINGS:	None
+**
+*/
+int wisp_winsshd(void)
+{
+#ifdef unix
+	return 0;		/* UNIX always returns false */
+#endif
+#ifdef WIN32
+
+	static int rc = -1;
+	
+	if (-1 == rc)
+	{
+		char	*ptr;
+
+		rc = 0;		/* Default to false */
+
+		/*
+		 *	The WinSSHd service sets the variable WINSSHDGROUP.
+		 *	If set then assume true.
+		 */
+		if (getenv("WINSSHDGROUP"))
+		{
+			rc = 1;
+		}
+
+		/*
+		 *	Variable WISPWINSSHD can force this flag on or off.
+		 */
+		if (ptr = getenv("WISPWINSSHD")) 
+		{
+			if ('1' == *ptr)
+			{
+				rc = 1;
+			}
+			else
+			{
+				rc = 0;
+			}
+		}
+
+		if (1 == rc)
+		{
+			wtrace("WISPCFG","WINSSHD","Running in a WinSSHd SSH session.");
 		}
 		
 	}
@@ -1845,6 +1915,9 @@ main()
 /*
 **	History:
 **	$Log: wispcfg.c,v $
+**	Revision 1.39  2011/08/22 03:09:59  gsl
+**	Support for WinSSHd on Windows
+**	
 **	Revision 1.38  2003/07/09 20:07:26  gsl
 **	type of "WISPTELNET"
 **	

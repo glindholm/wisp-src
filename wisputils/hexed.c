@@ -23,7 +23,7 @@
 ******************************************************************************
 */
 
-static char rcsid[]="$Id:$"; /* USED BELOW */
+static char rcsid[]="$Id: hexed.c,v 1.32 2003/06/20 15:37:44 gsl Exp $"; /* USED BELOW */
 
 
 #include <stdio.h>
@@ -47,8 +47,8 @@ static char rcsid[]="$Id:$"; /* USED BELOW */
 #include "vdata.h"
 #include "intdef.h"
 
-#define RCSVERS "$Revision:$"
-#define RCSDATE "$Date:$"
+#define RCSVERS "$Revision: 1.32 $"
+#define RCSDATE "$Date: 2003/06/20 15:37:44 $"
 
 static char VERSION[5];
 static char MODDATE[20];

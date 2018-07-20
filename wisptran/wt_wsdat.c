@@ -35,6 +35,10 @@
 #include "wcommon.h"
 #include "intdef.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 int ws_init(void)
 {
 	register int i;
@@ -602,6 +606,9 @@ int ws_init(void)
 /*
 **	History:
 **	$Log: wt_wsdat.c,v $
+**	Revision 1.50  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.49  2003/12/02 21:23:20  gsl
 **	Fix so native screen sections don't get generated in a copybook file.
 **	Change generated copybooks (internal) to use same file extension rules

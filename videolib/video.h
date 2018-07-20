@@ -495,7 +495,7 @@ extern void vraw_stty_save (void);
 extern void vraw_stty_sync (void);
 extern void vrawattribute(int atr);
 extern void vrawmove(int row, int col);
-extern int vrawprint (char *buf);
+extern int vrawprint (const char *buf);
 extern int vrawflush(void);
 extern int vrawputc (char ch);
 extern int vrawntcn_get_mouse_position( int *row, int *col );
@@ -517,6 +517,8 @@ int   VL_vtty_get (void* tt);
 void VL_vwait(int seconds, int hundredths);
 char VL_GetASCIIGraphicsChar(unsigned char graph_char);
 int  IVS_vlanguage (const char *path);
+
+void VL_trace_enable();
 
 #ifndef VIDEO_META_DEFS
 #define VIDEO_META_DEFS
@@ -870,6 +872,12 @@ int  IVS_vlanguage (const char *path);
 /*
 **	History:
 **	$Log: video.h,v $
+**	Revision 1.46  2011/10/20 00:44:14  gsl
+**	fix new warnings form gnu
+**	
+**	Revision 1.45  2011/08/22 03:10:00  gsl
+**	Support for WinSSHd on Windows
+**	
 **	Revision 1.44  2003/06/20 15:37:44  gsl
 **	VL_ globals
 **	

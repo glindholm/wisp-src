@@ -73,6 +73,10 @@
 
 #include "filext.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 
 #define YESNO(x,y)  (x & y ? "Y" : "N")
 
@@ -1629,6 +1633,9 @@ static void helptext()
 /*
 **	History:
 **	$Log: wusage.c,v $
+**	Revision 1.36  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.35  2003/02/12 19:57:35  gsl
 **	fix memory error in us_equ() was using an argv[] without checking argc to see
 **	if it is available

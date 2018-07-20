@@ -26,7 +26,11 @@ WISPTRAN  = $(WISPDIR)\bin\wisp.exe
 WISPLANG  = ACU
 WISPFLAGS = -V $(WISPLANG) -I..\wisputils -M -u FORCEGENWISPCPY
 
-#ACUDIR=C:\acucorp\acucbl610\acugt
+#ACUDIR=C:\data\Acucorp\ACUCBL722\ACUGT
+#ACUDIR=C:\data\Acucorp\ACUCBL810\ACUGT
+#ACUDIR=C:\data\Acucorp\ACUCBL900\ACUGT
+#ACUDIR=C:\data\Acucorp\ACUCBL910\ACUGT
+
 COBOL=$(ACUDIR)\bin\ccbl32.exe
 COBFLAGS = -Da4 -Gd -Za -Te 800
 
@@ -235,179 +239,38 @@ wispconfigsetup: $(WC) $(WISPCONFIGFILES) $(VC) $(VIDEOCAPFILES)
 $(WC) $(VC):
 	mkdir $@
 
-$(WC)\ACUCONFIG:		.\ACUCONFIG.NT
+$(WC)\ACUCONFIG:		.\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\CHARMAP:			$(WISPDIR)\config\$(@F)
+$(WC)\CHARMAP:			.\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\FORMS:			$(WISPDIR)\config\$(@F)
+$(WC)\FORMS:			.\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\LGMAP:			.\LGMAP.NT
+$(WC)\LGMAP:			.\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\LPMAP:			.\LPMAP.NT
+$(WC)\LPMAP:			.\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\OPTIONS:			$(WISPDIR)\config\$(@F)
+$(WC)\OPTIONS:			.\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\PRMAP:			$(WISPDIR)\config\$(@F)
+$(WC)\PRMAP:			.\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\W4WMAP:			$(WISPDIR)\config\$(@F)
+$(WC)\W4WMAP:			.\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\wproc.msg:		$(WISPDIR)\config\$(@F)
+$(WC)\wproc.msg:		.\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\wrun.cfg:			.\wrun_acu.cfg
+$(WC)\wrun.cfg:			.\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\wsysconf.cfg:		$(WISPDIR)\config\$(@F)
+$(WC)\wsysconf.cfg:		.\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(VIDEOCAPFILES):		$(WISPDIR)\config\videocap\$(@F)
+$(VIDEOCAPFILES):		.\config_nt\videocap\$(@F)
 	$(COPY) $** $@
-
-#
-#	History:
-#	$Log: sampleacu.mak,v $
-#	Revision 1.42  2007/08/09 16:58:26  gsl
-#	TT#8 Building with MSVS.NET 2003
-#	
-#	Revision 1.41  2004/05/03 17:21:01  gsl
-#	Acucobol 6.1
-#	
-#	Revision 1.40  2004/05/03 15:43:47  gsl
-#	Acucobol 6.1
-#	
-#	Revision 1.39  2003/11/10 17:09:11  gsl
-#	Fix WFILECHK3 has declaratives bug and add WC0005 test case
-#	
-#	Revision 1.38  2003/07/07 20:38:09  gsl
-#	WL0035 READVTOC tests
-#	
-#	Revision 1.37  2003/07/07 19:39:54  gsl
-#	WC0004 ##TEMP file tests
-#	
-#	Revision 1.36  2003/07/07 17:58:27  gsl
-#	WL0034 LINK tests
-#	
-#	Revision 1.35  2003/07/07 14:29:44  gsl
-#	WC0003 ACCEPT VERB tests
-#	
-#	Revision 1.34  2003/07/03 18:53:55  gsl
-#	RETURN-CODE tests
-#	
-#	Revision 1.33  2003/07/02 21:18:30  gsl
-#	Add WL0033 FIND auto tests
-#	
-#	Revision 1.32  2003/07/01 19:28:52  gsl
-#	QA
-#	
-#	Revision 1.31  2003/06/30 20:23:39  gsl
-#	fix disprint
-#	
-#	Revision 1.30  2003/06/26 16:18:35  gsl
-#	version numbers
-#	
-#	Revision 1.29  2003/03/07 20:05:08  gsl
-#	Add #FORCEGENWISPCPY option
-#	
-#	Revision 1.28  2003/02/28 18:19:00  gsl
-#	update
-#	
-#	Revision 1.27  2003/02/27 19:06:55  gsl
-#	Move the QA MESSAGE logic out of QASUBS into new file QAMESSAG
-#	
-#	Revision 1.26  2003/01/30 19:43:45  gsl
-#	Add WL0032 to autotest RENAME
-#	
-#	Revision 1.25  2003/01/20 20:14:18  gsl
-#	Add WL0031 auto tests for SETFILE
-#	
-#	Revision 1.24  2003/01/20 17:02:28  gsl
-#	Add WL0030 auto test for SUBMIT
-#	
-#	Revision 1.23  2003/01/17 15:31:40  gsl
-#	Added WL0029 SCRATCH autotest
-#	
-#	Revision 1.22  2003/01/16 17:25:39  gsl
-#	Add FILECOPY tests
-#	
-#	Revision 1.21  2002/12/11 14:08:43  gsl
-#	Removed wispmsg.dat/txt and makemsg
-#	
-#	Revision 1.20  2002/11/26 21:52:02  gsl
-#	Add WC0001.wcb to test Horz Repeating fields
-#	
-#	Revision 1.19  2002/11/22 18:56:21  gsl
-#	Fix and standardize the Acucoobl COBFLAGS
-#	
-#	Revision 1.18  2002/10/11 18:44:11  gsl
-#	Change DEL to -DEL
-#	Remove clean from default target
-#	
-#	Revision 1.17  2002/07/31 01:31:29  gsl
-#	update
-#	
-#	Revision 1.16  2002/07/24 00:29:58  gsl
-#	update
-#	
-#	Revision 1.15  2002/07/23 20:50:16  gsl
-#	building sample
-#	
-#	Revision 1.14  2002/07/10 01:36:56  gsl
-#	use .acu
-#	
-#	Revision 1.13  2002/05/15 18:35:32  gsl
-#	update
-#	
-#	Revision 1.12  2001-11-26 11:24:49-05  gsl
-#	Add target for testdirs
-#
-#	Revision 1.11  2001-11-13 11:01:36-05  gsl
-#	Use ACUCONFIG.NT
-#
-#	Revision 1.10  2001-11-12 18:07:44-05  gsl
-#	update
-#
-#	Revision 1.9  2000-04-24 20:59:17-04  gsl
-#	wisp 4.3.06
-#
-#	Revision 1.8  1999-09-27 09:58:04-04  gsl
-#	Update the auto build of WISPCONFIG to use a custom wrun.cfg file
-#
-#	Revision 1.7  1999-09-13 15:53:08-04  gsl
-#	Add wispconfigsetup to do the WIN32 setup of the config dir.
-#
-#	Revision 1.6  1998-06-26 11:22:00-04  gsl
-#	Add WL0027 to build
-#
-#	Revision 1.5  1998-06-15 15:07:52-04  gsl
-#	Add manual locking flag
-#
-#	Revision 1.4  1998-01-16 15:22:01-05  gsl
-#	Add CFLAGS to prtargs gets built correctly
-#
-#	Revision 1.3  1998-01-13 09:23:25-05  gsl
-#	Fix makefile
-#
-#	Revision 1.2  1997-05-20 16:21:33-04  gsl
-#	Add WL0018A and WL0018B for extra MESSAGE testing
-#
-#	Revision 1.1  1997-05-20 15:54:21-04  gsl
-#	Initial revision
-#
-#	Revision 1.9  1997-05-01 09:24:21-04  gsl
-#	Add all the WL00xx automatic tests
-#
-#	Revision 1.8  1996-12-13 14:47:37-05  gsl
-#	Update so will work on NT as well as unix
-#
-#
-#
-#
-

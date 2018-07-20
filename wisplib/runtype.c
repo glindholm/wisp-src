@@ -49,6 +49,10 @@
 #include "wisplib.h"
 #include "werrlog.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 /*
 **	Routine:	WL_runtype()
 **
@@ -193,7 +197,7 @@ static int osd_runtype(const char* filespec)
 	**	Last chance: Read the file to see if it is an ACUCOBOL program.
 	*/
 
-	fh = open(filespec,O_RDONLY|O_BINARY,0);
+	fh = _open(filespec,O_RDONLY|O_BINARY,0);
 	if ( fh == -1 )
 	{
 		return(RUN_ACCESS);
@@ -267,6 +271,9 @@ int WL_runtype(const char* filespec)
 /*
 **	History:
 **	$Log: runtype.c,v $
+**	Revision 1.22  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.21  2003/01/31 18:48:36  gsl
 **	Fix  copyright header and -Wall warnings
 **	

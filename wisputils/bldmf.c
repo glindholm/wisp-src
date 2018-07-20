@@ -61,8 +61,8 @@
 #include "bldmf.h"
 #include "werrlog.h"
 
-static char rcs_date[]		="$Date:$";
-static char rcs_revision[]	="$Revision:$";
+static char rcs_date[]		="$Date: 2010/02/10 03:54:22 $";
+static char rcs_revision[]	="$Revision: 1.26 $";
 static char rcs_state[]		="$State: Exp $";
 static char bldmf_version[80];
 

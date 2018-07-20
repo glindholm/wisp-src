@@ -1,40 +1,40 @@
-WISP 4.3.06 - Windows 2000 Telnet Problem
-=========================================
-
-A problem was discovered with WISP 4.3.06 when running under Telnet on
-Windows 2000.  It appears that console Input under Telnet on Windows
-2000 is filtering out Escape (0x1b) and Newline (0x0a)
-characters. This causes keyboard processing to fail if the keys
-generate Escape or Newline characters.  
-
-The default VT220 7-bit terminal emulation uses the Escape character
-as a lead-in character for all function and arrow keys. 
-
-To workaround the problem it is suggested you switch to using VT220
-8-bit terminal emulation. 
-
-The following files are provided:
-
-The WINCON videocap file should replace your current copy of WINCON in
-your videocap folder (c:\wisp4306\config\videocap).  It has been
-enhanced to recognize VT220 8-bit key control sequences in addition to
-the 7-bit key control sequences it already understood. 
-
-The vt220.kbd Costar keyboard definition file should replace the
-vt220.kbd file in your Costar installation folder (C:\W4W). It has be
-changed to send VT220 8-bit key control sequences instead of the 7-bit
-key control sequences it previously sent.  The version is based off of
-the vt220_8.kbd file that is distributed with Costar with additions to
-support 32 PF keys. 
-
-The MOUSE.SCR Costar script file should replace the file
-C:\W4W\w4w\mouse.scr.  This script was updated in 1999 to support
-Telnet on NT and has been available for download since then however
-you may still have old versions of it.  The script was changed to
-terminate the mouse position with a Carrage Return (\r) instead of a
-Newline (\n).  If you are using a Visual Basic front-end to Costar you
-may not need this file. 
-
-The w4w_vt220 videocap file is provided in case you also use Costar
-for Unix access to WISP migrated applications.  It has been enhanced
-to also recognize the VT220 8-bit keys. 
+WISP 4.3.06 - Windows 2000 Telnet Problem
+=========================================
+
+A problem was discovered with WISP 4.3.06 when running under Telnet on
+Windows 2000.  It appears that console Input under Telnet on Windows
+2000 is filtering out Escape (0x1b) and Newline (0x0a)
+characters. This causes keyboard processing to fail if the keys
+generate Escape or Newline characters.  
+
+The default VT220 7-bit terminal emulation uses the Escape character
+as a lead-in character for all function and arrow keys. 
+
+To workaround the problem it is suggested you switch to using VT220
+8-bit terminal emulation. 
+
+The following files are provided:
+
+The WINCON videocap file should replace your current copy of WINCON in
+your videocap folder (c:\wisp4306\config\videocap).  It has been
+enhanced to recognize VT220 8-bit key control sequences in addition to
+the 7-bit key control sequences it already understood. 
+
+The vt220.kbd Costar keyboard definition file should replace the
+vt220.kbd file in your Costar installation folder (C:\W4W). It has be
+changed to send VT220 8-bit key control sequences instead of the 7-bit
+key control sequences it previously sent.  The version is based off of
+the vt220_8.kbd file that is distributed with Costar with additions to
+support 32 PF keys. 
+
+The MOUSE.SCR Costar script file should replace the file
+C:\W4W\w4w\mouse.scr.  This script was updated in 1999 to support
+Telnet on NT and has been available for download since then however
+you may still have old versions of it.  The script was changed to
+terminate the mouse position with a Carrage Return (\r) instead of a
+Newline (\n).  If you are using a Visual Basic front-end to Costar you
+may not need this file. 
+
+The w4w_vt220 videocap file is provided in case you also use Costar
+for Unix access to WISP migrated applications.  It has been enhanced
+to also recognize the VT220 8-bit keys. 

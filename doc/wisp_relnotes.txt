@@ -6,7 +6,7 @@ Title:          RELEASE NOTES FOR WISP VERSION 5.1
 Document:       wisp_relnotes.txt
 Last Updated:   $Date:$
 Products:       WISP for UNIX, WISP for Windows (WIN32)
-Versions:       5.1.00
+WISPVER:        5.1.10
 
 Summary:        Release notes for changes to WISP since version 3.3c.
 
@@ -23,6 +23,35 @@ Summary:        Release notes for changes to WISP since version 3.3c.
         Email wisp@shellstream.com
         FAQ   http://www.shellstream.com/faq
 
+
+CHANGES FOR RELEASE 5.1.10
+==========================
+The following items describe corrections and improvements that have
+been made to the WISP toolkit for release 5.1.10.
+
+Support for (Acucobol) Extend 9.1 and 9.0 has been added.
+
+Printing on Windows with no printer specified was failing without 
+reason if the user had not set a default printer. This has been 
+changed to correctly report the issue.
+
+Add support for runing under WinSSHD SSH server on Windows. 
+See \etc\WISP_WinSSHD.pdf for complete information.
+
+Developed WPRINT64 for printing on 64-bit Windows Server 2008. 
+At the time of this writing there is a bug on all versions of Windows 64-bit 
+servers that prevents multiple users from printing with 32-bit programs. The 
+WISP runtime is a 32-bit program. If you have multiple users running WISP 
+migrated applications on a 64-bit Windows server then you will need to use 
+a 64-bit print utility to avoid this problem. Shell Stream Software has 
+developed the utility WPRINT64 to address this issue. This utility is 
+available for no charge to licensed WISP users upon request.
+
+If you use WCONFIG to configure the WISP runtime via registry keys it is 
+highly recommended that you run WCONFIG as an administator. To run WCONFIG as
+an administrator right-click on wconfig.exe and select "Run as administrator".
+With current versions of Windows it is recommended you use environment 
+variables to configure the WISP runtime instead or registry keys via WCONFIG.
 
 
 CHANGES FOR RELEASE 5.1.00
@@ -3069,6 +3098,7 @@ three part version number.
 
     WISP VERSION      CUTOVER DATE 
     ------------      ------------
+        5.1.10          11/05/11        WinSSHD on Windows
         5.1.00          02/01/10        Shell Stream Software
         5.0.01          11/10/03        5.0 Patch 1
         5.0.00          07/09/03        Major Release

@@ -160,10 +160,10 @@ SYSDEF = "Error SYSDEF not defined"
 #
 #SYSDEF = -DAIX
 #
-# IBM XLC Compilers (cc_r is thread safe)
-#CC_STD  = cc_r
-#CC_ANSI = cc_r
-#CC_SYS_FLAGS = -qlanglvl=ansi -qarch=com -qmaxmem=16384
+# IBM XLC Compilers
+#CC_STD  = cc
+#CC_ANSI = cc
+#CC_SYS_FLAGS = -q32 -qlanglvl=extc89 -qarch=com -qmaxmem=16384 -qthreaded
 #
 #CCC = xlC
 #CCC_SYS_FLAGS = -Q -qarch=com -qchars=signed -DBOOL_TYPE
@@ -175,7 +175,7 @@ SYSDEF = "Error SYSDEF not defined"
 #
 # GNU C++
 #CCC = g++
-#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall -Wno-write-strings
 #LEX=flex
 #
 #	AIX 4.1

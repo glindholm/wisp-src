@@ -53,6 +53,10 @@
 #include "vmodules.h"
 #include "vraw.h"
 
+#ifdef WIN32
+#define chmod(file, mode) _chmod(file, mode)
+#endif
+
 /*					Local definitions.									*/
 
 #define DISPLAY_LINE 2
@@ -62,6 +66,7 @@ static char vre_logfile[128] = "videoerr.log"; 	/* Log ver() errors to this file
 static int rvis_space = VMODE_REVERSE|VMODE_UNDERSCORE|VMODE_BLINK|VMODE_BOLD;		/* Visible on reverse screen in these cases.	*/
 static int vis_space = VMODE_REVERSE|VMODE_UNDERSCORE|VMODE_BLINK;			/* Visible on normal screen in these cases.	*/
 
+static int bTrace = 0;						/* is VL_trace enabled */
 
 /*
  *	Set the log file
@@ -78,6 +83,44 @@ void VL_vre_set_logfile(const char* filepath)
 	}
 }
 
+
+void VL_trace_enable()
+{
+	bTrace = 1;
+}
+
+void VL_trace(char* text, ...)
+{
+	va_list args;
+	char string[1000];
+	static int first = 1;
+
+	if (first)
+	{
+		char	*ptr;
+		first = 0;
+
+		ptr = getenv("VIDEOTRACE");
+		if (ptr) 
+		{
+			if ('1' == *ptr)
+			{
+				bTrace = 1;
+			}
+		}
+	}
+
+	va_start(args,text);
+
+	if (!bTrace)
+	{
+		return;
+	}
+	vsprintf(string, text, args);
+
+	VL_vre_write_logfile(string);
+}
+
 /*
  *	Write to the log file
  */
@@ -85,8 +128,6 @@ void VL_vre_write_logfile(const char* buff)						/* Write out a buffer to the er
 {
 	int created_log = 0;
 	FILE *efile;									/* Pointer to error log file.		*/
-	time_t clock;
-	char	timestamp[40];
 
 	if ('\0' == vre_logfile[0])							/* If no log file just return		*/
 	{
@@ -106,11 +147,7 @@ void VL_vre_write_logfile(const char* buff)						/* Write out a buffer to the er
 		return;
 	}
 
-	clock = time(0);								/* Format timestamp	*/
-	strcpy(timestamp, ctime(&clock));
-	timestamp[strlen(timestamp) - 1] = '\0';					/* Remove the trailing newline 		*/
-
-	fprintf(efile,"%s %s\n",timestamp, buff);					/* Write buff to file with timestamp	*/
+	fprintf(efile,"(VIDEO) %s\n", buff);						/* Write buff to file 	*/
 
 	fclose(efile);									/* All done!				*/
 
@@ -399,6 +436,15 @@ void VL_vtitle(const char *titlestr)
 /*
 **	History:
 **	$Log: vutil.c,v $
+**	Revision 1.23  2011/10/28 01:42:03  gsl
+**	fix warnings
+**	
+**	Revision 1.22  2011/10/20 00:44:14  gsl
+**	fix new warnings form gnu
+**	
+**	Revision 1.21  2011/08/22 03:10:00  gsl
+**	Support for WinSSHd on Windows
+**	
 **	Revision 1.20  2010/02/10 03:52:33  gsl
 **	fix warnings for redefined functions
 **	

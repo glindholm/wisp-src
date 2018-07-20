@@ -22,7 +22,7 @@
  */
 
 static char *copyright="Copyright 1990 International Digital Scientific, Inc. All Rights Reserved.";
-static char rcsid[] = "$Id:$";
+static char rcsid[] = "$Id: bldscr.c,v 1.7 1995/04/25 09:57:59 gsl V4_4_02f $";
 
 #include <stdio.h>
 #include <errno.h>

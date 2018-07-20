@@ -57,6 +57,7 @@
 #include "idsisubs.h"
 #include "wmalloc.h"
 #include "wisplib.h"
+#include "wispcfg.h"
 
 #include "video.h"
 #include "vlocal.h"
@@ -1033,7 +1034,7 @@ int use_w4w(void)
 		flag = (use_costar()) ? 1 : 0;
 		
 #ifdef WIN32
-		if (vrawdirectio())
+		if (vrawdirectio() && !wisp_winsshd())
 		{
 			flag = 1;
 		}
@@ -1085,6 +1086,9 @@ int w4w_hotspot_vmode(void)
 /*
 **	History:
 **	$Log: costar.c,v $
+**	Revision 1.40  2011/08/22 03:09:59  gsl
+**	Support for WinSSHd on Windows
+**	
 **	Revision 1.39  2010/01/11 04:26:06  gsl
 **	fix warnings
 **	

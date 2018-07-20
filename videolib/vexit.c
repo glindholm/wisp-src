@@ -42,6 +42,7 @@
 void VL_vexit()
 {
 	int op;
+	VL_trace("VL_vexit()");
 
 	if (!VL_video_inited) return;							/* Don't need to do because not inited.	*/
 
@@ -72,6 +73,9 @@ void VL_vexit()
 /*
 **	History:
 **	$Log: vexit.c,v $
+**	Revision 1.19  2011/08/25 23:40:15  gsl
+**	tracing
+**	
 **	Revision 1.18  2003/06/20 15:37:44  gsl
 **	VL_ globals
 **	
