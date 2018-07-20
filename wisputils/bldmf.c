@@ -4,13 +4,13 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
+** $Id: bldmf.c,v 1.26 2010/02/10 03:54:22 gsl Exp $
 ** 
 ** CVS
-** $Source:$
+** $Source: /cvsdata/CVSROOT/wisp/src/wisputils/bldmf.c,v $
 ** $Author: gsl $
-** $Date:$
-** $Revision:$
+** $Date: 2010/02/10 03:54:22 $
+** $Revision: 1.26 $
 ******************************************************************************
 */
 
@@ -61,8 +61,8 @@
 #include "bldmf.h"
 #include "werrlog.h"
 
-static char rcs_date[]		="$Date:$";
-static char rcs_revision[]	="$Revision:$";
+static char rcs_date[]		="$Date: 2010/02/10 03:54:22 $";
+static char rcs_revision[]	="$Revision: 1.26 $";
 static char rcs_state[]		="$State: Exp $";
 static char bldmf_version[80];
 

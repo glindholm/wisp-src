@@ -40,6 +40,10 @@
 #include "wang_os.hpp"
 #endif
 
+#ifdef WIN32
+#define unlink(file)			_unlink(file)
+#endif
+
 
 // Free subprograms that support input objects
 
@@ -492,6 +496,9 @@ int state_file_input::destroy() {
 //
 //	History:
 //	$Log: input.cpp,v $
+//	Revision 1.10  2011/10/29 20:09:14  gsl
+//	Fix ISO routine name warnins on WIN32
+//	
 //	Revision 1.9  2002/07/10 21:06:28  gsl
 //	Fix globals WL_ to make unique
 //	

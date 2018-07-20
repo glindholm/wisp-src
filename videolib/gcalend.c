@@ -86,7 +86,7 @@ static int setleap();
 static int setwstr();
 static int outmonth();
 static int showagain();
-static int initpage();
+static int initpage(char page[LENGTH][WIDTH+1]);
 static int getnow();
 static int in_use();
 static int fdom();
@@ -114,7 +114,7 @@ int gcalend(void)
 	{
 		strcpy(apt[i],"               ");
 		apt[i][15] = CHAR_NULL;
-		initpage(tab+PAGE);
+		initpage((char (*)[WIDTH+1])(tab+PAGE));
 	}
 
 	if ((fp = VL_vopenf("cal","r")) == NULL) newcal = TRUE;
@@ -718,7 +718,7 @@ static int showagain()
 	return(SUCCESS);
 }
 
-static int initpage(page) char page[LENGTH][WIDTH+1];
+static int initpage(char page[LENGTH][WIDTH+1])
 {
 	register int i;
 
@@ -766,6 +766,12 @@ static int in_use(wstr) char *wstr;
 /*
 **	History:
 **	$Log: gcalend.c,v $
+**	Revision 1.27  2011/10/28 01:42:03  gsl
+**	fix warnings
+**	
+**	Revision 1.26  2011/10/20 01:02:47  gsl
+**	mark warnings
+**	
 **	Revision 1.25  2010/02/10 14:50:17  gsl
 **	fix warnings
 **	

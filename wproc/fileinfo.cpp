@@ -47,6 +47,11 @@
 #endif
 #include "wisp_rts.h"
 
+#ifdef WIN32
+#define access(filename, mode)		_access(filename, mode)
+#define getcwd(buffer, maxlen)		_getcwd(buffer, maxlen)
+#endif
+
 
 char *component(const char *a_path, int index, int len) {
   int i;
@@ -427,6 +432,9 @@ char *find_valid_input_file(char *a_name) {
 //
 //	History:
 //	$Log: fileinfo.cpp,v $
+//	Revision 1.16  2011/10/29 20:09:14  gsl
+//	Fix ISO routine name warnins on WIN32
+//	
 //	Revision 1.15  2003/06/11 19:08:46  gsl
 //	Fixed so only set PV/PL before a run if not blank
 //	

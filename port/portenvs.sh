@@ -48,6 +48,6 @@ echo SHELL=${SHELL}
 echo
 echo Switching to new shell for WISP PORT
 echo
-PS1="WISP PORT `hostname` $ "
+PS1='WISP PORT '`uname`' [${PWD}] \$ '
 export PS1
 $SHELL

@@ -4,7 +4,7 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
+** $Id: cols.c,v 1.8 2003/02/04 18:50:26 gsl Exp $
 **
 ** NOTICE:
 ** Confidential, unpublished property of NeoMedia Technologies, Inc.
@@ -16,10 +16,10 @@
 ** Technologies, Inc. is strictly prohibited.
 ** 
 ** CVS
-** $Source:$
+** $Source: /cvsdata/CVSROOT/wisp/src/wisputils/cols.c,v $
 ** $Author: gsl $
-** $Date:$
-** $Revision:$
+** $Date: 2003/02/04 18:50:26 $
+** $Revision: 1.8 $
 ******************************************************************************
 */
 
@@ -54,8 +54,8 @@
  **
  **/
 
-#define RCSVERS "$Revision:$"
-#define RCSDATE "$Date:$"
+#define RCSVERS "$Revision: 1.8 $"
+#define RCSDATE "$Date: 2003/02/04 18:50:26 $"
 
 static char *vers=RCSVERS;
 static char *date=RCSDATE;

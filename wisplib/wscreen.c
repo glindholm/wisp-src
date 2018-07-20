@@ -1,24 +1,8 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
+** Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 ** WISP - Wang Interchange Source Processor
-**
 ** $Id:$
 **
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
-** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 */
 
 
@@ -123,7 +107,7 @@ static void close_open_occurs( int this_level, struct v_struct *v1, struct v_str
 
 /*
 85002	%%WSCREEN-F-SCRVERSION Screen version mismatch %d [Current=%d]
-85004	%%WSCREEN-F-LEVELNOTFND Expecting [L] found [%5.5s...]
+85004	%%WSCREEN-F-LEVELNOTFND Expecting [L] found [%5.5s...] at offset [%u]
 85006	%%WSCREEN-F-BADCONTROL Invalid control characters found [%5.5s...]
 85008	%%WSCREEN-F-BADPIC Expecting [P{...}] found [%9.9s...]
 85010	%%WSCREEN-F-MAXITEMS Too many screen items %d MAX=%d
@@ -184,7 +168,7 @@ void WSCREEN(
 
 	if ( !ver22 && !ver90 )								/* Is there a version match?		*/
 	{
-		werrlog(WERRCODE(85002),*screen,WISP_SCREEN_VERSION,0,0,0,0,0,0);
+		WL_werrlog(WERRCODE(85002),*screen,WISP_SCREEN_VERSION,0,0,0,0,0,0);
 		wexit(WERRCODE(85002));							/* Take fatal error.			*/
 	}
 
@@ -700,7 +684,12 @@ static void load_item_table22(unsigned char *screen)
 	wisp_set_screenname((char*)scrn_ptr);	/* Load the screen name.			*/
 	scrn_ptr += 32;
 
-	static_screen = (*scrn_ptr++ == 'S') ? 1 : 0;				/* Is this screen Static or Dynamic.		*/
+	/*
+	** static_screen = (*scrn_ptr++ == 'S') ? 1 : 0; 
+	** This failed to increment scrn_ptr on AIX 5.3 with IBM xlC compiler version 11.1.0.0
+	*/
+	static_screen = (*scrn_ptr == 'S') ? 1 : 0;				/* Is this screen Static or Dynamic.		*/
+	scrn_ptr += 1;
 
 	WL_set_char_decimal_point('.');
 	WL_set_char_comma(',');
@@ -720,7 +709,7 @@ static void load_item_table22(unsigned char *screen)
 
 		if ( *scrn_ptr != 'L' )						/* LEVEL not found - fatal error		*/
 		{
-			werrlog(WERRCODE(85004),scrn_ptr,0,0,0,0,0,0,0);
+			WL_werrlog(WERRCODE(85004), scrn_ptr, scrn_ptr-screen,0,0,0,0,0,0);
 			wexit(WERRCODE(85004));
 		}
 
@@ -756,7 +745,7 @@ static void load_item_table22(unsigned char *screen)
 				u_ptr = (unsigned char *)memchr(scrn_ptr,'}',40);
 				if ( !u_ptr )
 				{
-					werrlog(WERRCODE(85008),scrn_ptr-2,0,0,0,0,0,0,0);
+					WL_werrlog(WERRCODE(85008),scrn_ptr-2,0,0,0,0,0,0,0);
 					wexit(WERRCODE(85008));
 				}
 				memcpy(this_pic,scrn_ptr,u_ptr-scrn_ptr);
@@ -764,7 +753,7 @@ static void load_item_table22(unsigned char *screen)
 				scrn_ptr = u_ptr+1;
 				break;
 			default:
-				werrlog(WERRCODE(85006),scrn_ptr,0,0,0,0,0,0,0);
+				WL_werrlog(WERRCODE(85006),scrn_ptr,0,0,0,0,0,0,0);
 				wexit(WERRCODE(85006));
 				break;
 			}
@@ -855,7 +844,7 @@ static void load_item_table22(unsigned char *screen)
 			num_items += 1;
 			if ( num_items >= MAX_ITEM_TABLE )
 			{
-				werrlog(WERRCODE(85010),num_items+1,MAX_ITEM_TABLE,0,0,0,0,0,0);
+				WL_werrlog(WERRCODE(85010),num_items+1,MAX_ITEM_TABLE,0,0,0,0,0,0);
 				wexit(WERRCODE(85010));
 			}
 		}
@@ -896,6 +885,9 @@ static void close_open_occurs( int this_level, struct v_struct *v1, struct v_str
 /*
 **	History:
 **	$Log: wscreen.c,v $
+**	Revision 1.42  2011/08/14 14:21:23  gsl
+**	Fix *pointer++ increment bug in IMB xlC compiler
+**	
 **	Revision 1.41  2003/02/24 21:58:03  gsl
 **	Remove support for screen versions 20 and 21 (unix only) and juster
 **	

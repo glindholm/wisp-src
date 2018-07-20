@@ -1,5 +1,5 @@
 /*  mswinsub.c - modifications to the windows runtime should go here  */
-/*  $Id:$  */
+/*  $Id: mswinsub.c 50640 2007-03-13 17:15:03Z merge $  */
 
 /* Copyright (c) 1995-2007 by Acucorp, Inc.  All rights reserved.	*/
 /* Users of the ACUCOBOL-GT runtime may freely modify and distribute	*/

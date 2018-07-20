@@ -130,7 +130,8 @@ static int nOrigCols = 80;
 
 static BOOL bStreamIO=0;					/* Flag if stream IO is used with COSTAR and telnet */
 static BOOL bPipeIO = 0;					/* Is IO to a PIPE? */
-static BOOL bTelnet = 0;
+static BOOL bTelnet = 0;					/* In a pipe style telnet session */
+static BOOL bWinsshd = 0;					/* In a SSH session under WinSSHd (console style) */
 
 #define FG FOREGROUND_GREEN
 #define FR FOREGROUND_RED
@@ -213,6 +214,7 @@ static void vrawSetConsoleSize(HANDLE hConsole);
 static void vrawFillDefaultAttribute(HANDLE hConsole);
 static int localMessageBox(HWND hWnd, LPCTSTR lpText, LPCTSTR lpCaption, UINT uType);
 static int past_stop_tick(void);
+static int winsshd(void);
 
 /*
 **	ROUTINE:	vrawAllocConsole()
@@ -236,6 +238,8 @@ static DWORD vrawAllocConsole(void)
 	DWORD rc = 0;
 	
 	_ASSERT(!bStreamIO);
+	
+	VL_trace("vrawAllocConsole()");
 
 	FreeConsole();
 	hConsole	= INVALID_HANDLE_VALUE;
@@ -275,6 +279,7 @@ static int vrawinit(void)
 	RECT rectWin;
 	DWORD modeout, modein;
 	static BOOL bFirstTimeMoveWindow = TRUE;
+	static int started = 0;
 	
 	if (vraw_init_flag)
 	{
@@ -300,18 +305,27 @@ static int vrawinit(void)
 		}
 	}
 
+	if (started)
+	{
+		vrawerror("vrawinit() - RECURSIVE STARTUP");
+		exit(1);
+	}
+	started = 1; 
+
 	SetLastError(0);
+	VL_trace("vrawinit()");
 
 	initcolors();
 	
 	// Test if using stream IO screen handling (Co*STAR & telnet)
 	bStreamIO = !(vrawdirectio());
 
+	
+
 	//if using stream IO then just clear the screen,
 	//the rest is handled by Co*STAR, Telnet, or whatever at task level
 	if( bStreamIO )
 	{
-		
 		//Disable buffered output
 		setvbuf( stdout, NULL, _IONBF, 0 );
 
@@ -320,20 +334,29 @@ static int vrawinit(void)
 		setvbuf( stdin, NULL, _IONBF, 0 );
 
 		hConsole     = GetStdHandle(STD_OUTPUT_HANDLE);
+		PERR(!(hConsole == INVALID_HANDLE_VALUE), "GetStdHandle(STD_OUTPUT_HANDLE)");
+
 		hConsoleIn   = GetStdHandle(STD_INPUT_HANDLE);
+		PERR(!(hConsoleIn == INVALID_HANDLE_VALUE), "GetStdHandle(STD_INPUT_HANDLE)");
 
 		bSuccess = SetConsoleMode(hConsoleIn,0);  // Do not process input.
+		PERR(bSuccess,"SetConsoleMode(hConsoleIn,0)");
 
 		/*
 		**	Were done
 		*/
 		VL_video_inited = TRUE;	
 		vraw_init_flag = 1;
+		started = 0;
 
 		return SUCCESS;
 	}
 	
-	
+	/*
+	* Are we in a SSH session (console style)
+	*/
+	bWinsshd = winsshd();
+
 	/*
 	**	Check if we already have a console.
 	**	If not alloc one and set the default title.
@@ -344,29 +367,32 @@ static int vrawinit(void)
 		rc = vrawAllocConsole();
 	}
 
-	bSuccess = vraw_set_default_title();
-	if (TRUE != bSuccess)
+	if (!bWinsshd)
 	{
-		rc = vrawAllocConsole();
-
 		bSuccess = vraw_set_default_title();
-		PERR(bSuccess,"SetConsoleTitle");
+		if (TRUE != bSuccess)
+		{
+			rc = vrawAllocConsole();
+
+			bSuccess = vraw_set_default_title();
+			PERR(bSuccess,"SetConsoleTitle");
+		}
 	}
 
 	vrawFillDefaultAttribute(GetStdHandle(STD_OUTPUT_HANDLE));
 
 	/*
-	**	Initialize the console window handle now.
-	*/
-	vraw_get_console_hWnd();
-
-
-	/*
 	 *	Set the Icon in the console window
 	 */
+	if (!bWinsshd)
 	{
 		HICON hWispIcon = NULL;
 		HMODULE hModule = NULL;
+
+		/*
+		**	Initialize the console window handle now.
+		*/
+		vraw_get_console_hWnd();
 
 		hModule = GetModuleHandle(NULL);
 		if (NULL != hModule)
@@ -401,15 +427,15 @@ static int vrawinit(void)
 			SendMessage(vraw_get_console_hWnd(),
 				    WM_SETICON,(WPARAM)ICON_SMALL, (LPARAM)hWispIcon);
 		}
+
+
+		/*
+		**	If this process was created with the "hide parent" option
+		**	then this ShowWindow() will hide the window as the SHOWDEFAULT
+		**	will be ignored. 
+		*/
+		bSuccess = ShowWindow(vraw_get_console_hWnd(), SW_SHOWDEFAULT);
 	}
-
-
-	/*
-	**	If this process was created with the "hide parent" option
-	**	then this ShowWindow() will hide the window as the SHOWDEFAULT
-	**	will be ignored. 
-	*/
-	bSuccess = ShowWindow(vraw_get_console_hWnd(), SW_SHOWDEFAULT);
 
 	/* get the standard handles */
 	
@@ -440,20 +466,28 @@ static int vrawinit(void)
 	** Next, set the input mode to mouse input.
 	*/
 	bSuccess = GetConsoleMode(hConsoleIn, &dwOriginalInMode);
-	PERR(bSuccess, "GetConsoleMode");
+	PERR(bSuccess, "GetConsoleMode(hConsoleIn)");
+	//VL_trace("vrawinit() GetConsoleMode(hConsoleIn) dwOriginalInMode=0x%X",dwOriginalInMode);
 
 	/*
 	  modein = (dwOriginalInMode & ~(ENABLE_LINE_INPUT|ENABLE_ECHO_INPUT)) | ENABLE_MOUSE_INPUT;
 	*/
 	SetLastError(0);
-	modein = ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
+	if (bWinsshd)
+	{
+		modein = ENABLE_PROCESSED_INPUT; // mouse input not needed in SSH
+	}
+	else
+	{
+		modein = ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
+	}
 	bSuccess = SetConsoleMode(hConsoleIn,modein);
-	PERR(bSuccess, "SetConsoleMode");
+	PERR(bSuccess, "SetConsoleMode(hConsoleIn)");
 	/*
 	** Test to ensure the mode got set correctly
 	*/
 	bSuccess = GetConsoleMode(hConsoleIn, &dwTestMode);
-	PERR(bSuccess, "GetConsoleMode");
+	PERR(bSuccess, "GetConsoleMode(hConsoleIn)");
 	if (dwTestMode != modein)
 	{
 		vrawerror("Unable to set Console input mode.");
@@ -465,83 +499,76 @@ static int vrawinit(void)
 	SetLastError(0);
 	modeout = ENABLE_PROCESSED_OUTPUT;
 	bSuccess = SetConsoleMode(hConsole, modeout);
-	PERR(bSuccess, "SetConsoleMode");
+	PERR(bSuccess, "SetConsoleMode(hConsole)");
 	/*
 	** Test to ensure the mode got set correctly
 	*/
 	bSuccess = GetConsoleMode(hConsole, &dwTestMode);
-	PERR(bSuccess, "GetConsoleMode");
+	PERR(bSuccess, "GetConsoleMode(hConsole)");
 	if (dwTestMode != modeout)
 	{
 		vrawerror("Unable to set Console output mode.");
 	}
 
-	/*
-	**	Set the window and buffer sizes
-	*/
-	{
-		CONSOLE_SCREEN_BUFFER_INFO csbi;
-		bSuccess = GetConsoleScreenBufferInfo(hConsole, &csbi);
-		PERR(bSuccess, "GetConsoleScreenBufferInfo");
-		if (bSuccess)
-		{
-			nOrigRows = csbi.dwSize.Y;
-			nOrigCols = csbi.dwSize.X;
-		}
-	}
-	vrawSetConsoleSize(hConsole);
 
+	if (!bWinsshd)
+	{
+		/*
+		**	Set the window and buffer sizes
+		*/
+		vrawSetConsoleSize(hConsole);
 
-	/*
-	**	Move the console window to the same location as it's parents.
-	**	Only do this the first time in to avoid interferring with
-	**	other maintainence of the window location.
-	**	(E.g. After a LINK the window will be correctly already positioned.)
-	*/
-	if (bFirstTimeMoveWindow)
-	{
-		bSuccess = GetWindowRect(vraw_get_console_hWnd(), &rectWin);
-		bFirstTimeMoveWindow = FALSE;
-	}
-	else
-	{
-		bSuccess = FALSE;
-	}
-	if (bSuccess)
-	{
-		char* ptr;
-		LONG	nWidth, nHeight, nLeft, nTop;
-
-		nTop	= rectWin.top;
-		nLeft	= rectWin.left;
-		nWidth  = rectWin.right  - rectWin.left;
-		nHeight = rectWin.bottom - rectWin.top;
 
 		/*
-		**	The parents console window position is set as part
-		**	of the spawn. Get the position and if different 
-		**	then move the window.
-		**
-		**	If the position was not set then this code does nothing.
+		**	Move the console window to the same location as it's parents.
+		**	Only do this the first time in to avoid interferring with
+		**	other maintainence of the window location.
+		**	(E.g. After a LINK the window will be correctly already positioned.)
 		*/
-		ptr = getenv("CONWINPOS");
-		if (ptr && *ptr)
+		if (bFirstTimeMoveWindow)
 		{
-			sscanf(ptr, "%ld:%ld", &nLeft, &nTop);
+			bSuccess = GetWindowRect(vraw_get_console_hWnd(), &rectWin);
+			bFirstTimeMoveWindow = FALSE;
 		}
-		if (nLeft != rectWin.left || nTop != rectWin.top)
+		else
 		{
-			bSuccess = MoveWindow(vraw_get_console_hWnd(),
-					      nLeft, nTop, nWidth, nHeight, TRUE);
+			bSuccess = FALSE;
 		}
+		if (bSuccess)
+		{
+			char* ptr;
+			LONG	nWidth, nHeight, nLeft, nTop;
+
+			nTop	= rectWin.top;
+			nLeft	= rectWin.left;
+			nWidth  = rectWin.right  - rectWin.left;
+			nHeight = rectWin.bottom - rectWin.top;
+
+			/*
+			**	The parents console window position is set as part
+			**	of the spawn. Get the position and if different 
+			**	then move the window.
+			**
+			**	If the position was not set then this code does nothing.
+			*/
+			ptr = getenv("CONWINPOS");
+			if (ptr && *ptr)
+			{
+				sscanf(ptr, "%ld:%ld", &nLeft, &nTop);
+			}
+			if (nLeft != rectWin.left || nTop != rectWin.top)
+			{
+				bSuccess = MoveWindow(vraw_get_console_hWnd(),
+						      nLeft, nTop, nWidth, nHeight, TRUE);
+			}
+		}
+
+		/*
+		**	Activate and display the console window
+		*/
+		bSuccess = ShowWindow(vraw_get_console_hWnd(), SW_SHOWNORMAL);
+		bSuccess = SetForegroundWindow(vraw_get_console_hWnd());
 	}
-
-	/*
-	**	Activate and display the console window
-	*/
-	bSuccess = ShowWindow(vraw_get_console_hWnd(), SW_SHOWNORMAL);
-	bSuccess = SetForegroundWindow(vraw_get_console_hWnd());
-
 
 	/*
 	**	Set - video was initialized.
@@ -561,6 +588,7 @@ static int vrawinit(void)
 	*/
 	vrawerase(0, 0, LOGICAL_ROWS-1, LOGICAL_COLS-1);
 
+	started = 0;
 	return SUCCESS;
 }
 
@@ -598,9 +626,12 @@ static BOOL vrawSetWindowSize(HANDLE hConsole, int nrows, int ncols)
 
 	_ASSERT(!bStreamIO);
 
+	VL_trace("vrawSetWindowSize() rows=%d, cols=%d", nrows, ncols);
+
 	/* get the largest size we can size the console window to */
 	coordLargest = GetLargestConsoleWindowSize(hConsole);
 	PERR(coordLargest.X | coordLargest.Y, "GetLargestConsoleWindowSize");
+	VL_trace("GetLargestConsoleWindowSize() X=%d, Y=%d", coordLargest.X, coordLargest.Y);
 
 	/* set the window size */
 	rectWin.Left = 0;
@@ -612,8 +643,12 @@ static BOOL vrawSetWindowSize(HANDLE hConsole, int nrows, int ncols)
 	{
 		SetLastError(0);
 		bSuccess = SetConsoleWindowInfo(hConsole,absolute,&rectWin);
-		Sleep(60);
+		Sleep(100);
 		rc = GetLastError();
+		if (!bSuccess)
+		{
+			VL_trace("SetConsoleWindowInfo() failed rows=%d, cols=%d, lastError=%d", nrows, ncols, rc);
+		}
 
 		bSuccess = GetConsoleScreenBufferInfo(hConsole, &csbi);
 		PERR(bSuccess, "GetConsoleScreenBufferInfo");
@@ -668,6 +703,7 @@ static BOOL vrawSetBufferSize(HANDLE hConsole, int nrows, int ncols)
 
 	_ASSERT(!bStreamIO);
 	
+	VL_trace("vrawSetBufferSize() rows=%d cols=%d", nrows, ncols);
 	cxmin = GetSystemMetrics(SM_CXMIN);
 	cymin = GetSystemMetrics(SM_CYMIN);
 
@@ -679,11 +715,12 @@ static BOOL vrawSetBufferSize(HANDLE hConsole, int nrows, int ncols)
 	{
 		SetLastError(0);
 		bSuccess = SetConsoleScreenBufferSize(hConsole, coordBuf);
-		Sleep(60);
+		Sleep(100);
 		rc = GetLastError();
 
 		bSuccess = GetConsoleScreenBufferInfo(hConsole, &csbi);
 		PERR(bSuccess, "GetConsoleScreenBufferInfo");
+		VL_trace("GetConsoleScreenBufferInfo() X=%d Y=%d", csbi.dwSize.X, csbi.dwSize.Y);
 
 		if (csbi.dwSize.X == coordBuf.X &&
 		    csbi.dwSize.Y == coordBuf.Y    )
@@ -725,10 +762,14 @@ static BOOL vrawConsoleResize(HANDLE hConsole, int rows, int cols)
 	BOOL bSuccess = FALSE;
 
 	_ASSERT(!bStreamIO);
+	VL_trace("vrawConsoleResize() rows=%d cols=%d", rows, cols);
 
-	/* Get info on console buff */
 	bSuccess = GetConsoleScreenBufferInfo(hConsole, &csbi);
 	PERR(bSuccess, "GetConsoleScreenBufferInfo");
+	/*
+	*  NOTE X == colums,  Y = rows
+	*/
+	VL_trace("GetConsoleScreenBufferInfo() X=%d Y=%d", csbi.dwSize.X, csbi.dwSize.Y );
 
 	/*
 	**	If current buff size is greater then desired size
@@ -756,6 +797,7 @@ static BOOL vrawConsoleResize(HANDLE hConsole, int rows, int cols)
 	*/
 	bSuccess = GetConsoleScreenBufferInfo(hConsole, &csbi);
 	PERR(bSuccess, "GetConsoleScreenBufferInfo");
+	VL_trace("GetConsoleScreenBufferInfo() X=%d Y=%d", csbi.dwSize.X, csbi.dwSize.Y );
 
 	if (csbi.dwSize.X != cols ||
 	    csbi.dwSize.Y != rows    )
@@ -789,8 +831,22 @@ static BOOL vrawConsoleResize(HANDLE hConsole, int rows, int cols)
 static void vrawSetConsoleSize(HANDLE hConsole)
 {
 	BOOL bSuccess = FALSE;
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
 	_ASSERT(!bStreamIO);
+
+	VL_trace("vrawSetConsoleSize()");
+
+	bSuccess = GetConsoleScreenBufferInfo(hConsole, &csbi);
+	PERR(bSuccess, "GetConsoleScreenBufferInfo");
+	if (bSuccess)
+	{
+		VL_trace("GetConsoleScreenBufferInfo() original size X=%d Y=%d", csbi.dwSize.X, csbi.dwSize.Y );
+
+		// save original sizes
+		nOrigRows = csbi.dwSize.Y;
+		nOrigCols = csbi.dwSize.X;
+	}
 
 	bSuccess = vrawConsoleResize(hConsole, LOGICAL_ROWS, LOGICAL_COLS);
 	if (bSuccess) return;
@@ -860,7 +916,7 @@ static void vrawSetConsoleSize(HANDLE hConsole)
 **	WARNINGS:	None
 **
 */
-static BOOL vrawWriteConsole(HANDLE hConsole, char *buff, int len)
+static BOOL vrawWriteConsole(HANDLE hConsole, const char *buff, int len)
 {
 	DWORD cCharsWritten = 0;
 	BOOL bSuccess = TRUE;
@@ -957,7 +1013,7 @@ char vrawcheck()
 	return xgetc_nw();			/* Check for a char, don't wait */
 }
 
-int vrawprint(char* buf)			/* Do raw output.       */
+int vrawprint(const char* buf)			/* Do raw output.       */
 {
 	if (!vraw_init_flag) vrawinit();        /* Init if not done.    */
 
@@ -1036,11 +1092,12 @@ static int repositionParentConsole(void)
 	return 0;
 }
 
-int vrawexit()
+int vrawexit(void)
 {
 	if (vraw_init_flag)		/* Init if done.    */
 	{
 		BOOL bSuccess = FALSE;
+		VL_trace("vrawexit()");
 
 		if( bStreamIO )
 		{
@@ -1048,11 +1105,18 @@ int vrawexit()
 			return SUCCESS;
 		}
 
-		repositionParentConsole();
-
 		vrawcursor(1); /* restore the cursor */
+
+		if( bWinsshd )
+		{
+			vraw_init_flag = 0;   /* No longer initialized.               */
+			return SUCCESS;
+		}
+
 //		bSuccess = vrawConsoleResize(hConsole, nOrigRows, nOrigCols);
-		
+
+		repositionParentConsole();		
+
 		if ( INVALID_HANDLE_VALUE != hConsoleSave )
 		{
 			/*
@@ -1063,6 +1127,7 @@ int vrawexit()
 //			bSuccess = vrawConsoleResize(hConsole, nOrigRows, nOrigCols);
 			hConsoleSave = INVALID_HANDLE_VALUE;
 		}
+
 		if ( INVALID_HANDLE_VALUE != hConsole )
 		{
 			/*
@@ -1072,11 +1137,12 @@ int vrawexit()
 			PERR(bSuccess,"CloseHandle");
 			hConsole = INVALID_HANDLE_VALUE;
 		}
-		if ( INVALID_HANDLE_VALUE != hConsoleIn )
+		if ( INVALID_HANDLE_VALUE != hConsoleIn)
 		{
 			/*
 			**	Restore the input mode
 			*/
+			VL_trace("SetConsoleMode(hConsoleIn, 0x%X )", dwOriginalInMode);
 			bSuccess = SetConsoleMode(hConsoleIn, dwOriginalInMode);
 			PERR(bSuccess,"SetConsoleMode");
 		}
@@ -1677,6 +1743,7 @@ static void initcolors()
 
 	if (ptr = getenv("VCOLORS"))
 	{
+		VL_trace("initcolors() VCOLORS=%s",ptr);
 		for(i=0; i<NUMATTR && *ptr && *(ptr+1); i++)
 		{
 			buff[0] = *ptr++;
@@ -1688,6 +1755,7 @@ static void initcolors()
 			}
 			else
 			{
+				VL_vre("initcolors() - ERROR unable to load attr(%d) buff=[%s]",i,buff);
 				break;
 			}
 		}
@@ -1775,7 +1843,11 @@ static BOOL vrawSetCursorPosition(int row, int col)
 		coordScreen.X = col;
 		coordScreen.Y = row;
 
-		SetConsoleCursorPosition(hConsole, coordScreen);
+		bSuccess = SetConsoleCursorPosition(hConsole, coordScreen);
+		if (!bSuccess)
+		{
+			VL_trace("SetConsoleCursorPosition: failed row=%d col=%d", row, col);
+		}
 
 		bSuccess = vrawGetCursorPosition(&new_row, &new_col);
 		if (bSuccess)
@@ -1915,7 +1987,7 @@ int vrawcursor( int state )
 	{
 		SetLastError(0);
 		bSuccess = SetConsoleCursorInfo(hConsole,&cinfo);
-		Sleep(60);
+		Sleep(100);
 
 		if (!bSuccess)
 		{
@@ -2163,6 +2235,11 @@ HWND vraw_get_console_hWnd(void)
 	{
 		return NULL;
 	}
+
+	if (winsshd())
+	{
+		return NULL;
+	}
 	
 	if (!hwndConsole)
 	{
@@ -2209,7 +2286,7 @@ void vrawtitle(const char *title)
 {
 	BOOL bSuccess;
 
-	if (bStreamIO)
+	if (bStreamIO || bWinsshd)
 	{
 		return;
 	}
@@ -2284,19 +2361,48 @@ static BOOL vraw_set_default_title(void)
 */
 void vrawerror(const char* message)
 {
-	CHAR szTemp[1024];
-	int iButtonPressed;
-	
-	sprintf(szTemp, "%s\n\nContinue execution?", message);
+	static int entered = 0;
 
-	MessageBeep(MB_ICONEXCLAMATION);
-	iButtonPressed = localMessageBox(NULL, szTemp, "Video Raw Error",
-				    MB_ICONEXCLAMATION | MB_YESNO | MB_SETFOREGROUND);
-
-	if (iButtonPressed == IDNO)
+	if (entered)
 	{
+		fprintf(stderr,"vrawerror(%s) - already entered!\r\n",message);
+		fprintf(stdout,"vrawerror(%s) - already entered!\r\n",message);
 		exit(1);
 	}
+	entered = 1;
+
+	if (vrawdirectio() && !winsshd())
+	{
+		CHAR szTemp[1024];
+		int iButtonPressed;
+		
+		sprintf(szTemp, "%s\n\nContinue execution?", message);
+
+		MessageBeep(MB_ICONEXCLAMATION);
+		iButtonPressed = localMessageBox(NULL, szTemp, "Video Raw Error",
+					    MB_ICONEXCLAMATION | MB_YESNO | MB_SETFOREGROUND);
+
+		if (iButtonPressed == IDNO)
+		{
+			exit(1);
+		}
+	}
+	else
+	{
+		VL_trace_enable();
+		VL_trace("vrawerror(%s)",message);
+		if (vraw_init_flag)
+		{
+			vrawprint(message);
+		}
+		else
+		{
+			fprintf(stderr,"vrawerror: %s\r\n",message);
+			fprintf(stdout,"vrawerror: %s\r\n",message);
+		}
+		exit(1);
+	}
+	entered = 0;
 }
 
 /*
@@ -2329,6 +2435,8 @@ int vrawdirectio(void)
 		char* ptr;
 		
 		bPipeIO = (GetFileType( GetStdHandle(STD_OUTPUT_HANDLE)) == FILE_TYPE_PIPE) ? 1 : 0;
+		VL_trace("vrawdirectio() bPipeIO=%d", bPipeIO);
+
 		directio = (bPipeIO) ? 0: 1;
 
 		if (ptr = getenv("W4W"))
@@ -2372,9 +2480,11 @@ int vrawdirectio(void)
 
 		if (bTelnet)
 		{
+			VL_trace("vrawdirectio() bTelnet=%d", bTelnet);
 			directio = 0;
 		}
-		
+
+		VL_trace("vrawdirectio() return(%d)", directio);
 	}
 
 	return directio;
@@ -2399,6 +2509,52 @@ void vrawDebugBreak(void)
 void vraw_stty_save()    { /* STUB */ }
 void vraw_stty_restore() { /* STUB */ }
 void vraw_stty_sync()    { /* STUB */ }
+
+/*
+ * Return true (1) if running in an SSH session under a WinSSHd server.
+ */
+static int winsshd(void)
+{
+	static int rc = -1;
+	
+	if (-1 == rc)
+	{
+		char	*ptr;
+
+		rc = 0;		/* Default to false */
+
+		/*
+		 *	The WinSSHd service sets the variable WINSSHDGROUP.
+		 *	If set then assume true.
+		 */
+		if (getenv("WINSSHDGROUP"))
+		{
+			rc = 1;
+		}
+
+		/*
+		 *	Variable WISPWINSSHD can force this flag on or off.
+		 */
+		if (ptr = getenv("WISPWINSSHD")) 
+		{
+			if ('1' == *ptr)
+			{
+				rc = 1;
+			}
+			else
+			{
+				rc = 0;
+			}
+		}
+
+		if (1 == rc)
+		{
+			VL_trace("winsshd() - Running in SSH session under WinSSHd");
+		}
+		
+	}
+	return rc;
+}
 
 /*
 **	ROUTINE:	localMessageBox()
@@ -2478,6 +2634,12 @@ static void writelog(char *fmt,...)
 /*
 **	History:
 **	$Log: vrawntcn.c,v $
+**	Revision 1.73  2011/08/25 23:43:19  gsl
+**	for winsshd don't resize the console
+**	
+**	Revision 1.72  2011/08/22 03:10:00  gsl
+**	Support for WinSSHd on Windows
+**	
 **	Revision 1.71  2003/07/09 20:07:26  gsl
 **	type of "WISPTELNET"
 **	

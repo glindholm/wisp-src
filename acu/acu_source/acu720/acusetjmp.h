@@ -1,5 +1,5 @@
 /* acusetjmp.h - declarations for acusavenv and aculongjmp routines  */
-/* $Id:$ */
+/* $Id: acusetjmp.h 45102 2006-01-12 19:46:07Z merge $ */
 
 /* Copyright (c) 2002-2006 by Acucorp, Inc.  All rights reserved.	*/
 

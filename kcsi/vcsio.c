@@ -44,6 +44,9 @@ Cloned from KCSI_ccsio.c for routine names.
 #include "kcsifunc.h"
 #include "visn3.h"
 
+#ifdef WIN32
+#define unlink(filename) _unlink(filename)
+#endif
 
 /*
 #define	DEBUG
@@ -1188,6 +1191,9 @@ int KCSI_e_trans(int code)
 /*
 **	History:
 **	$Log: vcsio.c,v $
+**	Revision 1.30  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.29  2003/06/10 16:49:50  gsl
 **	fix trace in close_file()
 **	

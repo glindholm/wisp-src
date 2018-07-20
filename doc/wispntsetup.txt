@@ -6,7 +6,7 @@ Title:          WISP for Windows Quick Set-Up Steps
 Document:       wispntsetup.txt
 Last Updated:   $Date:$
 Products:       WISP/WIN32
-Versions:       5.1.00
+WISPVER:        5.1.10
 
 Summary:        WISP for Windows installation and setup steps
 
@@ -59,19 +59,38 @@ The Steps
 
     a) In Explorer or File Manager select C:\WISPxxxx
     b) From File menu select "Properties"
-    c) From the Sharing tab, select "Share As:" Share Name: "WISP"
+    c) From the Sharing tab, 
+	- Click on "Advanced Sharing..."
+	- Select "Share this folder"
+	- Set Share Name: "WISP"
+	- You may need to set "Permissions" to allow "Full Control"
     d) Click OK
 
-3) Configure WISP on the server machine.
+3) Configure the WISP runtime environment on the server machine.
     
-    To configure WISP you will need to either run WCONFIG.exe to 
-    setup the registry values or you will need to setup the equivalent
-    environment variables.  See the WISP manual for information on
-    configuring via environment variables. 
+    You can configure WISP with either environment variables or via 
+    registry keys.  It is recommended you use environment variables 
+    for all new distributions.
+    
+    To configure with environment variables you will need to at a 
+    minimum set the following:
+    
+	set WISPSERVER=MYSERVER
+	set WISPDIR=\\MYSERVER\WISP
+	set WISPCONFIG=\\MYSERVER\WISP\CONFIG
+	set WISPUSERSDIR=C:\USERS
+	set WISPTMPDIR=C:\TEMP
+
+    The values shown above are only examples. See the WISP manual for complete 
+    information on configuring via environment variables. 
+    
+    To configure WISP with registry keys run WCONFIG.exe to setup the registry 
+    values.  On current Windows machines you should always run WCONFIG.exe
+    as an Administrator.
 
     To configure using WCONFIG.exe follow these instructions:
 
-    a) Run C:\WISPxxxx\BIN\WCONFIG.exe
+    a) Run C:\WISPxxxx\BIN\WCONFIG.exe (Right-click and "Run as Administrator")
     b) Answer the prompts.
 
        "Would you like to import configuration information from a
@@ -142,6 +161,12 @@ The Steps
     Follow the build instructions for your version of 
     Acucobol.
 
+       For Acucobol-GT 9.1 see:
+        - C:\WISPxxxx\acu\acu91\build_wisp_acu91_rts.txt
+
+       For Acucobol-GT 9.0 see:
+        - C:\WISPxxxx\acu\acu90\build_wisp_acu90_rts.txt
+
        For Acucobol-GT 8.1 see:
         - C:\WISPxxxx\acu\acu81\build_wisp_acu81_rts.txt
 
@@ -169,15 +194,13 @@ The Steps
    Follow the instructions in Appendix B of the WISP manual.
 
    Share the Acucobol installation directory. (E.g. Share
-   "C:\Acucorp\acucbl810\acugt") as "ACUDIR".  
+   "C:\Acucorp\acucbl910\acugt") as "ACUDIR".  
 
    Edit the WRUN.CFG configuration file in the WISPCONFIG
    directory and change the RUNCBL= option to point to the new
    runtime system.
 
           RUNCBL=\\SERVER01\ACUDIR\BIN\WRUN32.EXE
-          or
-          RUNCBL=\\SERVER01\ACUDIR\BIN\WRUN32WISP.EXE
 
    Substitute the actual server and share name inplace of 
    "\\SERVER01\ACUDIR" in the above example.
@@ -185,10 +208,15 @@ The Steps
 7) Configure the client machines
 
    Each of the client machines on the network will need to be
-   configured by running the Wconfig.exe program.
+   configured by setting environment variables or by running the WCONFIG.exe 
+   program to set the registry keys.
+   
+   See the WISP manual for complete information on configuring via environment 
+   variables. 
 
-   The process can be simplified by "Exporting" the configuration to a
-   text file then "Importing" the configuration on each machine.
+   If using registry keys the process can be simplified by "Exporting" the 
+   configuration to a text file then "Importing" the configuration on each 
+   machine.
 
    a) On the server run C:\WISPxxxx\BIN\WCONFIG.EXE
    b) Click on the "Export" button and enter a file name.

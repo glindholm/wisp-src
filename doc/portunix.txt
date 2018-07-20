@@ -1,5 +1,4 @@
 	Copyright (c) Shell Stream Software LLC. All Rights Reserved. 
-	All Rights Reserved.
 	====================================================================
 	
 	Title:		WISP PORTING INSTRUCTIONS FOR UNIX
@@ -69,6 +68,8 @@
 	 	Load the source kit from external media using tar.
 		Then uncompress it and un-tar it to create the "src"
 		directory.
+		
+		CVSROOT=:pserver:gsl@devel.shellstream.net:/cvsdata/CVSROOT
 
 		    $ cd wisp
                     $ cvs co -P -d src wisp/src
@@ -151,6 +152,8 @@
 
 		$ make -f makewisp.umf all_acu>>make.err 2>&1 & # make and log errors
 		$ tail -f make.err		 # show progress on screen
+		or
+		$ maketail.sh all_acu
 
 
 	BUILD ALL WISP COMPONENTS
@@ -161,15 +164,18 @@
 	does not build the COBOL runtime systems or SAMPLE.
 
 	[ ]	$ cd ${WISPSRC}/port
-		$ maketail.sh			# make & tail
+		$ maketail.sh shipkit		# build WISP & EDE
+		
 		or
-		$ maketail.sh all_acu
-		or
-		$ maketail.sh shipkit		# missing all cobol
-		or
-		$ make -f makewisp.umf>>make.err 2>&1 &	# make and log errors
+		
+		$ make -f makewisp.umf shipkit>>make.err 2>&1 & # make and log errors
 		$ tail -f make.err		# show progress on screen
 		
+		plus 
+		
+		$ maketail.sh kcsi_acu		# To build KCSI for ACU		
+		
+		$ maketail.sh all_acu		# WISP, EDE, KCSI/ACU		
 
 	[ ]	$ vi make.err			# ensure no errors
 
@@ -217,18 +223,12 @@
 	MOVE SHIPPING KITS
 	==================
 
-	Move the shipping kits into the shipping area on wakko.
+	Move the shipping kits into the shipping area on DEVEL.
 	There are 3 ship kits:
 
 	[ ]	 ${WISPSRC}/wisp_XXXX.ship
 	[ ]	 ${WISPSRC}/kcsi/kcsi_acu_XXXX.ship
 	[ ]	 ${WISPSRC}/kcsi/kcsi_mf_XXXX.ship
-
-	From a local networked machine:
-
-	$ cd ${WISPSRC}
-	$ cp -r -p *.ship $SHIPPING/os_X.X.X
-	$ cp -r -p kcsi/*.ship $SHIPPING/os_X.X.X
 
 
 

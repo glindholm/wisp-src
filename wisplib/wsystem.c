@@ -144,10 +144,21 @@ int WL_run_unixcommand_silent(const char* command)
 */
 #include <stdio.h>
 #include "win32spn.h"
+#include "wispcfg.h"
 
 int WL_wsystem(const char* cmd)
 {
-	return WL_win32spawnlp(NULL, cmd, SPN_WAIT_FOR_CHILD);
+	if (wisp_winsshd())
+	{
+		/*
+		 * With winsshd the console is left in a "raw" state so do not inherit it
+		 */
+		return WL_win32spawnlp(NULL, cmd, SPN_WAIT_FOR_CHILD|SPN_NO_INHERIT);
+	}
+	else
+	{
+		return WL_win32spawnlp(NULL, cmd, SPN_WAIT_FOR_CHILD);
+	}
 }
 
 int WL_wsystem_standalone(const char* cmd)
@@ -158,6 +169,9 @@ int WL_wsystem_standalone(const char* cmd)
 /*
 **	History:
 **	$Log: wsystem.c,v $
+**	Revision 1.25  2011/08/27 22:43:52  gsl
+**	fix winsshd issue with inherited handles
+**	
 **	Revision 1.24  2003/05/01 20:59:58  gsl
 **	trace return on in run_unixcommand_silent()
 **	

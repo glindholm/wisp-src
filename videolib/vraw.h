@@ -66,7 +66,7 @@ extern int  vrawntcn_get_mouse_position( int *row, int *col );
 extern void VL_vshut(void);
 extern int  vrawexit(void);
 extern int  vrawputc(char ch);
-extern int  vrawprint(char *buf);
+extern int  vrawprint(const char *buf);
 extern char vrawinput(void);
 extern char vrawcheck(void);
 extern void vrawtitle(const char *title);
@@ -90,6 +90,9 @@ extern void* vrawttyalloc(void);
 /*
 **	History:
 **	$Log: vraw.h,v $
+**	Revision 1.5  2011/08/22 03:10:00  gsl
+**	Support for WinSSHd on Windows
+**	
 **	Revision 1.4  2003/01/31 19:25:56  gsl
 **	Fix copyright header
 **	

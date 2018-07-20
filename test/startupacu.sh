@@ -55,6 +55,6 @@ echo
 echo Switching to new shell for WISP QA
 echo
 #PS1="TESTACU `hostname` $ "
-PS1="TESTACU `uname -n` $ "
+PS1='TESTACU '`uname`' [${PWD}] $ '
 export PS1
 $SHELL

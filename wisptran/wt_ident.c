@@ -33,6 +33,10 @@
 #include "statment.h"
 #include "ring.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 extern char	decimal_is;
 
 char	*figcon1_ring = 0;
@@ -773,6 +777,9 @@ static void finish_figcons(NODE hold_special)
 /*
 **	History:
 **	$Log: wt_ident.c,v $
+**	Revision 1.35  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.34  2003/12/02 21:23:20  gsl
 **	Fix so native screen sections don't get generated in a copybook file.
 **	Change generated copybooks (internal) to use same file extension rules

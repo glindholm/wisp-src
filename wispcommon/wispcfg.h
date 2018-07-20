@@ -79,6 +79,7 @@ const char* WL_acu_vutil_exe(void);
 const char* wispdir(void);
 int WL_no_windows(void);
 int wisptelnet(void);
+int wisp_winsshd(void);
 const char* wisprcfilepath(void);
 
 #endif /* wispcfg_H */
@@ -86,6 +87,9 @@ const char* wisprcfilepath(void);
 /*
 **	History:
 **	$Log: wispcfg.h,v $
+**	Revision 1.17  2011/08/22 03:09:59  gsl
+**	Support for WinSSHd on Windows
+**	
 **	Revision 1.16  2003/02/14 16:12:07  gsl
 **	Define a value for testing is $WISPCONFIG is not set
 **	

@@ -4,17 +4,17 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
+** $Id: ptmain.c,v 1.19 2010/01/10 16:04:27 gsl Exp $
 ** 
 ** CVS
-** $Source:$
+** $Source: /cvsdata/CVSROOT/wisp/src/proctran/ptmain.c,v $
 ** $Author: gsl $
-** $Date:$
-** $Revision:$
+** $Date: 2010/01/10 16:04:27 $
+** $Revision: 1.19 $
 ******************************************************************************
 */
 
-static char rcsid[]="$Id:$"; /* USED BELOW */
+static char rcsid[]="$Id: ptmain.c,v 1.19 2010/01/10 16:04:27 gsl Exp $"; /* USED BELOW */
 
 /*
 **	File:		ptmain.c

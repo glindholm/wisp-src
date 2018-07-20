@@ -94,8 +94,10 @@ MF_FLAGS = -C warnings=2 -C LINKCOUNT=5000
 #
 STDDIST=ctlcnvrt.wcb rptcnvrt.wcb kcsi_packlist.txt kcsi_relnotes.txt
 
+ACUXDIST=CONTROL REPORT INQUIRY DATENTRY CREATE 
+
 ACUDIST=libkcsiacu.a kcsi_sub85_inc.c wruncbl.umf \
-	CONTROL REPORT INQUIRY DATENTRY CREATE \
+	$(ACUXDIST) \
 	kcsi_acu_install.txt $(STDDIST)
 
 MFXDIST=control report inquiry datentry create \
@@ -254,7 +256,6 @@ all:	kcsi_acu kcsi_mf
 clean:
 	rm -f *.o *.a *.int *.idy *.cbx *.cob *.cpy *.err *~ core
 	rm -f control report inquiry datentry create
-	rm -f CONTROL REPORT INQUIRY DATENTRY CREATE
 	rm -f wruncblk wruncblke 
 	rm -f wruncbl.umf *.alc sub.c sub85.c filetbl.c callc.c wisp_sub85_inc.c
 	rm -r -f kcsi*.ship
@@ -405,6 +406,13 @@ wruncblk_rts: $(LIBC_ACU_A) wruncbl.umf
 
 wruncbl.umf: $(WISPSRC)/acu/wruncbl.umf
 	cp -f $(WISPSRC)/acu/wruncbl.umf $@
+
+kcsi_acux.tar.Z: $(ACUXDIST)
+	tar -cvf - $(ACUXDIST) | compress > $@
+	
+kcsi_acux: kcsi_acux.tar.Z
+	uncompress -c kcsi_acux.tar.Z | tar -xvf -
+	touch $(ACUXDIST)
 
 #-----------------------------------------------------------------------
 #

@@ -65,6 +65,10 @@
 #include "werrlog.h"
 #include "wdefines.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -2320,6 +2324,9 @@ static int ssbytenormal(void)
 /*
 **	History:
 **	$Log: sortseqf.c,v $
+**	Revision 1.34  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.33  2003/08/05 18:42:27  gsl
 **	fix warnings
 **	

@@ -11,6 +11,9 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
@@ -39,9 +42,55 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="nmake /f &quot;sampleacu.mak&quot;"
+				ReBuildCommandLine="nmake /f &quot;sampleacu.mak&quot; clean all"
+				CleanCommandLine="nmake /f &quot;sampleacu.mak&quot; clean"
+				Output="SAMPLE"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory=".\Debug"
 			IntermediateDirectory=".\Debug"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="nmake /f &quot;sampleacu.mak&quot;"
+				ReBuildCommandLine="nmake /f &quot;sampleacu.mak&quot; /a"
+				CleanCommandLine=""
+				Output="SAMPLE"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="0"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
@@ -692,7 +741,7 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Config"
+			Name="Config_nt"
 			>
 			<File
 				RelativePath="config_nt\ACUCONFIG"
@@ -703,7 +752,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\config_nt\FORMS"
+				>
+			</File>
+			<File
 				RelativePath="config_nt\LGMAP"
+				>
+			</File>
+			<File
+				RelativePath=".\config_nt\LGMAP.zoomstar"
+				>
+			</File>
+			<File
+				RelativePath=".\config_nt\LPMAP"
 				>
 			</File>
 			<File
@@ -711,7 +772,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\config_nt\PRMAP"
+				>
+			</File>
+			<File
+				RelativePath=".\config_nt\README.txt"
+				>
+			</File>
+			<File
 				RelativePath="config_nt\W4WMAP"
+				>
+			</File>
+			<File
+				RelativePath=".\config_nt\wproc.msg"
 				>
 			</File>
 			<File
@@ -722,6 +795,22 @@
 				RelativePath="config_nt\wsysconf.cfg"
 				>
 			</File>
+			<Filter
+				Name="videocap"
+				>
+				<File
+					RelativePath=".\config_nt\videocap\ansi.vcap"
+					>
+				</File>
+				<File
+					RelativePath=".\config_nt\videocap\wincon.vcap"
+					>
+				</File>
+				<File
+					RelativePath=".\config_nt\videocap\xterm.vcap"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="WPS"
@@ -788,10 +877,6 @@
 			Name="SCRIPTS"
 			Filter="sh;bat"
 			>
-			<File
-				RelativePath="configacu.bat"
-				>
-			</File>
 			<File
 				RelativePath="configacu.sh"
 				>
@@ -873,7 +958,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\setupqa.bat"
+				>
+			</File>
+			<File
 				RelativePath="startacu.bat"
+				>
+			</File>
+			<File
+				RelativePath=".\startqa.bat"
 				>
 			</File>
 			<File
@@ -958,6 +1051,30 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Config_test_obsolete"
+			>
+			<File
+				RelativePath=".\ACUCONFIG.NT"
+				>
+			</File>
+			<File
+				RelativePath=".\lgmap.nt"
+				>
+			</File>
+			<File
+				RelativePath=".\LPMAP.NT"
+				>
+			</File>
+			<File
+				RelativePath="testacu_nt.reg"
+				>
+			</File>
+			<File
+				RelativePath=".\wrun_acu.cfg"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\doc\portwin32.txt"
 			>
@@ -980,14 +1097,6 @@
 		</File>
 		<File
 			RelativePath="samplemf.umf"
-			>
-		</File>
-		<File
-			RelativePath="testacu.bsc"
-			>
-		</File>
-		<File
-			RelativePath="testacu_nt.reg"
 			>
 		</File>
 	</Files>

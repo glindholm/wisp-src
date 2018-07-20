@@ -54,6 +54,7 @@
 #include "wisplib.h"
 #include "vssubs.h"
 #include "idsisubs.h"
+#include "werrlog.h"
 
 /*
 **	Structures and Defines
@@ -108,6 +109,8 @@ void WL_wexith(void)									/* This is the WISP exit handler.	*/
 
 	if (already) return;								/* Already been here.			*/
 	else	already = 1;
+
+	WL_wtrace("WEXITH", "ENTRY", "Performing pre-exit cleanup"); 
 
 	/*
 	**	Delete all IS_SCRATCH files
@@ -211,7 +214,7 @@ void wispexit_cleanup(void)
 	**	If this is the top level process then delete
 	**	the temp files.
 	*/
-	if (getpid() == WL_wgetpgrp()) /* If TOP level process */
+	if (_getpid() == WL_wgetpgrp()) /* If TOP level process */
 	{
 		WL_delete_defaults_temp();
 		WL_delete_retcode();
@@ -265,6 +268,15 @@ int WL_delete_worklib(void)
 /*
 **	History:
 **	$Log: wexith.c,v $
+**	Revision 1.37  2011/09/04 21:12:54  gsl
+**	fix win32 IOS C++ warnings
+**	
+**	Revision 1.36  2011/08/26 00:57:02  gsl
+**	tracing
+**	
+**	Revision 1.35  2011/08/25 23:40:00  gsl
+**	tracing
+**	
 **	Revision 1.34  2003/02/17 22:07:17  gsl
 **	move VSSUB prototypes to vssubs.h
 **	

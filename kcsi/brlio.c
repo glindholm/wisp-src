@@ -40,6 +40,15 @@ cloned from relio.c
 #include "kcsio.h"
 #include "kcsifunc.h"
 
+
+#ifdef WIN32
+#define open(filename, oflag, pmode)	_open(filename, oflag, pmode)
+#define close(file)		_close(file)
+#define read(file, buff, count) _read(file, buff, count)
+#define write(file, buff, count) _write(file, buff, count)
+#define lseek(file, offset, origin) _lseek(file, offset, origin)
+#endif
+
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
@@ -116,7 +125,7 @@ Doopen should not be used for open output
 ------*/
 static void do_open(KCSIO_BLOCK *kfb,int mode)
 {
-	kfb->_io_channel = open(kfb->_sys_name,mode);
+	kfb->_io_channel = open(kfb->_sys_name,mode,0);
 	if (-1 == kfb->_io_channel)
 	{
 		kfb->_status = EBADF;
@@ -664,6 +673,9 @@ static void brel_commit(int fh)
 /*
 **	History:
 **	$Log: brlio.c,v $
+**	Revision 1.20  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.19  2003/02/05 21:47:53  gsl
 **	fix -Wall warnings
 **	

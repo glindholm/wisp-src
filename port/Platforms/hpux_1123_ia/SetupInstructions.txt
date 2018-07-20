@@ -1,0 +1,16 @@
+Use "sam" to create a /data file system.
+	-> Disks and File systems
+		-> Logical Volumes
+			-> Actions -> Create
+	/data 4000 MB		
+			
+8/2011
+------
+New config is:
+
+/opt	8 gig
+/usr	9 gig
+/var	8 gig
+/home	3 gig
+
+No need for a /data volume

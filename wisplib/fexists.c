@@ -116,7 +116,7 @@ int WL_fexists(const char* name)
 	 *	Use access() because stat() fails on a share name like "\\machine\share".
 	 */
 
-	if (0==access(name,000))
+	if (0==_access(name,000))
 	{
 		return 1;
 	}
@@ -496,12 +496,15 @@ int WL_fcanread(const char* name)
 #endif /* unix */
 
 #ifdef WIN32
-	return (0==access(name,004)) ? 1 : 0;
+	return (0==_access(name,004)) ? 1 : 0;
 #endif
 }
 /*
 **	History:
 **	$Log: fexists.c,v $
+**	Revision 1.26  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.25  2007/07/31 16:51:07  gsl
 **	Change INT8 to INT64 to avoid conflicts on WIN32
 **	

@@ -91,6 +91,10 @@
 #include "wfcisam.h"
 #include "assert.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 /*
 **	Structures and Defines
 */
@@ -3360,6 +3364,9 @@ main()
 /*
 **	History:
 **	$Log: mngfile.c,v $
+**	Revision 1.68  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.67  2003/08/01 20:44:17  gsl
 **	On Windows fix (12) Edit a file by using double-quotes instead of the unix single quotes
 **	

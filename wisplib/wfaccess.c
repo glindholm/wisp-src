@@ -72,6 +72,10 @@
 #include "wisplib.h"
 #include "werrlog.h"
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 
 static int x_wfaccess(char* filename, int is_output, int is_indexed);
 
@@ -214,6 +218,9 @@ static int x_wfaccess(char* filename, int is_output, int is_indexed)
 /*
 **	History:
 **	$Log: wfaccess.c,v $
+**	Revision 1.25  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.24  2009/10/18 20:57:07  gsl
 **	Fix bug with Vista/2008 where creat() was failing because of unsupported mode.
 **	

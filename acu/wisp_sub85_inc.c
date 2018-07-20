@@ -43,8 +43,9 @@
 #include "kcsi_sub85_inc.c"
 #endif /* KCSI */
 
-int 	wfrontend();
-int	wfrontend2();
+int wispfrontend( char* name, int num_args, Argument args[], int initial, ... );
+int wispfrontend2( char* name, int num_args, Argument args[], int initial, ... );
+
 
 /************************************************************************/
 #endif /* WISP_SUB85_HEADER */
@@ -59,200 +60,200 @@ int	wfrontend2();
 /*
 **  VSSUBS & USERSUBS
 */
-	{ "BELL", 	wfrontend },
-	{ "BITPACK",	wfrontend },
-	{ "BITUNPK",	wfrontend },
-	{ "CANCEL",	wfrontend },
-	{ "CEXIT",	wfrontend },
-	{ "COBLINK",	wfrontend },
-	{ "DATE",	wfrontend },
-	{ "DATE2",	wfrontend },
-	{ "DATE4",	wfrontend },
-	{ "DATE6",	wfrontend },
-	{ "DAY",	wfrontend },
-	{ "EXTRACT",	wfrontend },
-	{ "EXTRACT2",	wfrontend },
-	{ "FIND",	wfrontend },
-	{ "GETPARM",	wfrontend },
-	{ "HEXPACK",	wfrontend },
-	{ "HEXUNPK",	wfrontend },
-	{ "LINK",	wfrontend2 },
-	{ "LOGOFF",	wfrontend },
-	{ "MESSAGE",	wfrontend },
-	{ "PAUSE",	wfrontend },
-	{ "PRINT",	wfrontend },
-	{ "PUTPARM",	wfrontend },
-	{ "READFDR",	wfrontend },
-	{ "READFDR4",	wfrontend },
-	{ "READVTOC",	wfrontend },
-	{ "RENAME",	wfrontend },
-	{ "SCRATCH",	wfrontend },
-	{ "SCREEN",	wfrontend },
-	{ "SEARCH",	wfrontend },
-	{ "SET",	wfrontend },
-	{ "SET2",	wfrontend },
-	{ "SETFILE",	wfrontend },
-	{ "SORT",	wfrontend },
-	{ "SORTCALL",	wfrontend },
-	{ "SORTLINK",	wfrontend },
-	{ "STRING",	wfrontend },		
-	{ "SUBMIT",	wfrontend },
-	{ "UPDATFDR",	wfrontend },
-	{ "WSXIO",	wfrontend },
+	{ "BELL", 	wispfrontend, NULL },
+	{ "BITPACK",	wispfrontend, NULL },
+	{ "BITUNPK",	wispfrontend, NULL },
+	{ "CANCEL",	wispfrontend, NULL },
+	{ "CEXIT",	wispfrontend, NULL },
+	{ "COBLINK",	wispfrontend, NULL },
+	{ "DATE",	wispfrontend, NULL },
+	{ "DATE2",	wispfrontend, NULL },
+	{ "DATE4",	wispfrontend, NULL },
+	{ "DATE6",	wispfrontend, NULL },
+	{ "DAY",	wispfrontend, NULL },
+	{ "EXTRACT",	wispfrontend, NULL },
+	{ "EXTRACT2",	wispfrontend, NULL },
+	{ "FIND",	wispfrontend, NULL },
+	{ "GETPARM",	wispfrontend, NULL },
+	{ "HEXPACK",	wispfrontend, NULL },
+	{ "HEXUNPK",	wispfrontend, NULL },
+	{ "LINK",	wispfrontend2, NULL },
+	{ "LOGOFF",	wispfrontend, NULL },
+	{ "MESSAGE",	wispfrontend, NULL },
+	{ "PAUSE",	wispfrontend, NULL },
+	{ "PRINT",	wispfrontend, NULL },
+	{ "PUTPARM",	wispfrontend, NULL },
+	{ "READFDR",	wispfrontend, NULL },
+	{ "READFDR4",	wispfrontend, NULL },
+	{ "READVTOC",	wispfrontend, NULL },
+	{ "RENAME",	wispfrontend, NULL },
+	{ "SCRATCH",	wispfrontend, NULL },
+	{ "SCREEN",	wispfrontend, NULL },
+	{ "SEARCH",	wispfrontend, NULL },
+	{ "SET",	wispfrontend, NULL },
+	{ "SET2",	wispfrontend, NULL },
+	{ "SETFILE",	wispfrontend, NULL },
+	{ "SORT",	wispfrontend, NULL },
+	{ "SORTCALL",	wispfrontend, NULL },
+	{ "SORTLINK",	wispfrontend, NULL },
+	{ "STRING",	wispfrontend, NULL },		
+	{ "SUBMIT",	wispfrontend, NULL },
+	{ "UPDATFDR",	wispfrontend, NULL },
+	{ "WSXIO",	wispfrontend, NULL },
 
 /*
 **  WISPSUBS
 */
-	{ "ACUGARGS", 	wfrontend },
-	{ "ACUNARGS", 	wfrontend },
-	{ "ACUPARGS", 	wfrontend },
-	{ "BIT_OFF",	wfrontend },
-	{ "BIT_ON",	wfrontend },
-	{ "BIT_TEST",	wfrontend },
-	{ "FILECOPY",	wfrontend },
-	{ "FXZONE",	wfrontend },
-	{ "GETPARMBUILD",wfrontend },
-	{ "INITWISP2",	wfrontend },
-	{ "INITWISP3",	wfrontend },
-	{ "ISDBFILE",	wfrontend2 },
-	{ "LBIT_OFF",	wfrontend },
-	{ "LBIT_ON",	wfrontend },
-	{ "LINKPROC",	wfrontend },
-	{ "MWCONV",	wfrontend },
-	{ "NOHELP",	wfrontend },
-	{ "ONHELP",	wfrontend },
-	{ "RETCODE",	wfrontend },
-	{ "SET8BIT",	wfrontend },
-	{ "SETFILE2",	wfrontend },
-	{ "SETRETCODE", wfrontend },
-	{ "SETSUBMIT",  wfrontend },
-	{ "SLEEPONE",   wfrontend },
-	{ "SORTINFO",	wfrontend },
-	{ "UPPER",	wfrontend },
-	{ "USEHARDLINK",wfrontend },
-	{ "USESOFTLINK",wfrontend },
-	{ "VWANG",	wfrontend },
-	{ "W4WAPI",	wfrontend },
-	{ "W99TOX",	wfrontend },
-	{ "WACCEPT",	wfrontend },
-	{ "WANSI2WANG",	wfrontend },
-	{ "WCHAIN",	wfrontend },
-	{ "WDISPLAY",	wfrontend },
-	{ "WFCLOSE",	wfrontend },
-	{ "WFILECHK2",  wfrontend },
-	{ "WFILECHK3",	wfrontend },
-	{ "WFNAME",     wfrontend },
-	{ "WFNAME2",    wfrontend },
-	{ "WFOPEN3",	wfrontend },
-	{ "WFOPEN4",	wfrontend },
-	{ "WFWAIT",	wfrontend },
-	{ "WGETCURPOS",	wfrontend },
-	{ "WGETFILEXT", wfrontend },
-	{ "WISPEXIT",	wfrontend },
-	{ "WISPHELP",	wfrontend },
-	{ "WISPPLAT",	wfrontend },
-	{ "WISPSHUT",	wfrontend },
-	{ "WISPSORT",	wfrontend },
-	{ "WISPSYNC",	wfrontend },
-	{ "WS_CLOSE",	wfrontend },
-	{ "WS_READ",	wfrontend },
-	{ "WS_READ_ALT",	wfrontend },
-	{ "WS_REWRITE",	wfrontend },
-	{ "WSCREEN",	wfrontend },
-	{ "WSETFACBLINK", wfrontend },
-	{ "WSETFILEXT", wfrontend },
-	{ "WSTOP",	wfrontend },
-	{ "WTITLE",	wfrontend },
-	{ "WVASET",     wfrontend },
-	{ "WWANG2ANSI",	wfrontend },
-	{ "X4DBFILE",	wfrontend2 },
-	{ "X4DBFILE2",	wfrontend2 },
+	{ "ACUGARGS", 	wispfrontend, NULL },
+	{ "ACUNARGS", 	wispfrontend, NULL },
+	{ "ACUPARGS", 	wispfrontend, NULL },
+	{ "BIT_OFF",	wispfrontend, NULL },
+	{ "BIT_ON",	wispfrontend, NULL },
+	{ "BIT_TEST",	wispfrontend, NULL },
+	{ "FILECOPY",	wispfrontend, NULL },
+	{ "FXZONE",	wispfrontend, NULL },
+	{ "GETPARMBUILD",wispfrontend, NULL },
+	{ "INITWISP2",	wispfrontend, NULL },
+	{ "INITWISP3",	wispfrontend, NULL },
+	{ "ISDBFILE",	wispfrontend2, NULL },
+	{ "LBIT_OFF",	wispfrontend, NULL },
+	{ "LBIT_ON",	wispfrontend, NULL },
+	{ "LINKPROC",	wispfrontend, NULL },
+	{ "MWCONV",	wispfrontend, NULL },
+	{ "NOHELP",	wispfrontend, NULL },
+	{ "ONHELP",	wispfrontend, NULL },
+	{ "RETCODE",	wispfrontend, NULL },
+	{ "SET8BIT",	wispfrontend, NULL },
+	{ "SETFILE2",	wispfrontend, NULL },
+	{ "SETRETCODE", wispfrontend, NULL },
+	{ "SETSUBMIT",  wispfrontend, NULL },
+	{ "SLEEPONE",   wispfrontend, NULL },
+	{ "SORTINFO",	wispfrontend, NULL },
+	{ "UPPER",	wispfrontend, NULL },
+	{ "USEHARDLINK",wispfrontend, NULL },
+	{ "USESOFTLINK",wispfrontend, NULL },
+	{ "VWANG",	wispfrontend, NULL },
+	{ "W4WAPI",	wispfrontend, NULL },
+	{ "W99TOX",	wispfrontend, NULL },
+	{ "WACCEPT",	wispfrontend, NULL },
+	{ "WANSI2WANG",	wispfrontend, NULL },
+	{ "WCHAIN",	wispfrontend, NULL },
+	{ "WDISPLAY",	wispfrontend, NULL },
+	{ "WFCLOSE",	wispfrontend, NULL },
+	{ "WFILECHK2",  wispfrontend, NULL },
+	{ "WFILECHK3",	wispfrontend, NULL },
+	{ "WFNAME",     wispfrontend, NULL },
+	{ "WFNAME2",    wispfrontend, NULL },
+	{ "WFOPEN3",	wispfrontend, NULL },
+	{ "WFOPEN4",	wispfrontend, NULL },
+	{ "WFWAIT",	wispfrontend, NULL },
+	{ "WGETCURPOS",	wispfrontend, NULL },
+	{ "WGETFILEXT", wispfrontend, NULL },
+	{ "WISPEXIT",	wispfrontend, NULL },
+	{ "WISPHELP",	wispfrontend, NULL },
+	{ "WISPPLAT",	wispfrontend, NULL },
+	{ "WISPSHUT",	wispfrontend, NULL },
+	{ "WISPSORT",	wispfrontend, NULL },
+	{ "WISPSYNC",	wispfrontend, NULL },
+	{ "WS_CLOSE",	wispfrontend, NULL },
+	{ "WS_READ",	wispfrontend, NULL },
+	{ "WS_READ_ALT",	wispfrontend, NULL },
+	{ "WS_REWRITE",	wispfrontend, NULL },
+	{ "WSCREEN",	wispfrontend, NULL },
+	{ "WSETFACBLINK", wispfrontend, NULL },
+	{ "WSETFILEXT", wispfrontend, NULL },
+	{ "WSTOP",	wispfrontend, NULL },
+	{ "WTITLE",	wispfrontend, NULL },
+	{ "WVASET",     wispfrontend, NULL },
+	{ "WWANG2ANSI",	wispfrontend, NULL },
+	{ "X4DBFILE",	wispfrontend2, NULL },
+	{ "X4DBFILE2",	wispfrontend2, NULL },
 
 /*
 ** The following are obsolete API routines used by 
 ** older versions of WISP. They are included for
 ** backwards compatablity.
 */
-	{ "GETWFILEXT", wfrontend },	/* getwfilext	-> WGETFILEXT */
-	{ "SETPROGID",  wfrontend },	/* Obsolete */
-	{ "SETTRIGPROG",wfrontend },	/* Obsolete */
-	{ "SETWFILEXT", wfrontend },	/* setwfilext	-> WSETFILEXT */
-	{ "SETWISPFILEXT", wfrontend }, /* setwispfilext-> WSETFILEXT */
-	{ "W2ROWCOL",	wfrontend },	/* w2rowcol 	-> WGETCURPOS */
-	{ "WEXITH",     wfrontend },	/* wexith 	-> WISPEXIT */
-	{ "WFILECHK",   wfrontend },	/* Obsolete */
-	{ "WFOPEN",	wfrontend },	/* Obsolete */
-	{ "WFOPEN2",	wfrontend },	/* Obsolete */
-	{ "WMEMCPY",	wfrontend },	/* Obsolete */
-	{ "WPAUSE",	wfrontend },	/* wpause	-> PAUSE */
-	{ "WRENAME",	wfrontend },	/* wrename 	-> RENAME */
-	{ "WSETSTAT",	wfrontend },	/* Obsolete */
-	{ "XX2BYTE",	wfrontend },	/* xx2byte 	-> W99TOX */
+	{ "GETWFILEXT", wispfrontend, NULL },	/* getwfilext	-> WGETFILEXT */
+	{ "SETPROGID",  wispfrontend, NULL },	/* Obsolete */
+	{ "SETTRIGPROG",wispfrontend, NULL },	/* Obsolete */
+	{ "SETWFILEXT", wispfrontend, NULL },	/* setwfilext	-> WSETFILEXT */
+	{ "SETWISPFILEXT", wispfrontend, NULL }, /* setwispfilext-> WSETFILEXT */
+	{ "W2ROWCOL",	wispfrontend, NULL },	/* w2rowcol 	-> WGETCURPOS */
+	{ "WEXITH",     wispfrontend, NULL },	/* wexith 	-> WISPEXIT */
+	{ "WFILECHK",   wispfrontend, NULL },	/* Obsolete */
+	{ "WFOPEN",	wispfrontend, NULL },	/* Obsolete */
+	{ "WFOPEN2",	wispfrontend, NULL },	/* Obsolete */
+	{ "WMEMCPY",	wispfrontend, NULL },	/* Obsolete */
+	{ "WPAUSE",	wispfrontend, NULL },	/* wpause	-> PAUSE */
+	{ "WRENAME",	wispfrontend, NULL },	/* wrename 	-> RENAME */
+	{ "WSETSTAT",	wispfrontend, NULL },	/* Obsolete */
+	{ "XX2BYTE",	wispfrontend, NULL },	/* xx2byte 	-> W99TOX */
 
 /*
 ** The following are NETRON CAP specific routines
 */
 #ifdef NETCAP
-	{ "WSCLOSE",	wfrontend },
-	{ "WSFNM",	wfrontend },
-	{ "WSFNS",	wfrontend },
+	{ "WSCLOSE",	wispfrontend, NULL },
+	{ "WSFNM",	wispfrontend, NULL },
+	{ "WSFNS",	wispfrontend, NULL },
 #endif
 /*
 ** The following are ACP routines 
 */
 #ifdef ACP
-	{ "BREAKACP",	wfrontend },
-	{ "CHECKACP",	wfrontend },
-	{ "CLOSEACP",	wfrontend },
-	{ "GETACP",	wfrontend },
-	{ "OPENACP",	wfrontend },
-	{ "READACP",	wfrontend },
-	{ "SETACP",	wfrontend },
-	{ "WRITEACP",	wfrontend },
+	{ "BREAKACP",	wispfrontend, NULL },
+	{ "CHECKACP",	wispfrontend, NULL },
+	{ "CLOSEACP",	wispfrontend, NULL },
+	{ "GETACP",	wispfrontend, NULL },
+	{ "OPENACP",	wispfrontend, NULL },
+	{ "READACP",	wispfrontend, NULL },
+	{ "SETACP",	wispfrontend, NULL },
+	{ "WRITEACP",	wispfrontend, NULL },
 #endif
 
 /*
 ** The following are EDE routines
 */
 #ifdef EDE
-	{ "A_WSLINK",	wfrontend },
-	{ "DYLINK",	wfrontend },
-	{ "DYUNLINK",	wfrontend },
-	{ "EDCLRSCR",	wfrontend },
-	{ "EDDRKSCR",	wfrontend },
-	{ "EDEXIT",	wfrontend },
-	{ "EDLOAD",	wfrontend },
-	{ "EDLTESCR",	wfrontend },
-	{ "EDNARSCR",	wfrontend },
-	{ "EDWIDSCR",	wfrontend },
-	{ "GCALC",	wfrontend },
-	{ "GCALEND",	wfrontend },
-	{ "GCLOCK",	wfrontend },
-	{ "GENVEC",	wfrontend },
-	{ "GNOTEPAD",	wfrontend },
-	{ "GPUZZLE",	wfrontend },
-	{ "MENUCONT",	wfrontend },
-	{ "MENUEXIT",	wfrontend },
-	{ "MENUGO",	wfrontend },
-	{ "MENUINFO",	wfrontend },
-	{ "MENUITEM",	wfrontend },
-	{ "MENUKILL",	wfrontend },
-	{ "MENULOAD",	wfrontend },
-	{ "MENUMODE",	wfrontend },
-	{ "MENUREST",	wfrontend },
-	{ "MENUSAVE",	wfrontend },
-	{ "NOPFKEYS",	wfrontend },
-	{ "PFKEYSON",	wfrontend },
-	{ "POPAREA",	wfrontend },
-	{ "PUSHAREA",   wfrontend },
-	{ "PUSHSCRN",	wfrontend },
-	{ "RETRACE",	wfrontend },
-	{ "TRACEEND",	wfrontend },
-	{ "TRACEGO",	wfrontend },
-	{ "VIDLINE",	wfrontend },
-	{ "VIDMODE",	wfrontend },
-	{ "VIDMOVE",	wfrontend },
-	{ "VIDTEXT",	wfrontend },
+	{ "A_WSLINK",	wispfrontend, NULL },
+	{ "DYLINK",	wispfrontend, NULL },
+	{ "DYUNLINK",	wispfrontend, NULL },
+	{ "EDCLRSCR",	wispfrontend, NULL },
+	{ "EDDRKSCR",	wispfrontend, NULL },
+	{ "EDEXIT",	wispfrontend, NULL },
+	{ "EDLOAD",	wispfrontend, NULL },
+	{ "EDLTESCR",	wispfrontend, NULL },
+	{ "EDNARSCR",	wispfrontend, NULL },
+	{ "EDWIDSCR",	wispfrontend, NULL },
+	{ "GCALC",	wispfrontend, NULL },
+	{ "GCALEND",	wispfrontend, NULL },
+	{ "GCLOCK",	wispfrontend, NULL },
+	{ "GENVEC",	wispfrontend, NULL },
+	{ "GNOTEPAD",	wispfrontend, NULL },
+	{ "GPUZZLE",	wispfrontend, NULL },
+	{ "MENUCONT",	wispfrontend, NULL },
+	{ "MENUEXIT",	wispfrontend, NULL },
+	{ "MENUGO",	wispfrontend, NULL },
+	{ "MENUINFO",	wispfrontend, NULL },
+	{ "MENUITEM",	wispfrontend, NULL },
+	{ "MENUKILL",	wispfrontend, NULL },
+	{ "MENULOAD",	wispfrontend, NULL },
+	{ "MENUMODE",	wispfrontend, NULL },
+	{ "MENUREST",	wispfrontend, NULL },
+	{ "MENUSAVE",	wispfrontend, NULL },
+	{ "NOPFKEYS",	wispfrontend, NULL },
+	{ "PFKEYSON",	wispfrontend, NULL },
+	{ "POPAREA",	wispfrontend, NULL },
+	{ "PUSHAREA",   wispfrontend, NULL },
+	{ "PUSHSCRN",	wispfrontend, NULL },
+	{ "RETRACE",	wispfrontend, NULL },
+	{ "TRACEEND",	wispfrontend, NULL },
+	{ "TRACEGO",	wispfrontend, NULL },
+	{ "VIDLINE",	wispfrontend, NULL },
+	{ "VIDMODE",	wispfrontend, NULL },
+	{ "VIDMOVE",	wispfrontend, NULL },
+	{ "VIDTEXT",	wispfrontend, NULL },
 #endif /* EDE */
 
 /*
@@ -485,11 +486,13 @@ extern int nc_pop_menu();
 extern int ws_bar_menu();
 #endif /* EDE */
 
-/*
-	The first entry is UPPERCASE.
-	The second is case sensitive.
-*/
-struct	PROCTABLE WISPTABLE[] = {
+
+struct	WISPPROCTABLE {
+	char	*name;		/* subroutine name in UPPERCASE */
+	int	(*routine)();	/* pointer to function to call */
+};
+
+struct	WISPPROCTABLE WISPTABLE[] = {
 /*
 **  VSSUBS & USERSUBS
 */
@@ -698,12 +701,12 @@ struct	PROCTABLE WISPTABLE[] = {
 };
 
 
-int wfrontend( char* name, int num_args, Argument args[], int initial )
+int wispfrontend( char* name, int num_args, Argument args[], int initial, ... )
 {
 #define MAXARGS 128
 	int i;
 	int (*fn)();
-	struct PROCTABLE *p;
+	struct WISPPROCTABLE *p;
 
 	for (p = WISPTABLE; p->name && 0 != strcmp(p->name,name); ++p);
 	if (p->name && 0 == strcmp(p->name,name))
@@ -807,15 +810,15 @@ int wfrontend( char* name, int num_args, Argument args[], int initial )
 }
 
 /*
-	wfrontend2 - Acts just like wfrontend except it puts both the address and the length on the stack. So for each arg
+	wispfrontend2 - Acts just like wispfrontend except it puts both the address and the length on the stack. So for each arg
 		     there 2 entries on the stack.
 */	
-int wfrontend2( char* name, int num_args, Argument args[], int initial )
+int wispfrontend2( char* name, int num_args, Argument args[], int initial, ... )
 {
 #define MAXARGS2 64
 	int i,l;
 	int (*fn)();
-	struct PROCTABLE *p;
+	struct WISPPROCTABLE *p;
 
 	for (p = WISPTABLE; p->name && 0 != strcmp(p->name,name); ++p);
 	if (p->name && 0 == strcmp(p->name,name))
@@ -974,7 +977,7 @@ void WL_call_acucobol( char* filespec, int4 parmcnt, char *parms[], int4 lens[],
 #if !defined(WISP_ACU50) && !defined(WISP_ACU51) && !defined(WISP_ACU52)
 extern short *Astdlib_A_call_err();
 #define  A_call_err  (*Astdlib_A_call_err()) 
-#endif /* 6.0 - 8.1 */
+#endif /* 6.0 - 9.0 */
 
 #if defined(WISP_ACU50) || defined(WISP_ACU51) 
 	extern	short A_call_err;

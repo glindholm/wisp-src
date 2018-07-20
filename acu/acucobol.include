@@ -38,6 +38,8 @@
 # 62	ACUCOBOL Version 6.2
 # 72	ACUCOBOL Version 7.2
 # 81	ACUCOBOL Version 8.1
+# 90	ACUCOBOL Version 9.0
+# 91	ACUCOBOL Version 9.1
 #
 #============================================================================
 #
@@ -70,26 +72,50 @@
 ACUOTHER=
 
 #----------------------------------------------------------------------------
-#	On HP-UX 11i (32-bit) with HP cc
+#	On HP-UX 11i PA-RISC (32-bit) with HP cc
 #
-#ACUOTHER= -lnsl
+#
+## Acu 9.0, 9.1
+#ACUOTHER= -lpthread -lnsl
+#SYSCCFLAGS = -Ae +DAportable -Wl,+s -D_REENTRANT -D_LARGEFILE64_SOURCE +z
 #
 ## Acu 8.1
+#ACUOTHER= -lnsl
 #SYSCCFLAGS = -Ae +DAportable -Wl,+s -D_REENTRANT -D_LARGEFILE64_SOURCE +z
 #
 ## Acu 7.x, 6.2
+#ACUOTHER= -lnsl
 #SYSCCFLAGS = -Ae +DAportable -Wl,+s -D_LARGEFILE64_SOURCE
 #
 ## Acu 6.1, 6.0
+#ACUOTHER= -lnsl
 #SYSCCFLAGS = -Ae +DAportable -D_LARGEFILE64_SOURCE
 #----------------------------------------------------------------------------
-#	On HP-UX 11i (64-bit)
+#	On HP-UX 11i PA-RISC (64-bit) with HP cc
+#
+#
+## Acu 9.0, 9.1
+#ACUOTHER= -lpthread -lnsl
+#SYSCCFLAGS = -Ae +DS2.0 +DA2.0W +DD64 -Wl,+s -D_REENTRANT +z -DCOBOL_64BIT
 #
 #ACUOTHER= -lnsl
 #SYSCCFLAGS = -Ae +DS2.0 +DA2.0W +DD64 
 #
 #----------------------------------------------------------------------------
-#	On Solaris (32-bit) with Sun cc
+#	On HP-UX 11.23 IA (32-bit) with HP cc
+#
+#
+## Acu 9.0, 9.1
+#ACUOTHER= -lpthread 
+#SYSCCFLAGS = -Ae +DSblended -Wl,+s -D_REENTRANT -D_LARGEFILE64_SOURCE +z
+#
+#
+#----------------------------------------------------------------------------
+#	On Solaris 8,9,10 (32-bit) with Sun cc
+#
+## Acu 9.0, 9.1
+#ACUOTHER= -lnsl -lsocket -ldl -lpthread
+#SYSCCFLAGS = -m32 -D_REENTRANT
 #
 ## Acu 8.x, 7.x, 6.x, 5.2 
 #ACUOTHER= -lnsl -lsocket -ldl
@@ -99,7 +125,11 @@ ACUOTHER=
 #ACUOTHER= -lnsl -lsocket
 #
 #----------------------------------------------------------------------------
-#	On AIX (32-bit) with IBM cc 
+#	On AIX 5.3 (32-bit) with IBM cc 
+#
+## Acu 9.0, 9.1
+#ACUOTHER= -lpthread
+#SYSCCFLAGS = -q32 -qlanglvl=extc89 -qcpluscmt -qarch=com -qmaxmem=16384 -bmaxdata:0x80000000 -D_THREAD_SAFE 
 #
 ## Acu 8.1 
 #SYSCCFLAGS = -q32 -qarch=com -qmaxmem=16384 -bmaxdata:0x80000000 -D_THREAD_SAFE 
@@ -110,6 +140,25 @@ ACUOTHER=
 ## Acu 6.0, 5.x
 #SYSCCFLAGS = -qarch=com -qmaxmem=16384
 #
+#
+#----------------------------------------------------------------------------
+#	On AIX 5.3 (32-bit) with GNU gcc
+#
+## Acu 9.0, 9.1
+#ACUOTHER= -lpthread
+#SYSCCFLAGS = -D_THREAD_SAFE 
+#
+## Acu 8.1 
+#SYSCCFLAGS = -D_THREAD_SAFE 
+#
+#
+#----------------------------------------------------------------------------
+#	On AIX 5.3 (64-bit) with IBM cc 
+#
+## Acu 9.0, 9.1
+#ACUOTHER= -lpthread
+#SYSCCFLAGS = -q64 -qlanglvl=extc89 -qcpluscmt -qarch=com -qmaxmem=16384 -bmaxdata:0x80000000 -D_THREAD_SAFE -DCOBOL_64BIT
+#
 #----------------------------------------------------------------------------
 #	On AIX (64-bit) with GNU gcc
 #
@@ -118,6 +167,11 @@ ACUOTHER=
 #----------------------------------------------------------------------------
 #	On LINUX (32-bit) with GNU gcc
 #
+## Acu 9.0, 9.1
+#ACUOTHER= -ldl -lpthread
+#SYSCCFLAGS = -m32 -D_LARGEFILE64_SOURCE
+#
+##Acu 8.1
 #ACUOTHER= -ldl
 #SYSCCFLAGS = -m32 -D_LARGEFILE64_SOURCE
 #
@@ -223,6 +277,26 @@ ACULIBS81=$(ACU_LIBDIR)/libruncbl.a \
 	$(ACU_LIBDIR)/libmemory.a \
 	$(ACU_LIBDIR)/libz.a
 
+ACULIBS90=$(ACU_LIBDIR)/libruncbl.a \
+	$(ACU_LIBDIR)/libaclnt.a \
+	$(ACU_LIBDIR)/libacvt.a \
+	$(ACU_LIBDIR)/libfsi.a \
+	$(ACU_LIBDIR)/libaxml.a \
+	$(ACU_LIBDIR)/libaregex.a  \
+	$(ACU_LIBDIR)/libacuterm.a \
+	$(ACU_LIBDIR)/libexpat.a \
+	$(ACU_LIBDIR)/libvision.a \
+	$(ACU_LIBDIR)/libsocks.a \
+	$(ACU_LIBDIR)/libmessage.a \
+	$(ACU_LIBDIR)/libcfg.a \
+	$(ACU_LIBDIR)/liblib.a \
+	$(ACU_LIBDIR)/libstdlib.a \
+	$(ACU_LIBDIR)/libmemory.a \
+	$(ACU_LIBDIR)/libcobacme.a \
+	$(ACU_LIBDIR)/libz.a
+
+ACULIBS91=$(ACULIBS90)
+
 ACUMAIN50=
 ACUMAIN51=
 ACUMAIN52=$(ACU_LIBDIR)/amain.o
@@ -230,6 +304,8 @@ ACUMAIN60=$(ACU_LIBDIR)/amain.o
 ACUMAIN62=$(ACU_LIBDIR)/amain.o
 ACUMAIN72=$(ACU_LIBDIR)/amain.o
 ACUMAIN81=$(ACU_LIBDIR)/amain.o
+ACUMAIN90=$(ACU_LIBDIR)/amain.o
+ACUMAIN91=$(ACU_LIBDIR)/amain.o
 
 ACUTEST50=$(ACU_LIBDIR)/libcfg.a
 ACUTEST51=$(ACU_LIBDIR)/libcfg.a
@@ -238,6 +314,8 @@ ACUTEST60=$(ACU_LIBDIR)/libexpat.a
 ACUTEST62=$(ACU_LIBDIR)/libexpat.a
 ACUTEST72=$(ACU_LIBDIR)/libaxml.a
 ACUTEST81=$(ACU_LIBDIR)/libaxml.a
+ACUTEST90=$(ACU_LIBDIR)/libcobacme.a
+ACUTEST91=$(ACU_LIBDIR)/libcobacme.a
 
 ACUCCFLAGS50= -DNO_ACUSQL=1
 ACUCCFLAGS51= -DNO_ACUSQL=1
@@ -246,6 +324,8 @@ ACUCCFLAGS60= -DNO_ACUSQL=1 -DUSE_XML=1
 ACUCCFLAGS62= -DNO_ACUSQL=1 -DUSE_XML=1 -DUSE_EXTSM=0
 ACUCCFLAGS72= -DNO_ACUSQL=1 -DUSE_XML=1 -DUSE_EXTSM=0 -DNO_CICS=1 -DNO_MQSERIES=1
 ACUCCFLAGS81= -DNO_ACUSQL=1 -DUSE_XML=1 -DUSE_EXTSM=0 -DNO_CICS=1 -DNO_MQSERIES=1
+ACUCCFLAGS90= -DNO_ACUSQL=1 -DUSE_XML=1 -DUSE_EXTSM=0 -DNO_CICS=1 -DNO_MQSERIES=1 -DUSE_RMFM
+ACUCCFLAGS91= -DNO_ACUSQL=1 -DUSE_XML=1 -DUSE_EXTSM=0 -DNO_CICS=1 -DNO_MQSERIES=1 -DUSE_RMFM
 
 SUB85ACU50=sub85_acu50.c
 SUB85ACU51=sub85_acu51.c
@@ -254,6 +334,8 @@ SUB85ACU60=sub85_acu60.c
 SUB85ACU62=sub85_acu62.c
 SUB85ACU72=sub85_acu72.c
 SUB85ACU81=sub85_acu81.c
+SUB85ACU90=sub85_acu90.c
+SUB85ACU91=sub85_acu91.c
 
 #
 #	DEFINE COMMON MACROS FOR ALL VERSIONS OF ACUCOBOL
@@ -327,12 +409,30 @@ ACUSRCDIR=$(ACU_LIBDIR)
 #
 # 81	ACUCOBOL Version 8.1
 #
+#ACUSUBS=callc.o sub.o filetbl.o
+#ACULIBS=$(ACULIBS81) $(ACUOTHER)
+#ACUMAIN=$(ACUMAIN81)
+#ACUTEST=$(ACUTEST81)
+#ACUCCFLAGS=$(ACUCCFLAGS81) $(SYSCCFLAGS)
+#SUB85ACU=$(SUB85ACU81)
+#
+# 90	ACUCOBOL Version 9.0
+#
+#ACUSUBS=callc.o sub.o filetbl.o
+#ACULIBS=$(ACULIBS90) $(ACUOTHER)
+#ACUMAIN=$(ACUMAIN90)
+#ACUTEST=$(ACUTEST90)
+#ACUCCFLAGS=$(ACUCCFLAGS90) $(SYSCCFLAGS)
+#SUB85ACU=$(SUB85ACU90)
+#
+# 91	ACUCOBOL Version 9.1
+#
 ACUSUBS=callc.o sub.o filetbl.o
-ACULIBS=$(ACULIBS81) $(ACUOTHER)
-ACUMAIN=$(ACUMAIN81)
-ACUTEST=$(ACUTEST81)
-ACUCCFLAGS=$(ACUCCFLAGS81) $(SYSCCFLAGS)
-SUB85ACU=$(SUB85ACU81)
+ACULIBS=$(ACULIBS91) $(ACUOTHER)
+ACUMAIN=$(ACUMAIN91)
+ACUTEST=$(ACUTEST91)
+ACUCCFLAGS=$(ACUCCFLAGS91) $(SYSCCFLAGS)
+SUB85ACU=$(SUB85ACU91)
 
 #
 #============================================================================

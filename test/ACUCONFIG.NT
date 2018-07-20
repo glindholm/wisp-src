@@ -1,5 +1,9 @@
+## This is *OBSOLETE* - replaced with \test\config_nt\ACUCONFIG
+
 FILE-STATUS-CODES	74
+#CODE_PREFIX		. C:\dev\wisp\src\TEST C:\dev\wisp\src\kit\wisp\acu C:\dev\wisp\src\kit\kcsiacu
 CODE-PREFIX		. \\ZOOMSTAR\TESTACU \\ZOOMSTAR\WISP\ACU \\ZOOMSTAR\KCSI
+
 #V-VERSION 3
 ALTVARV3-VERSION 3
 ALTVARV2-VERSION 2

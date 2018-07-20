@@ -95,6 +95,10 @@
 
 #include <video.h>
 
+#ifdef WIN32
+#include "isonames.h"
+#endif
+
 /*
 **	Structures and Defines
 */
@@ -3072,6 +3076,9 @@ int WL_wang_alphanumeric(const char* str)
 /*
 **	History:
 **	$Log: wperson.c,v $
+**	Revision 1.86  2011/10/29 20:09:14  gsl
+**	Fix ISO routine name warnins on WIN32
+**	
 **	Revision 1.85  2009/10/18 20:48:21  gsl
 **	fix windows warnings
 **	

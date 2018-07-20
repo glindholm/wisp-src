@@ -16,28 +16,28 @@
 #ifdef KCSI_SUB85_HEADER
 /*********************************************************************/
 
-int	call_kcsi_create_main();
-int	call_kcsio();
-int	call_kdisp();
-int	call_ctrlvers();
-int	call_rptvers();
-int	call_rptcall();
-int	call_kformat();
-int	call_inqvers();
-int	call_parseinq();
-int	call_geninq();
-int	call_datvers();
-int	call_dbsc();
-int	call_inidio();
-int	call_dmnt();
-int	call_kexists();
-int	call_valnam();
-int	call_valvol();
-int	call_valfnm();
-int	call_rptwop();
-int	call_kmatch();
-int	call_kfiltyp();
-int	call_ktrace();
+int	call_kcsi_create_main(char* name, int num_args, Argument args[], int initial, ...);
+int	call_kcsio(char* name, int num_args, Argument args[], int initial, ...);
+int	call_kdisp(char* name, int num_args, Argument args[], int initial, ...);
+int	call_ctrlvers(char* name, int num_args, Argument args[], int initial, ...);
+int	call_rptvers(char* name, int num_args, Argument args[], int initial, ...);
+int	call_rptcall(char* name, int num_args, Argument args[], int initial, ...);
+int	call_kformat(char* name, int num_args, Argument args[], int initial, ...);
+int	call_inqvers(char* name, int num_args, Argument args[], int initial, ...);
+int	call_parseinq(char* name, int num_args, Argument args[], int initial, ...);
+int	call_geninq(char* name, int num_args, Argument args[], int initial, ...);
+int	call_datvers(char* name, int num_args, Argument args[], int initial, ...);
+int	call_dbsc(char* name, int num_args, Argument args[], int initial, ...);
+int	call_inidio(char* name, int num_args, Argument args[], int initial, ...);
+int	call_dmnt(char* name, int num_args, Argument args[], int initial, ...);
+int	call_kexists(char* name, int num_args, Argument args[], int initial, ...);
+int	call_valnam(char* name, int num_args, Argument args[], int initial, ...);
+int	call_valvol(char* name, int num_args, Argument args[], int initial, ...);
+int	call_valfnm(char* name, int num_args, Argument args[], int initial, ...);
+int	call_rptwop(char* name, int num_args, Argument args[], int initial, ...);
+int	call_kmatch(char* name, int num_args, Argument args[], int initial, ...);
+int	call_kfiltyp(char* name, int num_args, Argument args[], int initial, ...);
+int	call_ktrace(char* name, int num_args, Argument args[], int initial, ...);
 
 void kcsi_create_main();
 void KCSIO();
@@ -68,28 +68,28 @@ void RPTWOP();
 #ifdef KCSI_SUB85_LIBTABLE
 /*********************************************************************/
 
-	{ "KCSI_CREATE_MAIN",	call_kcsi_create_main},
-	{ "KCSIO",	call_kcsio},
-	{ "KDISP",	call_kdisp},
-	{ "CTRLVERS",	call_ctrlvers},
-	{ "RPTVERS",	call_rptvers},
-	{ "RPTCALL",	call_rptcall},
-	{ "KFORMAT",	call_kformat},
-	{ "INQVERS",	call_inqvers},
-	{ "GENINQ",     call_geninq},
-	{ "PARSEINQ",	call_parseinq},
-	{ "DATVERS",    call_datvers},
-	{ "DBSC",	call_dbsc},
-	{ "INIDIO",	call_inidio},
-	{ "DMNT",       call_dmnt},
-	{ "KEXISTS",	call_kexists},
-	{ "VALVOL",	call_valvol},
-	{ "VALNAM",	call_valnam},
-	{ "VALFNM",	call_valfnm},
-	{ "RPTWOP",	call_rptwop},
-	{ "KMATCH",	call_kmatch},
-	{ "KFILTYP",	call_kfiltyp},
-	{ "KTRACE",	call_ktrace},
+	{ "KCSI_CREATE_MAIN",	call_kcsi_create_main, NULL },
+	{ "KCSIO",	call_kcsio, NULL },
+	{ "KDISP",	call_kdisp, NULL },
+	{ "CTRLVERS",	call_ctrlvers, NULL },
+	{ "RPTVERS",	call_rptvers, NULL },
+	{ "RPTCALL",	call_rptcall, NULL },
+	{ "KFORMAT",	call_kformat, NULL },
+	{ "INQVERS",	call_inqvers, NULL },
+	{ "GENINQ",     call_geninq, NULL },
+	{ "PARSEINQ",	call_parseinq, NULL },
+	{ "DATVERS",    call_datvers, NULL },
+	{ "DBSC",	call_dbsc, NULL },
+	{ "INIDIO",	call_inidio, NULL },
+	{ "DMNT",       call_dmnt, NULL },
+	{ "KEXISTS",	call_kexists, NULL },
+	{ "VALVOL",	call_valvol, NULL },
+	{ "VALNAM",	call_valnam, NULL },
+	{ "VALFNM",	call_valfnm, NULL },
+	{ "RPTWOP",	call_rptwop, NULL },
+	{ "KMATCH",	call_kmatch, NULL },
+	{ "KFILTYP",	call_kfiltyp, NULL },
+	{ "KTRACE",	call_ktrace, NULL },
 
 /*********************************************************************/
 #endif /*  KCSI_SUB85_LIBTABLE */
@@ -100,11 +100,7 @@ void RPTWOP();
 /*----
 Call to file io routine kcsi_create_main();
 ------*/
-int call_kcsi_create_main( name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int 		initial;
+int call_kcsi_create_main(char* name, int num_args, Argument args[], int initial, ...)
 {
 	kcsi_create_main();
 	return Okay;
@@ -114,11 +110,7 @@ int 		initial;
 Call to file io routine KCSIO(*IO_BLOCK, *UFB, *record);
 UFB passed but not used in vision 3
 ------*/
-int call_kcsio( name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int 		initial;
+int call_kcsio(char* name, int num_args, Argument args[], int initial, ...)
 {
 	KCSIO(args[0].a_address,args[1].a_address,args[2].a_address);
 	return Okay;
@@ -127,11 +119,7 @@ int 		initial;
 /*----
 INIDIO(*IO_BLOCK)
 ------*/
-int call_inidio(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_inidio(char* name, int num_args, Argument args[], int initial, ...)
 {
 	INIDIO(args[0].a_address);
 	return Okay;
@@ -140,11 +128,7 @@ int		initial;
 /*----
 KDISP(*file_sys_name,*type,*return_code)
 ------*/
-int call_kdisp(name, num_args, args, initial)
-char 	*name;
-int	num_args;
-Argument	args[];
-int	initial;
+int call_kdisp(char* name, int num_args, Argument args[], int initial, ...)
 {
 	KDISP(args[0].a_address,args[1].a_address,args[2].a_address);
 	return Okay;
@@ -153,11 +137,7 @@ int	initial;
 KFORMAT(*decimals,*receiver,*RFL)
 -------*/
 
-int call_kformat(name, num_args, args, initial)
-char 	*name;
-int	num_args;
-Argument	args[];
-int	initial;
+int call_kformat(char* name, int num_args, Argument args[], int initial, ...)
 {
 	KFORMAT(args[0].a_address,args[1].a_address,args[2].a_address);
 	return Okay;
@@ -168,11 +148,7 @@ All versions are passed a receiving string for a formatted version
 and logo.
 CTRLVERS(*vers)
 ------*/
-int call_ctrlvers(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_ctrlvers(char* name, int num_args, Argument args[], int initial, ...)
 {
 	CTRLVERS(args[0].a_address,args[1].a_address);
 	return Okay;
@@ -181,31 +157,19 @@ int		initial;
 /*----
 RPTVERS(char *VERS, char *A-BINARY, char *STYLE)
 ------*/
-int call_rptvers(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_rptvers(char* name, int num_args, Argument args[], int initial, ...)
 {
 	RPTVERS(args[0].a_address,args[1].a_address, args[2].a_address);
 	return Okay;
 }
 
-int call_inqvers(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_inqvers(char* name, int num_args, Argument args[], int initial, ...)
 {
 	INQVERS(args[0].a_address,args[1].a_address);
 	return Okay;
 }
 
-int call_datvers(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_datvers(char* name, int num_args, Argument args[], int initial, ...)
 {
 	DATVERS(args[0].a_address,args[1].a_address);
 	return Okay;
@@ -217,11 +181,7 @@ RPTCALL(*RPT_OPTIONS,*RHD,*RDF,*RCB,*RCD,*RFL,*CRF,*RTT,*ST,*DL,*NF,
 	*printer_file,*library,*volume,
 	*caller,*kts)
 ------*/
-int call_rptcall(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_rptcall(char* name, int num_args, Argument args[], int initial, ...)
 {
 	RPTCALL(args[0].a_address,
 		args[1].a_address,
@@ -247,11 +207,7 @@ int		initial;
 /*----
 PARSEINQ(*RFL,*DL,*result,*scr_flds,*message,*return_code);
 ------*/
-int call_parseinq(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_parseinq(char* name, int num_args, Argument args[], int initial, ...)
 {
 	PARSEINQ(args[0].a_address,
 		args[1].a_address,
@@ -268,11 +224,7 @@ GENINQ(	*SHELL_IO_BLOCK,*display_opt,*run_opt,
 	*CONTROL_IO_BLOCK,*query_title,*query_lines,
 	*EXTRACT_IO_BLOCK)
 ------*/
-int call_geninq(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_geninq(char* name, int num_args, Argument args[], int initial, ...)
 {
 	GENINQ(args[0].a_address,
 		args[1].a_address,
@@ -291,11 +243,7 @@ DBSC(*CTRL_HEADERS,*CTRL_TABLE1,*CTRL_TABLE2,
 	*CTRL_IO_BLOCK,*DATA_IO_BLOCK,*return_code)
 ------*/
 
-int call_dbsc(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_dbsc(char* name, int num_args, Argument args[], int initial, ...)
 {
 	DBSC(args[0].a_address,
 		args[1].a_address,
@@ -310,11 +258,7 @@ DMNT(*CTRL_HEADERS,*CTRL_TABLE1,*CTRL_TABLE2,
 	*CTRL_IO_BLOCK,*DATA_IO_BLOCK,*menu_mode,*key_index)
 ------*/
 
-int call_dmnt(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_dmnt(char* name, int num_args, Argument args[], int initial, ...)
 {
 	DMNT(args[0].a_address,
 		args[1].a_address,
@@ -330,11 +274,7 @@ int		initial;
 VALNAM(*NAME (or LIB) ,*RC);
 ------*/
 
-int call_valnam(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_valnam(char* name, int num_args, Argument args[], int initial, ...)
 {
 	VALNAM(args[0].a_address,
 		args[1].a_address);
@@ -345,11 +285,7 @@ int		initial;
 VALVOL(*VOL ,*RC);
 ------*/
 
-int call_valvol(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_valvol(char* name, int num_args, Argument args[], int initial, ...)
 {
 	VALVOL(args[0].a_address,
 		args[1].a_address);
@@ -360,11 +296,7 @@ int		initial;
 VALFNM(*FIELDNAME ,*RC);
 ------*/
 
-int call_valfnm(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_valfnm(char* name, int num_args, Argument args[], int initial, ...)
 {
 	VALFNM(args[0].a_address,
 		args[1].a_address);
@@ -375,11 +307,7 @@ int		initial;
 KEXISTS(*RC,*FILE, *LIBm, *VOL)
 ------*/
 
-int call_kexists(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_kexists(char* name, int num_args, Argument args[], int initial, ...)
 {
 	KEXISTS(args[0].a_address,
 		args[1].a_address,
@@ -392,11 +320,7 @@ int		initial;
 RPTWOP(*RC,*OPTIONS, *MESSAGE)
 ------*/
 
-int call_rptwop(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_rptwop(char* name, int num_args, Argument args[], int initial, ...)
 {
 	RPTWOP(args[0].a_address,
 		args[1].a_address,
@@ -408,21 +332,13 @@ int		initial;
 /*----
 KMATCH(*rc,*general-field-1, *general-field-2)
 ------*/
-int call_kmatch(name, num_args, args, initial)
-char 	*name;
-int	num_args;
-Argument	args[];
-int	initial;
+int call_kmatch(char* name, int num_args, Argument args[], int initial, ...)
 {
 	KMATCH(args[0].a_address,args[1].a_address,args[2].a_address);
 	return Okay;
 }
 
-int call_kfiltyp(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_kfiltyp(char* name, int num_args, Argument args[], int initial, ...)
 {
 	KFILTYP(args[0].a_address);
 	return Okay;
@@ -432,11 +348,7 @@ int		initial;
 KTRACE(*str[80])
 ------*/
 
-int call_ktrace(name, num_args, args, initial)
-char		*name;
-int		num_args;
-Argument	args[];
-int		initial;
+int call_ktrace(char* name, int num_args, Argument args[], int initial, ...)
 {
 	KTRACE(args[0].a_address);
 	return Okay;
@@ -452,6 +364,12 @@ int		initial;
 /*
 **	History:
 **	$Log: kcsi_sub85_inc.c,v $
+**	Revision 1.5  2011/10/30 01:16:55  gsl
+**	Acu 9.1.0
+**	
+**	Revision 1.4  2011/10/22 00:06:47  gsl
+**	Acu 9.1.0
+**	
 **	Revision 1.3  2010/01/16 02:16:22  gsl
 **	new release
 **	wisp 5.1.00

@@ -72,6 +72,14 @@ int (isupper) (int c)  { return isupper(c);  }
 #include "txt.hpp"
 #include "utility.hpp"
 
+#ifdef WIN32
+#define chdir(path)			_chdir(path)
+#define fileno(file)			_fileno(file)
+#define rmdir(dir)			_rmdir(dir)
+#define getcwd(buffer, maxlen)		_getcwd(buffer, maxlen)
+#define filelength(file)		_filelength(file)
+#define tempnam(dir, prefix)		_tempnam(dir, prefix)
+#endif
 
 char *make_pattern(const char *name) {
    char    *pattern;
@@ -1217,6 +1225,9 @@ void machine::exec_builtin() {
 //
 //	History:
 //	$Log: builtin.cpp,v $
+//	Revision 1.15  2011/10/29 20:09:14  gsl
+//	Fix ISO routine name warnins on WIN32
+//	
 //	Revision 1.14  2003/02/11 19:05:26  gsl
 //	Remove unneeded #ifdef's for DEBUG
 //	
