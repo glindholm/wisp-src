@@ -370,8 +370,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 **
 **	FUNCTION:	Front-end to MF and ACU file info routines
 **
-**	DESCRIPTION:	First call cisaminfo() and if not a cisam file call 
-**			visioninfo() which also handles non-index files.
+**	DESCRIPTION:	Checks for Vision files, Cisam/MF FHisam files, unstructured files
 **
 **	ARGUMENTS:	
 **	path		The path to the file
@@ -389,12 +388,12 @@ static int4 fileinfo(const char* path, const char* code, void* raw_field)
 {
 	int4 rc;
 
-	rc = WL_cisaminfo( path, code, raw_field );
+	rc = WL_visioninfo( path, code, raw_field );
 
 	if (READFDR_RC_24_NO_FILE_HEADER == rc ||
 	    READFDR_RC_68_UNKNOWN_FILE_FORMAT == rc)
 	{
-		rc = WL_visioninfo( path, code, raw_field );
+		rc = WL_cisaminfo( path, code, raw_field );
 	}
 
 	if (READFDR_RC_24_NO_FILE_HEADER == rc ||
@@ -539,6 +538,10 @@ static int4 unstructured_fileinfo(const char* path, const char* code, void* raw_
 /*
 **	History:
 **	$Log: readfdr.c,v $
+**	Revision 1.37  2012/07/09 02:38:46  gsl
+**	WISP 5.1.11
+**	Patch READFDR bug with Shared Vision files on Windows.
+**	
 **	Revision 1.36  2007/07/31 16:51:07  gsl
 **	Change INT8 to INT64 to avoid conflicts on WIN32
 **	

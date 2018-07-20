@@ -214,16 +214,19 @@ int4 WL_cisaminfo(				/* CISAM file system interface				*/
 
 	if ( f == -1 )
 	{
+		WL_wtrace("WFCISAM", "OPEN", "Open failed errno=[%d] path=[%s]", errno, is_idx?path_idx:path);
 		return( READFDR_RC_44_IO_ERROR );
 	}
 
 	i1 = read( f, fheader, sizeof(fheader) );			/* read the header					*/
-	close(f);
-
 	if ( i1 == -1 )
 	{
+		WL_wtrace("WFCISAM", "READ", "Read failed errno=[%d] path=[%s]", errno, is_idx?path_idx:path);
+		close(f);
 		return( READFDR_RC_44_IO_ERROR );
 	}
+
+	close(f);
 
 	if ( i1 < FHISAM_STD_HEADER_SIZE)
 	{
@@ -806,6 +809,10 @@ int WL_unloadfhisam(const char *inname, const char *outname, int4 recsize)
 /*
 **	History:
 **	$Log: wfcisam.c,v $
+**	Revision 1.38  2012/07/09 02:38:46  gsl
+**	WISP 5.1.11
+**	Patch READFDR bug with Shared Vision files on Windows.
+**	
 **	Revision 1.37  2011/10/29 20:09:14  gsl
 **	Fix ISO routine name warnins on WIN32
 **	

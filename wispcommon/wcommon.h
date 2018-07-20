@@ -54,16 +54,16 @@
 	- wisputils/display.rc		PRODUCTVERSION
 	- wisputils/wusage.rc		PRODUCTVERSION
 */
-#define WISP_VERSION		"V5.1.10"	/* WISPTRAN version (char[20])		*/
-#define WISP_VERSION_NUM	5110		/* WISPVER */
+#define WISP_VERSION		"V5.1.11"	/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION_NUM	5111		/* WISPVER */
 #define WISP_LICENSE_VERSION	51
 
 #define WISP_SCREEN_VERSION	22		/* SCREEN version number.		*/
 
 /* CHANGE-COPYRIGHT-DATE */
 #define WISP_OWNER "Shell Stream Software LLC"
-#define WISP_COPYRIGHT_YEAR_STR	"2011"
-#define WISP_COPYRIGHT_YEAR_INT	2011
+#define WISP_COPYRIGHT_YEAR_STR	"2012"
+#define WISP_COPYRIGHT_YEAR_INT	2012
 #define WISP_PHONE_NUMBER "(813) 425-6344"
 #define WISP_EMAIL "wisp@shellstream.com"
 #define WISP_WEBSITE "www.shellstream.com"
