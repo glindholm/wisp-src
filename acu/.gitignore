@@ -3,10 +3,10 @@ wc225*.cob
 ACULINK.cob
 *.o
 *.alc
-callc.c
-filetbl.c
-sub.c
-sub85.c
+#callc.c
+#filetbl.c
+#sub.c
+#sub85.c
 wruncbl
 wruncble
 
