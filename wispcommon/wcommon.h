@@ -15,11 +15,6 @@
 */
 
 /*
- * $Id:$
- * $Source:$
- */
-
-/*
 **	File:		wcommon.h
 **
 **	Project:	wisp

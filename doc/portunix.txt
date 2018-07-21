@@ -3,9 +3,7 @@
 	
 	Title:		WISP PORTING INSTRUCTIONS FOR UNIX
 	
-	Id:		$Id:$
 	Document:	portunix.lis
-	Last Updated:	$Date:$
 	Products:	WISP/UNIX, EDE, KCSI
 	Versions:	5.0.00 
 	

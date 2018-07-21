@@ -6,7 +6,6 @@ All Rights Reserved.
 Title:          Build EDE for Acucobol 6.0 Runtime (WIN32)
 
 Document:       build_ede_acu60_rts.txt
-Last Updated:   $Date:$
 Products:       EDE/WIN32
 Versions:       5.0.00
 

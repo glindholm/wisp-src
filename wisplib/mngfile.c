@@ -1,8 +1,6 @@
 /*
 ** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
 **
-** $Id:$
-**
 ** NOTICE:
 ** Confidential, unpublished property of NeoMedia Technologies, Inc.
 ** Use and distribution limited solely to authorized personnel.
@@ -12,19 +10,12 @@
 ** any means without the written permission of NeoMedia 
 ** Technologies, Inc. is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 */
 
 /*
 **	File:		mngfile.c
 **
 **	Project:	wisp/lib
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Emulate Wang Manage Files and Libraries
 **

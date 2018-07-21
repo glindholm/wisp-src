@@ -1,14 +1,11 @@
 #
 #	Copyright (c) Shell Stream Software LLC. All Rights Reserved. 
-#	$Id:$
 #
 #
 #
 #	File:		sampleacu.umf
 #
 #	Project:	WISP/SAMPLE
-#
-#	RCS:		$Source:$
 #
 #	Function:	The UNIX makefile for SAMPLE/ACUCOBOL
 #

@@ -28,6 +28,9 @@ CHANGES FOR RELEASE 5.1.11
 The following items describe corrections and improvements that have
 been made to the WISP toolkit for release 5.1.11.
 
+On Intel (Little-Endian) machines WPROC was returning the wrong value for
+the EXTRACT RECORDS statement.
+
 On Windows READFDR/READFDR4 could fail with a Return Code 44 on a Vision file 
 that was opened SHARED by another program.
 

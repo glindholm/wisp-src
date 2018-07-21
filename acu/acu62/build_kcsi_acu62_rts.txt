@@ -6,7 +6,6 @@ All Rights Reserved.
 Title:          Build KCSI for Acucobol 6.2 Runtime (WIN32)
 
 Document:       build_kcsi_acu62_rts.txt
-Last Updated:   $Date:$
 Products:       KCSI/WIN32
 Versions:       4.1.00
 

@@ -4,8 +4,6 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
 ** Confidential, unpublished property of NeoMedia Technologies, Inc.
 ** Use and distribution limited solely to authorized personnel.
@@ -15,11 +13,6 @@
 ** any means without the written permission of NeoMedia 
 ** Technologies, Inc. is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 ******************************************************************************
 */
 
@@ -29,8 +22,6 @@ static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.01.00";
 **	File:		wsort.c
 **
 **	Project:	wisp/utils
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	To hold WSORT utility source file.
 **

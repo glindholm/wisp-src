@@ -1,5 +1,4 @@
 /*
-**	Id:	$Id: sub85_acu50.c,v 1.3 2003/06/12 13:54:15 gsl Exp $
 **	File:	sub85_acu50.c		
 **
 **	This is the WISP compatable version of sub85.c for use with 

@@ -1,6 +1,5 @@
 /* 
 	Copyright (c) 1997 NeoMedia Technologies, Inc., All rights reserved.
-	$Id:$
 */
 
 /*

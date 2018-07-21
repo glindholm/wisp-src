@@ -1,4 +1,3 @@
-rem $Id:$
 rem
 rem Test environment variables overriding registry values
 rem

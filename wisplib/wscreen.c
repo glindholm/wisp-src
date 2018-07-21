@@ -1,7 +1,6 @@
 /*
 ** Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 ** WISP - Wang Interchange Source Processor
-** $Id:$
 **
 */
 

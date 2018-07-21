@@ -3,8 +3,6 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
 ** Confidential, unpublished property of NeoMedia Technologies, Inc.
 ** Use and distribution limited solely to authorized personnel.
@@ -14,17 +12,10 @@
 ** any means without the written permission of NeoMedia 
 ** Technologies, Inc. is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 */
 
 /*
 **	Project:	WISPLIB 
-**
-**	RCS:		$Source:$
 **
 ** 	Purpose:     	Print a file under WIN32 platforms
 **

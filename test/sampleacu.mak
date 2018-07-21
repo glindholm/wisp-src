@@ -1,14 +1,11 @@
 #
 #	Copyright (c) 1988-2003 NeoMedia Migrations, All rights reserved.
-#	$Id:$
 #
 #
 #
 #	File:		sampleacu.mak
 #
 #	Project:	WISP/SAMPLE
-#
-#	RCS:		$Source:$
 #
 #	Function:	The makefile for SAMPLE/ACUCOBOL
 #

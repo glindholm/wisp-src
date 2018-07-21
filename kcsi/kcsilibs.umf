@@ -1,12 +1,9 @@
 #-----------------------------------------------------------------------
 #	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
-#	$Id:$
 #
 #	File:		kcsilibs.umf
 #
 #	Project:	KCSI (CRID + CREATE)
-#
-#	RCS:		$Source:$
 #
 #	Purpose:	Build KCSI libraries on unix
 #

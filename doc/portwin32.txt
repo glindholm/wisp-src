@@ -4,7 +4,6 @@
 	Title:		PORTING WISP TO WIN32
 	
 	Document:	portwin32.txt
-	Last Updated:	$Date:$
 	Products:	WISP/WIN32 EDE KCSI
 	Versions:	5.1.00 and later
 	

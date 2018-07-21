@@ -15,12 +15,6 @@
 */
 
 /*
- * $Id:$
- * $Source:$
- */
-
-
-/*
 **	File:		wauthorize.c
 **
 **	Purpose:	The wauthorize utility
@@ -998,7 +992,6 @@ static void putheader(void)
 /*		123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567890				*/
 	printf("\n");
 	printf("                   **** %s LICENSE AUTHORIZATION TOOL ****\n",WLIC_product_name());
-	printf("                               $Revision:$\n");
 	printf("         Copyright (c) 1994-" WISP_COPYRIGHT_YEAR_STR " by Shell Stream Software, LLC.\n");
 	printf("\n");
 	printf("This program will generate %s license keys and validation codes for use with\n",WLIC_product_name());

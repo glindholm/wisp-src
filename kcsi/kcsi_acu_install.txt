@@ -4,7 +4,6 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 Title:          Installation of KCSI for ACUCOBOL on UNIX
 
 Document:       kcsi_acu_install.txt
-Last Updated:   $Date:$
 Products:       KCSI Utilities
 Versions:       4.2.00
 

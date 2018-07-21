@@ -1,14 +1,11 @@
 /* 
 	Copyright (c) 1997 NeoMedia Technologies, Inc., All rights reserved.
-	$Id:$
 */
 
 /*
 **	File:		assert.h
 **
 **	Project:	WISP/KCSI/COMMON
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Define ASSERT macros
 **

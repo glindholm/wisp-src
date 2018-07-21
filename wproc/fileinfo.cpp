@@ -2,8 +2,6 @@
 //	Copyright (c) 1996-2003 NeoMedia Technologies Inc. All rights reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //
 // Copyright (c) Lexical Software, 1991.  All rights reserved.

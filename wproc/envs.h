@@ -7,8 +7,6 @@
 **
 **	Project:	wproc
 **
-**	RCS:		$Source:$
-**
 **	Purpose:	Defines for wproc environment variables.
 **
 */

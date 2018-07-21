@@ -12,8 +12,8 @@ CVS/
 Debug/
 Release/
 x64/
-#/testacu/
-#/testmf/
+/testacu/
+/testmf/
 *_Win32_Release/
 *_Win32_Debug/
 /wisp.ncb

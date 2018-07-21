@@ -1,4 +1,4 @@
-* $Id:$
+* t1.wps
 PROCEDURE T1
 	RUN SORT
 	DISPLAY OPTIONS

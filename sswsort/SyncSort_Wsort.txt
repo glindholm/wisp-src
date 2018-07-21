@@ -1,4 +1,3 @@
-$Id:$
 SyncSort_Wsort.txt
 
 

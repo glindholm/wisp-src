@@ -1,4 +1,4 @@
-# $Id:$
+# install_qa.mak
 #
 SRC=C:\dev\wisp\src
 QA=$(SRC)\test\QA

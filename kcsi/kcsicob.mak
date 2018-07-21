@@ -1,12 +1,9 @@
 #-----------------------------------------------------------------------
 #	Copyright (c) Shell Stream Software LLC. All Rights Reserved.
-#	$Id:$
 #
 #	File:		kcsicob.mak
 #
 #	Project:	KCSI (CRID + CREATE)
-#
-#	RCS:		$Source:$
 #
 #	Purpose:	Build KCSI on WIN32
 #

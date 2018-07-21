@@ -4,8 +4,6 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
 ** Confidential, unpublished property of NeoMedia Technologies, Inc.
 ** Use and distribution limited solely to authorized personnel.
@@ -15,11 +13,6 @@
 ** any means without the written permission of NeoMedia 
 ** Technologies, Inc. is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 ******************************************************************************
 */
 
@@ -27,8 +20,6 @@
 **	File:		win32wrun.c
 **
 **	Project:	wisp/utils
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Frontend to frontend COBOL runtime system.  Startup in this file
 **                      is handled by a Winmain function to prevent auto creation of a console

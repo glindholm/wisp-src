@@ -1,6 +1,4 @@
 #	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
-#	$Id:$
-#
 #
 #	File:	wacu.mak
 #

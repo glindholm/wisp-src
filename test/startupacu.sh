@@ -1,7 +1,5 @@
 #!/bin/sh
 #
-#	$Id:$
-#
 #	File:		startupacu.sh
 #
 #	Usage:		$ cd .../wisp/src/testacu

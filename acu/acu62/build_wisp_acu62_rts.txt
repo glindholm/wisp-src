@@ -6,7 +6,6 @@ All Rights Reserved.
 Title:          Build WISP for Acucobol 6.2 Runtime (WIN32)
 
 Document:       build_wisp_acu62_rts.txt
-Last Updated:   $Date:$
 Products:       WISP/WIN32
 Versions:       5.0.01
 

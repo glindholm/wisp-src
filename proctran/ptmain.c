@@ -3,14 +3,7 @@
 ** Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
-**
-** $Id: ptmain.c,v 1.19 2010/01/10 16:04:27 gsl Exp $
 ** 
-** CVS
-** $Source: /cvsdata/CVSROOT/wisp/src/proctran/ptmain.c,v $
-** $Author: gsl $
-** $Date: 2010/01/10 16:04:27 $
-** $Revision: 1.19 $
 ******************************************************************************
 */
 

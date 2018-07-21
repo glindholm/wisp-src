@@ -1,4 +1,4 @@
-# $Id:$
+# wprint64kit.mak
 #
 BASEDIR=C:\dev\wisp\src
 KITDIR=C:\dev\wisp\src\kit\wprint64_1.0

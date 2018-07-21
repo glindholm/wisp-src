@@ -2,8 +2,6 @@
 //	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //
 // Copyright (c) Lexical Copyright, 1992.  All rights reserved.
@@ -181,6 +179,7 @@ void wang_os_readfdr_int(
 
 	argcount_is(7);
 	READFDR(filename, libname, volname, &mode, field, &temp, &rc);
+	WL_wswap(&temp);
 
 	receiver = (0 == rc) ? temp : -1;
 }

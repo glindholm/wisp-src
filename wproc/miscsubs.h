@@ -2,8 +2,6 @@
 **	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
 **
 **	Project:	WPROC
-**	Id:		$Id:$
-**	RCS:		$Source:$
 **	
 */
 
@@ -11,8 +9,6 @@
 **	File:		miscsubs.h
 **
 **	Project:	wproc
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	C++ prototypes for miscsubs C routines
 **

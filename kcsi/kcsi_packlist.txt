@@ -4,7 +4,6 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 Title:          KCSI PACKING LIST
 
 Document:       kcsi_packlist.lis
-Last Updated:   $Date:$
 Products:       KCSI
 Versions:       4.2.00
 

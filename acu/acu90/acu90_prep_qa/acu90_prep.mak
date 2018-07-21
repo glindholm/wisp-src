@@ -1,4 +1,4 @@
-# $Id:$
+# acu90_prep.mak
 #
 ACUDIR=C:\data\Acucorp\ACUCBL900\ACUGT
 WISPKITDIR=C:\dev\wisp\src\kit\wisp

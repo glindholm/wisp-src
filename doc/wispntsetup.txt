@@ -4,7 +4,6 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 Title:          WISP for Windows Quick Set-Up Steps
 
 Document:       wispntsetup.txt
-Last Updated:   $Date:$
 Products:       WISP/WIN32
 WISPVER:        5.1.10
 

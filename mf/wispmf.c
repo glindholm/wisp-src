@@ -1,6 +1,5 @@
 /* 
 	Copyright (c) Shell Stream Software LLC, All rights reserved.
-	$Id:$
 */
 /*
 	wispmf.c	WISP Micro Focus COBOL

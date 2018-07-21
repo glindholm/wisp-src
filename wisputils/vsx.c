@@ -4,8 +4,6 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id: vsx.c,v 1.133 2011/10/29 20:09:14 gsl Exp $
-**
 ** NOTICE:
 ** Confidential, unpublished property of NeoMedia Technologies, Inc.
 ** Use and distribution limited solely to authorized personnel.
@@ -15,11 +13,6 @@
 ** any means without the written permission of NeoMedia 
 ** Technologies, Inc. is strictly prohibited.
 ** 
-** CVS
-** $Source: /cvsdata/CVSROOT/wisp/src/wisputils/vsx.c,v $
-** $Author: gsl $
-** $Date: 2011/10/29 20:09:14 $
-** $Revision: 1.133 $
 ******************************************************************************
 */
 
