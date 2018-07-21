@@ -64,8 +64,17 @@
 		   
 	   [_]	Build "acu91_prep_qa"
 	   
+		- Prepares to build the Acucobol runtimes 
+		- Copy all the needed files into a build area(src\acu\acu91\acu91_prep_qa\acu_lib_wisp)
+		- The files from ${ACUDIR)\lib will be copied from the Acucobol install area
+		- The WISP files will be copied from the ship kit build area (src\kit\wisp)
+	   
 	   [_]  Open folder src\acu\acu91\acu91_prep_qa and build each of 
 		the Acucobol runtimes 
+		
+		- For each solution file open it to opwn Visual Studio 10.
+		- Change the configuration from Debug to Release
+		- Right-click on the solution and "Rebuild Solution"
 		
 		WISP only runtimes:
 		
@@ -114,7 +123,10 @@
 	- Build SHIPKIT
 	- Rename src\kit\wisp to src\kit\wisp51xx
 	- Zip wisp51xx folder
-
+	- rename wisp51xx.zip to wisp_51xx_win32.zip
+	- copy kits to C:\ShellStream\WISP_Shipping
+	- copy kits to devel.shellstream.net
+	
 	
 	Save ACU QA Objects
 	-------------------
@@ -141,6 +153,14 @@
 		versions.sh
 		cvs add -ko Versions_xxxx.txt
 		cvs commit Versions_xxxx.txt
-	[ ]	Tag the release in CVS
+	[ ]	Tag the release in CVS (e.g. V5_1_10)
+	[ ]	Build source kit
+		cd tmp (on UNIX)
+		cvs co -P -d src wisp/src
+		-- or --
+		cvs co -P -r V5_1_10 -d src wisp/src
+		$WISP/src/port/tarz src
+		mv src.tar.Z wisp5150.src.tar.Z
+		ftp to C:\ShellStream\WISP_Source
 
 	========================= END OF DOCUMENT ==========================
