@@ -79,7 +79,7 @@ static demoexit()
 {
 		printf("Your EVALUATION copy of WISP has timed out.\n\n");
 		printf("For assistance contact:\n\n");
-		printf("                       NeoMedia Technologies Incorporated\n");
+		printf("                       Shell Stream Software LLC\n");
 		printf("                          %s,\n", WISP_ADDRESS_STREET);
 		printf("                              %s\n", WISP_ADDRESS_CITY_STATE_ZIP);
 		printf("                            Phone: %s\n", WISP_PHONE_NUMBER);

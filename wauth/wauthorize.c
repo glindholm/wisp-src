@@ -2410,7 +2410,7 @@ static void cgi_display_license_sheet(
 	/*
 	 * Display the record.
 	 */
-	printf("<h3 align=center>NeoMedia Technologies Inc.</h3>\n");
+	printf("<h3 align=center>Shell Stream Software LLC</h3>\n");
 	printf("<p>&nbsp</p>\n");
 
 	printf("<hr width=40%% align=center>\n");
@@ -2488,7 +2488,7 @@ static void cgi_display_license_sheet(
 	printf("To license a machine for the WISP runtime run the program \"wlicense\" "
 	       "and enter the LICENSE KEY as written above. "
 	       "<br><br>"
-	       "If you have any questions, please contact NeoMedia Technical support "
+	       "If you have any questions, please contact Shell Stream Software support "
 	       "at " WISP_PHONE_NUMBER ".");
 	printf("</table>");
 
