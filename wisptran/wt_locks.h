@@ -1,6 +1,5 @@
 /* 
-	Copyright (c) 1998 NeoMedia Migrations, All rights reserved.
-	$Id:$
+	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 */
 
 /*

@@ -1,5 +1,5 @@
 #
-#	Copyright (c) 1988-2003 NeoMedia Migrations, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 #
 #
 #
