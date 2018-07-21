@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 2001 NeoMedia Technologies, All rights reserved.
+	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 	$Id:$
 */
 
