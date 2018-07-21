@@ -7,7 +7,7 @@
 ** $Id: bldmf.c,v 1.26 2010/02/10 03:54:22 gsl Exp $
 ** 
 ** CVS
-** $Source: /cvsdata/CVSROOT/wisp/src/wisputils/bldmf.c,v $
+**
 ** $Author: gsl $
 ** $Date: 2010/02/10 03:54:22 $
 ** $Revision: 1.26 $

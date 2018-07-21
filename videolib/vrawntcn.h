@@ -2,7 +2,7 @@
 ******************************************************************************
 ** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
 **
-** $Id:$
+**
 **
 ** NOTICE:
 ** Confidential, unpublished property of NeoMedia Technologies, Inc.
@@ -14,10 +14,10 @@
 ** Technologies, Inc. is strictly prohibited.
 ** 
 ** CVS
-** $Source:$
+**
 ** $Author: gsl $
-** $Date:$
-** $Revision:$
+**
+**
 ******************************************************************************
 */
 
@@ -26,7 +26,7 @@
 **
 **	Project:	video/lib
 **
-**	RCS:		$Source:$
+**
 **
 **	Purpose:	prototypes for global vrawntcn functions
 **

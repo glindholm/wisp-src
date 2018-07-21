@@ -4,7 +4,7 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
+**
 **
 ** NOTICE:
 ** Confidential, unpublished property of NeoMedia Technologies, Inc.
@@ -16,10 +16,10 @@
 ** Technologies, Inc. is strictly prohibited.
 ** 
 ** CVS
-** $Source:$
+**
 ** $Author: gsl $
-** $Date:$
-** $Revision:$
+**
+**
 ******************************************************************************
 */
 
@@ -28,7 +28,7 @@
 **
 **	Project:	wisp/utils
 **
-**	RCS:		$Source:$
+**
 **
 **	Purpose:	called by shell to get 3 digit status code back from COBOL
 **

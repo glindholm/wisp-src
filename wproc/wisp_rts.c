@@ -2,8 +2,8 @@
 **	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
 **
 **	Project:	WPROC
-**	Id:		$Id:$
-**	RCS:		$Source:$
+**
+**
 **	
 */
 #ifdef WISP_LIB_STUBS

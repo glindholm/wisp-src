@@ -4,7 +4,7 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
+**
 **
 ** NOTICE:
 ** Confidential, unpublished property of NeoMedia Technologies, Inc.
@@ -16,10 +16,10 @@
 ** Technologies, Inc. is strictly prohibited.
 ** 
 ** CVS
-** $Source:$
+**
 ** $Author: gsl $
-** $Date:$
-** $Revision:$
+**
+**
 ******************************************************************************
 */
 
@@ -27,7 +27,7 @@
 /** 
  **	Program:	wsysinit
  **
- **	CVS:		"$Source:$"
+ **"
  ** 
  **	Purpose:	clean out tmp files and shared memory used by wisp
  **/

@@ -16,7 +16,7 @@
 ** Technologies, Inc. is strictly prohibited.
 ** 
 ** CVS
-** $Source: /cvsdata/CVSROOT/wisp/src/wisputils/wsubmit.c,v $
+**
 ** $Author: gsl $
 ** $Date: 2003/02/04 21:05:36 $
 ** $Revision: 1.18 $
@@ -28,7 +28,7 @@
 **
 **	Project:	wisp/utils
 **
-**	RCS:		$Source: /cvsdata/CVSROOT/wisp/src/wisputils/wsubmit.c,v $
+**
 **
 **	Purpose:	Emulation of Wang Proc SUBMIT statement
 **

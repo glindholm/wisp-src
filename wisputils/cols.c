@@ -16,7 +16,7 @@
 ** Technologies, Inc. is strictly prohibited.
 ** 
 ** CVS
-** $Source: /cvsdata/CVSROOT/wisp/src/wisputils/cols.c,v $
+**
 ** $Author: gsl $
 ** $Date: 2003/02/04 18:50:26 $
 ** $Revision: 1.8 $

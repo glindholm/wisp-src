@@ -8,7 +8,7 @@
 **
 **	Project:	WISP/TRAN
 **
-**	RCS:		$Source:$
+**
 **
 **	Purpose:	Record locking
 **

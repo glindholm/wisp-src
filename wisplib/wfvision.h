@@ -8,7 +8,7 @@
 **
 **	Project:	WISP/LIB
 **
-**	RCS:		$Source:$
+**
 **
 **	Purpose:	Vision file routines
 **

@@ -8,7 +8,7 @@
 **
 **	Project:	WISPLIB
 **
-**	RCS:		$Source:$
+**
 **
 **	Purpose:	Function prototypes for VSSUBS subs
 **
