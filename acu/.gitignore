@@ -15,3 +15,8 @@ bld_ede/
 bld_kcsi/
 bld_wisp/
 
+# Local copies 
+/callc.c
+/filetbl.c
+/sub.c
+/sub85.c
