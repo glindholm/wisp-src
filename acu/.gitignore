@@ -1,12 +1,17 @@
 wc105*.cob
 wc225*.cob
 ACULINK.cob
-*.o
+
 *.alc
-#callc.c
-#filetbl.c
-#sub.c
-#sub85.c
-wruncbl
-wruncble
+
+/wruncbl
+/wruncble
+
+acu_lib_wisp/
+acu_lib_kcsi/
+acu_lib_ede/
+
+bld_ede/
+bld_kcsi/
+bld_wisp/
 

@@ -1,8 +1,7 @@
-*.exe
-*.o
 /wc1051*.cob
 /wc2251*.cob
 /DISPRINT.cob
+
 bldmf
 display
 hexed
@@ -32,5 +31,6 @@ wsubmit
 wsysconf
 wsysinit
 wusage
+
 bldmf_l.c
 
