@@ -5,7 +5,7 @@
 	
 	Document:	portunix.lis
 	Products:	WISP/UNIX, EDE, KCSI
-	Versions:	5.0.00 
+	Versions:	5.1.xx 
 	
 	Summary:	How it port WISP (and others) for unix.
 			Building a shipping kit.
@@ -43,6 +43,9 @@
 	[ ]	Install Micro Focus COBOL.
 
 
+	[ ] Find version of ACUCOBOL
+		$ runcbl -v
+	
 	LOAD THE WISP SOURCE KIT
 	========================
 
@@ -52,7 +55,7 @@
 		files. (If a WISP directory already exists don't recreate.)
 
 		Example:
-			$ mkdir /usr2/wisp
+			$ mkdir ~/work/wisp
 
 	[ ]	DELETE or RENAME THE OLD SOURCE DIRECTORY
 
@@ -67,18 +70,18 @@
 		Then uncompress it and un-tar it to create the "src"
 		directory.
 		
-		CVSROOT=:pserver:gsl@devel.shellstream.net:/cvsdata/CVSROOT
+		From git:
 
-		    $ cd wisp
-                    $ cvs co -P -d src wisp/src
-		or
-		    $ cvs co -P -r V5_0_xx_branch -d src.50xx wisp/src
+			git clone git@bitbucket.org:glindholm/wisp-src-main.git src
+			cd src
+			git checkout {BRANCH}
+
 		or
 		    $ uncompress -c wispXXXX.src.tar.Z | tar -xvf -
 		or
 		    $ uncompress -c wispXXXX.src.cpio.Z | cpio -icvd
-		(to update)
-                    $ cvs update -Pd
+			
+			
 
 	[ ]	SET ENVIRONMENT VARIABLES
 
@@ -89,7 +92,7 @@
 		to set the WISPSRC and WISPDIR variables.
 
 			$ cd wisp/src/port
-			$ portenvs.sh
+			$ ./portenvs.sh
 
 		This will set the variables WISPSRC and WISPDIR.
 
@@ -97,7 +100,7 @@
 		You will need the variable WISPSRC set for the whole porting 
 		process.  Alway ensure that it is set correctly.
 
-			$ WISPSRC=/disk1/neomedia/wisp/src 
+			$ WISPSRC=/home/user/work/wisp/src 
 			$ WISPDIR=${WISPSRC}
 			$ ACUDIR=/usr/local/acucobol
 			$ COBDIR=/usr/local/mf41
@@ -114,6 +117,9 @@
 	[ ]	${WISPSRC}/port/make.include
 		- Uncomment the correct system flags.
 
+	[ ] Verify version of ACUCOBOL
+	    $ runcbl -v
+		
 	[ ]	${WISPSRC}/acu/acucobol.include
 		- Search for:
 		  "****  CHANGE PLATFORM SETTINGS HERE ****"
@@ -132,28 +138,6 @@
 		Add system configuration device info.
 
 
-	IF MISSING ACUCOBOL COMPILER
-	============================
-
-	If you are on a system with only an Acucobol runtime and no
-	compiler then:
-
-	[ ]	 Copy the ${WISPSRC}/testacu Acucobol object files
-		 acuqa.tar.Z from a system that has them.
-		 (This is part of the CVS source set)
-
-
-	IF MISSING MICRO FOCUS COBOL
-	============================
-
-	[ ]	In the next section run this command instead.
-
-		$ make -f makewisp.umf all_acu>>make.err 2>&1 & # make and log errors
-		$ tail -f make.err		 # show progress on screen
-		or
-		$ maketail.sh all_acu
-
-
 	BUILD ALL WISP COMPONENTS
 	=========================
 
@@ -162,18 +146,22 @@
 	does not build the COBOL runtime systems or SAMPLE.
 
 	[ ]	$ cd ${WISPSRC}/port
-		$ maketail.sh shipkit		# build WISP & EDE
+		$ ./maketail.sh shipkit		# build WISP & EDE
 		
-		or
 		
-		$ make -f makewisp.umf shipkit>>make.err 2>&1 & # make and log errors
-		$ tail -f make.err		# show progress on screen
+	[ ] IF ACUCOBOL COMPILER 
 		
-		plus 
+		$ ./maketail.sh kcsi_acu	# To build KCSI for ACU		
 		
-		$ maketail.sh kcsi_acu		# To build KCSI for ACU		
+		$ ./maketail.sh all_acu		# WISP, EDE, KCSI/ACU		
 		
-		$ maketail.sh all_acu		# WISP, EDE, KCSI/ACU		
+	[ ] IF NO ACUCOBOL COMPILER 
+		
+		$ ./maketail.sh kcsi_acu_nc	# To build KCSI for ACU	(NO ACUCOBOL COMPILER)
+	
+	[ ] IF MF COMPILER
+	
+		$ ./maketail.sh all_mf		# WISP, EDE, KCSI/MF		
 
 	[ ]	$ vi make.err			# ensure no errors
 
@@ -190,7 +178,7 @@
 
 	[ ]	*** Install to ${WISPSRC}/QA ***
 		$ cd ${WISPSRC}/port
-		$ installqa.sh
+		$ ./installqa.sh
 		
 		*** You may need to export CC ***
 		$ export CC=gcc
@@ -204,7 +192,7 @@
 	then move the modified source files to their appropriate source
 	directories and repeat the above steps starting at the BUILD step.
 
-	[ ]	Follow "qawisp.lis" checklist to test WISP.
+	[ ]	Follow "doc/qawisp.lis" checklist to test WISP.
 
 
 	INSTALL THE NEW WISP

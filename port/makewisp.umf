@@ -88,6 +88,11 @@ kcsi_acu:	wisptran wisplib videolib
 		(cd $(WISPSRC)/kcsi;		$(MAKE) -f kcsilibs.umf WISPSRC=$(WISPSRC) kcsi_acu)
 		@echo KCSI for ACUCOBOL is up-to-date.
 
+kcsi_acu_nc:	wisptran wisplib videolib
+		@echo Making $@
+		(cd $(WISPSRC)/kcsi;		$(MAKE) -f kcsilibs.umf WISPSRC=$(WISPSRC) kcsi_acu_nc)
+		@echo KCSI for ACUCOBOL is up-to-date.
+
 edelib:	
 		@echo Making $@
 		(cd $(WISPSRC)/ede; 		$(MAKE) -f libede.umf install)

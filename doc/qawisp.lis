@@ -41,11 +41,11 @@
 	PURPOSE:	This QA checklist is to be used to test and verify
 			all functionality of WISP.
 
-	WHEN USED:	This QA checklist is used everytime WISP is
-			ported to a new platform and everytime a new
+	WHEN USED:	This QA checklist is used every time WISP is
+			ported to a new platform and every time a new
 			release is re-ported to a platform.
 
-+			The items that comprize a mini-test are marked
++			The items that comprise a mini-test are marked
 +			with a plus sign (+) in column one.
 
 	INSTRUCTIONS:	1) Fill in the above information.
@@ -72,14 +72,14 @@
 +	PREREQUESITE
 
 	___	Port WISP to this machine following the steps outlined in
-		the document "portunix.lis".
+		the document "doc/portunix.lis".
 
 	___	Install WISP and build the RTS. This is normally done with
 		the "installqa.sh" script but could be done from a WISP
 		kit.
 		
 		$ cd ${WISPSRC}/port
-		$ installqa.sh
+		$ ./installqa.sh
 
 
 +	SET UP FOR WISP QA TESTING.
@@ -112,8 +112,8 @@
 		This will set your $WISPCONFIG plus COBOL specific variables.
 		It will also set $QA to point to your test directory.
 
-		ACU	$ startupacu.sh
-		MF	$ startupmf.sh
+		ACU	$ ./startupacu.sh
+		MF	$ ./startupmf.sh
 
 	****
 	****    THE ABOVE STEPS MUST BE DONE EVERYTIME YOU RE-START.

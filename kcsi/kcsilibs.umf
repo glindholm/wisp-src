@@ -13,6 +13,7 @@
 #
 #	all		All shipkits (default)
 #	kcsi_acu	The Acucobol KCSI shipkit
+#	kcsi_acu_nc	The Acucobol KCSI shipkit (NO ACUCOBOL COMPILER)
 #	kcsi_mf		The Micro Focus KCSI shipkit
 #	clean		Remove all built pieces
 #
@@ -284,10 +285,17 @@ kcsi_acu:
 	$(MAKE) -f $(MAKEFILE) CC="$(CC)" CFLAGS="$(CFLAGS_CRID) -DKCSI_ACU" LIBC_ALL_A=$(LIBC_ACU_A) \
 		WISPSRC=$(WISPSRC) kcsi_acu_go
 
+kcsi_acu_nc:
+	$(MAKE) -f $(MAKEFILE) CC="$(CC)" CFLAGS="$(CFLAGS_CRID) -DKCSI_ACU" LIBC_ALL_A=$(LIBC_ACU_A) \
+		WISPSRC=$(WISPSRC) kcsi_acu_nc_go
+
 kcsi_mf_go: header_mf required kcsi_mf_shipkit 
 	@echo KCSI $(KCSI_VERSION) for MICRO FOCUS is UP-TO-DATE.
 
 kcsi_acu_go: header_acu required kcsi_acu_shipkit wruncblk_rts
+	@echo KCSI $(KCSI_VERSION) for ACUCOBOL is UP-TO-DATE.
+
+kcsi_acu_nc_go: header_acu required kcsi_acux kcsi_acu_shipkit wruncblk_rts
 	@echo KCSI $(KCSI_VERSION) for ACUCOBOL is UP-TO-DATE.
 
 ACUSHIPDIR=kcsi_acu_$(KCSI_VERSION).ship
@@ -407,7 +415,7 @@ wruncbl.umf: $(WISPSRC)/acu/wruncbl.umf
 kcsi_acux.tar.Z: $(ACUXDIST)
 	tar -cvf - $(ACUXDIST) | compress > $@
 	
-kcsi_acux: kcsi_acux.tar.Z
+kcsi_acux:
 	uncompress -c kcsi_acux.tar.Z | tar -xvf -
 	touch $(ACUXDIST)
 
