@@ -106,7 +106,7 @@ Boolean scope::can_go_to(block a_block) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/scope.cpp,v
+//
 //	Working file: scope.cpp
 //	head: 1.5
 //	branch:

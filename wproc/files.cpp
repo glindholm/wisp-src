@@ -212,7 +212,7 @@ trace(general, "Writing to file: ");
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/files.cpp,v
+//
 //	Working file: files.cpp
 //	head: 1.5
 //	branch:

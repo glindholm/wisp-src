@@ -66,7 +66,7 @@ extern char *const txt_trace_level;
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/txt.hpp,v
+//
 //	Working file: txt.hpp
 //	head: 1.4
 //	branch:

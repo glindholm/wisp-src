@@ -131,7 +131,7 @@ char *nw_user_login_name() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/network.cpp,v
+//
 //	Working file: network.cpp
 //	head: 1.7
 //	branch:

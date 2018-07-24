@@ -348,7 +348,7 @@ symbol *machine::locate_label_symbol(const char *name, offset label_table) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/machine.cpp,v
+//
 //	Working file: machine.cpp
 //	head: 1.6
 //	branch:

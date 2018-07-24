@@ -64,7 +64,7 @@ void colors_cleanup();
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/colors.hpp,v
+//
 //	Working file: colors.hpp
 //	head: 1.4
 //	branch:

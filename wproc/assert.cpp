@@ -52,7 +52,7 @@ void assert_error(char *source_file, int line_number) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/assert.cpp,v
+//
 //	Working file: assert.cpp
 //	head: 1.7
 //	branch:

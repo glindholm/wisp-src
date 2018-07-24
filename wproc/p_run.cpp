@@ -317,7 +317,7 @@ void compiler::using_stmt() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_run.cpp,v
+//
 //	Working file: p_run.cpp
 //	head: 1.5
 //	branch:

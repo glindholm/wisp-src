@@ -58,7 +58,7 @@ void object::operator delete(void* p, size_t size) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/object.cpp,v
+//
 //	Working file: object.cpp
 //	head: 1.5
 //	branch:

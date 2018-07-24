@@ -47,7 +47,7 @@ class system_environment : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/sysenv.hpp,v
+//
 //	Working file: sysenv.hpp
 //	head: 1.4
 //	branch:

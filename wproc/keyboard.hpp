@@ -533,7 +533,7 @@
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/keyboard.hpp,v
+//
 //	Working file: keyboard.hpp
 //	head: 1.6
 //	branch:

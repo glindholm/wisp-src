@@ -96,7 +96,7 @@ void compiler::assign_stmt() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_assign.cpp,v
+//
 //	Working file: p_assign.cpp
 //	head: 1.6
 //	branch:

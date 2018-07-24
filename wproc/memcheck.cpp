@@ -24,7 +24,7 @@
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/memcheck.cpp,v
+//
 //	Working file: memcheck.cpp
 //	head: 1.8
 //	branch:

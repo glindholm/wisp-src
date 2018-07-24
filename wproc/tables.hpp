@@ -115,7 +115,7 @@ class table : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/tables.hpp,v
+//
 //	Working file: tables.hpp
 //	head: 1.4
 //	branch:

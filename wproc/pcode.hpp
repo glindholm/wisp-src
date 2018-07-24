@@ -130,7 +130,7 @@ class pcode_emitter : public pcode_access {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/pcode.hpp,v
+//
 //	Working file: pcode.hpp
 //	head: 1.4
 //	branch:

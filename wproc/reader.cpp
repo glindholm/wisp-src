@@ -283,7 +283,7 @@ void message_reader::position_to(int a_message_number) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/reader.cpp,v
+//
 //	Working file: reader.cpp
 //	head: 1.6
 //	branch:

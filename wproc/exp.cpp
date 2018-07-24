@@ -361,7 +361,7 @@ expression *expression_array::remove_exp(int an_index) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/exp.cpp,v
+//
 //	Working file: exp.cpp
 //	head: 1.5
 //	branch:

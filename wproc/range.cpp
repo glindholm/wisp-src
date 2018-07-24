@@ -93,7 +93,7 @@ int_32 range::pack() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/range.cpp,v
+//
 //	Working file: range.cpp
 //	head: 1.6
 //	branch:

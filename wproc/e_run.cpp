@@ -338,7 +338,7 @@ void machine::exec_using() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_run.cpp,v
+//
 //	Working file: e_run.cpp
 //	head: 1.9
 //	branch:

@@ -223,7 +223,7 @@ class machine : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/machine.hpp,v
+//
 //	Working file: machine.hpp
 //	head: 1.5
 //	branch:

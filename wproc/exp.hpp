@@ -197,7 +197,7 @@ class expression_array : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/exp.hpp,v
+//
 //	Working file: exp.hpp
 //	head: 1.5
 //	branch:

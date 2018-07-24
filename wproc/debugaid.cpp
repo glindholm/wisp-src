@@ -209,7 +209,7 @@ void debug_trace_level_restore() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/debugaid.cpp,v
+//
 //	Working file: debugaid.cpp
 //	head: 1.7
 //	branch:

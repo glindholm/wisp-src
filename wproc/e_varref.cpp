@@ -120,7 +120,7 @@ Boolean machine::variable_reference() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_varref.cpp,v
+//
 //	Working file: e_varref.cpp
 //	head: 1.7
 //	branch:

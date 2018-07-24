@@ -82,7 +82,7 @@ void show_memory(char *kind, void* ptr, size_t size) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/memory.cpp,v
+//
 //	Working file: memory.cpp
 //	head: 1.7
 //	branch:

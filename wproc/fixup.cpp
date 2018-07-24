@@ -199,7 +199,7 @@ Boolean fixup::fixups_pending() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/fixup.cpp,v
+//
 //	Working file: fixup.cpp
 //	head: 1.5
 //	branch:

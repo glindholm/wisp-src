@@ -114,7 +114,7 @@ Boolean state::restore_state(char *a_filename) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/state.cpp,v
+//
 //	Working file: state.cpp
 //	head: 1.5
 //	branch:

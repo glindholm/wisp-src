@@ -70,7 +70,7 @@ class arguments : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/args.hpp,v
+//
 //	Working file: args.hpp
 //	head: 1.4
 //	branch:

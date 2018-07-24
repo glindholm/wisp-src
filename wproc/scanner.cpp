@@ -563,7 +563,7 @@ void scanner::ignore_rest_of_line()
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/scanner.cpp,v
+//
 //	Working file: scanner.cpp
 //	head: 1.6
 //	branch:

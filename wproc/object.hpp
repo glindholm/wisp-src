@@ -42,7 +42,7 @@ class object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/object.hpp,v
+//
 //	Working file: object.hpp
 //	head: 1.4
 //	branch:

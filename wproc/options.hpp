@@ -79,7 +79,7 @@ extern options user_options;
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/options.hpp,v
+//
 //	Working file: options.hpp
 //	head: 1.4
 //	branch:

@@ -1345,7 +1345,7 @@ void compiler::p_wang_cleanup() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_wang.cpp,v
+//
 //	Working file: p_wang.cpp
 //	head: 1.6
 //	branch:

@@ -142,7 +142,7 @@ Boolean runtime_demo_ok(const char *source_name) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/install.cpp,v
+//
 //	Working file: install.cpp
 //	head: 1.8
 //	branch:

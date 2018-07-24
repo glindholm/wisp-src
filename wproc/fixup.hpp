@@ -99,7 +99,7 @@ class fixup : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/fixup.hpp,v
+//
 //	Working file: fixup.hpp
 //	head: 1.4
 //	branch:

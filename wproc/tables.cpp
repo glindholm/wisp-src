@@ -124,7 +124,7 @@ void table::set_none_seen() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/tables.cpp,v
+//
 //	Working file: tables.cpp
 //	head: 1.6
 //	branch:

@@ -198,7 +198,7 @@ class symbol_table : public state_object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/symbols.hpp,v
+//
 //	Working file: symbols.hpp
 //	head: 1.6
 //	branch:

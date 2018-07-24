@@ -122,7 +122,7 @@ expression *stack::top(int offset) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/stack.cpp,v
+//
 //	Working file: stack.cpp
 //	head: 1.5
 //	branch:

@@ -67,7 +67,7 @@ char *const txt_trace_level         = "trace level";
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/txt.cpp,v
+//
 //	Working file: txt.cpp
 //	head: 1.5
 //	branch:

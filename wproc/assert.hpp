@@ -35,7 +35,7 @@ void assert_error(char *source_file, int line_number);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/assert.hpp,v
+//
 //	Working file: assert.hpp
 //	head: 1.5
 //	branch:

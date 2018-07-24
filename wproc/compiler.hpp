@@ -307,7 +307,7 @@ class compiler : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/compiler.hpp,v
+//
 //	Working file: compiler.hpp
 //	head: 1.8
 //	branch:

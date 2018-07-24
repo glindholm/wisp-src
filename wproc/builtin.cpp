@@ -1235,7 +1235,7 @@ void machine::exec_builtin() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/builtin.cpp,v
+//
 //	Working file: builtin.cpp
 //	head: 1.12
 //	branch:

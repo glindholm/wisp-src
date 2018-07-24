@@ -154,7 +154,7 @@ char *demo_notice() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/product.cpp,v
+//
 //	Working file: product.cpp
 //	head: 1.11
 //	branch:

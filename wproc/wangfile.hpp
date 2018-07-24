@@ -34,7 +34,7 @@ class wang_filename : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/wangfile.hpp,v
+//
 //	Working file: wangfile.hpp
 //	head: 1.3
 //	branch:

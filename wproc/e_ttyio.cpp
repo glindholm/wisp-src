@@ -142,7 +142,7 @@ void machine::exec_write() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_ttyio.cpp,v
+//
 //	Working file: e_ttyio.cpp
 //	head: 1.5
 //	branch:

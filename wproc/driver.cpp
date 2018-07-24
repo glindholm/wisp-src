@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/driver.cpp,v
+//
 //	Working file: driver.cpp
 //	head: 1.9
 //	branch:

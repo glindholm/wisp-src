@@ -37,7 +37,7 @@ Boolean cancel_requested();
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/cancel.hpp,v
+//
 //	Working file: cancel.hpp
 //	head: 1.4
 //	branch:

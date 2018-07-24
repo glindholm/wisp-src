@@ -48,7 +48,7 @@ Boolean runtime_demo_ok(const char *source_name);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/install.hpp,v
+//
 //	Working file: install.hpp
 //	head: 1.5
 //	branch:

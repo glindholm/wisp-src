@@ -40,7 +40,7 @@ char    *nw_user_login_name();
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/network.hpp,v
+//
 //	Working file: network.hpp
 //	head: 1.4
 //	branch:

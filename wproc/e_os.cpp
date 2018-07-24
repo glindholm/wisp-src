@@ -303,7 +303,7 @@ void machine::exec_set() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_os.cpp,v
+//
 //	Working file: e_os.cpp
 //	head: 1.5
 //	branch:

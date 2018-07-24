@@ -67,7 +67,7 @@ wang_filename::wang_filename(const char *s) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/wangfile.cpp,v
+//
 //	Working file: wangfile.cpp
 //	head: 1.4
 //	branch:

@@ -290,7 +290,7 @@ class screen : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/screen.hpp,v
+//
 //	Working file: screen.hpp
 //	head: 1.4
 //	branch:

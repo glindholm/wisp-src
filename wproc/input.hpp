@@ -132,7 +132,7 @@ input *create_input_object(const char *a_filename, arguments *args);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/input.hpp,v
+//
 //	Working file: input.hpp
 //	head: 1.4
 //	branch:

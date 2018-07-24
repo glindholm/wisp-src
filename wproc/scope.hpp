@@ -52,7 +52,7 @@ class scope : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/scope.hpp,v
+//
 //	Working file: scope.hpp
 //	head: 1.4
 //	branch:

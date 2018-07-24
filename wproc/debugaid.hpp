@@ -93,7 +93,7 @@ debug_trace_level_restore()
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/debugaid.hpp,v
+//
 //	Working file: debugaid.hpp
 //	head: 1.6
 //	branch:

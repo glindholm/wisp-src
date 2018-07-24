@@ -42,7 +42,7 @@ void show_memory(char *kind, void* ptr, size_t size);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/memory.hpp,v
+//
 //	Working file: memory.hpp
 //	head: 1.4
 //	branch:

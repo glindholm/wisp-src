@@ -62,7 +62,7 @@ Boolean machine::valid_substring(
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_substr.cpp,v
+//
 //	Working file: e_substr.cpp
 //	head: 1.5
 //	branch:

@@ -102,7 +102,7 @@ class tracer : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/tracer.hpp,v
+//
 //	Working file: tracer.hpp
 //	head: 1.4
 //	branch:

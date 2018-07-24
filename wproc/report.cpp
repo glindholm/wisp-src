@@ -779,7 +779,7 @@ void report_status(const char *msg1, const char *msg2, const char *msg3) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/report.cpp,v
+//
 //	Working file: report.cpp
 //	head: 1.5
 //	branch:

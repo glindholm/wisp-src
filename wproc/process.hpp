@@ -56,7 +56,7 @@ extern process *the_process;
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/process.hpp,v
+//
 //	Working file: process.hpp
 //	head: 1.4
 //	branch:

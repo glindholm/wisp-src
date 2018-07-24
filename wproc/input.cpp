@@ -506,7 +506,7 @@ int state_file_input::destroy() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/input.cpp,v
+//
 //	Working file: input.cpp
 //	head: 1.7
 //	branch:

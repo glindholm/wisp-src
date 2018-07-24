@@ -58,7 +58,7 @@ void files_cleanup(int nesting_level);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/files.hpp,v
+//
 //	Working file: files.hpp
 //	head: 1.4
 //	branch:

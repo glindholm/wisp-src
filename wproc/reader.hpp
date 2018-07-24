@@ -105,7 +105,7 @@ class message_reader : public reader {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/reader.hpp,v
+//
 //	Working file: reader.hpp
 //	head: 1.4
 //	branch:

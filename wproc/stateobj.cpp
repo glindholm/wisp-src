@@ -111,7 +111,7 @@ void state_object::restore(char *&a_string) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/stateobj.cpp,v
+//
 //	Working file: stateobj.cpp
 //	head: 1.5
 //	branch:

@@ -161,7 +161,7 @@ extern w4w_handler global_w4w_handler;
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/crt_io.hpp,v
+//
 //	Working file: crt_io.hpp
 //	head: 1.5
 //	branch:

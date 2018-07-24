@@ -1341,7 +1341,7 @@ void screen::init_fkey_map() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/screen.cpp,v
+//
 //	Working file: screen.cpp
 //	head: 1.10
 //	branch:

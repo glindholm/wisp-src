@@ -105,7 +105,7 @@ char *number_to_color(int number) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/colors.cpp,v
+//
 //	Working file: colors.cpp
 //	head: 1.5
 //	branch:

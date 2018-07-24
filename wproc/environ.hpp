@@ -90,7 +90,7 @@ typedef          int  int_32;
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/environ.hpp,v
+//
 //	Working file: environ.hpp
 //	head: 1.9
 //	branch:

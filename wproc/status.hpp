@@ -54,7 +54,7 @@ enum status_kind {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/status.hpp,v
+//
 //	Working file: status.hpp
 //	head: 1.5
 //	branch:

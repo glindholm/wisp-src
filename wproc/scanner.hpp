@@ -56,7 +56,7 @@ class scanner : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/scanner.hpp,v
+//
 //	Working file: scanner.hpp
 //	head: 1.4
 //	branch:

@@ -302,7 +302,7 @@ void process::load_from_env()
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/process.cpp,v
+//
 //	Working file: process.cpp
 //	head: 1.11
 //	branch:

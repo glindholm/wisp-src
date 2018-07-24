@@ -144,7 +144,7 @@ void compiler::write_stmt() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_ttyio.cpp,v
+//
 //	Working file: p_ttyio.cpp
 //	head: 1.5
 //	branch:

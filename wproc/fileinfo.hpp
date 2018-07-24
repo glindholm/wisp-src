@@ -82,7 +82,7 @@ char *pcode_filename(const char *a_path);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/fileinfo.hpp,v
+//
 //	Working file: fileinfo.hpp
 //	head: 1.5
 //	branch:

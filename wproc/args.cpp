@@ -194,7 +194,7 @@ int arguments::count() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/args.cpp,v
+//
 //	Working file: args.cpp
 //	head: 1.6
 //	branch:

@@ -251,7 +251,7 @@ void machine::exec_declare(Boolean formal_parameter) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_decl.cpp,v
+//
 //	Working file: e_decl.cpp
 //	head: 1.12
 //	branch:

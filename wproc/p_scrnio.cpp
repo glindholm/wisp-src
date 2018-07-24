@@ -687,7 +687,7 @@ void compiler::screen_stmt() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_scrnio.cpp,v
+//
 //	Working file: p_scrnio.cpp
 //	head: 1.5
 //	branch:

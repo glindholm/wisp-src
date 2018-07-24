@@ -56,7 +56,7 @@ class state_object : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/stateobj.hpp,v
+//
 //	Working file: stateobj.hpp
 //	head: 1.4
 //	branch:

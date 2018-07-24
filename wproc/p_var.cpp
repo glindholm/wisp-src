@@ -162,7 +162,7 @@ int compiler::parse_variable(symbol *a_symbol, range &a_range) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_var.cpp,v
+//
 //	Working file: p_var.cpp
 //	head: 1.5
 //	branch:

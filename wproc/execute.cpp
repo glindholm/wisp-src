@@ -765,7 +765,7 @@ opcode machine::execute() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/execute.cpp,v
+//
 //	Working file: execute.cpp
 //	head: 1.8
 //	branch:

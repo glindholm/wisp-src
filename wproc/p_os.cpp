@@ -245,7 +245,7 @@ void compiler::p_os_cleanup() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_os.cpp,v
+//
 //	Working file: p_os.cpp
 //	head: 1.5
 //	branch:

@@ -114,7 +114,7 @@ Boolean drive_ready(int drive) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/critical.cpp,v
+//
 //	Working file: critical.cpp
 //	head: 1.5
 //	branch:

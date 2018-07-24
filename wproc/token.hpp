@@ -105,7 +105,7 @@ class token : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/token.hpp,v
+//
 //	Working file: token.hpp
 //	head: 1.4
 //	branch:

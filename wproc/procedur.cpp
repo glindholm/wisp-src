@@ -209,7 +209,7 @@ void executable_procedure::interpret() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/procedur.cpp,v
+//
 //	Working file: procedur.cpp
 //	head: 1.5
 //	branch:

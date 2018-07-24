@@ -49,7 +49,7 @@ class range : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/range.hpp,v
+//
 //	Working file: range.hpp
 //	head: 1.6
 //	branch:

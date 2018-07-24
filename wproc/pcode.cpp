@@ -386,7 +386,7 @@ void pcode_emitter::resume_emission() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/pcode.cpp,v
+//
 //	Working file: pcode.cpp
 //	head: 1.7
 //	branch:

@@ -745,7 +745,7 @@ void compiler::while_stmt() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_ctrl.cpp,v
+//
 //	Working file: p_ctrl.cpp
 //	head: 1.6
 //	branch:

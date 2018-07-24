@@ -932,7 +932,7 @@ int parse_time(
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/utility.cpp,v
+//
 //	Working file: utility.cpp
 //	head: 1.12
 //	branch:

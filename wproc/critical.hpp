@@ -36,7 +36,7 @@ Boolean drive_ready(int drive);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/critical.hpp,v
+//
 //	Working file: critical.hpp
 //	head: 1.4
 //	branch:

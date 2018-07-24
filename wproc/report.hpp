@@ -88,7 +88,7 @@ void report_status(
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/report.hpp,v
+//
 //	Working file: report.hpp
 //	head: 1.5
 //	branch:

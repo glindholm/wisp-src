@@ -61,7 +61,7 @@ class stack : public object {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/stack.hpp,v
+//
 //	Working file: stack.hpp
 //	head: 1.4
 //	branch:

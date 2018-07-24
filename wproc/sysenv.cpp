@@ -194,7 +194,7 @@ void system_environment::restore() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/sysenv.cpp,v
+//
 //	Working file: sysenv.cpp
 //	head: 1.6
 //	branch:

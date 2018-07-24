@@ -781,7 +781,7 @@ void machine::exec_screen() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_scrnio.cpp,v
+//
 //	Working file: e_scrnio.cpp
 //	head: 1.7
 //	branch:

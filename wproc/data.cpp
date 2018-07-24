@@ -322,7 +322,7 @@ void string_array_data::sort() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/data.cpp,v
+//
 //	Working file: data.cpp
 //	head: 1.6
 //	branch:

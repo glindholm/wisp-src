@@ -129,7 +129,7 @@ void machine::assign(expression *a_variable, expression *a_value) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_assign.cpp,v
+//
 //	Working file: e_assign.cpp
 //	head: 1.6
 //	branch:

@@ -151,7 +151,7 @@ void token::dump() const {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/token.cpp,v
+//
 //	Working file: token.cpp
 //	head: 1.5
 //	branch:

@@ -186,7 +186,7 @@ void machine::integer_subtract() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_math.cpp,v
+//
 //	Working file: e_math.cpp
 //	head: 1.7
 //	branch:

@@ -245,7 +245,7 @@ void show_usage() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/options.cpp,v
+//
 //	Working file: options.cpp
 //	head: 1.7
 //	branch:

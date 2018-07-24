@@ -615,7 +615,7 @@ void machine::resolve_partial_backref() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_wang.cpp,v
+//
 //	Working file: e_wang.cpp
 //	head: 1.7
 //	branch:

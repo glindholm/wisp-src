@@ -126,7 +126,7 @@ enum submit_opcode {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/subops.hpp,v
+//
 //	Working file: subops.hpp
 //	head: 1.4
 //	branch:

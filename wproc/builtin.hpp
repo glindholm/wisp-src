@@ -160,7 +160,7 @@ enum builtin_kind {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/builtin.hpp,v
+//
 //	Working file: builtin.hpp
 //	head: 1.5
 //	branch:

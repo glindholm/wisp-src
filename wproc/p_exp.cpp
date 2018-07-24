@@ -679,7 +679,7 @@ Boolean compiler::parse_filename() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_exp.cpp,v
+//
 //	Working file: p_exp.cpp
 //	head: 1.6
 //	branch:

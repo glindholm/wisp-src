@@ -46,7 +46,7 @@
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/ext.hpp,v
+//
 //	Working file: ext.hpp
 //	head: 1.5
 //	branch:

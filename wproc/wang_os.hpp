@@ -160,7 +160,7 @@ void wang_os_first_procedure_name(char *a_name);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/wang_os.hpp,v
+//
 //	Working file: wang_os.hpp
 //	head: 1.6
 //	branch:

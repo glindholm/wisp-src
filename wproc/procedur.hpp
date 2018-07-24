@@ -81,7 +81,7 @@ class executable_procedure : public procedure {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/procedur.hpp,v
+//
 //	Working file: procedur.hpp
 //	head: 1.4
 //	branch:

@@ -127,7 +127,7 @@ char *opcode_name(opcode an_opcode);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/opcodes.hpp,v
+//
 //	Working file: opcodes.hpp
 //	head: 1.4
 //	branch:

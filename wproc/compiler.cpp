@@ -554,7 +554,7 @@ void compiler::compile_statements(int_32 how_many) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/compiler.cpp,v
+//
 //	Working file: compiler.cpp
 //	head: 1.11
 //	branch:

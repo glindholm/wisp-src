@@ -60,7 +60,7 @@ char *demo_notice();
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/product.hpp,v
+//
 //	Working file: product.hpp
 //	head: 1.5
 //	branch:

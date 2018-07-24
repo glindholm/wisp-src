@@ -181,7 +181,7 @@ class label_data : public data {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/data.hpp,v
+//
 //	Working file: data.hpp
 //	head: 1.4
 //	branch:

@@ -32,7 +32,7 @@
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/memcheck.hpp,v
+//
 //	Working file: memcheck.hpp
 //	head: 1.7
 //	branch:

@@ -52,7 +52,7 @@ enum field_attr {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/attribs.hpp,v
+//
 //	Working file: attribs.hpp
 //	head: 1.4
 //	branch:
