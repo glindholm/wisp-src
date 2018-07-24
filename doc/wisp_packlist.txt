@@ -5,7 +5,7 @@ Title:          WISP PACKING LIST
 
 Document:       wisp_packlist.lis
 Products:       WISP
-WISPVER:        5.1.10
+WISPVER:        5.1.12
 
 Summary:        Packing list for the WISP shipping kit.
 
