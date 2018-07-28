@@ -5,7 +5,7 @@
 	
 	Document:	portwin32.txt
 	Products:	WISP/WIN32 EDE KCSI
-	Versions:	5.1.00 and later
+	WISPVER:	5.1.XX and later
 	
 	Summary:	Instructions on re-porting WISP to WIN32
 
@@ -22,13 +22,12 @@
 	Transfering a WISP Source Kit
 	-----------------------------
 
-	Check out wisp/src from CVS. 
-	CVSROOT=:pserver:gsl@devel.shellstream.net:/cvsdata/CVSROOT
+	From git:
 
-            $ cd wisp
-            $ cvs co -P -d src wisp/src
-		or
-            $ cvs co -P -r V5_0_xx_branch -d src.50xx wisp/src
+		cd wisp
+		git clone git@bitbucket.org:glindholm/wisp-src-main.git src
+		cd src
+		git checkout {BRANCH}
 
 	This will create a standard wisp source kit directory layout.
 
@@ -38,7 +37,9 @@
 	Edit makefiles and set the ACUDIR and COBOL value to
 	point to the location of Acucobol directory. 
 
-	[_] Set the enviroment variable ACUDIR=C:\data\acucorp\acucbl910\acugt
+	[_] Set the environment variable ACUDIR=C:\data\Acucorp\Acucbl910\AcuGT
+		Note: The Acucobol license files are generated here:
+			C:\ProgramData\Micro Focus\extend\9.1.0\x86\
 
 	or set ACUDIR in each of theses makefiles
 
@@ -63,7 +64,7 @@
 		   
 	   [_]	Build "acu91_prep_qa"
 	   
-		- Prepares to build the Acucobol runtimes 
+		- Prepares to build the Acucobol 9.1 runtimes 
 		- Copy all the needed files into a build area(src\acu\acu91\acu91_prep_qa\acu_lib_wisp)
 		- The files from ${ACUDIR)\lib will be copied from the Acucobol install area
 		- The WISP files will be copied from the ship kit build area (src\kit\wisp)
@@ -71,33 +72,33 @@
 	   [_]  Open folder src\acu\acu91\acu91_prep_qa and build each of 
 		the Acucobol runtimes 
 		
-		- For each solution file open it to opwn Visual Studio 10.
+		- For each solution file open it to open Visual Studio 10.
 		- Change the configuration from Debug to Release
 		- Right-click on the solution and "Rebuild Solution"
 		
 		WISP only runtimes:
 		
-		[_] lib_acu91_wisp\wrun32.sln
+		[_] acu_lib_wisp\wrun32.sln
 
-		[_] lib_acu91_wisp\run32.sln
+		[_] acu_lib_wisp\run32.sln
 
-		[_] lib_acu91_wisp\crun32.sln
+		[_] acu_lib_wisp\crun32.sln
 		
 		WISP + KCSI runtimes:
 		
-		[_] lib_acu91_kcsi\wrun32.sln
+		[_] acu_lib_kcsi\wrun32.sln
 
-		[_] lib_acu91_kcsi\run32.sln
+		[_] acu_lib_kcsi\run32.sln
 
-		[_] lib_acu91_kcsi\crun32.sln
+		[_] acu_lib_kcsi\crun32.sln
 		
 		WISP + EDE runtimes:
 		
-		[_] lib_acu91_ede\wrun32.sln
+		[_] acu_lib_ede\wrun32.sln
 
-		[_] lib_acu91_ede\run32.sln
+		[_] acu_lib_ede\run32.sln
 
-		[_] lib_acu91_ede\crun32.sln
+		[_] acu_lib_ede\crun32.sln
 
 
 
@@ -133,7 +134,7 @@
 	- Clean TESTACU
 	- Build TESTACU
 	- mkdir acuqa.wisp5150.acu910
-	- copy *.acu tp acuqa.wispxxx.acuxxx (expect 72 items)
+	- copy *.acu to acuqa.wispxxx.acuxxx (expect 72 items)
 	- zip folder
 	- check in to source control
 	

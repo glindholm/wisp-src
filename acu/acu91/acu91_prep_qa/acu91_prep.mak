@@ -2,7 +2,7 @@
 #
 ACUDIR=C:\data\Acucorp\ACUCBL910\ACUGT
 WISPKITDIR=C:\dev\wisp\src\kit\wisp
-KCSIKITDIR==C:\dev\wisp\src\kit\kcsiacu
+KCSIKITDIR=C:\dev\wisp\src\kit\kcsiacu
 EDEKITDIR=C:\dev\wisp\src\kit\ede
 BLDDIR_WISP=acu_lib_wisp
 BLDDIR_KCSI=acu_lib_kcsi
