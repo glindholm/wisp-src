@@ -31,6 +31,7 @@
 
 	This will create a standard wisp source kit directory layout.
 
+	[ ] Set the environment variable WISPSRC={base}\wisp\src
 
 	Set Up The Project
 	------------------
@@ -118,7 +119,7 @@
 	- Check in any changes to source control
 	- Clean SHIPKIT
 	- Build SHIPKIT
-	- Remove the kits from C:\dev\wisp\src\kit
+	- Remove the kits from wisp\src\kit
 	- CVS diff / revert acu changes
 	- Build SHIPKIT
 	- Rename src\kit\wisp to src\kit\wisp51xx

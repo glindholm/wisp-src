@@ -1,9 +1,9 @@
 # install_qa.mak
 #
-SRC=C:\dev\wisp\src
-QA=$(SRC)\test\QA
-KIT=$(SRC)\kit
-LICENSE=$(SRC)\test\wisp.license.zoomstar.txt 
+#WISPSRC=..\..\..\..
+QA=$(WISPSRC)\test\QA
+KIT=$(WISPSRC)\kit
+LICENSE=$(WISPSRC)\test\wisp.license.zoomstar.txt 
 
 
 default: prepare
@@ -11,9 +11,10 @@ default: prepare
 header: $(WISPDIR) $(ACUDIR) 
 	@echo ">>>> INSTALLING WISP KITS INTO QA"
 	@echo ">>>>"
-	@echo ">>>> QA   = " $(QA)
-	@echo ">>>> KIT  = " $(KIT)
-	@echo ">>>> CD        = " 
+	@echo ">>>> WISPSRC = " $(WISPSRC)
+	@echo ">>>> QA      = " $(QA)
+	@echo ">>>> KIT     = " $(KIT)
+	@echo ">>>> CD      = " 
 	@CD
 	@echo ">>>>"
 

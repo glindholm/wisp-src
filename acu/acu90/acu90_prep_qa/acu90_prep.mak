@@ -1,9 +1,10 @@
 # acu90_prep.mak
 #
-ACUDIR=C:\data\Acucorp\ACUCBL900\ACUGT
-WISPKITDIR=C:\dev\wisp\src\kit\wisp
-KCSIKITDIR==C:\dev\wisp\src\kit\kcsiacu
-EDEKITDIR=C:\dev\wisp\src\kit\ede
+#ACUDIR=C:\data\Acucorp\ACUCBL910\ACUGT
+#WISPSRC=..\..\..
+WISPKITDIR=$(WISPSRC)\kit\wisp
+KCSIKITDIR=$(WISPSRC)\kit\kcsiacu
+EDEKITDIR=$(WISPSRC)\kit\ede
 BLDDIR_WISP=acu_lib_wisp
 BLDDIR_KCSI=acu_lib_kcsi
 BLDDIR_EDE=acu_lib_ede
@@ -13,6 +14,7 @@ default: prepare
 header: $(WISPKITDIR) $(ACUDIR) 
 	@echo ">>>> PREPARING TO BUILD ACUCOBOL 9.0 RUNTIMES"
 	@echo ">>>>"
+	@echo ">>>> WISPSRC    = " $(WISPSRC)
 	@echo ">>>> WISPKITDIR = " $(WISPKITDIR)
 	@echo ">>>> KCSIKITDIR = " $(KCSIKITDIR)
 	@echo ">>>> EDEKITDIR  = " $(EDEKITDIR)
