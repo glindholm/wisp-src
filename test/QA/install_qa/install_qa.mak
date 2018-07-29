@@ -3,7 +3,7 @@
 #WISPSRC=..\..\..\..
 QA=$(WISPSRC)\test\QA
 KIT=$(WISPSRC)\kit
-LICENSE=$(WISPSRC)\test\wisp.license.zoomstar.txt 
+LICENSE=$(WISPSRC)\test\machine\$(COMPUTERNAME)\license.txt 
 
 
 default: prepare

@@ -221,55 +221,55 @@
 
 		___  Run \test\QA\wisp\bin\WLICENSE.EXE
 		--OR--
-		___  Copy \test\machine\%MACHINENAME%\license.txt \test\QA\wisp\license.txt
+		___  Copy \test\machine\%COMPUTERNAME%\license.txt \test\QA\wisp\license.txt
 
 +	SETUP ${WISPCONFIG} DIRECTORY
 
 	Copy the config files.
-	___	Copy \test\machine\%MACHINENAME%\config_nt to \test\config 
+	___	Copy \test\machine\%COMPUTERNAME%\config_nt to \test\config 
 
 	
 	Configure which Acucobol runtime to use
 	___	Edit \src\test\config\wrun.cfg and uncomment correct runtime:
 		
-			#runcbl=\\ZOOMSTAR\ACUDIR\BIN\wrun32.exe
-			#runcbl=\\ZOOMSTAR\ACUDIR\BIN\run32.exe
-			#runcbl=\\ZOOMSTAR\ACUDIR\BIN\crun32.exe
+			#runcbl=\\%COMPUTERNAME%\ACUDIR\BIN\wrun32.exe
+			#runcbl=\\%COMPUTERNAME%\ACUDIR\BIN\run32.exe
+			#runcbl=\\%COMPUTERNAME%\ACUDIR\BIN\crun32.exe
 
 	For Testing Console Runtime:
 	___	Edit config\OPTIONS: 
 			- Comment out #UTILSWINDOWS
 			- Uncomment CONSOLEACU
 
-	___     Run \src\test\setupqa.bat to setup environment variables
+	___     Run \test\machine\%COMPUTERNAME%\setupqa.bat to setup environment variables
 		
 		-- OR --
 	
 		Run WCONFIG \\SERVER\QA\WISP\bin\wconfig.exe (RUN AS ADMINSTRATOR)
 		
-			Import test\config\testacu_zoomstar.reg
+			Import test\config\testacu_%COMPUTERNAME%.reg
 		
 			-- OR --
 			
-		SERVER	  = \\ZOOMSTAR
-		WISP Dir  = \\ZOOMSTAR\QA\WISP
+		SERVER	  = \\%COMPUTERNAME%
+		WISP Dir  = \\%COMPUTERNAME%\QA\WISP
 		- GENERAL (TAB)
-		WISPCONFIG =\\ZOOMSTAR\TESTACU\CONFIG 
-		PATH = \\ZOOMSTAR\QA\WISP\BIN;
-		       \\ZOOMSTAR\QA\WISP\ACU;
-		       \\ZOOMSTAR\TESTACU;
-		       \\ZOOMSTAR\TESTACU\VOLRUN\ONPATH;
-		       \\ZOOMSTAR\QA\KCSIACU;
+		WISPCONFIG =\\%COMPUTERNAME%\TESTACU\CONFIG 
+		PATH = \\%COMPUTERNAME%\QA\WISP\BIN;
+		       \\%COMPUTERNAME%\QA\WISP\ACU;
+		       \\%COMPUTERNAME%\TESTACU;
+		       \\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;
+		       \\%COMPUTERNAME%\QA\KCSIACU;
 		       C:\Windows;
 
-		PATH = \\ZOOMSTAR\QA\WISP\bin;\\ZOOMSTAR\QA\WISP\ACU;\\ZOOMSTAR\TESTACU;\\ZOOMSTAR\TESTACU\VOLRUN\ONPATH;\\ZOOMSTAR\QA\KCSIACU;
+		PATH = \\%COMPUTERNAME%\QA\WISP\bin;\\%COMPUTERNAME%\QA\WISP\ACU;\\%COMPUTERNAME%\TESTACU;\\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;\\%COMPUTERNAME%\QA\KCSIACU;
 
 		- MESSAGE (TAB)
-		SHAREDIR = \\ZOOMSTAR\TESTACU\MESSAGE
+		SHAREDIR = \\%COMPUTERNAME%\TESTACU\MESSAGE
 
 	___	Test configuration:
 
-		C:\dev\WISP\src\test\QA\wisp\bin\wdiag.bat
+		run \test\QA\wisp\bin\wdiag.bat
 
 	
 
