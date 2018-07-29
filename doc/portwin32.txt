@@ -19,8 +19,8 @@
 	This document describes the process of re-porting WISP to WIN32.
 	
 
-	Transfering a WISP Source Kit
-	-----------------------------
+	Transferring a WISP Source Kit
+	------------------------------
 
 	From git:
 
@@ -31,35 +31,29 @@
 
 	This will create a standard wisp source kit directory layout.
 
-	[ ] Set the environment variable WISPSRC={base}\wisp\src
-
 	Set Up The Project
 	------------------
-	Edit makefiles and set the ACUDIR and COBOL value to
-	point to the location of Acucobol directory. 
+
+	[ ] Set the environment variable WISPSRC={base}\wisp\src
 
 	[_] Set the environment variable ACUDIR=C:\data\Acucorp\Acucbl910\AcuGT
+	
 		Note: The Acucobol license files are generated here:
 			C:\ProgramData\Micro Focus\extend\9.1.0\x86\
 
-	or set ACUDIR in each of theses makefiles
-
-	[_] src\acu\wacu.mak
-	[_] src\kcsi\kcsicob.mak
-	[_] src\test\sampleacu.mak
-	[_] src\wisptran\wisptran_test.mak
-	[_] src\wisputils\disprint.mak
-
+	[ ] Ensure envvar COMPUTERNAME is set (should be set by default)
+	
+	
 	Build the Project
 	-----------------
 	Run the MSVS 2005 using the wisp project solution
 	file "wisp\src\wisp.sln" . 
 
-	[_] Clean "SHIPKIT - Release" 
+	[_] Clean "SHIPKIT - Release - Win32" 
 
-	[_] Build "SHIPKIT - Release" 
+	[_] Build "SHIPKIT - Release - Win32" 
 
-	[_] Rebuild "TESTACU - Release"
+	[_] Rebuild "TESTACU - Release - Win32"
 
 	[_] Build the Acucobol runtimes
 		   

@@ -182,14 +182,14 @@
 	___	Port WISP to this machine following the steps outlined in
 		the document "portwin32.txt".
 	
-	___	Build "Install_QA" to install in \src\test\QA
+	___	Build "Install_QA" to install in \test\QA
 
 	___	Share these directories: (Properties -> Sharing -> Advanced)
 	
-		C:\dev\WISP\src\test\QA			as QA
-		C:\dev\WISP\src\test\QA\wisp		as WISP
-		C:\DEV\WISP\SRC\TEST			as TESTACU (with write permission)
-		C:\data\Acucorp\Acucbl910\AcuGT		as ACUDIR
+		%WISPSRC%\test\QA       as QA
+		%WISPSRC%\test\QA\wisp  as WISP
+		%WISPSRC%\TEST          as TESTACU (with write permission)
+		%ACUDIR%                as ACUDIR
 		C:\DEV\WISP				as WISPDEV
 		C:\Users				as USERS   (with write permission)
 	
@@ -198,11 +198,11 @@
 		WISP + KCSI runtime(s)
 		
 		Regular runtime
-		___ Copy \src\acu\acu91\acu91_prep_qa\acu_lib_kcsi\wrun32.dll
+		___ Copy \acu\acu91\acu91_prep_qa\acu_lib_kcsi\wrun32.dll
 		    to \\SERVER\ACUDIR\bin
 
 		Console runtime
-		___ Copy \src\acu\acu91\acu91_prep_qa\acu_lib_kcsi\crun32.exe
+		___ Copy \acu\acu91\acu91_prep_qa\acu_lib_kcsi\crun32.exe
 		    to \\SERVER\ACUDIR\bin
 		___ Copy ACU license file:
 			- C:\ProgramData\Micro Focus\extend\9.1.0\x86
@@ -214,20 +214,20 @@
 	___	Install WISP, build the RTS, and license the machine.
 
 
-		___  Run WCONFIG.EXE
+		___  Run \test\QA\wisp\bin\WCONFIG.EXE (as Administrator)
 		     ___  (RESET) if already configured
 		     ___  WISP Server: (name of test machine)
 		     ___  Accept defaults...
 
-		___  Run WLICENSE.EXE
+		___  Run \test\QA\wisp\bin\WLICENSE.EXE
 		--OR--
-		___  Copy \src\test\wisp.license.zoomstar.txt \src\QA\wisp\wisp.license
+		___  Copy \test\machine\%MACHINENAME%\license.txt \test\QA\wisp\license.txt
 
 +	SETUP ${WISPCONFIG} DIRECTORY
 
 	Copy the config files.
-	___	Copy \test\config_nt to \test\config 
-	___	Remove CVS files from \test\config
+	___	Copy \test\machine\%MACHINENAME%\config_nt to \test\config 
+
 	
 	Configure which Acucobol runtime to use
 	___	Edit \src\test\config\wrun.cfg and uncomment correct runtime:

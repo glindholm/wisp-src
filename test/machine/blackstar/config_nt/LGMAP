@@ -1,0 +1,7 @@
+SOURCE \\blackstar\wispdev\src
+VOLIN  \\blackstar\testacu\volin
+VOLOUT \\blackstar\testacu\volout
+VOLRUN \\blackstar\testacu\volrun
+VOLSPL \\blackstar\testacu\volspl
+VOLWRK \\blackstar\testacu\volwrk
+TEST   \\blackstar\testacu
