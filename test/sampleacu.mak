@@ -236,38 +236,38 @@ wispconfigsetup: $(WC) $(WISPCONFIGFILES) $(VC) $(VIDEOCAPFILES)
 $(WC) $(VC):
 	mkdir $@
 
-$(WC)\ACUCONFIG:		.\config_nt\$(@F)
+$(WC)\ACUCONFIG:		.\machine\$(COMPUTERNAME)\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\CHARMAP:			.\config_nt\$(@F)
+$(WC)\CHARMAP:			.\machine\$(COMPUTERNAME)\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\FORMS:			.\config_nt\$(@F)
+$(WC)\FORMS:			.\machine\$(COMPUTERNAME)\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\LGMAP:			.\config_nt\$(@F)
+$(WC)\LGMAP:			.\machine\$(COMPUTERNAME)\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\LPMAP:			.\config_nt\$(@F)
+$(WC)\LPMAP:			.\machine\$(COMPUTERNAME)\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\OPTIONS:			.\config_nt\$(@F)
+$(WC)\OPTIONS:			.\machine\$(COMPUTERNAME)\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\PRMAP:			.\config_nt\$(@F)
+$(WC)\PRMAP:			.\machine\$(COMPUTERNAME)\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\W4WMAP:			.\config_nt\$(@F)
+$(WC)\W4WMAP:			.\machine\$(COMPUTERNAME)\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\wproc.msg:		.\config_nt\$(@F)
+$(WC)\wproc.msg:		.\machine\$(COMPUTERNAME)\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\wrun.cfg:			.\config_nt\$(@F)
+$(WC)\wrun.cfg:			.\machine\$(COMPUTERNAME)\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(WC)\wsysconf.cfg:		.\config_nt\$(@F)
+$(WC)\wsysconf.cfg:		.\machine\$(COMPUTERNAME)\config_nt\$(@F)
 	$(COPY) $** $@
 
-$(VIDEOCAPFILES):		.\config_nt\videocap\$(@F)
+$(VIDEOCAPFILES):		.\machine\$(COMPUTERNAME)\config_nt\videocap\$(@F)
 	$(COPY) $** $@

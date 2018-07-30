@@ -181,6 +181,10 @@
 
 	___	Port WISP to this machine following the steps outlined in
 		the document "portwin32.txt".
+		
+	___ The WISPCONFIG files are copied from \test\machine\%COMPUTERNAME%\config_nt\
+		If this is a new machine, then create a new \test\machine
+		folder for the new machine.
 	
 	___	Build "Install_QA" to install in \test\QA
 
@@ -221,7 +225,9 @@
 
 		___  Run \test\QA\wisp\bin\WLICENSE.EXE
 		--OR--
-		___  Copy \test\machine\%COMPUTERNAME%\license.txt \test\QA\wisp\license.txt
+		___  Copy \test\machine\%COMPUTERNAME%\license.txt to \test\QA\wisp\license.txt
+			 (This is usually done by INSTALL_QA project)
+			 
 
 +	SETUP ${WISPCONFIG} DIRECTORY
 
@@ -276,8 +282,8 @@
 ################  This page is for all platforms  ####################
 
 		Windows: Open explorer 
-		to \\Zoomstar\qa\wisp\bin\
-		or C:\dev\WISP\src\test\QA\wisp\bin
+		to \\%COMPUTERNAME%\qa\wisp\bin\
+		or %WISPSRC%\test\QA\wisp\bin
 
 +	SETUP DEFAULT USAGE CONSTANTS
 

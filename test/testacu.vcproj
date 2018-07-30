@@ -741,78 +741,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Config_nt"
-			>
-			<File
-				RelativePath="config_nt\ACUCONFIG"
-				>
-			</File>
-			<File
-				RelativePath="config_nt\CHARMAP"
-				>
-			</File>
-			<File
-				RelativePath=".\config_nt\FORMS"
-				>
-			</File>
-			<File
-				RelativePath="config_nt\LGMAP"
-				>
-			</File>
-			<File
-				RelativePath=".\config_nt\LGMAP.zoomstar"
-				>
-			</File>
-			<File
-				RelativePath=".\config_nt\LPMAP"
-				>
-			</File>
-			<File
-				RelativePath="config_nt\OPTIONS"
-				>
-			</File>
-			<File
-				RelativePath=".\config_nt\PRMAP"
-				>
-			</File>
-			<File
-				RelativePath=".\config_nt\README.txt"
-				>
-			</File>
-			<File
-				RelativePath="config_nt\W4WMAP"
-				>
-			</File>
-			<File
-				RelativePath=".\config_nt\wproc.msg"
-				>
-			</File>
-			<File
-				RelativePath="config_nt\wrun.cfg"
-				>
-			</File>
-			<File
-				RelativePath="config_nt\wsysconf.cfg"
-				>
-			</File>
-			<Filter
-				Name="videocap"
-				>
-				<File
-					RelativePath=".\config_nt\videocap\ansi.vcap"
-					>
-				</File>
-				<File
-					RelativePath=".\config_nt\videocap\wincon.vcap"
-					>
-				</File>
-				<File
-					RelativePath=".\config_nt\videocap\xterm.vcap"
-					>
-				</File>
-			</Filter>
-		</Filter>
-		<Filter
 			Name="WPS"
 			Filter="wps"
 			>
@@ -954,19 +882,7 @@
 				>
 			</File>
 			<File
-				RelativePath="sampleacu.bat"
-				>
-			</File>
-			<File
-				RelativePath=".\setupqa.bat"
-				>
-			</File>
-			<File
 				RelativePath="startacu.bat"
-				>
-			</File>
-			<File
-				RelativePath=".\startqa.bat"
 				>
 			</File>
 			<File
@@ -1048,30 +964,6 @@
 			</File>
 			<File
 				RelativePath=".\wisp.license.zoomstar.txt"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Config_test_obsolete"
-			>
-			<File
-				RelativePath=".\ACUCONFIG.NT"
-				>
-			</File>
-			<File
-				RelativePath=".\lgmap.nt"
-				>
-			</File>
-			<File
-				RelativePath=".\LPMAP.NT"
-				>
-			</File>
-			<File
-				RelativePath="testacu_nt.reg"
-				>
-			</File>
-			<File
-				RelativePath=".\wrun_acu.cfg"
 				>
 			</File>
 		</Filter>
