@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="SHIP">
+      <UniqueIdentifier>{d41ee012-c72b-437c-b7d8-0f493955e8a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SHIP\CONFIG">
+      <UniqueIdentifier>{4c2b993f-1025-46f7-be1d-9bc7a51ed8ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SHIP\CONFIG\videocap">
+      <UniqueIdentifier>{6f24b44d-6489-4427-b216-e9e159a984d8}</UniqueIdentifier>
+      <Extensions>vcap</Extensions>
+    </Filter>
+    <Filter Include="SHIP\ETC">
+      <UniqueIdentifier>{47d3d5b9-694c-4cd5-8c2c-a58ad78e5163}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\doc\wispntsetup.txt">
+      <Filter>SHIP</Filter>
+    </None>
+    <None Include="..\nt\ACUCONFIG">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\nt\CHARMAP">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\nt\CQMAP">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\nt\FORMS">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\nt\LGMAP">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\nt\LPMAP">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\etc\OPTIONS">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\nt\PRMAP">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\etc\W4WMAP">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\etc\wispmsg.txt">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\wproc\wproc.msg">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\nt\wrun.cfg">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\nt\wsysconf.cfg">
+      <Filter>SHIP\CONFIG</Filter>
+    </None>
+    <None Include="..\videocap\aix_xterm.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\aixterm.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\ansi.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\ansidos.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\att605.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\decterm.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\dg_xterm.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\ibm3151.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\ibm8514.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\ipx_sun.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\ipx_xterm.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\msdos.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\qvt101p.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\rflvt220.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\sco_xterm.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\stddef.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\sun_cmd.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\uterm.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\uw_xterm.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\vt100.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\vt220.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\vt510.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\w4w_vt220.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\wincon.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\wy_vt100.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\videocap\xterm.vcap">
+      <Filter>SHIP\CONFIG\videocap</Filter>
+    </None>
+    <None Include="..\doc\aqmwisp.txt">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="..\wisputils\disprint.mak">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="..\wisputils\disprint.umf">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="..\wisputils\DISPRINT.wcb">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="make.include">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="..\wisputils\SOFTLINK.wcb">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="..\doc\wisp_install_unix.txt">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="..\doc\wisp_packlist.txt">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="..\doc\wisp_relnotes.txt">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="..\doc\wispntdoc.txt">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="..\wisputils\WISPPLAT.wcb">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="..\wisptran\words.def">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+    <None Include="..\doc\wproc.txt">
+      <Filter>SHIP\ETC</Filter>
+    </None>
+  </ItemGroup>
+</Project>

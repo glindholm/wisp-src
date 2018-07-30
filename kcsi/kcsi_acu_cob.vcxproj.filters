@@ -1,0 +1,516 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="WCB Files">
+      <UniqueIdentifier>{cbc4210c-7603-4a83-8610-5490008f7582}</UniqueIdentifier>
+      <Extensions>wcb</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="blnksc.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="CREATE.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="cridtest.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctlcnvrt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlary.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrldepp.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrldif.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrldio.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlerr.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlext.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlfil.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlfld.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlgrp.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlhdi.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlhdl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlhdr.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlio.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrllst.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlmain.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlmap.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrload.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlopt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrloptl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlprt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlrng.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlseq.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrltbl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ctrlval.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="dtectl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="dtefac.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="dteinqpp.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="dteload.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="dtemain.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="dtemnu.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="dteoop.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="dtespc.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="dteupd.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="dteuph.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="dtexst.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="fdcrt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="fdctrl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="fdprt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="fdrpt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="figs.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqctl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqdat.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqent.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqget.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqhlp.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqmain.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqmak.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqnam.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqopt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqrpt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqxst.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="inqxtr.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="ioctrl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="iodata.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="iorpt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="kcsextfh.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="listmopt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="lkctrl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="lkctrlar.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="lkdio.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="lkprc.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="lkufb.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="lkvalnam.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="plbubble.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="plcrt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="plctrlf.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="plctrlh.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="pldisp.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="pldispk.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="plgp.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="plkeep.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="plktrace.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="pllink.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="plscrtch.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="plswait.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="pltrace.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="plusage.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rcctrl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rcctrlf.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rcctrlh.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rcctrlt1.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rcctrlt2.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rcrpt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptaka.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptckfl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptcld.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptcln.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptcnvrt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptcol.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptcon.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptctl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptctlh.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptctll.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptctlm.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptctlp.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptdef.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptdnw.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptdup.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptedo.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptedt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptedth.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptfil.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptio.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptlim.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptlod.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptmain.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptmak.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptmdt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptmnu.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptmod.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptmor.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptnew.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptnfl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptopt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptpdt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptpfl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptpfmnu.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptphlp.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptsdt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptseq.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptsfl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptsiz.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptsor.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptspc.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptsum.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rpttit.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptwmain.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptwmn.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptwop.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptxcl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptxdt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptxfl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="rptxln.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="scgpem.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="slcrt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="slctrl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="slprt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="slrpt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="tableio.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="tstextfh.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsbubble.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsconst.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wscrt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wscrts.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsctrl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsdisp.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsdispk.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsfileio.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsgp.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsgpem.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsint.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsiocode.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wskeep.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsktrace.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wslink.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsprt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsrpt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsrptcfl.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsrptopt.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsrptrec.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsrptwrk.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsscrtch.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wstrace.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="wsusage.wcb">
+      <Filter>WCB Files</Filter>
+    </None>
+    <None Include="kcsicob.mak" />
+  </ItemGroup>
+</Project>

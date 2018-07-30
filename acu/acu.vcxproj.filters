@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{f4264fe4-2d0e-4872-b32a-deab38e14545}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90</Extensions>
+    </Filter>
+    <Filter Include="Cobol">
+      <UniqueIdentifier>{533b8736-e49e-4887-96c3-eaacfc858516}</UniqueIdentifier>
+      <Extensions>cob wcb</Extensions>
+    </Filter>
+    <Filter Include="Make Files">
+      <UniqueIdentifier>{3d12f380-382d-4cf7-836d-6b859d95f8ff}</UniqueIdentifier>
+      <Extensions>mak;umf</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sub85_acu50.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85_acu51.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85_acu52.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85_acu60.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85_acu62.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85_acu72.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85_acu81.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85_acu90.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85_acu91.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wisp_sub85_inc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="acu60\wrundll.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="aculink.wcb">
+      <Filter>Cobol</Filter>
+    </None>
+    <None Include="acuusing.cob">
+      <Filter>Cobol</Filter>
+    </None>
+    <None Include="W%40FILESTATUSCHECK.cob">
+      <Filter>Cobol</Filter>
+    </None>
+    <None Include="W%40OPENFILE.cob">
+      <Filter>Cobol</Filter>
+    </None>
+    <None Include="acu.rules">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="acucobol.include">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="run32wisp_acu52.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wacu.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wacu.umf">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wrun32wisp_acu50.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wrun32wisp_acu51.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wrun32wisp_acu52.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wrun32wisp_ede_acu50.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wrun32wisp_ede_acu51.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wrun32wisp_ede_acu52.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wrun32wisp_kcsi_acu50.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wrun32wisp_kcsi_acu51.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wrun32wisp_kcsi_acu52.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="wruncbl.umf">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="acu60\wrundll_kcsi_acu60.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="acu60\wrundll_wisp_acu60.mak">
+      <Filter>Make Files</Filter>
+    </None>
+    <None Include="Acucobol6_notes.txt" />
+    <None Include="AcucobolLicenses.txt" />
+    <None Include="acu60\build_ede_acu60_rts.txt" />
+    <None Include="acu62\build_ede_acu62_rts.txt" />
+    <None Include="acu60\build_kcsi_acu60_rts.txt" />
+    <None Include="acu62\build_kcsi_acu62_rts.txt" />
+    <None Include="acu60\build_wisp_acu60_rts.txt" />
+    <None Include="acu60\build_wisp_acu60atm_rts.txt" />
+    <None Include="acu62\build_wisp_acu62_rts.txt" />
+  </ItemGroup>
+</Project>

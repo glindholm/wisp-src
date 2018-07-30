@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{cddb1395-329c-4826-91c6-4109fbc4aa11}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{00a660d5-262f-446c-98ce-7eddec531a71}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="edehelp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="edehli.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="edenetc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="edeoldoc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="genvec.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ede.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

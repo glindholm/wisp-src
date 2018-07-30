@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ACU">
+      <UniqueIdentifier>{079d32cd-23f1-4304-97c8-e301f81540b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ETC">
+      <UniqueIdentifier>{e99f4e72-f5bf-4885-a421-3fef3310c5af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MF">
+      <UniqueIdentifier>{8341df77-9a4e-4619-931f-40ef36cda91b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="kcsi_sub85_inc.c">
+      <Filter>ACU</Filter>
+    </ClCompile>
+    <ClCompile Include="control.c">
+      <Filter>MF</Filter>
+    </ClCompile>
+    <ClCompile Include="create.c">
+      <Filter>MF</Filter>
+    </ClCompile>
+    <ClCompile Include="datentry.c">
+      <Filter>MF</Filter>
+    </ClCompile>
+    <ClCompile Include="inquiry.c">
+      <Filter>MF</Filter>
+    </ClCompile>
+    <ClCompile Include="report.c">
+      <Filter>MF</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\acu\wrun32wisp_kcsi_acu52.mak">
+      <Filter>ACU</Filter>
+    </None>
+    <None Include="ctlcnvrt.wcb">
+      <Filter>ETC</Filter>
+    </None>
+    <None Include="rptcnvrt.wcb">
+      <Filter>ETC</Filter>
+    </None>
+    <None Include="crid_debug_notes.txt" />
+    <None Include="kcsi_acu_install.txt" />
+    <None Include="kcsi_mf.umf" />
+    <None Include="kcsi_mf_install.txt" />
+    <None Include="kcsi_packlist.txt" />
+    <None Include="kcsi_relnotes.txt" />
+    <None Include="kcsicob.mak" />
+    <None Include="kcsilibs.umf" />
+    <None Include="kcsintsetup.txt" />
+  </ItemGroup>
+</Project>

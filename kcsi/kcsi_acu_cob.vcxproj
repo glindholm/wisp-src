@@ -1,0 +1,291 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{FD3DE444-80B9-4B36-937A-3C2D48508562}</ProjectGuid>
+    <Keyword>MakeFileProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\kcsi_acu_cob___Win32_Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\kcsi_acu_cob___Win32_Debug\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake /f "kcsicob.mak" kcsi_acu</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake /f "kcsicob.mak" kcsi_acu /a</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">kcsi_acu_cob.exe</NMakeOutput>
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">nmake /f "kcsicob.mak" kcsi_acu</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">nmake /f "kcsicob.mak" kcsi_acu /a</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">kcsi_acu_cob.exe</NMakeOutput>
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\kcsi_acu_cob___Win32_Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\kcsi_acu_cob___Win32_Release\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NMAKE /f kcsicob.mak WISPDIR=.. kcsi_acu</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NMAKE /f kcsicob.mak WISPDIR=.. clean kcsi_acu</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NMAKE /f kcsicob.mak WISPDIR=.. clean</NMakeCleanCommandLine>
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">kcsi_acu_cob.exe</NMakeOutput>
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NMAKE /f kcsicob.mak WISPDIR=.. kcsi_acu</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NMAKE /f kcsicob.mak WISPDIR=.. clean kcsi_acu</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NMAKE /f kcsicob.mak WISPDIR=.. clean</NMakeCleanCommandLine>
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">kcsi_acu_cob.exe</NMakeOutput>
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="blnksc.wcb" />
+    <None Include="CREATE.wcb" />
+    <None Include="cridtest.wcb" />
+    <None Include="ctlcnvrt.wcb" />
+    <None Include="ctrlary.wcb" />
+    <None Include="ctrldepp.wcb" />
+    <None Include="ctrldif.wcb" />
+    <None Include="ctrldio.wcb" />
+    <None Include="ctrlerr.wcb" />
+    <None Include="ctrlext.wcb" />
+    <None Include="ctrlfil.wcb" />
+    <None Include="ctrlfld.wcb" />
+    <None Include="ctrlgrp.wcb" />
+    <None Include="ctrlhdi.wcb" />
+    <None Include="ctrlhdl.wcb" />
+    <None Include="ctrlhdr.wcb" />
+    <None Include="ctrlio.wcb" />
+    <None Include="ctrllst.wcb" />
+    <None Include="ctrlmain.wcb" />
+    <None Include="ctrlmap.wcb" />
+    <None Include="ctrload.wcb" />
+    <None Include="ctrlopt.wcb" />
+    <None Include="ctrloptl.wcb" />
+    <None Include="ctrlprt.wcb" />
+    <None Include="ctrlrng.wcb" />
+    <None Include="ctrlseq.wcb" />
+    <None Include="ctrltbl.wcb" />
+    <None Include="ctrlval.wcb" />
+    <None Include="dtectl.wcb" />
+    <None Include="dtefac.wcb" />
+    <None Include="dteinqpp.wcb" />
+    <None Include="dteload.wcb" />
+    <None Include="dtemain.wcb" />
+    <None Include="dtemnu.wcb" />
+    <None Include="dteoop.wcb" />
+    <None Include="dtespc.wcb" />
+    <None Include="dteupd.wcb" />
+    <None Include="dteuph.wcb" />
+    <None Include="dtexst.wcb" />
+    <None Include="fdcrt.wcb" />
+    <None Include="fdctrl.wcb" />
+    <None Include="fdprt.wcb" />
+    <None Include="fdrpt.wcb" />
+    <None Include="figs.wcb" />
+    <None Include="inqctl.wcb" />
+    <None Include="inqdat.wcb" />
+    <None Include="inqent.wcb" />
+    <None Include="inqget.wcb" />
+    <None Include="inqhlp.wcb" />
+    <None Include="inqmain.wcb" />
+    <None Include="inqmak.wcb" />
+    <None Include="inqnam.wcb" />
+    <None Include="inqopt.wcb" />
+    <None Include="inqrpt.wcb" />
+    <None Include="inqxst.wcb" />
+    <None Include="inqxtr.wcb" />
+    <None Include="ioctrl.wcb" />
+    <None Include="iodata.wcb" />
+    <None Include="iorpt.wcb" />
+    <None Include="kcsextfh.wcb" />
+    <None Include="listmopt.wcb" />
+    <None Include="lkctrl.wcb" />
+    <None Include="lkctrlar.wcb" />
+    <None Include="lkdio.wcb" />
+    <None Include="lkprc.wcb" />
+    <None Include="lkufb.wcb" />
+    <None Include="lkvalnam.wcb" />
+    <None Include="plbubble.wcb" />
+    <None Include="plcrt.wcb" />
+    <None Include="plctrlf.wcb" />
+    <None Include="plctrlh.wcb" />
+    <None Include="pldisp.wcb" />
+    <None Include="pldispk.wcb" />
+    <None Include="plgp.wcb" />
+    <None Include="plkeep.wcb" />
+    <None Include="plktrace.wcb" />
+    <None Include="pllink.wcb" />
+    <None Include="plscrtch.wcb" />
+    <None Include="plswait.wcb" />
+    <None Include="pltrace.wcb" />
+    <None Include="plusage.wcb" />
+    <None Include="rcctrl.wcb" />
+    <None Include="rcctrlf.wcb" />
+    <None Include="rcctrlh.wcb" />
+    <None Include="rcctrlt1.wcb" />
+    <None Include="rcctrlt2.wcb" />
+    <None Include="rcrpt.wcb" />
+    <None Include="rptaka.wcb" />
+    <None Include="rptckfl.wcb" />
+    <None Include="rptcld.wcb" />
+    <None Include="rptcln.wcb" />
+    <None Include="rptcnvrt.wcb" />
+    <None Include="rptcol.wcb" />
+    <None Include="rptcon.wcb" />
+    <None Include="rptctl.wcb" />
+    <None Include="rptctlh.wcb" />
+    <None Include="rptctll.wcb" />
+    <None Include="rptctlm.wcb" />
+    <None Include="rptctlp.wcb" />
+    <None Include="rptdef.wcb" />
+    <None Include="rptdnw.wcb" />
+    <None Include="rptdup.wcb" />
+    <None Include="rptedo.wcb" />
+    <None Include="rptedt.wcb" />
+    <None Include="rptedth.wcb" />
+    <None Include="rptfil.wcb" />
+    <None Include="rptio.wcb" />
+    <None Include="rptlim.wcb" />
+    <None Include="rptlod.wcb" />
+    <None Include="rptmain.wcb" />
+    <None Include="rptmak.wcb" />
+    <None Include="rptmdt.wcb" />
+    <None Include="rptmnu.wcb" />
+    <None Include="rptmod.wcb" />
+    <None Include="rptmor.wcb" />
+    <None Include="rptnew.wcb" />
+    <None Include="rptnfl.wcb" />
+    <None Include="rptopt.wcb" />
+    <None Include="rptpdt.wcb" />
+    <None Include="rptpfl.wcb" />
+    <None Include="rptpfmnu.wcb" />
+    <None Include="rptphlp.wcb" />
+    <None Include="rptsdt.wcb" />
+    <None Include="rptseq.wcb" />
+    <None Include="rptsfl.wcb" />
+    <None Include="rptsiz.wcb" />
+    <None Include="rptsor.wcb" />
+    <None Include="rptspc.wcb" />
+    <None Include="rptsum.wcb" />
+    <None Include="rpttit.wcb" />
+    <None Include="rptwmain.wcb" />
+    <None Include="rptwmn.wcb" />
+    <None Include="rptwop.wcb" />
+    <None Include="rptxcl.wcb" />
+    <None Include="rptxdt.wcb" />
+    <None Include="rptxfl.wcb" />
+    <None Include="rptxln.wcb" />
+    <None Include="scgpem.wcb" />
+    <None Include="slcrt.wcb" />
+    <None Include="slctrl.wcb" />
+    <None Include="slprt.wcb" />
+    <None Include="slrpt.wcb" />
+    <None Include="tableio.wcb" />
+    <None Include="tstextfh.wcb" />
+    <None Include="wsbubble.wcb" />
+    <None Include="wsconst.wcb" />
+    <None Include="wscrt.wcb" />
+    <None Include="wscrts.wcb" />
+    <None Include="wsctrl.wcb" />
+    <None Include="wsdisp.wcb" />
+    <None Include="wsdispk.wcb" />
+    <None Include="wsfileio.wcb" />
+    <None Include="wsgp.wcb" />
+    <None Include="wsgpem.wcb" />
+    <None Include="wsint.wcb" />
+    <None Include="wsiocode.wcb" />
+    <None Include="wskeep.wcb" />
+    <None Include="wsktrace.wcb" />
+    <None Include="wslink.wcb" />
+    <None Include="wsprt.wcb" />
+    <None Include="wsrpt.wcb" />
+    <None Include="wsrptcfl.wcb" />
+    <None Include="wsrptopt.wcb" />
+    <None Include="wsrptrec.wcb" />
+    <None Include="wsrptwrk.wcb" />
+    <None Include="wsscrtch.wcb" />
+    <None Include="wstrace.wcb" />
+    <None Include="wsusage.wcb" />
+    <None Include="kcsicob.mak" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\wisptran\wisptran.vcxproj">
+      <Project>{2c42a6d6-76e3-4530-adbf-d32662b4441c}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
