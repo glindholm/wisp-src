@@ -1,8 +1,0 @@
-## This is *OBSOLETE* - replaced with \test\config_nt\LGMAP
-SOURCE \\zoomstar\wispdev\src
-VOLIN  \\zoomstar\testacu\volin
-VOLOUT \\zoomstar\testacu\volout
-VOLRUN \\zoomstar\testacu\volrun
-VOLSPL \\zoomstar\testacu\volspl
-VOLWRK \\zoomstar\testacu\volwrk
-TEST   \\zoomstar\testacu
