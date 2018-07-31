@@ -46,7 +46,7 @@
 	
 	Build the Project
 	-----------------
-	Run the MSVS 2005 using the wisp project solution
+	Run the MSVS 2010 using the wisp project solution
 	file "wisp\src\wisp.sln" . 
 
 	[_] Clean "SHIPKIT - Release - Win32" 
