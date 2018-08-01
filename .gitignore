@@ -50,3 +50,6 @@ x64/
 Thumbs.db
 
 
+*.sdf
+*.opensdf
+*.bsc

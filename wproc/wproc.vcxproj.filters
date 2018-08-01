@@ -1,0 +1,515 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{1fcf5878-312d-408f-a65b-1b672a7d766c}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{354a19f1-bfec-4be9-9d4f-fa2088060154}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{257c2fd9-e20b-4d4d-a121-19a4e28a9162}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="args.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="assert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="builtin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cancel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="colors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="compiler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="critical.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="crt_io.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debugaid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="driver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="e_assign.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="e_decl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="e_math.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="e_os.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="e_run.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="e_scrnio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="e_substr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="e_ttyio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="e_varref.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="e_wang.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="execute.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="exp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fileinfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="files.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fixup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="install.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="machine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="memcheck.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="memory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="miscsubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="network.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="opcodes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="options.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="p_assign.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="p_ctrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="p_decl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="p_exp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="p_os.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="p_run.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="p_scrnio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="p_ttyio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="p_var.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="p_wang.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pcode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="procedur.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="process.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="product.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="range.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="reader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="report.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scanner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scope.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="screen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stateobj.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="symbols.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sysenv.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="token.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tracer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="txt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wang_os.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wangfile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="args.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="assert.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="attribs.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="builtin.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cancel.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="colors.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="critical.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="crt_io.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="data.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="debugaid.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="demovali.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="environ.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="envs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="exp.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ext.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fileinfo.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="files.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="filext.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fixup.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="getopt.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="holdev.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="idsistd.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="idsisubs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="input.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="install.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="intdef.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="keyboard.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="level.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="link.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="machine.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="memcheck.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="memory.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="miscsubs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="network.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="object.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="opcodes.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="options.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="paths.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pcode.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="platsubs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="procedur.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="process.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="product.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="prompt.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="putparm.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="range.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="reader.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="report.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ring.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="runtype.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scanner.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scnfacs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scope.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="screen.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sharemem.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sortseqf.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stack.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="state.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stateobj.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="status.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="subops.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="symbols.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sysdev.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sysenv.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tables.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="token.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tracer.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="txt.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utility.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="video_rt.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vssort.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vwang.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wang_os.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wangfile.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wangkeys.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wanguid.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wcommon.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wdefines.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="werrlog.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wexit.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wfiles.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wfname.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wglobals.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wisp_pic.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wisp_rts.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wisplib.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wispvers.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wlicense.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wperson.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wrunconf.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wsysconf.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wproc_rc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\wispcommon\wispicon.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="wproc.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\doc\wproc.txt" />
+  </ItemGroup>
+</Project>

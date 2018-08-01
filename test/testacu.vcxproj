@@ -1,0 +1,336 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{44409EAF-B6FE-4760-B888-2D949AE8C6B7}</ProjectGuid>
+    <RootNamespace>testacu</RootNamespace>
+    <Keyword>MakeFileProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\Release\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake /f "sampleacu.mak"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake /f "sampleacu.mak" clean all</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake /f "sampleacu.mak" clean</NMakeCleanCommandLine>
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">SAMPLE</NMakeOutput>
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|x64'">nmake /f "sampleacu.mak"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|x64'">nmake /f "sampleacu.mak" clean all</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|x64'">nmake /f "sampleacu.mak" clean</NMakeCleanCommandLine>
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">SAMPLE</NMakeOutput>
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\Debug\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake /f "sampleacu.mak"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake /f "sampleacu.mak" /a</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">SAMPLE</NMakeOutput>
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">nmake /f "sampleacu.mak"</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">nmake /f "sampleacu.mak" /a</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">SAMPLE</NMakeOutput>
+    <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+    <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="ACPTEST.wcb" />
+    <None Include="DISPFILE.wcb" />
+    <None Include="EDITWIN.wcb" />
+    <None Include="LESWAP.wcb" />
+    <None Include="MAINMENU.wcb" />
+    <None Include="MNLTEST.wcb" />
+    <None Include="QABCKGRD.wcb" />
+    <None Include="QADPCOMA.wcb" />
+    <None Include="QAFILE2.wcb" />
+    <None Include="QAFILEIO.wcb" />
+    <None Include="QAMESSAG.wcb" />
+    <None Include="QANETCAP.wcb" />
+    <None Include="QAPRINT.wcb" />
+    <None Include="QASCREEN.wcb" />
+    <None Include="QASCRN2.wcb" />
+    <None Include="QASMALL.wcb" />
+    <None Include="QASMALL2.wcb" />
+    <None Include="QASMALL3.wcb" />
+    <None Include="QASMALL4.wcb" />
+    <None Include="QASUBS.wcb" />
+    <None Include="QASY000M.wcb" />
+    <None Include="QASYS99.wcb" />
+    <None Include="QAWSFNM.wcb" />
+    <None Include="QAWSFNS.wcb" />
+    <None Include="QAWSUBS.wcb" />
+    <None Include="QAWSXIO.wcb" />
+    <None Include="SAMPLE.wcb" />
+    <None Include="SUB1.wcb" />
+    <None Include="SUB2.wcb" />
+    <None Include="SUB3.wcb" />
+    <None Include="TESTCOPY.wcb" />
+    <None Include="TOCCURS.wcb" />
+    <None Include="TRIGGER.wcb" />
+    <None Include="WC0000.wcb" />
+    <None Include="WC0001.wcb" />
+    <None Include="WC0002.wcb" />
+    <None Include="WC0002A.wcb" />
+    <None Include="WC0002B.wcb" />
+    <None Include="WC0002E.wcb" />
+    <None Include="WC0003.wcb" />
+    <None Include="WC0003B.wcb" />
+    <None Include="WC0004.wcb" />
+    <None Include="WC0005.wcb" />
+    <None Include="WISPTEST.wcb" />
+    <None Include="WL0000.wcb" />
+    <None Include="WL0010.wcb" />
+    <None Include="WL0011.wcb" />
+    <None Include="WL0012.wcb" />
+    <None Include="WL0013.wcb" />
+    <None Include="WL0014.wcb" />
+    <None Include="WL0015.wcb" />
+    <None Include="WL0016.wcb" />
+    <None Include="WL0017.wcb" />
+    <None Include="WL0018.wcb" />
+    <None Include="WL0018A.wcb" />
+    <None Include="WL0018B.wcb" />
+    <None Include="WL0019.wcb" />
+    <None Include="WL0020.wcb" />
+    <None Include="WL0021.wcb" />
+    <None Include="WL0022.wcb" />
+    <None Include="WL0023.wcb" />
+    <None Include="WL0024.wcb" />
+    <None Include="WL0025.wcb" />
+    <None Include="WL0026.wcb" />
+    <None Include="WL0027.wcb" />
+    <None Include="WL0028.wcb" />
+    <None Include="WL0029.wcb" />
+    <None Include="WL0030.wcb" />
+    <None Include="WL0031.wcb" />
+    <None Include="WL0032.wcb" />
+    <None Include="WL0033.wcb" />
+    <None Include="WL0034.wcb" />
+    <None Include="WL0034C.wcb" />
+    <None Include="WL0034D.wcb" />
+    <None Include="WL0035.wcb" />
+    <None Include="WN0010.wcb" />
+    <None Include="WT0000.wcb" />
+    <None Include="WT0010.wcb" />
+    <None Include="WT0011.wcb" />
+    <None Include="WT0012.wcb" />
+    <None Include="XLINK.wcb" />
+    <None Include="XLINK1.wcb" />
+    <None Include="DISPFILE.cob" />
+    <None Include="LESWAP.cob" />
+    <None Include="QABCKGRD.cob" />
+    <None Include="QADPCOMA.cob" />
+    <None Include="QAFILE2.cob" />
+    <None Include="QAFILEIO.cob" />
+    <None Include="QAMESSAG.cob" />
+    <None Include="QANETCAP.cob" />
+    <None Include="QAPRINT.cob" />
+    <None Include="QASCREEN.cob" />
+    <None Include="QASCRN2.cob" />
+    <None Include="QASUBS.cob" />
+    <None Include="QASY000M.cob" />
+    <None Include="QASYS99.cob" />
+    <None Include="QAWSFNM.cob" />
+    <None Include="QAWSFNS.cob" />
+    <None Include="QAWSUBS.cob" />
+    <None Include="QAWSXIO.cob" />
+    <None Include="SAMPLE.cob" />
+    <None Include="SUB1.cob" />
+    <None Include="SUB3.cob" />
+    <None Include="TRIGGER.cob" />
+    <None Include="WC0000.cob" />
+    <None Include="WC0001.cob" />
+    <None Include="WC0002.cob" />
+    <None Include="WC0002A.cob" />
+    <None Include="WC0002B.cob" />
+    <None Include="WC0002E.cob" />
+    <None Include="WC0003.cob" />
+    <None Include="WC0003B.cob" />
+    <None Include="WC0004.cob" />
+    <None Include="WC0005.cob" />
+    <None Include="wc105052.cob" />
+    <None Include="wc105053.cob" />
+    <None Include="wc225052.cob" />
+    <None Include="wc225053.cob" />
+    <None Include="WL0000.cob" />
+    <None Include="WL0010.cob" />
+    <None Include="WL0011.cob" />
+    <None Include="WL0012.cob" />
+    <None Include="WL0013.cob" />
+    <None Include="WL0014.cob" />
+    <None Include="WL0015.cob" />
+    <None Include="WL0016.cob" />
+    <None Include="WL0017.cob" />
+    <None Include="WL0018.cob" />
+    <None Include="WL0018A.cob" />
+    <None Include="WL0018B.cob" />
+    <None Include="WL0019.cob" />
+    <None Include="WL0020.cob" />
+    <None Include="WL0021.cob" />
+    <None Include="WL0022.cob" />
+    <None Include="WL0023.cob" />
+    <None Include="WL0024.cob" />
+    <None Include="WL0025.cob" />
+    <None Include="WL0026.cob" />
+    <None Include="WL0027.cob" />
+    <None Include="WL0028.cob" />
+    <None Include="WL0030.cob" />
+    <None Include="WL0031.cob" />
+    <None Include="WL0032.cob" />
+    <None Include="WL0033.cob" />
+    <None Include="WL0034.cob" />
+    <None Include="WL0034C.cob" />
+    <None Include="WL0034D.cob" />
+    <None Include="WL0035.cob" />
+    <None Include="WT0000.cob" />
+    <None Include="WT0010.cob" />
+    <None Include="WT0011.cob" />
+    <None Include="WT0012.cob" />
+    <None Include="XLINK.cob" />
+    <None Include="XLINK1.cob" />
+    <None Include="pptest1.wps" />
+    <None Include="qa0000.wps" />
+    <None Include="qa0001.wps" />
+    <None Include="qabckpc2.wps" />
+    <None Include="qabckprc.wps" />
+    <None Include="qacopy.wps" />
+    <None Include="qacreate.wps" />
+    <None Include="qasort.wps" />
+    <None Include="qastart.wps" />
+    <None Include="WC0002C.wps" />
+    <None Include="WC0002D.wps" />
+    <None Include="WC0003A.wps" />
+    <None Include="WL0030P.wps" />
+    <None Include="WL0034B.wps" />
+    <None Include="configacu.sh" />
+    <None Include="configmf.sh" />
+    <None Include="envtest.bat" />
+    <None Include="prtargds.bat" />
+    <None Include="prtargnt.bat" />
+    <None Include="prtargsh.sh" />
+    <None Include="qabacksh.sh" />
+    <None Include="qabckac2.sh" />
+    <None Include="qabckacu.sh" />
+    <None Include="qabcklp2.sh" />
+    <None Include="qabcklpi.sh" />
+    <None Include="qabckmf.sh" />
+    <None Include="qabckmf2.sh" />
+    <None Include="qabkpacu.sh" />
+    <None Include="qabkplpi.sh" />
+    <None Include="qabkpmf.sh" />
+    <None Include="qaflags.bat" />
+    <None Include="qaflags.sh" />
+    <None Include="qautils.sh" />
+    <None Include="startacu.bat" />
+    <None Include="startupacu.sh" />
+    <None Include="startupmf.sh" />
+    <None Include="testsub.sh" />
+    <None Include="tstpp.sh" />
+    <None Include="wisp.license.cyclone.txt" />
+    <None Include="wisp.license.devel.txt" />
+    <None Include="wisp.license.glindholm-xp.txt" />
+    <None Include="wisp.license.hpc240.h6.txt" />
+    <None Include="wisp.license.hpc240.txt" />
+    <None Include="wisp.license.ozone.txt" />
+    <None Include="wisp.license.panther.txt" />
+    <None Include="wisp.license.redrum.txt" />
+    <None Include="wisp.license.tribble.txt" />
+    <None Include="wisp.license.wakko.txt" />
+    <None Include="wisp.license.zaphod64.a6.txt" />
+    <None Include="wisp.license.zaphod64.txt" />
+    <None Include="wisp.license.zhadum.txt" />
+    <None Include="wisp.license.zigzag.txt" />
+    <None Include="wisp.license.zoomstar.txt" />
+    <None Include="..\doc\portwin32.txt" />
+    <None Include="..\doc\qawisp.lis" />
+    <None Include="sample.umf" />
+    <None Include="sampleacu.mak" />
+    <None Include="sampleacu.umf" />
+    <None Include="samplemf.umf" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\wisptran\wisptran_test.vcxproj">
+      <Project>{4268e55e-3f09-416a-a97c-7f2aca308eca}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

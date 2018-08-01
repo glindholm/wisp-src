@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{04424753-e542-4cee-a571-47bc7f792245}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{a67ab7fb-e9c7-497b-9f22-afe9daa9320d}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{6e1cfd3b-bf3e-4bc1-be2d-15532487c14c}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\wispcommon\getopt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptcheck.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptcli.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptdecl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptdoit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptequatn.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptextrct.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptif.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptinit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptmain.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptpdiv.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptrens.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptscrdef.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptscreen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pttype.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptusing.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptutils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ptwrite.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wispcommon\ring.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wispcommon\wisp_pic.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\wispcommon\getopt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pgcblsrc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pgcommon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pgdefeqn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pgeqtns.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pgextrct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pgglobal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pgkeyw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pgstruct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\ring.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wisp_pic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

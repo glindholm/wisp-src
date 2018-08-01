@@ -1,0 +1,654 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="WCB">
+      <UniqueIdentifier>{727aa1ff-3860-4dcb-9687-43270cf6499b}</UniqueIdentifier>
+      <Extensions>wcb</Extensions>
+    </Filter>
+    <Filter Include="COB">
+      <UniqueIdentifier>{5ecc6abe-cdb1-4024-9184-cd88632496f4}</UniqueIdentifier>
+      <Extensions>cob</Extensions>
+    </Filter>
+    <Filter Include="WPS">
+      <UniqueIdentifier>{c9a17852-59fe-40bb-b1e3-bf57baba2cb1}</UniqueIdentifier>
+      <Extensions>wps</Extensions>
+    </Filter>
+    <Filter Include="SCRIPTS">
+      <UniqueIdentifier>{f4d31675-74ea-4dec-ac39-a2419232c630}</UniqueIdentifier>
+      <Extensions>sh;bat</Extensions>
+    </Filter>
+    <Filter Include="LICENSE">
+      <UniqueIdentifier>{3fa1a900-7ec2-4e17-b6fc-e85021c929c4}</UniqueIdentifier>
+      <Extensions>license</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ACPTEST.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="DISPFILE.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="EDITWIN.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="LESWAP.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="MAINMENU.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="MNLTEST.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QABCKGRD.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QADPCOMA.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QAFILE2.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QAFILEIO.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QAMESSAG.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QANETCAP.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QAPRINT.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QASCREEN.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QASCRN2.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QASMALL.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QASMALL2.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QASMALL3.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QASMALL4.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QASUBS.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QASY000M.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QASYS99.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QAWSFNM.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QAWSFNS.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QAWSUBS.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="QAWSXIO.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="SAMPLE.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="SUB1.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="SUB2.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="SUB3.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="TESTCOPY.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="TOCCURS.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="TRIGGER.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WC0000.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WC0001.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WC0002.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WC0002A.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WC0002B.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WC0002E.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WC0003.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WC0003B.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WC0004.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WC0005.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WISPTEST.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0000.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0010.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0011.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0012.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0013.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0014.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0015.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0016.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0017.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0018.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0018A.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0018B.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0019.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0020.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0021.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0022.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0023.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0024.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0025.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0026.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0027.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0028.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0029.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0030.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0031.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0032.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0033.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0034.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0034C.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0034D.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WL0035.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WN0010.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WT0000.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WT0010.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WT0011.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="WT0012.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="XLINK.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="XLINK1.wcb">
+      <Filter>WCB</Filter>
+    </None>
+    <None Include="DISPFILE.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="LESWAP.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QABCKGRD.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QADPCOMA.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QAFILE2.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QAFILEIO.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QAMESSAG.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QANETCAP.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QAPRINT.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QASCREEN.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QASCRN2.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QASUBS.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QASY000M.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QASYS99.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QAWSFNM.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QAWSFNS.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QAWSUBS.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="QAWSXIO.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="SAMPLE.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="SUB1.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="SUB3.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="TRIGGER.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WC0000.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WC0001.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WC0002.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WC0002A.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WC0002B.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WC0002E.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WC0003.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WC0003B.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WC0004.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WC0005.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="wc105052.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="wc105053.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="wc225052.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="wc225053.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0000.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0010.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0011.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0012.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0013.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0014.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0015.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0016.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0017.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0018.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0018A.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0018B.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0019.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0020.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0021.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0022.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0023.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0024.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0025.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0026.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0027.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0028.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0030.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0031.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0032.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0033.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0034.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0034C.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0034D.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WL0035.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WT0000.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WT0010.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WT0011.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="WT0012.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="XLINK.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="XLINK1.cob">
+      <Filter>COB</Filter>
+    </None>
+    <None Include="pptest1.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="qa0000.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="qa0001.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="qabckpc2.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="qabckprc.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="qacopy.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="qacreate.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="qasort.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="qastart.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="WC0002C.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="WC0002D.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="WC0003A.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="WL0030P.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="WL0034B.wps">
+      <Filter>WPS</Filter>
+    </None>
+    <None Include="configacu.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="configmf.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="envtest.bat">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="prtargds.bat">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="prtargnt.bat">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="prtargsh.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qabacksh.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qabckac2.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qabckacu.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qabcklp2.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qabcklpi.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qabckmf.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qabckmf2.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qabkpacu.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qabkplpi.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qabkpmf.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qaflags.bat">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qaflags.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="qautils.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="startacu.bat">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="startupacu.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="startupmf.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="testsub.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="tstpp.sh">
+      <Filter>SCRIPTS</Filter>
+    </None>
+    <None Include="wisp.license.cyclone.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.devel.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.glindholm-xp.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.hpc240.h6.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.hpc240.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.ozone.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.panther.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.redrum.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.tribble.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.wakko.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.zaphod64.a6.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.zaphod64.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.zhadum.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.zigzag.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="wisp.license.zoomstar.txt">
+      <Filter>LICENSE</Filter>
+    </None>
+    <None Include="..\doc\portwin32.txt" />
+    <None Include="..\doc\qawisp.lis" />
+    <None Include="sample.umf" />
+    <None Include="sampleacu.mak" />
+    <None Include="sampleacu.umf" />
+    <None Include="samplemf.umf" />
+  </ItemGroup>
+</Project>

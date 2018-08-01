@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="DEMO">
+      <UniqueIdentifier>{e1bc9edc-40ee-43f7-86fb-f590481e5859}</UniqueIdentifier>
+      <Extensions>wcb; hlp</Extensions>
+    </Filter>
+    <Filter Include="ACU">
+      <UniqueIdentifier>{294db754-a2f2-40fe-ad42-1f0d4a3b5b47}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="demo\helpmap.dat">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\helpmap.unix">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbbld.wcb">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbcode.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbcol.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbcpy1.wcb">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbcpy2.wcb">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbcpy3.wcb">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbdisp.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbedit.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbedit.wcb">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbicnt.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbname.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbopts.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbrow.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbtext.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbtype.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbvalue.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\mcbwidth.hlp">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menubld.old">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menudefs.wcb">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menudemo.mak">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menudemo.opt">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menudemo.umf">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menudemo.wcb">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menudemomf.umf">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menudisp.wcb">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menulogo.wcb">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menumcbs.wcb">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menumgr.old">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="demo\menuvect.wcb">
+      <Filter>DEMO</Filter>
+    </None>
+    <None Include="..\acu\wrun32wisp_ede.mak">
+      <Filter>ACU</Filter>
+    </None>
+    <None Include="edentsetup.txt" />
+  </ItemGroup>
+</Project>
