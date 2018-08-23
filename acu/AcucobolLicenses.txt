@@ -1,4 +1,45 @@
 ----------------------------------------------------------------------------
+10.2.0
+----------------------------------------------------------------------------
+ACUCOBOL-GT Dev Sys	10.2.0 	X86 running XP, Vista, Win 7, 8, 10, Server 2003, 2008 32 Bit
+Serial: 333724
+
+Version 10.2.0 Windows 32 Bit
+
+AcuBench
+Product Code: MSAAWUWCAW6GEQHG
+Product Key: RY9TYWWCAZZG
+
+ACUCOBOL-GT Dev Sys
+Product Code: MSAESUWCAW6GEQHG
+Product Key: RY9XUWWCAZZG
+
+AcuSQL Precompiler
+Product Code: MSAAWYWGAENYEQHG
+Product Key: RY9TYSWGAHGG
+--------------------------------------------------------------------------------------------------------------------
+ACUCOBOL-GT Runtime	10.2.0 	SPARC running Solaris 11 32 Bit
+Serial: 118947
+
+Product Code: MSASAAJ4UYW8EPWW
+Product Key: QRGBCGJ4UWPP
+--------------------------------------------------------------------------------------------------------------------
+ACUCOBOL-GT Runtime	10.2.0 	IBM pSeries running AIX 7.2 32 Bit
+Serial: 333725
+
+ACUCOBOL-GT Runtime
+Product Code: 2QFJQUGB7MWBENCE
+Product Key: 7LM3NWGB7JJ5
+--------------------------------------------------------------------------------------------------------------------
+ACUCOBOL-GT Runtime	10.2.0 	X86 running Linux (glibc 2.x) 32 Bit
+Serial: 88446
+
+ACUCOBOL-GT Runtime	
+Product Code: 26A4MEGB6MWLEPAN
+Product Key: 7KLMKCGB6JRJ
+--------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------
 9.1.0
 ----------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------
