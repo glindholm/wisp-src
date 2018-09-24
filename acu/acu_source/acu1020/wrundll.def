@@ -1,0 +1,33 @@
+EXPORTS
+	AcuWinMain		@16
+	AcuDllMain		@17
+	AcuInitialize		@18
+	AcuShutdown		@19
+	AcuCancel		@20
+	AcuCall			@21
+	AcuGetCallError		@22
+	acu_shutdown		@23
+	acu_cancel		@24
+	cobol			@25
+	acu_convert		@26
+	acu_win_init		@27
+	cobol_exit_code		@28
+	AcuCall50		@29
+	SetAcuPluginWnd		@30
+	AcuClearQuitMode	@31
+	Astart_program		@32
+	acusavenv		@33
+	aculongjmp		@34
+	acu_initv		@35
+	acu_cobol		@36
+	acu_cancel_all		@37
+	acu_unload		@38
+	acu_unload_all		@39
+	AcuRunMain		@40
+	acu_runmain		@41
+	acu_reg_sig_handlers	@42
+	acu_unreg_sig_handlers	@43
+	acu_abend		@44
+	acu_register_sub	@45
+        acu_async_shutdown      @46     ; v9.00 added for BIS
+	acu_set_int_variable	@47	; Added to report DEP setting, can be more generally useful
