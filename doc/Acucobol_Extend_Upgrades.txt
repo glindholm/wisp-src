@@ -1,0 +1,103 @@
+Acucobol Extend Upgrades - Instructions for new releases
+========================================================
+
+Windows 10
+----------
+* Install Windows release to *WRITABLE* folder %ACUDIR%=C:\data\Acucorp\AcucblXXXX (not default location)
+	%ACUDIR%=C:\data\Acucorp\AcucblXXXX\AcuGT
+
+* Save original copies of %ACUDIR%\lib and %ACUDIR%\bin
+	%ACUDIR%\lib - Original
+	%ACUDIR%\bin - Original
+
+* Copy acu source files from %ACUDIR%\lib to %WISPSRC%\acu\acu_source\acuXXXX
+	*.c	*.h *.rc *.def *.inc *.res *.sln *.vcxproj
+
+* Create %WISPSRC%\acu\sub85_acuXXXX.c file
+	* Start with the %ACUDIR%\lib\sub85.c file
+	* Apply WISP changes (copy from earlier versions)
+
+* Update the Visual Studio project files to:
+	Add libraries: Project > Add Existing Items...
+		wisp.lib
+		video.lib
+	Add file: Source Files > Add Existing Items...
+		wisp_sub85_inc.c
+			(Properties > Exclude from build : YES)
+X	Add resource:
+X		wisp.rc
+	Add Preprocessor Definitions: 
+		Properties > Configuration Properties > C/C++ > Preprocessor > Preprocessor Definitions > Edit
+		add _CRT_SECURE_NO_DEPRECATE
+		
+* Create WISP/ACU Distribution files in %WISPSRC%\acu\acuXXXX
+
+* Build Patch distribution
+	wispXXXX_win32_acuXXXX
+		README.txt
+		wisp_sub85_inc.c
+		acuXXXX
+			build_wisp_acuXXX_*_rts.txt
+			*.vcxproj
+			sub85.c
+	wispXXXX_unix_acuXXXX
+		
+
+Linux
+-----
+
+AIX 7
+-----
+IBM's Virtual Loaner Program is now Power Development Platform (PDP)
+https://www-356.ibm.com/partnerworld/wps/ent/pdp/web/MyProgramAccess
+
+
+
+
+
+Micro Focus - extend 10.2.0
+###########################
+
+Windows 10
+==========
+Default Install folder: C:\Program Files (x86)\Micro Focus\extend 10.2.0
+
+Install to: C:\data\Acucorp\Acucbl1020
+%ACUDIR% = C:\data\Acucorp\Acucbl1020\AcuGT
+
+
+Visual Studio 2017 Community
+----------------------------
+- Desktop Developement with C++
+	Add
+	- Visual C++ MFC for x86 and x62
+	- Windows 8.1 SDK and UCRT SDK
+	- C++/CLI support
+- .NET desktop development
+
+
+Clean Rebuild w/o WISP
+----------------------
+Copy %ACUDIR%\lib - %ACUDIR%\lib-no-wisp
+
+VS2017 - open wrun32.sln
+rebuild project - wrundll  (Release Win32)
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	MSB8036	The Windows SDK version 8.1 was not found. Install the required version of Windows SDK or change the SDK version in the project property pages or by right-clicking the solution and selecting "Retarget solution".	wrundll	C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.WindowsSDK.targets	46	
+
+VS2017 Installer: Added - Windows 8.1 SDK and UCRT SDK
+
+VS2017 - open wrun32.sln
+rebuild project - wrundll  (Release Win32)
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Warning	MSB8012	TargetPath(C:\data\Acucorp\Acucbl1020\AcuGT\lib-no-wisp\Release\wrundll.dll) does not match the Linker's OutputFile property value (C:\data\Acucorp\Acucbl1020\AcuGT\lib-no-wisp\wrun32.dll). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).	wrundll	C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets	1216	
+Warning	MSB8012	TargetName(wrundll) does not match the Linker's OutputFile property value (wrun32). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).	wrundll	C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets	1218	
+Error	LNK2019	unresolved external symbol _HPDF_New referenced in function _c_pdf	wrundll	C:\data\Acucorp\Acucbl1020\AcuGT\lib-no-wisp\wrunlib.lib(cpdf.obj)	1	
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2019	unresolved external symbol _pdf_get_current_document referenced in function _get_hpdfdoc	wrundll	C:\data\Acucorp\Acucbl1020\AcuGT\lib-no-wisp\wrunlib.lib(cpdf.obj)	1	
+
+## Acu 10.2.0 is missing PDF library on Windows
+## Add apdf32.lib to AcuGT\lib folder and add library to project in VS2017 

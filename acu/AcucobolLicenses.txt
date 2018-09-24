@@ -40,6 +40,70 @@ Product Key: 7KLMKCGB6JRJ
 --------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------
+10.1.1
+----------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------
+ACUCOBOL-GT Runtime	10.1.1	SPARC running Solaris 11 32 Bit
+
+Users/Devs: 2
+Serial: 118947
+
+ACUCOBOL-GT Runtime	
+Product Code: 26B4PFCAACWPGEAF
+Product Key: 33R5RDCAAAPJ
+
+--------------------------------------------------------------------------------------------------------------------
+ACUCOBOL-GT Dev Sys	10.1.1	X86 running XP, Vista, Win 7, 8, 10, Server 2003, 2008 32 Bit
+
+AcuBench	
+Product Code: LTAAWUWCAW6GE8HC
+Product Key: GZ7TYWWCAZZC	
+License Type: UPDATE
+Users/Devs: 1
+Serial: 333724
+End User : Neomedia Technologies
+
+ACUCOBOL-GT Dev Sys	
+Product Code: SAALU4DYAV2LUGJC
+Product Key: SBP5S6DYASU2	
+License Type: UPDATE
+Users/Devs: 1
+Serial: 333724
+End User : Neomedia Technologies
+
+AcuSQL Precompiler	
+Product Code: UABLULDGA92QUGJD
+Product Key: UBNMSNDGA6VJ	
+License Type: UPDATE
+Users/Devs: 1
+Serial: 333724
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+ACUCOBOL-GT Runtime	10.1.1	IBM pSeries running AIX 7.2 32 Bit
+
+ACUCOBOL-GT Runtime	
+Product Code: LTAASU2C2WE8W8ZC
+Product Key: G97TUW2C2Z2A	
+License Type: UPDATE
+Users/Devs: 1
+Serial: 333725
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+ACUCOBOL-GT Runtime	10.1.1	X86 running Linux (glibc 2.x) 32 Bit
+
+ACUCOBOL-GT Runtime	
+Product Code: LBSSSS24J8WGG7WC
+Product Key: H87BUY24J7RA	
+License Type: UPDATE
+Users/Devs: 2
+Serial: 88446
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------
 9.1.0
 ----------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------
