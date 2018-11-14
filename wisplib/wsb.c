@@ -862,7 +862,7 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 			if ((ptr = strchr(l_keylist,'X')))
 			{
 				*ptr = (char)0;
-				key_cnt = strlen(l_keylist) / 2;
+				key_cnt = (uint2)(strlen(l_keylist) / 2);
 			}
 			if (key_cnt < 1)
 			{

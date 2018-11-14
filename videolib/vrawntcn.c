@@ -51,6 +51,8 @@
 #include <assert.h>
 #include <crtdbg.h>
 
+#include <VersionHelpers.h>
+
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
@@ -278,18 +280,12 @@ static int vrawinit(void)
 	}
 	else
 	{
-		OSVERSIONINFO osVer;
-
-		osVer.dwOSVersionInfoSize = sizeof(osVer);
-		bSuccess = GetVersionEx(&osVer);
-		PERR(bSuccess, "GetVersionEx");
-
-		if (osVer.dwPlatformId == VER_PLATFORM_WIN32s) 
+		if (!IsWindowsXPOrGreater())
 		{
 			localMessageBox(NULL, 
-					"This application cannot run on Windows 3.1.\n"
+					"This application requires Windows XP or greater.\n"
 					"This application will now terminate.",
-					"Error: Windows NT or Windows 95 Required to Run",  
+					"Error: Windows XP Required to Run",  
 					MB_OK );
 			exit(0);
 			return FAILURE;
@@ -1054,7 +1050,7 @@ static int repositionParentConsole(void)
 	{
 		return 0;
 	}
-	sscanf(env,"%d",&hwndParent);
+	sscanf(env,"%d",(int *)&hwndParent);
 	if (NULL == hwndParent)
 	{
 		return 0;
@@ -1065,7 +1061,7 @@ static int repositionParentConsole(void)
 	}
 
 	/*
-	**	Get the position of this window an move the parent window to the same location
+	**	Get the position of this window and move the parent window to the same location
 	*/
 	bSuccess = GetWindowRect(hwndConsole, &rectWin);
 	if (bSuccess)
