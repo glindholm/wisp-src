@@ -5,7 +5,7 @@ Title:          WISP/UNIX INSTALLATION NOTES
 
 Document:       wisp_install_unix.txt
 Products:       WISP/UNIX
-WISPVER:        5.1.12
+WISPVER:        5.1.20
 
 Summary:        How to install WISP from the distribution media.
 
