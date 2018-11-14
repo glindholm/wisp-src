@@ -4,9 +4,9 @@ Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 Title:          Build WISP for Acucobol 10.2 Console Runtime (WIN32)
 
 Document:       build_wisp_acu102_con_rts.txt
-Last Updated:   2018-08-31
+Last Updated:   2018-11-13
 Products:       WISP/WIN32
-Versions:       5.1.00
+Versions:       5.1.20
 
 Summary:        Instructions to build Acucobol 10.2 Console runtime.
 
@@ -47,6 +47,7 @@ for the build.
     ${WISPDIR}\lib\wisp.lib
     ${WISPDIR}\lib\video.lib
     ${WISPDIR}\acu\wisp_sub85_inc.c
+    ${WISPDIR}\acu\wispicon.ico
     ${WISPDIR}\acu\acu102\sub85.c
     ${WISPDIR}\acu\acu102\crun32.vcxproj
 
