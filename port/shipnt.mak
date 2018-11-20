@@ -17,7 +17,6 @@ VHEADKIT=	$(KITDIR)\v
 wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\bin\hexed.exe	\
 		$(WISPKIT)\bin\proctran.exe 	\
-		$(WISPKIT)\bin\rexec.exe 	\
 		$(WISPKIT)\bin\vsedit.exe	\
 		$(WISPKIT)\bin\vtest.exe	\
 		$(WISPKIT)\bin\wconfig.exe	\
@@ -85,42 +84,6 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\acu\WACUWSB.acu		\
 		$(WISPKIT)\acu\wisp_sub85_inc.c		\
 		$(WISPKIT)\acu\wispicon.ico		\
-		$(WISPKIT)\acu\acu50\sub85.c			\
-		$(WISPKIT)\acu\acu50\wisprts.rc			\
-		$(WISPKIT)\acu\acu50\wrun32wisp_acu50.mak	\
-		$(WISPKIT)\acu\acu51\sub85.c			\
-		$(WISPKIT)\acu\acu51\wisprts.rc			\
-		$(WISPKIT)\acu\acu51\wrun32wisp_acu51.mak	\
-		$(WISPKIT)\acu\acu52\sub85.c			\
-		$(WISPKIT)\acu\acu52\wisprts.rc			\
-		$(WISPKIT)\acu\acu52\wrun32wisp_acu52.mak	\
-		$(WISPKIT)\acu\acu52\run32wisp_acu52.mak	\
-		$(WISPKIT)\acu\acu60\build_wisp_acu60_rts.txt	\
-		$(WISPKIT)\acu\acu60\build_wisp_acu60atm_rts.txt	\
-		$(WISPKIT)\acu\acu60\run32.rc			\
-		$(WISPKIT)\acu\acu60\run32_wisp_acu60.mak	\
-		$(WISPKIT)\acu\acu60\run32_wisp_acu60.dsp	\
-		$(WISPKIT)\acu\acu60\sub85.c			\
-		$(WISPKIT)\acu\acu60\wrundll.rc			\
-		$(WISPKIT)\acu\acu60\wrundll_wisp_acu60.mak	\
-		$(WISPKIT)\acu\acu60\wrundll_wisp_acu60.dsp	\
-		$(WISPKIT)\acu\acu62\build_wisp_acu62_rts.txt	\
-		$(WISPKIT)\acu\acu62\sub85.c			\
-		$(WISPKIT)\acu\acu62\wisp.rc			\
-		$(WISPKIT)\acu\acu62\wrundll.vcproj		\
-		$(WISPKIT)\acu\acu72\build_wisp_acu72_rts.txt	\
-		$(WISPKIT)\acu\acu72\sub85.c			\
-		$(WISPKIT)\acu\acu72\wisp.rc			\
-		$(WISPKIT)\acu\acu72\wrundll.vcproj		\
-		$(WISPKIT)\acu\acu72\build_wisp_acu72_atm_rts.txt	\
-		$(WISPKIT)\acu\acu72\run32.vcproj		\
-		$(WISPKIT)\acu\acu81\build_wisp_acu81_rts.txt	\
-		$(WISPKIT)\acu\acu81\build_wisp_acu81_atm_rts.txt	\
-		$(WISPKIT)\acu\acu81\run32.vcproj		\
-		$(WISPKIT)\acu\acu81\sub85.c			\
-		$(WISPKIT)\acu\acu81\wisp.rc			\
-		$(WISPKIT)\acu\acu81\wrundll.rc		\
-		$(WISPKIT)\acu\acu81\wrundll.vcproj		\
 		$(WISPKIT)\acu\acu90\build_wisp_acu90_rts.txt	\
 		$(WISPKIT)\acu\acu90\build_wisp_acu90_atm_rts.txt	\
 		$(WISPKIT)\acu\acu90\build_wisp_acu90_con_rts.txt	\
@@ -140,6 +103,14 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\acu\acu91\wisp.rc			\
 		$(WISPKIT)\acu\acu91\wrun32.sln			\
 		$(WISPKIT)\acu\acu91\wrundll.vcxproj		\
+		$(WISPKIT)\acu\acu102\build_wisp_acu102_rts.txt	\
+		$(WISPKIT)\acu\acu102\build_wisp_acu102_atm_rts.txt	\
+		$(WISPKIT)\acu\acu102\build_wisp_acu102_con_rts.txt	\
+		$(WISPKIT)\acu\acu102\run32.vcxproj		\
+		$(WISPKIT)\acu\acu102\crun32.vcxproj		\
+		$(WISPKIT)\acu\acu102\sub85.c			\
+		$(WISPKIT)\acu\acu102\wisp.rc			\
+		$(WISPKIT)\acu\acu102\wrundll.vcxproj		\
 		$(WISPKIT)\demo\cursor.wps	\
 		$(WISPKIT)\demo\demo.wps	\
 		$(WISPKIT)\demo\dr.wps		\
@@ -181,18 +152,6 @@ ede_dist_list=	$(EDEKIT)\good.exe		\
 		$(EDEKIT)\demo\mcbwidth.hlp	\
 		$(EDEKIT)\demo\menudemo.opt	\
 		$(EDEKIT)\demo\menudemo.mak	\
-		$(EDEKIT)\acu5\wrun32wisp_ede_acu50.mak	\
-		$(EDEKIT)\acu5\wrun32wisp_ede_acu51.mak	\
-		$(EDEKIT)\acu5\wrun32wisp_ede_acu52.mak	\
-		$(EDEKIT)\acu60\wrundll_ede_acu60.mak		\
-		$(EDEKIT)\acu60\wrundll_ede_acu60.dsp		\
-		$(EDEKIT)\acu60\build_ede_acu60_rts.txt	\
-		$(EDEKIT)\acu62\build_ede_acu62_rts.txt	\
-		$(EDEKIT)\acu62\sub.c		\
-		$(EDEKIT)\acu62\wrundll.vcproj	\
-		$(EDEKIT)\acu72\build_ede_acu72_rts.txt	\
-		$(EDEKIT)\acu72\sub.c		\
-		$(EDEKIT)\acu72\wrundll.vcproj	\
 		$(EDEKIT)\acu90\build_ede_acu90_rts.txt		\
 		$(EDEKIT)\acu90\build_ede_acu90_atm_rts.txt		\
 		$(EDEKIT)\acu90\build_ede_acu90_con_rts.txt		\
@@ -221,16 +180,6 @@ kcsiacu_dist_list= \
 		$(KCSIACUKIT)\kcsi_sub85_inc.c	\
 		$(KCSIACUKIT)\ctlcnvrt.wcb	\
 		$(KCSIACUKIT)\rptcnvrt.wcb	\
-		$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu50.mak	\
-		$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu51.mak	\
-		$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu52.mak	\
-		$(KCSIACUKIT)\acu60\build_kcsi_acu60_rts.txt	\
-		$(KCSIACUKIT)\acu60\wrundll_kcsi_acu60.mak	\
-		$(KCSIACUKIT)\acu60\wrundll_kcsi_acu60.dsp	\
-		$(KCSIACUKIT)\acu62\build_kcsi_acu62_rts.txt	\
-		$(KCSIACUKIT)\acu62\wrundll.vcproj	\
-		$(KCSIACUKIT)\acu72\build_kcsi_acu72_rts.txt	\
-		$(KCSIACUKIT)\acu72\wrundll.vcproj	\
 		$(KCSIACUKIT)\acu90\build_kcsi_acu90_rts.txt	\
 		$(KCSIACUKIT)\acu90\build_kcsi_acu90_con_rts.txt	\
 		$(KCSIACUKIT)\acu90\wrundll.vcproj	\
@@ -257,7 +206,7 @@ default: 	wispshipkit edeshipkit kcsiacushipkit
 clean: clean_wisp clean_ede clean_kcsi
 
 clean_wisp:
-	-rmdir /q /s $(WISPKIT)
+	-rmdir /q /s $(WISPKIT) $(BASEDIR)\config
 
 clean_ede:
 	-rmdir /q /s $(EDEKIT)
@@ -293,15 +242,9 @@ $(KITDIR):
 wispkit_dir_list= \
 	$(WISPKIT)			\
 	$(WISPKIT)\acu			\
-	$(WISPKIT)\acu\acu50		\
-	$(WISPKIT)\acu\acu51		\
-	$(WISPKIT)\acu\acu52		\
-	$(WISPKIT)\acu\acu60		\
-	$(WISPKIT)\acu\acu62		\
-	$(WISPKIT)\acu\acu72		\
-	$(WISPKIT)\acu\acu81		\
 	$(WISPKIT)\acu\acu90		\
 	$(WISPKIT)\acu\acu91		\
+	$(WISPKIT)\acu\acu102		\
 	$(WISPKIT)\bin			\
 	$(WISPKIT)\config		\
 	$(WISPKIT)\config\videocap	\
@@ -317,10 +260,6 @@ $(wispkit_dir_list):
 edekit_dir_list= \
 	$(EDEKIT) \
 	$(EDEKIT)\demo \
-	$(EDEKIT)\acu5 \
-	$(EDEKIT)\acu60 \
-	$(EDEKIT)\acu62 \
-	$(EDEKIT)\acu72 \
 	$(EDEKIT)\acu90 \
 	$(EDEKIT)\acu91
 
@@ -331,12 +270,9 @@ $(edekit_dir_list):
 
 kcsiacu_dir_list= \
 	$(KCSIACUKIT) \
-	$(KCSIACUKIT)\acu5 \
-	$(KCSIACUKIT)\acu60 \
-	$(KCSIACUKIT)\acu62 \
-	$(KCSIACUKIT)\acu72 \
 	$(KCSIACUKIT)\acu90 \
-	$(KCSIACUKIT)\acu91
+	$(KCSIACUKIT)\acu91 \
+	$(KCSIACUKIT)\acu102
 
 kcsiacukitdirs: $(kcsiacu_dir_list)
 
@@ -348,7 +284,7 @@ config_dir_list = \
 	$(BASEDIR)\config\videocap
 
 $(config_dir_list):
-	mkdir $@
+	-mkdir $@
 
 configdirs: $(config_dir_list)
 
@@ -571,116 +507,6 @@ $(WISPKIT)\acu\wisp_sub85_inc.c:	$(BASEDIR)\acu\$(@F)
 $(WISPKIT)\acu\wispicon.ico:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\acu50\sub85.c:			$(BASEDIR)\acu\sub85_acu50.c
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu50\wisprts.rc:		$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu50\wrun32wisp_acu50.mak:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu51\sub85.c:			$(BASEDIR)\acu\sub85_acu51.c
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu51\wisprts.rc:		$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu51\wrun32wisp_acu51.mak:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu52\sub85.c:			$(BASEDIR)\acu\sub85_acu52.c
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu52\wisprts.rc:		$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu52\wrun32wisp_acu52.mak:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu52\run32wisp_acu52.mak:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu60\build_wisp_acu60_rts.txt:	$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu60\build_wisp_acu60atm_rts.txt:	$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu60\sub85.c:			$(BASEDIR)\acu\sub85_acu60.c
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu60\wrundll.rc:		$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu60\wrundll_wisp_acu60.mak:	$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu60\wrundll_wisp_acu60.dsp:	$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu60\run32.rc:			$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu60\run32_wisp_acu60.mak:	$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu60\run32_wisp_acu60.dsp:	$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-
-
-$(WISPKIT)\acu\acu62\build_wisp_acu62_rts.txt:	$(BASEDIR)\acu\acu62\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu62\sub85.c:			$(BASEDIR)\acu\sub85_acu62.c
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu62\wisp.rc:			$(BASEDIR)\acu\acu62\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu62\wrundll.vcproj:		$(BASEDIR)\acu\acu62\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu72\build_wisp_acu72_rts.txt:	$(BASEDIR)\acu\acu72\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu72\sub85.c:			$(BASEDIR)\acu\sub85_acu72.c
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu72\wisp.rc:			$(BASEDIR)\acu\acu72\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu72\wrundll.vcproj:		$(BASEDIR)\acu\acu72\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu72\build_wisp_acu72_atm_rts.txt:	$(BASEDIR)\acu\acu72\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu72\run32.vcproj:		$(BASEDIR)\acu\acu72\$(@F)
-	$(COPY) $** $@
-
-
-$(WISPKIT)\acu\acu81\build_wisp_acu81_rts.txt:	$(BASEDIR)\acu\acu81\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu81\build_wisp_acu81_atm_rts.txt:	$(BASEDIR)\acu\acu81\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu81\sub85.c:			$(BASEDIR)\acu\sub85_acu81.c
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu81\wisp.rc:			$(BASEDIR)\acu\acu81\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu81\wrundll.rc:		$(BASEDIR)\acu\acu81\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu81\wrundll.vcproj:	$(BASEDIR)\acu\acu81\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\acu81\run32.vcproj:		$(BASEDIR)\acu\acu81\$(@F)
-	$(COPY) $** $@
 
 $(WISPKIT)\acu\acu90\build_wisp_acu90_rts.txt \
 $(WISPKIT)\acu\acu90\build_wisp_acu90_atm_rts.txt \
@@ -709,6 +535,17 @@ $(WISPKIT)\acu\acu91\crun32.vcxproj \
 	$(COPY) $** $@
 
 $(WISPKIT)\acu\acu91\sub85.c:	$(BASEDIR)\acu\sub85_acu91.c
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu102\build_wisp_acu102_rts.txt \
+$(WISPKIT)\acu\acu102\build_wisp_acu102_atm_rts.txt \
+$(WISPKIT)\acu\acu102\build_wisp_acu102_con_rts.txt \
+$(WISPKIT)\acu\acu102\wisp.rc \
+$(WISPKIT)\acu\acu102\sub85.c \
+$(WISPKIT)\acu\acu102\wrundll.vcxproj \
+$(WISPKIT)\acu\acu102\run32.vcxproj \
+$(WISPKIT)\acu\acu102\crun32.vcxproj \
+:	$(BASEDIR)\acu\acu102\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\demo\cursor.wps:	$(BASEDIR)\wproc\$(@F)
@@ -763,35 +600,7 @@ $(EDEKIT)\edem.lib:		$(BASEDIR)\ede\$(@F)
 $(EDEKIT)\edentsetup.txt:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\acu5\wrun32wisp_ede_acu50.mak \
-$(EDEKIT)\acu5\wrun32wisp_ede_acu51.mak \
-$(EDEKIT)\acu5\wrun32wisp_ede_acu52.mak \
-:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
 
-$(EDEKIT)\acu60\build_ede_acu60_rts.txt:	$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-	
-$(EDEKIT)\acu60\wrundll_ede_acu60.mak \
-$(EDEKIT)\acu60\wrundll_ede_acu60.dsp \
-:	$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-$(EDEKIT)\acu62\build_ede_acu62_rts.txt:	$(BASEDIR)\acu\acu62\$(@F)
-	$(COPY) $** $@
-
-$(EDEKIT)\acu62\sub.c \
-$(EDEKIT)\acu62\wrundll.vcproj \
-:	$(BASEDIR)\acu\acu62\ede\$(@F)
-	$(COPY) $** $@
-
-$(EDEKIT)\acu72\build_ede_acu72_rts.txt:	$(BASEDIR)\acu\acu72\$(@F)
-	$(COPY) $** $@
-
-$(EDEKIT)\acu72\sub.c \
-$(EDEKIT)\acu72\wrundll.vcproj \
-:	$(BASEDIR)\acu\acu72\ede\$(@F)
-	$(COPY) $** $@
 
 $(EDEKIT)\acu90\sub.c \
 $(EDEKIT)\acu90\wrundll.vcproj \
@@ -926,30 +735,6 @@ $(KCSIACUKIT)\ctlcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
 $(KCSIACUKIT)\rptcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu50.mak \
-$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu51.mak \
-$(KCSIACUKIT)\acu5\wrun32wisp_kcsi_acu52.mak \
-:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(KCSIACUKIT)\acu60\build_kcsi_acu60_rts.txt \
-$(KCSIACUKIT)\acu60\wrundll_kcsi_acu60.mak \
-$(KCSIACUKIT)\acu60\wrundll_kcsi_acu60.dsp \
-:	$(BASEDIR)\acu\acu60\$(@F)
-	$(COPY) $** $@
-
-
-$(KCSIACUKIT)\acu62\build_kcsi_acu62_rts.txt:	$(BASEDIR)\acu\acu62\$(@F)
-	$(COPY) $** $@
-
-$(KCSIACUKIT)\acu62\wrundll.vcproj:		$(BASEDIR)\acu\acu62\kcsi\$(@F)
-	$(COPY) $** $@
-
-$(KCSIACUKIT)\acu72\build_kcsi_acu72_rts.txt:	$(BASEDIR)\acu\acu72\$(@F)
-	$(COPY) $** $@
-
-$(KCSIACUKIT)\acu72\wrundll.vcproj:		$(BASEDIR)\acu\acu72\kcsi\$(@F)
-	$(COPY) $** $@
 
 $(KCSIACUKIT)\acu90\build_kcsi_acu90_rts.txt \
 $(KCSIACUKIT)\acu90\build_kcsi_acu90_con_rts.txt \

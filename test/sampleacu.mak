@@ -27,6 +27,7 @@ WISPFLAGS = -V $(WISPLANG) -I..\wisputils -M -u FORCEGENWISPCPY
 #ACUDIR=C:\data\Acucorp\ACUCBL810\ACUGT
 #ACUDIR=C:\data\Acucorp\ACUCBL900\ACUGT
 #ACUDIR=C:\data\Acucorp\ACUCBL910\ACUGT
+#ACUDIR=D:\work\Acucobol\Acucbl1020\AcuGT
 
 COBOL=$(ACUDIR)\bin\ccbl32.exe
 COBFLAGS = -Da4 -Gd -Za -Te 800

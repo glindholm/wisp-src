@@ -1,25 +1,21 @@
 /*
-**	File:	sub85_acu102.c		
+**	File:	sub85_acu91.c		
 **
-**	This is the WISP compatible version of sub85.c for use with 
-**	Acucobol 10.2 
+**	This is the WISP compatable version of sub85.c for use with 
+**	Acucobol 9.1 
 **
-**	If you are using Acucobol 10.2 you will need to copy
+**	If you are using Acucobol 9.1 you will need to copy
 **	and rename this file to sub85.c.
 **
 **	All of the WISP added code is enclosed in
 **	"#ifdef WISP" statements.
 */
 #define WISP
-#define WISP_ACU102
+#define WISP_ACU91
 
 /* sub85.c - RM/COBOL-85 compatible 'C' routine interface */
 
-/*
-** Copyright (C) 1993,1995,1997,1999-2003,2007-2008,2010,2015-2016 Micro Focus.
-** All rights reserved.
-*/
-
+/* Copyright (c) 1995-2007 by Acucorp, Inc.  All rights reserved.	*/
 /* Users of the ACUCOBOL-GT runtime may freely modify and distribute	*/
 /* this file as they see fit in order to support an ACUCOBOL-GT based	*/
 /* application.  */
@@ -60,14 +56,14 @@
 #undef	ACU_SOURCE_FILENAME
 #endif	/* ACU_SOURCE_FILENAME */
 #define	ACU_SOURCE_FILENAME	"lib/sub85.c"
-const char what_lib_sub85_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date: 2017-12-22 17:24:40 +0000 (Fri, 22 Dec 2017) $$Rev: 72641 $";
+const char what_lib_sub85_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date: 2010-10-18 20:02:12 +0100 (Mon, 18 Oct 2010) $$Rev: 59403 $";
 
 int call_system(char *, int, Argument [], int);
 void wstoasc(Argument *, char *);
 
 
 struct	PROCTABLE LIBTABLE[] = {
-	{ "SYSTEM", (pfSub85Intf)call_system, NULL },
+	{ "SYSTEM", call_system, NULL },
 
 #ifdef WISP
 /************************************************************************/
@@ -78,7 +74,7 @@ struct	PROCTABLE LIBTABLE[] = {
 #include "wisp_sub85_inc.c"
 /************************************************************************/
 #endif /* WISP */
-
+	
 	{ NULL,	NULL, NULL }
 };
 
@@ -107,8 +103,7 @@ extern void w_set_fgbg(int, int);
 #define	MAXCMD		256
 
 int
-call_system(char *name A_UNUSED, int num_args, Argument args[],
-	int initial A_UNUSED)
+call_system(char *name, int num_args, Argument args[], int initial)
 {
 	char		command[ MAXCMD+1 ];
 	unsigned	size;
@@ -128,8 +123,10 @@ call_system(char *name A_UNUSED, int num_args, Argument args[],
 
 #ifndef	_WINDOWS
 	if ( num_args == 1 ) {
+#ifndef	MELD_DLL
 		w_set_fgbg( colormap[ EXIT_COLOR ].foregrnd,
 			colormap[ EXIT_COLOR ].backgrnd );
+#endif	/* MELD_DLL */
 		resetunit();
 	}
 #endif	/* _WINDOWS */
