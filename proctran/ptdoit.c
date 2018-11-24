@@ -104,7 +104,7 @@ int doit(void)										/* Do the COBOL generation.		*/
 	while (fgets(rline,STRBUFF,infile))						/* Read in STRBUFF chars until EOF.	*/
 	{
 		num_lineins++;
-		if (*rline == LNFD || *rline == '\0') *linein = '\0';			/* If an empty line.			*/
+		if (*rline == LNFD || *rline == '\r' || *rline == '\0') *linein = '\0';			/* If an empty line.			*/
 		else
 		{
 			strcpy(linein,rline);						/* Copy in local variables.		*/

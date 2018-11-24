@@ -940,7 +940,8 @@ int define_acu(const char* rts)
 				{
 					char* equalsPtr;
 					len=strlen(inlin);
-					if (len>0 && inlin[len-1] == '\n') inlin[len-1] = '\0';	/* Null out the newline char	*/
+					if (len > 0 && inlin[len - 1] == '\n') inlin[--len] = '\0';	/* Null out the newline char	*/
+					if (len > 0 && inlin[len - 1] == '\r') inlin[--len] = '\0';	/* Null out the CR	*/
 					cnt = sscanf(inlin,"%s",keyword);
 					if ( cnt < 1 ) continue;
 
@@ -1393,11 +1394,16 @@ int run_command(char *command)
 		{
 			char	*ptr;
 
-			if ((ptr=strchr(buff,'\n')))
+			if ((ptr = strchr(buff, '\n')))
 			{
 				*ptr = '\0';
 			}
-			
+
+			if ((ptr = strchr(buff, '\r')))
+			{
+				*ptr = '\0';
+			}
+
 			print_inset_nl(buff);
 		}
 		pclose(file);
@@ -1506,11 +1512,15 @@ static void cat_file(const char* file_path)
 		{
 			char *ptr;
 			
-			if ((ptr=strchr(inlin,'\n')))
+			if ((ptr = strchr(inlin, '\n')))
 			{
 				*ptr = '\0';
 			}
-			
+			if ((ptr = strchr(inlin, '\r')))
+			{
+				*ptr = '\0';
+			}
+
 			print_inset_nl(inlin);
 		}
 		fclose(the_file);
@@ -1536,9 +1546,13 @@ void print_config_file(const char* options_path)
 		while(fgets(inlin,sizeof(inlin)-1,the_file))
 		{
 			len=strlen(inlin);
-			if (len>0 && inlin[len-1] == '\n') 
+			if (len > 0 && inlin[len - 1] == '\n')
 			{
 				inlin[--len] = '\0';	/* Null out the newline char	*/
+			}
+			if (len > 0 && inlin[len - 1] == '\r')
+			{
+				inlin[--len] = '\0';	/* Null out the CR char	*/
 			}
 
 			/*

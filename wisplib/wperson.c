@@ -752,6 +752,21 @@ static int genspoollib(char *spoollib)
 	return(1);
 }
 
+static void remove_eol(char *str)
+{
+	int len;
+	len = strlen(str);
+
+	while (len > 0)
+	{
+		if (str[len-1] == '\r' || str[len-1] == '\n' )
+			str[--len] = '\0';
+		else
+			break;
+	}
+
+}
+
 static int opt_linkvectoroff_flag = 0;
 int WL_opt_linkvectoroff(void)
 {
@@ -851,13 +866,10 @@ int WL_load_options(void)					/* Load the runtime OPTIONS file.		*/
 				bContinued = 0;
 				if (NULL!=fgets(inlin,sizeof(inlin)-1,the_file))
 				{
+					remove_eol(inlin);
 					len=strlen(inlin);
-					if (len>0 && '\n'==inlin[len-1]) 	/* Strip off the newline char */
-					{
-						inlin[--len] = '\0';
-					}
 
-				        /*
+				    /*
 					 *	Check for continued line
 					 */
 					if (len>0 && '\\'==inlin[len-1])
@@ -1710,10 +1722,12 @@ static void load_lpmap(void)
 
 		while (fgets(inlin,sizeof(inlin),the_file))
 		{
-			if (inlin[0]=='\n')
+			remove_eol(inlin);
+			if (strlen(inlin) == 0 )
 			{
 				continue;
 			}
+
 			if (!prt_list)						/* first time?				*/
 			{
 				prt_list = (prt_id *)wisp_malloc(sizeof(prt_id));/* get some memory			*/
@@ -1725,11 +1739,6 @@ static void load_lpmap(void)
 				prt_ptr->next = (struct prt_id *)wisp_malloc(sizeof(prt_id));/* get some memory		*/
 				prt_ptr = (prt_id *)prt_ptr->next;		/* set pointer				*/
 				prt_ptr->next = NULL;				/* set next pointer to zero		*/
-			}
-
-			if ('\n' == inlin[strlen(inlin)-1])
-			{
-				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
 			}
 
 			if ( strlen(inlin) < 4 )				/* 4 = class + space + code + NL 	*/
@@ -2246,10 +2255,7 @@ static void load_cqmap(void)
 				wexit(WERRCODE(83024));
 			}
 
-			if (inlin[strlen(inlin)-1]=='\n')
-			{
-				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
-			}
+			remove_eol(inlin);
 			cqmap_ptr->class = toupper(inlin[0]);			/* get the class			*/
 			cqmap_ptr->queue = wisp_strdup(&inlin[2]);		/* dupe the queue name 			*/
 		}
@@ -2294,10 +2300,7 @@ static void load_forms(void)
 				forms_ptr->next = NULL;				/* set next pointer to zero		*/
 			}
 
-			if (inlin[strlen(inlin)-1]=='\n')
-			{
-				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
-			}
+			remove_eol(inlin);
 
 			inlin[3] = '\0';					/* null term after form#		*/
 			forms_ptr->form_num = atoi(inlin);			/* convert formnum to int		*/
@@ -2342,7 +2345,7 @@ static void load_prmap(void)
 
 		while (fgets(inlin,sizeof(inlin),the_file))
 		{
-			if (inlin[0]=='\n')
+			if (inlin[0]=='\n' || inlin[0] == '\r')
 			{
 				continue;
 			}
@@ -2372,10 +2375,7 @@ static void load_prmap(void)
 				wexit(WERRCODE(83028));
 			}
 
-			if (inlin[strlen(inlin)-1]=='\n')
-			{
-				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
-			}
+			remove_eol(inlin);
 
 			inlin[3] = '\0';					/* null term after printer #		*/
 			prmap_ptr->prmap_num = atoi(inlin);			/* convert printer # to int		*/

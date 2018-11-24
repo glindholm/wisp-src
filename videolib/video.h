@@ -397,6 +397,7 @@ void VL_vre_set_logfile(const char* filepath);
 unsigned char *VL_vsss(int row, int col, int rows, int cols);				/* Save a screen segment.		*/
 int VL_vrss(unsigned char *loc);								/* Restore a screen segment.		*/
 void VL_vtitle(const char *titlestr);
+void VL_truncate(char *inbuf);			/* Truncate trailing whitespace */
 
 
 /*

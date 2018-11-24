@@ -425,6 +425,21 @@ void VL_vtitle(const char *titlestr)
 	vrawtitle(titlestr);
 }
 
+/*----
+Truncate trailing whitespace
+----*/
+void VL_truncate(char *inbuf)
+{
+	int len;
+
+	len = strlen(inbuf);
+	while (len > 0 && (' ' == inbuf[len - 1] || '\t' == inbuf[len - 1] || '\n' == inbuf[len - 1] || '\r' == inbuf[len - 1]))
+	{
+		inbuf[--len] = '\0';
+	}
+
+}
+
 
 /*
 **	History:

@@ -2398,12 +2398,9 @@ static int nextfield(FILE *fp, char* name, char* cap)
 			inbuf[0] = '\0';
 		}
 		
-		/* Remove trailing whitespace */
+		
+		VL_truncate(inbuf); /* Remove trailing whitespace */
 		len = strlen(inbuf);
-		while(len > 0 && (' '==inbuf[len-1] || '\t'==inbuf[len-1] || '\n'==inbuf[len-1]))
-		{
-			inbuf[--len] = '\0';
-		}
 		
 	} while (len <= 0);								/* skipping comments and empty records */
 
@@ -2431,6 +2428,8 @@ static int nextfield(FILE *fp, char* name, char* cap)
 	--npos;
 	while ( cap[cpos]==' '||  cap[cpos]=='\t')  cap[cpos--]=(char)0;	/* remove trailing whitespace			*/
 	while (name[npos]==' '|| name[npos]=='\t') name[npos--]=(char)0;
+
+	//VL_trace("%d [%s][%s][%s]", vcline, inbuf, name, cap);
 
 	return TRUE;	
 }

@@ -6823,7 +6823,12 @@ void vwang_load_charmap(int force)
 			*/
 			while(fgets(inlin,sizeof(inlin)-1,the_file))
 			{
-				if ((ptr = strchr(inlin, '\n'))) 
+				if ((ptr = strchr(inlin, '\n')))
+				{
+					*ptr = '\0';
+				}
+
+				if ((ptr = strchr(inlin, '\r')))
 				{
 					*ptr = '\0';
 				}

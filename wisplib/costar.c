@@ -731,8 +731,7 @@ static w4w_pfkey_map_s *load_w4wmap(void)
 				/*
 				**	A leading # or blank line is treated as a comment.
 				*/
-				if ('#'  == buff[0] ||
-				    '\n' == buff[0]    ) continue;
+				if ('#'  == buff[0] || '\n' == buff[0] || '\r' == buff[0]) continue;
 
 				cnt = sscanf(buff,"%s \"%[^\"]\"",keyword,string);
 				if (0 == cnt) continue;

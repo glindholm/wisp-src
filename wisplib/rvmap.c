@@ -207,8 +207,9 @@ static struct rvmap_struct *rvmap(void)
 				if (strlen(inbuf) <= 0) continue;
 				if ('#' == inbuf[0]) continue;
 
-				if ((ptr = strchr(inbuf,'\n'))) *ptr = (char)0;
-				
+				if ((ptr = strchr(inbuf, '\n'))) *ptr = (char)0;
+				if ((ptr = strchr(inbuf, '\r'))) *ptr = (char)0;
+
 				cnt = sscanf(inbuf, "%s %s", local_prefix, remote_prefix);
 			
 				if (0 == cnt) continue;
