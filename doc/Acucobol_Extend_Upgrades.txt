@@ -131,15 +131,25 @@ wispcommon\wisplib.h
 nt_wisptran build failing:
 	>> add #include <windows.h> as the first include
 
+
+fgets() EOL handling appeared to change.
+	>> Added code to handle CR, LF End Of Line on Windows
+	
 TODO
 ----
+
 - Add wprint64 to shipping kit
 - Add Microsoft redistubution files for VS2017 build
+	C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.15.26706\x86
+	\x86\Microsoft.VC141.CRT
+	\x86\Microsoft.VC141.MFC
+	
 - Add support for Acucobol Extend 10.2 
 - Remove incompatable cobol versions from distribution
 - Add support for new Vision file types
 - AIX support
 - Update wisp_packlist.txt
+- Update wispntsetup.txt
 
 - KSCI ACU for Extend 10.2
 - Finish acu102_prep_qa for KSCI

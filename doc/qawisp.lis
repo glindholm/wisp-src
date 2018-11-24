@@ -187,6 +187,7 @@
 		folder for the new machine.
 	
 	___	Build "Install_QA" to install in \test\QA
+			- This will install WISP and the WISP license file in test\QA\wisp
 
 	___	Share these directories: (Properties -> Sharing -> Advanced)
 	
@@ -194,7 +195,7 @@
 		%WISPSRC%\test\QA\wisp  as WISP
 		%WISPSRC%\TEST          as TESTACU (with write permission)
 		%ACUDIR%                as ACUDIR
-		C:\DEV\WISP				as WISPDEV
+		C:\DEV\WISP(D:\work\shellstream\WISP)	as WISPDEV
 		C:\Users				as USERS   (with write permission)
 	
 	___	"Install" the Acucobol runtime(s)
@@ -202,7 +203,10 @@
 		WISP + KCSI runtime(s)
 		
 		Regular runtime
-		___ Copy \acu\acu91\acu91_prep_qa\acu_lib_kcsi\wrun32.dll
+		___ Copy \acu\acu102\acu102_prep_qa\acu_lib_wisp\wrun32.dll
+		    to \\SERVER\ACUDIR\bin
+		KSCI runtime
+		___ Copy \acu\acu102\acu102_prep_qa\acu_lib_kcsi\wrun32.dll
 		    to \\SERVER\ACUDIR\bin
 
 		Console runtime
@@ -247,28 +251,29 @@
 			- Comment out #UTILSWINDOWS
 			- Uncomment CONSOLEACU
 
-	___     Run \test\machine\%COMPUTERNAME%\setupqa.bat to setup environment variables
+
+	___ Run \test\machine\%COMPUTERNAME%\setupqa.bat to setup environment variables (in a console)
 		
 		-- OR --
 	
-		Run WCONFIG \\SERVER\QA\WISP\bin\wconfig.exe (RUN AS ADMINSTRATOR)
+		Run WCONFIG \\SERVER\QA\wisp\bin\wconfig.exe (RUN AS ADMINSTRATOR)
 		
 			Import test\config\testacu_%COMPUTERNAME%.reg
 		
 			-- OR --
 			
 		SERVER	  = \\%COMPUTERNAME%
-		WISP Dir  = \\%COMPUTERNAME%\QA\WISP
+		WISP Dir  = \\%COMPUTERNAME%\QA\wisp
 		- GENERAL (TAB)
 		WISPCONFIG =\\%COMPUTERNAME%\TESTACU\CONFIG 
-		PATH = \\%COMPUTERNAME%\QA\WISP\BIN;
-		       \\%COMPUTERNAME%\QA\WISP\ACU;
+		PATH = \\%COMPUTERNAME%\QA\wisp\bin;
+		       \\%COMPUTERNAME%\QA\wisp\acu;
 		       \\%COMPUTERNAME%\TESTACU;
 		       \\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;
-		       \\%COMPUTERNAME%\QA\KCSIACU;
+		       \\%COMPUTERNAME%\QA\kcsiacu;
 		       C:\Windows;
 
-		PATH = \\%COMPUTERNAME%\QA\WISP\bin;\\%COMPUTERNAME%\QA\WISP\ACU;\\%COMPUTERNAME%\TESTACU;\\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;\\%COMPUTERNAME%\QA\KCSIACU;
+		PATH = \\%COMPUTERNAME%\QA\WISP\bin;\\%COMPUTERNAME%\QA\wisp\acu;\\%COMPUTERNAME%\TESTACU;\\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;\\%COMPUTERNAME%\QA\kcsiacu;
 
 		- MESSAGE (TAB)
 		SHAREDIR = \\%COMPUTERNAME%\TESTACU\MESSAGE
