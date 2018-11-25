@@ -19,6 +19,7 @@
 #include <string.h>
 #include "wisplib.h"
 #include "werrlog.h"
+#include "idsisubs.h"
 
 #ifdef unix
 #include <signal.h>
@@ -89,12 +90,7 @@ int WL_run_unixcommand_silent(const char* command)
 		char	buff[1024];
 		while (fgets(buff, sizeof(buff), pipe) != NULL)
 		{
-			int i;
-			i = strlen(buff);
-			if (i > 0 && '\n' == buff[i-1]) 
-			{
-				buff[i-1] = '\0'; /* Remove trailing newline */
-			}
+			WL_remove_eol(buff);
 			
 			wtrace("UNIXCOMMAND","OUTPUT","%s",buff);
 		}

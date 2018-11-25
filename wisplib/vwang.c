@@ -99,6 +99,7 @@
 #include "wispcfg.h"
 
 #include "werrlog.h"									/* Include error logging definitions.	*/
+#include "idsisubs.h"
 
 /*
 **	Structures and Defines
@@ -6823,15 +6824,7 @@ void vwang_load_charmap(int force)
 			*/
 			while(fgets(inlin,sizeof(inlin)-1,the_file))
 			{
-				if ((ptr = strchr(inlin, '\n')))
-				{
-					*ptr = '\0';
-				}
-
-				if ((ptr = strchr(inlin, '\r')))
-				{
-					*ptr = '\0';
-				}
+				WL_remove_eol(inlin);
 
 				if (strlen(inlin) > 0 && inlin[0] != '#') /* Not a comment */
 				{

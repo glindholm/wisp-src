@@ -756,6 +756,22 @@ void WL_dqw_strcat(char *dest, const char *src)
 	}
 
 }
+
+
+void WL_remove_eol(char *str)
+{
+	int len;
+	len = strlen(str);
+
+	while (len > 0)
+	{
+		if (str[len - 1] == '\r' || str[len - 1] == '\n')
+			str[--len] = '\0';
+		else
+			break;
+	}
+}
+
 /*
 **	History:
 **	$Log: idsisubs.c,v $

@@ -39,6 +39,7 @@
 #include "wdefines.h"
 #include "werrlog.h"
 #include "wperson.h"
+#include "idsisubs.h"
 
 /*
 **	Structures and Defines
@@ -201,14 +202,12 @@ static struct rvmap_struct *rvmap(void)
 			{
 				int	cnt;
 				char	local_prefix[MAX_CONFIG_REC_LEN], remote_prefix[MAX_CONFIG_REC_LEN];
-				char	*ptr;
 
 				linenum++;
 				if (strlen(inbuf) <= 0) continue;
 				if ('#' == inbuf[0]) continue;
 
-				if ((ptr = strchr(inbuf, '\n'))) *ptr = (char)0;
-				if ((ptr = strchr(inbuf, '\r'))) *ptr = (char)0;
+				WL_remove_eol(inbuf);
 
 				cnt = sscanf(inbuf, "%s %s", local_prefix, remote_prefix);
 			

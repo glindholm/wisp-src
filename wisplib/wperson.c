@@ -752,21 +752,6 @@ static int genspoollib(char *spoollib)
 	return(1);
 }
 
-static void remove_eol(char *str)
-{
-	int len;
-	len = strlen(str);
-
-	while (len > 0)
-	{
-		if (str[len-1] == '\r' || str[len-1] == '\n' )
-			str[--len] = '\0';
-		else
-			break;
-	}
-
-}
-
 static int opt_linkvectoroff_flag = 0;
 int WL_opt_linkvectoroff(void)
 {
@@ -866,7 +851,7 @@ int WL_load_options(void)					/* Load the runtime OPTIONS file.		*/
 				bContinued = 0;
 				if (NULL!=fgets(inlin,sizeof(inlin)-1,the_file))
 				{
-					remove_eol(inlin);
+					WL_remove_eol(inlin);
 					len=strlen(inlin);
 
 				    /*
@@ -1722,7 +1707,7 @@ static void load_lpmap(void)
 
 		while (fgets(inlin,sizeof(inlin),the_file))
 		{
-			remove_eol(inlin);
+			WL_remove_eol(inlin);
 			if (strlen(inlin) == 0 )
 			{
 				continue;
@@ -2179,10 +2164,7 @@ static void load_scmap(void)
 				wexit(WERRCODE(83024));
 			}
 
-			if (inlin[strlen(inlin)-1]=='\n')
-			{
-				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
-			}
+			WL_remove_eol(inlin);
 
 			scmap_ptr->class = toupper(inlin[0]);			/* get the class			*/
 			scmap_ptr->nice = atoi(&inlin[2]);			/* convert nice to int			*/
@@ -2255,7 +2237,7 @@ static void load_cqmap(void)
 				wexit(WERRCODE(83024));
 			}
 
-			remove_eol(inlin);
+			WL_remove_eol(inlin);
 			cqmap_ptr->class = toupper(inlin[0]);			/* get the class			*/
 			cqmap_ptr->queue = wisp_strdup(&inlin[2]);		/* dupe the queue name 			*/
 		}
@@ -2300,7 +2282,7 @@ static void load_forms(void)
 				forms_ptr->next = NULL;				/* set next pointer to zero		*/
 			}
 
-			remove_eol(inlin);
+			WL_remove_eol(inlin);
 
 			inlin[3] = '\0';					/* null term after form#		*/
 			forms_ptr->form_num = atoi(inlin);			/* convert formnum to int		*/
@@ -2345,7 +2327,7 @@ static void load_prmap(void)
 
 		while (fgets(inlin,sizeof(inlin),the_file))
 		{
-			if (inlin[0]=='\n' || inlin[0] == '\r')
+			if (inlin[0] == '#' || inlin[0] == '\n' || inlin[0] == '\r')
 			{
 				continue;
 			}
@@ -2375,7 +2357,7 @@ static void load_prmap(void)
 				wexit(WERRCODE(83028));
 			}
 
-			remove_eol(inlin);
+			WL_remove_eol(inlin);
 
 			inlin[3] = '\0';					/* null term after printer #		*/
 			prmap_ptr->prmap_num = atoi(inlin);			/* convert printer # to int		*/
@@ -2436,7 +2418,7 @@ static void load_dispfac(void)
 {
 static	int	first=1;
 	FILE 	*the_file;
-	int	cnt, i, ndx, len;
+	int	cnt, i, ndx;
 	char	inlin[132], *ptr;
 	int	t_dchar;
 	char dispfac_path[WPATH_LEN];
@@ -2459,8 +2441,7 @@ static	int	first=1;
 		{
 			if (*inlin != '#')						/* Check if a comment.			*/
 			{
-				len=strlen(inlin);
-				if (len>0 && inlin[len-1] == '\n') inlin[len-1] = '\0';	/* Null out the newline char		*/
+				WL_remove_eol(inlin);
 				cnt = sscanf(inlin,"%x",&ndx);
 
 				if ( cnt < 1 ) continue;

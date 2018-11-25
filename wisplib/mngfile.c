@@ -1972,7 +1972,7 @@ static int select_rename(int file_type)
 					ecnt=0;
 					while( ecnt<8 && fgets(pbuf,80,fp) != NULL )
 					{
-						pbuf[strlen(pbuf)-1] = '\0';		/* remove the newline			*/
+						WL_remove_eol(pbuf);
 						strcpy(ebuf[ecnt],pbuf);
 						ecnt++;
 					}
