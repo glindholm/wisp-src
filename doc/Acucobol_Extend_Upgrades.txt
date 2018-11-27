@@ -137,6 +137,9 @@ fgets() EOL handling appeared to change.
 	
 TODO
 ----
+DONE - Add support for new Vision file types
+DONE - Remove incompatable cobol versions from distribution
+DONE - Add support for Acucobol Extend 10.2 
 
 - Add wprint64 to shipping kit
 - Add Microsoft redistubution files for VS2017 build
@@ -144,9 +147,6 @@ TODO
 	\x86\Microsoft.VC141.CRT
 	\x86\Microsoft.VC141.MFC
 	
-- Add support for Acucobol Extend 10.2 
-- Remove incompatable cobol versions from distribution
-- Add support for new Vision file types
 - AIX support
 - Update wisp_packlist.txt
 - Update wispntsetup.txt

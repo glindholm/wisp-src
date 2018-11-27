@@ -202,6 +202,8 @@ static int	file_screen_return;							/* Return to from file_screen		*/
 #define FILE_SHELL	17
 #define FILE_VISION5D	18
 #define FILE_VISION5I	19
+#define FILE_VISION6D	20
+#define FILE_VISION6I	21
 
 #define VOL_OPTION_NONE		0
 #define VOL_OPTION_WANG		1
@@ -2430,10 +2432,16 @@ static int build_file_screen(HWSB hWsb, char* pf_list, int protect, int filetype
 			strcpy(type,"VISION 4 (INDEX)");
 			break;
 		case FILE_VISION5D:
-			strcpy(type,"VISION 5 (DATA)");
+			strcpy(type, "VISION 5 (DATA)");
 			break;
 		case FILE_VISION5I:
-			strcpy(type,"VISION 5 (INDEX)");
+			strcpy(type, "VISION 5 (INDEX)");
+			break;
+		case FILE_VISION6D:
+			strcpy(type, "VISION 6 (DATA)");
+			break;
+		case FILE_VISION6I:
+			strcpy(type, "VISION 6 (INDEX)");
 			break;
 		case FILE_TEXT:
 			strcpy(type,"TEXT");
@@ -3012,6 +3020,16 @@ static int typefile(const char* file)
 	if (0==memcmp(header, VISION5D_MAGIC, VISION_MAGIC_LEN))
 	{
 		return FILE_VISION5D;
+	}
+
+	if (0 == memcmp(header, VISION6I_MAGIC, VISION_MAGIC_LEN))
+	{
+		return FILE_VISION6I;
+	}
+
+	if (0 == memcmp(header, VISION6D_MAGIC, VISION_MAGIC_LEN))
+	{
+		return FILE_VISION6D;
 	}
 
 	if ( header[0] == 0xFE && header[1] == 0x53 )
