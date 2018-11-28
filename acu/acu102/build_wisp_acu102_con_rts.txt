@@ -23,7 +23,7 @@ In these instructions these macros are used as follows:
 
 ${ACUDIR}     - Acucobol-GT 10.2 directory (C:\....\Micro Focus\extend10.2.0\AcuGT)
 ${ACUBLD}\lib - A copy of ${ACUDIR}\lib for performing the build (e.g. C:\data\acucbl102\AcuGT\lib)
-${WISPDIR}    - WISP installation directory (C:\WISP5100)
+${WISPDIR}    - WISP installation directory (C:\WISP5120)
 
 This procedure will rebuild ${ACUDIR}\bin\crun32.exe the Console runtime.
 

@@ -865,7 +865,7 @@
 			- You will get error:
 				%READFDR-E-NOTSUP Field ID of XX is NOT SUPPORTED
 			- All the rest of the tests are automatic.
-				*** PASSED *** ALL 0123 TESTS
+				*** PASSED *** ALL 0135 TESTS (Acu)
 			(16) EXIT Test
 
 	___	(2) FIND
@@ -949,7 +949,7 @@
 		FILE	 LIB	 VOL	 	TYPE
 		=======	 ======= ======  	====
 
-	___	WSORT				S   	(16) EXIT WSORT
+	___	WSORT                       S     (16) EXIT WSORT
 
 		Link to a non-WISP program.
 +	___	UNIX:   VI			TYPE=S	(:q!) Exit vi

@@ -144,6 +144,8 @@ DONE - Remove old MS Redist files
 DONE - Update wisp_packlist.txt (windows)
 DONE - Update wispntsetup.txt
 
+DONE - Release notes
+
 - AIX support
 - Update wisp_packlist.txt (unix)
 
