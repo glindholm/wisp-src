@@ -32,8 +32,6 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\bin\wshell.exe	\
 		$(WISPKIT)\bin\wsort.exe	\
 		$(WISPKIT)\bin\wusage.exe	\
-		$(WISPKIT)\bin\Microsoft.VC80.CRT	\
-		$(WISPKIT)\bin\Microsoft.VC80.MFC	\
 		$(WISPKIT)\lib\video.lib	\
 		$(WISPKIT)\lib\wisp.lib		\
 		$(WISPKIT)\etc\words.def	\

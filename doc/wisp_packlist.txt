@@ -234,8 +234,6 @@ bin\wrunt.exe
 bin\wshell.exe
 bin\wsort.exe
 bin\wusage.exe
-bin\Microsoft.VC80.CRT\*
-bin\Microsoft.VC80.MFC\*
 config
 config\ACUCONFIG
 config\CHARMAP
