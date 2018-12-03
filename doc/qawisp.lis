@@ -194,9 +194,11 @@
 		%WISPSRC%\test\QA       as QA
 		%WISPSRC%\test\QA\wisp  as WISP
 		%WISPSRC%\TEST          as TESTACU (with write permission)
-		%ACUDIR%                as ACUDIR
-		C:\DEV\WISP(D:\work\shellstream\WISP)	as WISPDEV
-		C:\Users				as USERS   (with write permission)
+		%ACUDIR%
+		C:\data\Acucorp\Acucbl1020\AcuGT  as ACUDIR
+		C:\DEV\WISP                       as WISPDEV
+		(D:\work\shellstream\WISP on Blackclaw)
+		C:\Users                          as USERS   (with write permission)
 	
 	___	"Install" the Acucobol runtime(s)
 	

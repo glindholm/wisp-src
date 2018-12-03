@@ -5,10 +5,9 @@
 #
 #	Versions:
 #		Acucobol-GT/Extend  (Statically linked)
+#				10.2, 
 #				9.1, 9.0, 
-#				8.1, 7.2, 
-#				6.2, 6.1, 6.0, 
-#				5.2, 5.1, 5.0
+#				8.1
 #				
 #		WISP		5.1.20  [WISPVER]
 #		KCSI		4.2.00  [KCSIVER]
@@ -21,8 +20,8 @@
 #		version of the Acucobol runtime. To build the Shared
 #		version see the platform and version specific
 #		makefiles:
-#			acu/acu81/Makefile_aix53sh_32.mak
-#			acu/acu81/Makefile_hpux1123sh_32.mak
+#			acu/acu102/Makefile_aix71_32sh.mak
+#			acu/acu91/Makefile_hpux1123_ia_32sh.mak
 #
 #	Description:
 #		This makefile can generate the following versions
