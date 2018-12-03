@@ -128,6 +128,11 @@ ACUOTHER=
 #----------------------------------------------------------------------------
 #	On AIX 7.1 (32-bit) with IBM cc_r 
 #
+## Acu 10.2
+#CC = xlc_r
+#ACUOTHER= 
+#SYSCCFLAGS = -q32 -qarch=com -qmaxmem=16384 -bmaxdata:0x80000000 -D_LARGE_FILES 
+#
 ## Acu 10.1
 #CC = cc_r
 #ACUOTHER= 
