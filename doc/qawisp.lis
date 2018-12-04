@@ -1,1582 +1,1561 @@
-	Copyright (c) Shell Stream Software LLC. All Rights Reserved. 	
-	====================================================================
-	
-	Title:		WISP QA Checklist
-	
-	Products:	WISP
-	
-	====================================================================
+    Copyright (c) Shell Stream Software LLC. All Rights Reserved.     
+    ====================================================================
+    
+    Title:       WISP QA Checklist
+    
+    Products:    WISP
+    
+    ====================================================================
 
-	WISP QA CHECKLIST
-	=================
+    WISP QA CHECKLIST
+    =================
 
-	QA Engineer:  _________________________________	   Date __/__/__
+    QA Engineer:  _________________________________       Date __/__/__
 
-	Platform:     ___________________________   OS Version: __________
+    Platform:     ___________________________   OS Version: __________
 
-	WISP Version: _________________________________
-
-	Problems 
-	detected: (1)_____________________________________________________
-
-		  (2)_____________________________________________________
-
-		  (3)_____________________________________________________
-
-		  (4)_____________________________________________________
-
-		  (5)_____________________________________________________
-
-		  (6)_____________________________________________________
-
-		  (7)_____________________________________________________
-
-		  (8)_____________________________________________________
-
-		  (9)_____________________________________________________
-
-		  (10)____________________________________________________
+    WISP Version: _________________________________
 
 
-	PURPOSE:	This QA checklist is to be used to test and verify
-			all functionality of WISP.
+    PURPOSE:   This QA checklist is to be used to test and verify
+               all functionality of WISP.
 
-	WHEN USED:	This QA checklist is used every time WISP is
-			ported to a new platform and every time a new
-			release is re-ported to a platform.
+    WHEN USED:  This QA checklist is used every time WISP is
+                ported to a new platform and every time a new
+                release is re-ported to a platform.
 
-+			The items that comprise a mini-test are marked
-+			with a plus sign (+) in column one.
++               The items that comprise a mini-test are marked
++               with a plus sign (+) in column one.
 
-	INSTRUCTIONS:	1) Fill in the above information.
+    INSTRUCTIONS:    1) Fill in the above information.
 
-			2) Do each action in sequence and check it off
-			   as it is done.
+            2) Do each action in sequence and check it off
+               as it is done.
 
-			3) If any functionality is not working number it
-			   and note it on this checklist (above) and report
-			   it.
-			   Use the following codes beside the item:
-				FAIL	- Not Working as expected
-				ABORT	- Causes program to ABORT
-				MISS	- Known missing functionality
-				N/A	- Not Applicable to environment
-				ENHC	- Enhancements needed
+            3) If any functionality is not working number it
+               and note it on this checklist (above) and report
+               it.
+               Use the following codes beside the item:
+                FAIL    - Not Working as expected
+                ABORT   - Causes program to ABORT
+                MISS    - Known missing functionality
+                N/A     - Not Applicable to environment
+                ENHC    - Enhancements needed
 
-			4) When completed turn in this checklist.
+            4) When completed turn in this checklist.
 
 
 
 #####################  This page is for UNIX only  ########################
 
-+	PREREQUESITE
++    PREREQUESITE
 
-	___	Port WISP to this machine following the steps outlined in
-		the document "doc/portunix.lis".
+    ___ Port WISP to this machine following the steps outlined in
+        the document "doc/portunix.lis".
 
-	___	Install WISP and build the RTS. This is normally done with
-		the "installqa.sh" script but could be done from a WISP
-		kit.
-		
-		$ export WISPSRC=${HOME}/work/wisp/src
-		$ cd ${WISPSRC}/port
-		$ ./installqa.sh
-
-
-+	SET UP FOR WISP QA TESTING.
-	
-	___	Login to 2 windows/terminals as 2 DIFFERENT userids.
-		One should be a COSTAR window with 
-
-			$ export WISPTERM=w4w_vt220
-			$ export W4W=2
-
-	___	Set the needed environment variables
-
-			$ export WISPGID=$$
-			$ export WISPSRC=${HOME}/work/wisp/src
-			
-			$ export ACUDIR=${HOME}/work/acu/acu1020
-			$ export A_TERMCAP=${ACUDIR}/etc/a_termcap
+    ___ Install WISP and build the RTS. This is normally done with
+        the "installqa.sh" script but could be done from a WISP
+        kit.
+        
+        $ export WISPSRC=${HOME}/work/wisp/src
+        $ cd ${WISPSRC}/port
+        $ ./installqa.sh
 
 
-			export COBDIR=/disk1/mfcobol
++    SET UP FOR WISP QA TESTING.
+    
+    ___ Login to 2 windows/terminals as 2 DIFFERENT userids.
+        One should be a COSTAR window with 
 
-	___	Copy the "test" directory  based on the COBOL you are using.
+            $ export WISPTERM=w4w_vt220
+            $ export W4W=2
 
-			$ cd ${WISPSRC}
-		ACU	$ cp -r test testacu
-		MF	$ cp -r test testmf
+    ___ Set the needed environment variables
 
-	___	Change directory to your "test" dir based on the COBOL you
-		are using.
-
-		ACU	$ cd ${WISPSRC}/testacu
-		MF	$ cd ${WISPSRC}/testmf
-
-	___	Run the "startup" file to setup environment variables.  
-		This will set your $WISPCONFIG plus COBOL specific variables.
-		It will also set $QA to point to your test directory.
-
-		ACU	$ ./startupacu.sh
-		MF	$ ./startupmf.sh
-
-	****
-	****    THE ABOVE STEPS MUST BE DONE EVERYTIME YOU RE-START.
-	****
+            $ export WISPGID=$$
+            $ export WISPSRC=${HOME}/work/wisp/src
+            
+            $ export ACUDIR=${HOME}/work/acu/acu1020
+            $ export A_TERMCAP=${ACUDIR}/etc/a_termcap
 
 
-	LICENSE THE MACHINE
+            $ export COBDIR=/disk1/mfcobol
 
-	___	$WISPDIR/bin/wlicense
+    ___ Copy the "test" directory  based on the COBOL you are using.
 
+            $ cd ${WISPSRC}
+        ACU $ cp -r test testacu
+        MF  $ cp -r test testmf
 
-+	BUILD SAMPLE
+    ___ Change directory to your "test" dir based on the COBOL you
+        are using.
 
-	***	If COBOL complier is not available
-	
-		$ make -f sampleacu.umf setup
+        ACU    $ cd ${WISPSRC}/testacu
+        MF     $ cd ${WISPSRC}/testmf
 
+    ___ Run the "startup" file to setup environment variables.  
+        This will set your $WISPCONFIG plus COBOL specific variables.
+        It will also set $QA to point to your test directory.
 
-	___	Build the SAMPLE programs.  
-		(*** ONLY if COBOL Compiler available ***)
+        ACU    $ ./startupacu.sh
+        MF     $ ./startupmf.sh
 
-		ACU	$ make -f sample.umf ACU
-		MF	$ make -f sample.umf MF
-		MFSE	$ make -f sample.umf MFSE
-
-	___	ACU: IF compiler available bundle the compiled *.acu files
-	
-			$ make -f sampleacu.umf acuqa
-			
-	___	Check your setup with WDIAG. Some LGMAP directories have
-		not yet been created.  Ensure that everything else is OK. 
-
-			$ wdiag
-
-	WISP TRANSLATOR TESTS
-
-	___	Run the WISP translator against the t_xxx.wcb test files.
-		(*** ONLY if COBOL Compiler available ***)
-
-		$ cd ${WISPSRC}/wisptran
-		$ make -f wisp.umf testacu  2>&1 |more
-		$ make -f wisp.umf testmf   2>&1 |more
-		$ make -f wisp.umf testmfse 2>&1 |more
-		$ make -f wisp.umf testacn  2>&1 |more
-
-		These will generate multiple WISP warnings and errors,
-		this is expected.  Look for errors coming from the COBOL
-		compilers.
-
-		Cobol should complain about the HOLD verb.
+    ****
+    ****    THE ABOVE STEPS MUST BE DONE EVERYTIME YOU RE-START.
+    ****
 
 
-	VIDEOCAP FILE
+    LICENSE THE MACHINE
 
-	___	Build a videocap file for this terminal for use in the QA.
-		See instructions in the WISP manual.
+    ___ $WISPDIR/bin/wlicense
 
-		$ vcapkeys	
+
++    BUILD SAMPLE
+
+    *** If COBOL complier is NOT available
+    
+        $ make -f sampleacu.umf setup
+
+
+    ___ Build the SAMPLE programs.  
+        (*** ONLY if COBOL Compiler available ***)
+
+        ACU   $ make -f sample.umf ACU
+        MF    $ make -f sample.umf MF
+        MFSE  $ make -f sample.umf MFSE
+
+    ___ ACU: IF compiler available bundle the compiled *.acu files
+    
+            $ make -f sampleacu.umf acuqa
+            
+    ___ Check your setup with WDIAG. Some LGMAP directories have
+        not yet been created.  Ensure that everything else is OK. 
+
+            $ wdiag
+
+    WISP TRANSLATOR TESTS
+
+    ___ Run the WISP translator against the t_xxx.wcb test files.
+        (*** ONLY if COBOL Compiler available ***)
+
+        $ cd ${WISPSRC}/wisptran
+        $ make -f wisp.umf testacu  2>&1 |more
+        $ make -f wisp.umf testmf   2>&1 |more
+        $ make -f wisp.umf testmfse 2>&1 |more
+        $ make -f wisp.umf testacn  2>&1 |more
+
+        These will generate multiple WISP warnings and errors,
+        this is expected.  Look for errors coming from the COBOL
+        compilers.
+
+        Cobol should complain about the HOLD verb.
+
+
+    VIDEOCAP FILE
+
+    ___ Build a videocap file for this terminal for use in the QA.
+        See instructions in the WISP manual.
+
+        $ vcapkeys    
 
 
 
 #####################  This page is for WIN32 only  ########################
 
-+	PREREQUESITE
++    PREREQUESITE
 
-	___	Port WISP to this machine following the steps outlined in
-		the document "portwin32.txt".
-		
-	___ The WISPCONFIG files are copied from \test\machine\%COMPUTERNAME%\config_nt\
-		If this is a new machine, then create a new \test\machine
-		folder for the new machine.
-	
-	___	Build "Install_QA" to install in \test\QA
-			- This will install WISP and the WISP license file in test\QA\wisp
+    ___ Port WISP to this machine following the steps outlined in
+        the document "portwin32.txt".
+        
+    ___ The WISPCONFIG files are copied from \test\machine\%COMPUTERNAME%\config_nt\
+        If this is a new machine, then create a new \test\machine
+        folder for the new machine.
+    
+    ___ Build "Install_QA" to install in \test\QA
+            - This will install WISP and the WISP license file in test\QA\wisp
 
-	___	Share these directories: (Properties -> Sharing -> Advanced)
-	
-		%WISPSRC%\test\QA       as QA
-		%WISPSRC%\test\QA\wisp  as WISP
-		%WISPSRC%\TEST          as TESTACU (with write permission)
-		%ACUDIR%
-		C:\data\Acucorp\Acucbl1020\AcuGT  as ACUDIR
-		C:\DEV\WISP                       as WISPDEV
-		(D:\work\shellstream\WISP on Blackclaw)
-		C:\Users                          as USERS   (with write permission)
-	
-	___	"Install" the Acucobol runtime(s)
-	
-		WISP + KCSI runtime(s)
-		
-		Regular runtime
-		___ Copy \acu\acu102\acu102_prep_qa\acu_lib_wisp\wrun32.dll
-		    to \\SERVER\ACUDIR\bin
-		KSCI runtime
-		___ Copy \acu\acu102\acu102_prep_qa\acu_lib_kcsi\wrun32.dll
-		    to \\SERVER\ACUDIR\bin
+    ___ Share these directories: (Properties -> Sharing -> Advanced)
+    
+        %WISPSRC%\test\QA       as QA
+        %WISPSRC%\test\QA\wisp  as WISP
+        %WISPSRC%\TEST          as TESTACU (with write permission)
+        %ACUDIR%
+        C:\data\Acucorp\Acucbl1020\AcuGT  as ACUDIR
+        C:\DEV\WISP                       as WISPDEV
+        (D:\work\shellstream\WISP on Blackclaw)
+        C:\Users                          as USERS   (with write permission)
+    
+    ___ "Install" the Acucobol runtime(s)
+    
+        WISP + KCSI runtime(s)
+        
+        Regular runtime
+        ___ Copy \acu\acu102\acu102_prep_qa\acu_lib_wisp\wrun32.dll
+            to \\SERVER\ACUDIR\bin
+        KSCI runtime
+        ___ Copy \acu\acu102\acu102_prep_qa\acu_lib_kcsi\wrun32.dll
+            to \\SERVER\ACUDIR\bin
 
-		Console runtime
-		___ Copy \acu\acu91\acu91_prep_qa\acu_lib_kcsi\crun32.exe
-		    to \\SERVER\ACUDIR\bin
-		___ Copy ACU license file:
-			- C:\ProgramData\Micro Focus\extend\9.1.0\x86
-			- cp wrun32.3lc to crun32.3lc
-		
-		
-	-- OR --
+        Console runtime
+        ___ Copy \acu\acu91\acu91_prep_qa\acu_lib_kcsi\crun32.exe
+            to \\SERVER\ACUDIR\bin
+        ___ Copy ACU license file:
+            - C:\ProgramData\Micro Focus\extend\9.1.0\x86
+            - cp wrun32.3lc to crun32.3lc
+        
+        
+    -- OR --
 
-	___	Install WISP, build the RTS, and license the machine.
-
-
-		___  Run \test\QA\wisp\bin\WCONFIG.EXE (as Administrator)
-		     ___  (RESET) if already configured
-		     ___  WISP Server: (name of test machine)
-		     ___  Accept defaults...
-
-		___  Run \test\QA\wisp\bin\WLICENSE.EXE
-		--OR--
-		___  Copy \test\machine\%COMPUTERNAME%\license.txt to \test\QA\wisp\license.txt
-			 (This is usually done by INSTALL_QA project)
-			 
-
-+	SETUP ${WISPCONFIG} DIRECTORY
-
-	Copy the config files.
-	___	Copy \test\machine\%COMPUTERNAME%\config_nt to \test\config 
-
-	
-	Configure which Acucobol runtime to use
-	___	Edit \src\test\config\wrun.cfg and uncomment correct runtime:
-		
-			#runcbl=\\%COMPUTERNAME%\ACUDIR\BIN\wrun32.exe
-			#runcbl=\\%COMPUTERNAME%\ACUDIR\BIN\run32.exe
-			#runcbl=\\%COMPUTERNAME%\ACUDIR\BIN\crun32.exe
-
-	For Testing Console Runtime:
-	___	Edit config\OPTIONS: 
-			- Comment out #UTILSWINDOWS
-			- Uncomment CONSOLEACU
+    ___ Install WISP, build the RTS, and license the machine.
 
 
-	___ Run \test\machine\%COMPUTERNAME%\setupqa.bat to setup environment variables (in a console)
-		
-		-- OR --
-	
-		Run WCONFIG \\SERVER\QA\wisp\bin\wconfig.exe (RUN AS ADMINSTRATOR)
-		
-			Import test\config\testacu_%COMPUTERNAME%.reg
-		
-			-- OR --
-			
-		SERVER	  = \\%COMPUTERNAME%
-		WISP Dir  = \\%COMPUTERNAME%\QA\wisp
-		- GENERAL (TAB)
-		WISPCONFIG =\\%COMPUTERNAME%\TESTACU\CONFIG 
-		PATH = \\%COMPUTERNAME%\QA\wisp\bin;
-		       \\%COMPUTERNAME%\QA\wisp\acu;
-		       \\%COMPUTERNAME%\TESTACU;
-		       \\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;
-		       \\%COMPUTERNAME%\QA\kcsiacu;
-		       C:\Windows;
+        ___  Run \test\QA\wisp\bin\WCONFIG.EXE (as Administrator)
+             ___  (RESET) if already configured
+             ___  WISP Server: (name of test machine)
+             ___  Accept defaults...
 
-		PATH = \\%COMPUTERNAME%\QA\WISP\bin;\\%COMPUTERNAME%\QA\wisp\acu;\\%COMPUTERNAME%\TESTACU;\\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;\\%COMPUTERNAME%\QA\kcsiacu;
+        ___  Run \test\QA\wisp\bin\WLICENSE.EXE
+        --OR--
+        ___  Copy \test\machine\%COMPUTERNAME%\license.txt to \test\QA\wisp\license.txt
+             (This is usually done by INSTALL_QA project)
+             
 
-		- MESSAGE (TAB)
-		SHAREDIR = \\%COMPUTERNAME%\TESTACU\MESSAGE
++    SETUP ${WISPCONFIG} DIRECTORY
 
-	___	Test configuration:
+    Copy the config files.
+    ___ Copy \test\machine\%COMPUTERNAME%\config_nt to \test\config 
 
-		run \test\QA\wisp\bin\wdiag.bat
+    
+    Configure which Acucobol runtime to use
+    ___ Edit \src\test\config\wrun.cfg and uncomment correct runtime:
+        
+            #runcbl=\\%COMPUTERNAME%\ACUDIR\BIN\wrun32.exe
+            #runcbl=\\%COMPUTERNAME%\ACUDIR\BIN\run32.exe
+            #runcbl=\\%COMPUTERNAME%\ACUDIR\BIN\crun32.exe
 
-	
+    For Testing Console Runtime:
+    ___ Edit config\OPTIONS: 
+            - Comment out #UTILSWINDOWS
+            - Uncomment CONSOLEACU
+
+
+    ___ Run \test\machine\%COMPUTERNAME%\setupqa.bat to setup environment variables (in a console)
+        
+        -- OR --
+    
+        Run WCONFIG \\SERVER\QA\wisp\bin\wconfig.exe (RUN AS ADMINSTRATOR)
+        
+            Import test\config\testacu_%COMPUTERNAME%.reg
+        
+            -- OR --
+            
+        SERVER      = \\%COMPUTERNAME%
+        WISP Dir  = \\%COMPUTERNAME%\QA\wisp
+        ### GENERAL (TAB)
+        WISPCONFIG =\\%COMPUTERNAME%\TESTACU\CONFIG 
+        PATH = \\%COMPUTERNAME%\QA\wisp\bin;
+               \\%COMPUTERNAME%\QA\wisp\acu;
+               \\%COMPUTERNAME%\TESTACU;
+               \\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;
+               \\%COMPUTERNAME%\QA\kcsiacu;
+               C:\Windows;
+
+        PATH = \\%COMPUTERNAME%\QA\WISP\bin;\\%COMPUTERNAME%\QA\wisp\acu;\\%COMPUTERNAME%\TESTACU;\\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;\\%COMPUTERNAME%\QA\kcsiacu;
+
+        ### MESSAGE (TAB)
+        SHAREDIR = \\%COMPUTERNAME%\TESTACU\MESSAGE
+
+    ___ Test configuration:
+
+        run \test\QA\wisp\bin\wdiag.bat
+
+    
 
 ################  This page is for all platforms  ####################
 
-		Windows: Open explorer 
-		to \\%COMPUTERNAME%\qa\wisp\bin\
-		or %WISPSRC%\test\QA\wisp\bin
+        Windows: Open explorer 
+        to \\%COMPUTERNAME%\qa\wisp\bin\
+        or %WISPSRC%\test\QA\wisp\bin
 
-+	SETUP DEFAULT USAGE CONSTANTS
++    SETUP DEFAULT USAGE CONSTANTS
 
-	___	Run "wshell"
+    ___ Run "wshell"
 
-		Setup USAGE CONSTANTS
-	___	(1) RUN Program or Procedure
-			PROGRAM = QA0000
-			LIBRARY = TEST		(WIN - ACU)
-			LIBRARY = TESTACU	(ACU)
-			LIBRARY = TESTMF	(MF)
-			VOLUME  = SOURCE
+        Setup USAGE CONSTANTS
+    ___ (1) RUN Program or Procedure
+            PROGRAM = QA0000
+            LIBRARY = TEST       (WIN - ACU)
+            LIBRARY = TESTACU    (ACU)
+            LIBRARY = TESTMF     (MF)
+            VOLUME  = SOURCE
 
-		Setup test programs
-	___	(1) RUN Program or Procedure
-			PROGRAM = QA0001
-			LIBRARY = TESTxxx
-			VOLUME  = SOURCE
+        Setup test programs
+    ___ (1) RUN Program or Procedure
+            PROGRAM = QA0001
+            LIBRARY = TESTxxx
+            VOLUME  = SOURCE
 
-	___	(13) Save environment
+    ___ (13) Save environment
 
-	___	(16) Exit
+    ___ (16) Exit
 
-	___	There should not be any WDIAG errors. If there
-		are serious errors they must be fixed here.
+    ___ There should not be any WDIAG errors. If there
+        are serious errors they must be fixed here.
 
-		UNIX:  $ wdiag
-		WIN32: double click on WDIAG.BAT (or run from Start menu)
-
-
-+	First check-out general functionality.
-
-	___     Run "wshell"
-		WIN:	(1) Run QASTART in TEST    on SOURCE
-		ACU:	(1) Run QASTART in TESTACU on SOURCE
-		MF:	(1) Run QASTART in TESTMF  on SOURCE
-
-	___	HELP-KEY (^e)
-			Look for the following info:
-			__  Workstation number
-			__  Date and time
-			__  Username
-			__  System name 
-			__  Progam: SAMPLE
-			__  Screen: MAIN-SCREEN
-
-	___	(32) Copyright Screen.	(Verify the Version number)
-		(31) Internal info
-		(30) Usage Constants
-		(29) Environment info
-
-	___	(5) Manage FILES/LIBRARIES
+        UNIX:  $ wdiag
+        WIN32: double click on WDIAG.BAT (or run from Start menu)
 
 
-	___	(14) PRINT PROGRAM Screen.
-		(15) PRINT COMMAND Screen.
-		Check the printouts for correctness.
-		Files are id#### LIBSPOOL VOLSPL.
-		Verify the file	has been submitted to a print queue.
++    First check-out general functionality.
 
-		(9) Use UTILITIES
-	___	(2) DISPLAY a file
-		    FILE = XYZ     LIBRARY = LIBIN    VOLUME = VOLIN
+    ___  Run "wshell"
+        WIN:    (1) Run QASTART in TEST    on SOURCE
+        ACU:    (1) Run QASTART in TESTACU on SOURCE
+        MF:     (1) Run QASTART in TESTMF  on SOURCE
 
-		(9) Use UTILITIES
-	___	(3) EDIT a file
-		    FILE = SAMPLE  LIBRARY = TESTxxx  VOLUME = SOURCE
+    ___ HELP-KEY (^e)
+            Look for the following info:
+            __  Workstation number
+            __  Date and time
+            __  Username
+            __  System name 
+            __  Progam: SAMPLE
+            __  Screen: MAIN-SCREEN
 
-		(9) Use UTILITIES
-	___	(4) DISPRINT
+    ___ (32) Copyright Screen.    (Verify the Version number)
+        (31) Internal info
+        (30) Usage Constants
+        (29) Environment info
+
+    ___ (5) Manage FILES/LIBRARIES
+
+
+    ___ (14) PRINT PROGRAM Screen.
+        (15) PRINT COMMAND Screen.
+        Check the printouts for correctness.
+        Files are id#### LIBSPOOL VOLSPL.
+        Verify the file    has been submitted to a print queue.
+
+        (9) Use UTILITIES
+    ___ (2) DISPLAY a file
+            FILE = XYZ     LIBRARY = LIBIN    VOLUME = VOLIN
+
+        (9) Use UTILITIES
+    ___ (3) EDIT a file
+            FILE = SAMPLE  LIBRARY = TESTxxx  VOLUME = SOURCE
+
+        (9) Use UTILITIES
+    ___ (4) DISPRINT
  
-		(10) Configure TERMINAL.		
-	___	(2)  PSEUDO Blank Characteristics.
-		     Character=[4] 
-		     Rendition=[N]
-
-	___	(11) Enter COMMANDS  (UNIX only)
-
-		UNIX: 	$ ps
-			$ exit  (or ^d)
-
-	___	(13) SAVE environment.
-
-	___	(16) CANCEL Processing
-
-	___	(16) EXIT wshell
+        (10) Configure TERMINAL.        
+    ___ (2)  PSEUDO Blank Characteristics.
+             Character=[4] 
+             Rendition=[N]
+
+    ___ (11) Enter COMMANDS  (UNIX only)
+
+        UNIX: $ ps
+              $ exit  (or ^d)
+
+    ___ (13) SAVE environment.
+
+    ___ (16) CANCEL Processing
+
+    ___ (16) EXIT wshell
 
 
-	Do SAMPLE.WCB tests
+    Do SAMPLE.WCB tests
 
-	UNIX:
-	___	$ wproc -v		Ensure running correct version
-	___	$ wproc qastart		Run SAMPLE with procedure qastart
+    UNIX:
+    ___ $ wproc -v        Ensure running correct version
+    ___ $ wproc qastart   Run SAMPLE with procedure qastart
 
-	WIN32:
-	___	Create a Shortcut on the desktop using Command line:
-		   "C:\WISPxxx\BIN\WPROC \\SERVER\TESTACU\QASTART"
-		   
-		[ ] startqa.bat
-			D:\work\shellstream\WISP\src\test\QA\wisp\bin\wproc.exe \\BLACKCLAW\TESTACU\QASTART
+    WIN32:
+    ___ Create a Shortcut on the desktop using Command line:
+        "C:\WISPxxx\BIN\WPROC \\SERVER\TESTACU\QASTART"
+           
+        [ ] startqa.bat
+            D:\work\shellstream\WISP\src\test\QA\wisp\bin\wproc.exe \\BLACKCLAW\TESTACU\QASTART
 
-	___	Double click on icon to start.
-		
+    ___ Double click on icon to start.
+        
 
-	(9) WL0000 - LIBRARY TESTS
+    (9) WL0000 - LIBRARY TESTS
 
-		Run each of the WLxxxx tests from the menu.
+        Run each of the WLxxxx tests from the menu.
 
-	___	(01) WL0010  - WISPPLAT
-	___	(02) WL0011  - USESOFTLINK/USEHARDLINK
-	___	(03) WL0012  - BITPACK
-	___	(04) WL0013  - BITUNPK
-	___	(05) WL0014  - HEXPACK
-	___	(06) WL0015  - HEXUNPK
-	___	(07) WL0016  - DATE/DATE2/4/6
-	___	(08) WL0017  - DAY
-	___	(09) WL0018  - MESSAGE  (Takes a few seconds to finish)
-        ___          (1)  WL0018 (SINGLE USER)
+    ___ (01) WL0010  - WISPPLAT
+    ___ (02) WL0011  - USESOFTLINK/USEHARDLINK
+    ___ (03) WL0012  - BITPACK
+    ___ (04) WL0013  - BITUNPK
+    ___ (05) WL0014  - HEXPACK
+    ___ (06) WL0015  - HEXUNPK
+    ___ (07) WL0016  - DATE/DATE2/4/6
+    ___ (08) WL0017  - DAY
+    ___ (09) WL0018  - MESSAGE  (Takes a few seconds to finish)
+        ___ (1)  WL0018 (SINGLE USER)
 
-			The WL0018A & B test the MESSAGE routine automatically.
-			Each program opens a message port then they handshake and
-			send and receive 100 numbered messages.
-        ___          (2)  WL0018A (TWO USER - A)
-        ___          (3)  WL0018B (TWO USER - B)
-			Once both programs have started, press Enter on both
-			screens and they should run for a few seconds (10-15) then
-			report that they sent 100 messages.
+            The WL0018A & B test the MESSAGE routine automatically.
+            Each program opens a message port then they handshake and
+            send and receive 100 numbered messages.
+        ___ (2)  WL0018A (TWO USER - A)
+        ___ (3)  WL0018B (TWO USER - B)
+            Once both programs have started, press Enter on both
+            screens and they should run for a few seconds (10-15) then
+            report that they sent 100 messages.
 
-	___	(10) WL0019  - SEARCH
-	___	(11) WL0020  - SORT
-	___	(12) WL0021  - STRING
-	___	(13) WL0022  - SET/EXTRACT
-	___	(14) WL0023  - bit tests
-	___	(15) WL0024  - UPPER
+    ___ (10) WL0019  - SEARCH
+    ___ (11) WL0020  - SORT
+    ___ (12) WL0021  - STRING
+    ___ (13) WL0022  - SET/EXTRACT
+    ___ (14) WL0023  - bit tests
+    ___ (15) WL0024  - UPPER
 
-	___	(17) WL0025  - WGETCURPOS (w2rowcol)
-	___	(18) WL0026  - W99TOX (xx2byte)
-	___	(19) WL0027  - PUTPARM
-			Test 6  (ENTER)
-				Check FILE = BBB  (16) Exit
-			Test 7  (ENTER)
-				Check FILE = ___  (16) Exit
-			Test 11 (ENTER)
-				Check FILE = ___  (16) Exit
-			Test 19 (ENTER)
-				Check FILE = DDD  (16) Exit
-			(ENTER) EXIT Tests
-			
-	___	(20) WL0028  - FILECOPY
-	___	(21) WL0029  - SCRATCH
-	___	(22) WL0030  - SUBMIT
-	___	(23) WL0031  - SETFILE
-	___	(24) WL0032  - RENAME
-	___	(25) WL0033  - FIND
-	___	(26) WL0034  - LINK
-	___	(27) WL0035  - READVTOC
+    ___ (17) WL0025  - WGETCURPOS (w2rowcol)
+    ___ (18) WL0026  - W99TOX (xx2byte)
+    ___ (19) WL0027  - PUTPARM
+            Test 6  (ENTER)
+                Check FILE = BBB  (16) Exit
+            Test 7  (ENTER)
+                Check FILE = ___  (16) Exit
+            Test 11 (ENTER)
+                Check FILE = ___  (16) Exit
+            Test 19 (ENTER)
+                Check FILE = DDD  (16) Exit
+            (ENTER) EXIT Tests
+            
+    ___ (20) WL0028  - FILECOPY
+    ___ (21) WL0029  - SCRATCH
+    ___ (22) WL0030  - SUBMIT
+    ___ (23) WL0031  - SETFILE
+    ___ (24) WL0032  - RENAME
+    ___ (25) WL0033  - FIND
+    ___ (26) WL0034  - LINK
+    ___ (27) WL0035  - READVTOC
 
-		(16) EXIT
+        (16) EXIT
 
-	(10) WC0000 - COBOL TESTS
+    (10) WC0000 - COBOL TESTS
 
-		Run each of the WCxxxx tests from the menu.
+        Run each of the WCxxxx tests from the menu.
 
-	___	(01) WC0001  - Field Wrapping
-	___	(02) WC0002  - RETURN-CODE
-	___	(03) WC0003  - ACCEPT VERB
-	___	(04) WC0004  - ##TEMP FILES
+    ___ (01) WC0001  - Field Wrapping
+    ___ (02) WC0002  - RETURN-CODE
+    ___ (03) WC0003  - ACCEPT VERB
+    ___ (04) WC0004  - ##TEMP FILES
 
-		(16) EXIT
+        (16) EXIT
 
-	(11) WT0000 - TRANSLATOR TESTS
+    (11) WT0000 - TRANSLATOR TESTS
 
-		Run each of the WTxxxx tests from the menu.
+        Run each of the WTxxxx tests from the menu.
 
-	___	(02) WT0011  - ACCEPT DATE
-	___	(03) WT0012  - MAX SCREEN FIELDS
+    ___ (02) WT0011  - ACCEPT DATE
+    ___ (03) WT0012  - MAX SCREEN FIELDS
 
-		(16) EXIT
+        (16) EXIT
 
-	(6) COBOL TESTS
+    (6) COBOL TESTS
 
-	___	(1) DISPLAY VERB.	Should display a message.
+    ___ (1) DISPLAY VERB.     Should display a message.
 
-	___	(3) SORT VERB.		Check SORTED FILE SQ field.
+    ___ (3) SORT VERB.        Check SORTED FILE SQ field.
 
-	___	(4) CONDITIONAL TEST.	WISP_CODE conditions.  Press (ENTER).
+    ___ (4) CONDITIONAL TEST  WISP_CODE conditions.  Press (ENTER).
 
-	___	(6) STOP VERB
+    ___ (6) STOP VERB
 
-		___	"TEST OF STOP VERB"
+        ___ "TEST OF STOP VERB"
 
-		___	"3"
+        ___ "3"
 
 
-	___	(7) MOVE WITH CONVERSION
+    ___ (7) MOVE WITH CONVERSION
 
-		___ 	(1) Auto Test
-			(16) EXIT test
+        ___  (1) Auto Test
+            (16) EXIT test
 
-		Exit all the way out to the shell
-		(16) to EXIT  COBOL TEST
-		(16) to EXIT  SAMPLE
-		(16) to EXIT  QASTART
+        Exit all the way out to the shell
+        (16) to EXIT  COBOL TEST
+        (16) to EXIT  SAMPLE
+        (16) to EXIT  QASTART
 
 
-	UNIX:
+    UNIX:
 
-	___	$ wrun SAMPLE
+    ___ $ wrun SAMPLE
 
-	WIN32:
-		Create a Shortcut on the desktop using Command line:
-	___	   "C:\WISPxxx\BIN\WRUN SAMPLE"
+    WIN32:
+        Create a Shortcut on the desktop using Command line:
+    ___ "C:\WISPxxx\BIN\WRUN SAMPLE"
 
-	___	Double click on icon to start.
+    ___ Double click on icon to start.
 
-	(3) FILE I/O TESTS	(QAFILEIO)
+    (3) FILE I/O TESTS    (QAFILEIO)
 
-		In this section we are going to test all the file I/O
-		functionality.
+        In this section we are going to test all the file I/O
+        functionality.
 
-		FILE-A tests.		Assume these work if no errors
-					are reported.
+        FILE-A tests.        Assume these work if no errors
+                             are reported.
 
-+	___	(1) CREATE FILE-A AND WRITE IT
-					Should create AFILE LIBOUT VOLOUT
-+	___	(4) DELETE RECORDS FROM FILE-A
-+	___	(1) CREATE FILE-A AND WRITE IT
-			Should get a PF3 getparm screen.
-			Change FILE from AFILE to AAA and press Enter.
-					Should create AAA   LIBOUT VOLOUT
++    ___ (1) CREATE FILE-A AND WRITE IT
+             Should create AFILE LIBOUT VOLOUT
++    ___ (4) DELETE RECORDS FROM FILE-A
++    ___ (1) CREATE FILE-A AND WRITE IT
+             Should get a PF3 getparm screen.
+             Change FILE from AFILE to AAA and press Enter.
+             Should create AAA   LIBOUT VOLOUT
 
-		SEQUENTIAL FILE tests.
+        SEQUENTIAL FILE tests.
 
-+	___	(6) CREATE A SEQUENTIAL FILE 
-					Leave the lib and vol blank.
-					Should create SEQFILE LIBOUT VOLOUT
-			(16) back to menu.
-	
-	___	(22) OPEN EXTEND SEQUENTIAL (should be no getparm)
-	___	(24) CLOSE SEQUENTIAL	    
-	___	(23) OPEN OUTPUT SEQUENTIAL (getparm - Press PF3)
-	___	(24) CLOSE SEQUENTIAL	    
++    ___ (6) CREATE A SEQUENTIAL FILE 
+                    Leave the lib and vol blank.
+                    Should create SEQFILE LIBOUT VOLOUT
+            (16) back to menu.
+    
+    ___ (22) OPEN EXTEND SEQUENTIAL (should be no getparm)
+    ___ (24) CLOSE SEQUENTIAL        
+    ___ (23) OPEN OUTPUT SEQUENTIAL (getparm - Press PF3)
+    ___ (24) CLOSE SEQUENTIAL        
 
-+	___	(6)  (again): At PF3 option FILE=SEQFILE1
-			(16) back to menu.
++    ___ (6)(again): At PF3 option FILE=SEQFILE1
+            (16) back to menu.
 
-+	___	(25) WRITE SEQUENTIAL	(ENTER) - File not OPEN
-					Should ERROR getparm  (85) [48][02]
-							      (74) [91][02]
-		(16) to EXIT program.
++    ___ (25) WRITE SEQUENTIAL    (ENTER) - File not OPEN
+                    Should ERROR getparm  (85) [48][02]
+                                          (74) [91][02]
+        (16) to EXIT program.
 
-+	___	UNIX: 	echo $?			Should be 16
-			wretcode		Should return 16
++    ___ UNIX: echo $?         Should be 16
+               wretcode        Should return 16
 
 
-	___	wshell
-		(1) Run SAMPLE in TESTxxx on SOURCE
+    ___ wshell
+        (1) Run SAMPLE in TESTxxx on SOURCE
 
-	Run SAMPLE and (3) FILE I/O TESTS
+    Run SAMPLE and (3) FILE I/O TESTS
 
-		FILE-B tests.	These test all the INDEXED file I/O operations.
-				Check FILE-B-STAT field after each operation.
+        FILE-B tests.    These test all the INDEXED file I/O operations.
+                         Check FILE-B-STAT field after each operation.
 
-	___	(2) Auto Test FILE-B
-		    (1) Create and Auto Test FILE-B
-		    (16) Exit
+    ___ (2) Auto Test FILE-B
+            (1) Create and Auto Test FILE-B
+            (16) Exit
 
-	___	(3) SORT SORT-B-FILE
+    ___ (3) SORT SORT-B-FILE
 
-	___	Display BFILESEQ in LIBOUT on VOLOUT with (11) record width=92
-		and ensure it is in descending order. (7,8,3,2,4,5,6,1)
-			(16) EXIT Display
+    ___ Display BFILESEQ in LIBOUT on VOLOUT with (11) record width=92
+        and ensure it is in descending order. (7,8,3,2,4,5,6,1)
+            (16) EXIT Display
 
-	___	(15) OPEN FILE-B INPUT	Press (ENTER)  (file status 00)
-	___	(11) WRITE FILE-B  (ENTER)   		        (85) [48]
-								(74) [90][01]
-				File status WRITE NOT ALLOWED
-				File OPEN in wrong mode.
+    ___ (15) OPEN FILE-B INPUT    Press (ENTER)  (file status 00)
+    ___ (11) WRITE FILE-B        (ENTER)         (85) [48]
+                                                 (74) [90][01]
+                File status WRITE NOT ALLOWED
+                File OPEN in wrong mode.
 
-	___	(16) to EXIT program.
-		Program ABORTED or was CANCELLED
+    ___ (16) to EXIT program.
+        Program ABORTED or was CANCELLED
 
 
-	___	wshell
-		(1) Run SAMPLE in TESTxxx on SOURCE
+    ___ wshell
+        (1) Run SAMPLE in TESTxxx on SOURCE
 
-	Run SAMPLE and (3) FILE I/O TESTS
+    Run SAMPLE and (3) FILE I/O TESTS
 
-	___	(15) OPEN FILE-B INPUT   
-	___	(15) OPEN FILE-B INPUT  Error-getparm  	(85) [41]
-					Already open	(74) [92][00]
+    ___ (15) OPEN FILE-B INPUT   
+    ___ (15) OPEN FILE-B INPUT  Error-getparm   (85) [41]
+                                Already open    (74) [92][00]
 
-	___	(16) to EXIT program.
-		Program ABORTED or was CANCELLED
+    ___ (16) to EXIT program.
+        Program ABORTED or was CANCELLED
 
 
-	___	wshell
-		(1) Run SAMPLE in TESTxxx on SOURCE
+    ___ wshell
+        (1) Run SAMPLE in TESTxxx on SOURCE
 
 
-	Run SAMPLE and (3) FILE I/O TESTS
+    Run SAMPLE and (3) FILE I/O TESTS
 
-		RECORD & FILE LOCKING TESTS
-	
-		FILE-B record and file locking tests. Start two windows
-		running QAFILEIO. In Window-1 run the Window-1 Tests
-		and in Window-2 run the Window-2 Tests.
+        RECORD & FILE LOCKING TESTS
+    
+        FILE-B record and file locking tests. Start two windows
+        running QAFILEIO. In Window-1 run the Window-1 Tests
+        and in Window-2 run the Window-2 Tests.
 
-		**** NOTE **** If you don't have 2 windows for this
-		test then only run the Window-1 tests.
+        **** NOTE **** If you don't have 2 windows for this
+        test then only run the Window-1 tests.
 
-	___	(2) Auto Test FILE-B
-		    (2) Run Window-1 Tests
-		    (3) Run Window-2 Tests
+    ___ (2) Auto Test FILE-B
+            (2) Run Window-1 Tests
+            (3) Run Window-2 Tests
 
-	STEP 01	<W1> OPEN FILE-B I-O  
-	STEP 02	<W2> OPEN FILE-B I-O  File-getparm FILE LOCKED
+    STEP 01    <W1> OPEN FILE-B I-O  
+    STEP 02    <W2> OPEN FILE-B I-O  File-getparm FILE LOCKED
 
-	STEP 03	<W1> CLOSE FILE-B
-	STEP 04	<W2> (ENTER) to retry OPEN I-O
-	STEP 05	<W1> OPEN FILE-B SHARED file-getparm FILE LOCKED
+    STEP 03    <W1> CLOSE FILE-B
+    STEP 04    <W2> (ENTER) to retry OPEN I-O
+    STEP 05    <W1> OPEN FILE-B SHARED file-getparm FILE LOCKED
 
-	STEP 06	<W2> CLOSE FILE-B
-	STEP 07	<W1> (ENTER) to retry OPEN SHARED
-	STEP 08	<W2> OPEN FILE-B SHARED  (success both have it opened)
+    STEP 06    <W2> CLOSE FILE-B
+    STEP 07    <W1> (ENTER) to retry OPEN SHARED
+    STEP 08    <W2> OPEN FILE-B SHARED  (success both have it opened)
 
-	STEP 09	<W2> READ HOLD (for REWRITE) key=AAAA (Record is now locked)
-	STEP 10	<W1> READ                    key=AAAA (should succeed)	(16) EXIT
-	STEP 11	<W1> READ HOLD               key=BBBB (should succeed)
+    STEP 09    <W2> READ HOLD (for REWRITE) key=AAAA (Record is now locked)
+    STEP 10    <W1> READ                    key=AAAA (should succeed)    (16) EXIT
+    STEP 11    <W1> READ HOLD               key=BBBB (should succeed)
 
-	STEP 12	<W1> READ HOLD (for DELETE)  key=AAAA (should wait)
-	STEP 13	<W2> REWRITE  key=AAAA       B-VALUE-2="NEW TEXT HERE"
-		              	  <W1> 	Should get modified record
+    STEP 12    <W1> READ HOLD (for DELETE)  key=AAAA (should wait)
+    STEP 13    <W2> REWRITE  key=AAAA       B-VALUE-2="NEW TEXT HERE"
+                            <W1>     Should get modified record
 
-	STEP 14	<W2> READ HOLD               key=AAAA (should wait)
-	STEP 15	<W1> DELETE   key=AAAA	     <W2> file-status 23 NOT FOUND
+    STEP 14    <W2> READ HOLD               key=AAAA (should wait)
+    STEP 15    <W1> DELETE   key=AAAA         <W2> file-status 23 NOT FOUND
 
-	STEP 16	<W1> READ HOLD		     key=BBBB (should succeed)
-	STEP 17	<W2> READ HOLD		     key=BBBB (should wait)
+    STEP 16    <W1> READ HOLD             key=BBBB (should succeed)
+    STEP 17    <W2> READ HOLD             key=BBBB (should wait)
 
-	STEP 18	<W1> FREE ALL		     <W2> Should now get record
-	STEP 19	<W2> FREE ALL		     No message
+    STEP 18    <W1> FREE ALL             <W2> Should now get record
+    STEP 19    <W2> FREE ALL             No message
 
-	STEP 20	<W1> READ HOLD		     key=BBBB	(should succeed)
-	STEP 21	<W2> READ TIMEOUT	     key=BBBB 
-					Should wait 5 secs then come back
-					with **** TIMEOUT **** filestatus 
-					REC LOCKED (92 or 99 or 9D)
+    STEP 20    <W1> READ HOLD             key=BBBB    (should succeed)
+    STEP 21    <W2> READ TIMEOUT          key=BBBB 
+                    Should wait 5 secs then come back
+                    with **** TIMEOUT **** filestatus 
+                    REC LOCKED (92 or 99 or 9D)
 
-		Next we try a non-timeout this is tricky and you need to
-		be fast. <W1> has BBBB locked now, <W2> is going to try
-		to read and lock BBBB, <W1> will read and lock CCCC
-		this will free BBBB and allow <W2> to lock it.
+        Next we try a non-timeout this is tricky and you need to
+        be fast. <W1> has BBBB locked now, <W2> is going to try
+        to read and lock BBBB, <W1> will read and lock CCCC
+        this will free BBBB and allow <W2> to lock it.
 
-	STEP 22	<W2> READ TIMEOUT key=BBBB
-	STEP 23	<W1> READ HOLD    key=CCCC *** QUICKLY ***
+    STEP 22    <W2> READ TIMEOUT key=BBBB
+    STEP 23    <W1> READ HOLD    key=CCCC *** QUICKLY ***
 
-		Window <W1> should get CCCC then a moment later <W2> should
-		get BBBB without a TIMEOUT.
+        Window <W1> should get CCCC then a moment later <W2> should
+        get BBBB without a TIMEOUT.
 
-	STEP 24	<W1> READ HOLD   key=AAAA INVALID KEY 23 (was deleted)
-		This should unlock CCCC.
-	STEP 25	<W2> READ HOLD   key=CCCC 	(should succeed)
+    STEP 24    <W1> READ HOLD   key=AAAA INVALID KEY 23 (was deleted)
+        This should unlock CCCC.
+    STEP 25    <W2> READ HOLD   key=CCCC     (should succeed)
 
-	STEP 26	<W2> (10) CLOSE FILE-B   	(should unlock CCCC)
-	STEP 27	<W1> (10) CLOSE FILE-B
+    STEP 26    <W2> (10) CLOSE FILE-B       (should unlock CCCC)
+    STEP 27    <W1> (10) CLOSE FILE-B
 
-		For manual record locking ensure that READ and WRITE don't
-		release the record lock.  (QA testing ACU only)
+        For manual record locking ensure that READ and WRITE don't
+        release the record lock.  (QA testing ACU only)
 
-	___	<W1> (9) OPEN FILE-B SHARED  (success)
-	___	<W2> (9) OPEN FILE-B SHARED  (success both have it opened)
-	___	<W2> (19) READ HOLD           key=BBBB (should succeed)
-	___	<W1> (19) READ HOLD	      key=BBBB (should wait)
-	___	<W2> (12) READ                key=CCCC (succeed) 
-						       (<W1> still waits)
-			(16) EXIT read loop
-	___	<W2> (11) WRITE               key=XXXX (succeed) 
-						       (<W1> still waits)
-			(16) EXIT write loop
-	___	<W2> (9) OPEN FILE-B SHARED  (Abort (16) <W1> gets BBBB)
-	___	<W1> (21) READ HOLD DELETE    key=XXXX (succeed) 
-	___	<W1> (10) CLOSE FILE-B       (succeed)
-						       						       
+    ___ <W1> (9)  OPEN FILE-B SHARED  (success)
+    ___ <W2> (9)  OPEN FILE-B SHARED  (success both have it opened)
+    ___ <W2> (19) READ HOLD           key=BBBB (should succeed)
+    ___ <W1> (19) READ HOLD           key=BBBB (should wait)
+    ___ <W2> (12) READ                key=CCCC (succeed) 
+                                     (<W1> still waits)
+             (16) EXIT read loop
+    ___ <W2> (11) WRITE               key=XXXX (succeed) 
+                                     (<W1> still waits)
+             (16) EXIT write loop
+    ___ <W2> (9)  OPEN FILE-B SHARED  (Abort (16) <W1> gets BBBB)
+    ___ <W1> (21) READ HOLD DELETE    key=XXXX (succeed) 
+    ___ <W1> (10) CLOSE FILE-B        (succeed)
+                                                              
 
-		We are finished the lock tests, EXIT from <W2>.
+        We are finished the lock tests, EXIT from <W2>.
 
 
-	QAFILEIO - Screen 2
+    QAFILEIO - Screen 2
 
-		(32) NEXT SCREEN
+    (32) NEXT SCREEN
 
-	___	(1) SEQ/DYN LOGGING	Should give three screens, an OPEN
-					WRITE and CLOSE. Each screen shows
-					the file status, 05 is fine for
-					the OPEN.
-					Run three times waiting a minute
-					between each one. This will write
-					three timestamps out to the file.
-	___	DISPLAY file (1) file=@TRNSLOG lib=@LOGFIL@ vol=VOLOUT
-	                (16) Exit DISPLAY
-			(16) Exit SES/DYN LOGGING Test
+    ___ (1) SEQ/DYN LOGGING    Should give three screens, an OPEN
+                    WRITE and CLOSE. Each screen shows
+                    the file status, 05 is fine for
+                    the OPEN.
+                    Run three times waiting a minute
+                    between each one. This will write
+                    three timestamps out to the file.
+    ___ DISPLAY file (1) file=@TRNSLOG lib=@LOGFIL@ vol=VOLOUT
+                    (16) Exit DISPLAY
+            (16) Exit SES/DYN LOGGING Test
 
-	___	(Set PRINTMODE = Keep) -- (^E) HELP (3) SET PRINT Defaults
+    ___ (Set PRINTMODE = Keep) -- (^E) HELP (3) SET PRINT Defaults
 
-	___	(2) OPEN OUT PRINT WRITE CLOSE
-					Leave lib & vol blank, it should
-					use LIBSPOOL and VOLSPL.
-	___	DISPLAY file (1) file=PRTFILE lib=LIBSPOOL vol=VOLSPL  
-		It was written with AFTER ADVANCING PAGE and 5 LINES.
-	                (16) Exit DISPLAY
+    ___ (2) OPEN OUT PRINT WRITE CLOSE
+                    Leave lib & vol blank, it should
+                    use LIBSPOOL and VOLSPL.
+    ___ DISPLAY file (1) file=PRTFILE lib=LIBSPOOL vol=VOLSPL  
+        It was written with AFTER ADVANCING PAGE and 5 LINES.
+                    (16) Exit DISPLAY
 
-	___	(2) OPEN OUT PRINT WRITE CLOSE (again)
-	            ********
-		    At the PF3 screen change FILE=PRTFILE2. (Needed later)
-		    ********
-		    (ENTER) Exit Test
+    ___ (2) OPEN OUT PRINT WRITE CLOSE (again)
+                ********
+            At the PF3 screen change FILE=PRTFILE2. (Needed later)
+            ********
+            (ENTER) Exit Test
 
-	___	(3) OPEN OUTPUT PRINT FILE	(PF3 to continue)(ENTER)
-	___	(4) CLOSE PRINT FILE		
+    ___ (3) OPEN OUTPUT PRINT FILE    (PF3 to continue)(ENTER)
+    ___ (4) CLOSE PRINT FILE        
 
-	___	(5) OPEN EXTEND PRINT FILE	(NO PF3, it's EXTEND)
-	___	(4) CLOSE PRINT FILE		
+    ___ (5) OPEN EXTEND PRINT FILE    (NO PF3, it's EXTEND)
+    ___ (4) CLOSE PRINT FILE        
 
-	___	(6) OPEN EXT PRINT WRITE CLOSE	
+    ___ (6) OPEN EXT PRINT WRITE CLOSE    
 
-	___	(7) SUBS SCREEN/PRINT EXTEND	(Should print it)
-			This one uses the "SCREEN" and "PRINT" subs to 
-			create a print file then extend it.  You will see
-			a screen image and there should be a line following
-			it that has a name and timestamp.
+    ___ (7) SUBS SCREEN/PRINT EXTEND    (Should print it)
+            This one uses the "SCREEN" and "PRINT" subs to 
+            create a print file then extend it.  You will see
+            a screen image and there should be a line following
+            it that has a name and timestamp.
 
-+	___	(13) CREATE A LARGE FILE (Takes a couple seconds)
++    ___ (13) CREATE A LARGE FILE (Takes a couple seconds)
 
-+	___	(14) CREATE EMPTY Files (ENTER) (ENTER)
++    ___ (14) CREATE EMPTY Files (ENTER) (ENTER)
 
-+	___	(15) CREATE LIBSAM Files (Creates each type of data file)
++    ___ (15) CREATE LIBSAM Files (Creates each type of data file)
 
-+	___	(26) LOAD ALTVAR8 (IDX8) -- (MF ONLY may error)
++    ___ (26) LOAD ALTVAR8 (IDX8) -- (MF ONLY may error)
 
-		(16) to EXIT FILE I/O TESTS
+    (16) to EXIT FILE I/O TESTS
 
 
-		
-	(4) SCREEN I/O TESTS (QASCREEN)
+        
+    (4) SCREEN I/O TESTS (QASCREEN)
 
-		This section tests all the screen I/O functionality.
+        This section tests all the screen I/O functionality.
 
-+	___	(1) DISPLAY A COMPLEX SCREEN.
-		___  Enter XXX in NO-ECHO FIELD
-		___  Enter one valid and one invalid range.
-		___  Enter a letter in a numeric field
++    ___ (1) DISPLAY A COMPLEX SCREEN.
+        ___  Enter XXX in NO-ECHO FIELD
+        ___  Enter one valid and one invalid range.
+        ___  Enter a letter in a numeric field
 
-	___	(2) TRY THE PF KEYS.  		try all PF keys 1-32
+    ___ (2) TRY THE PF KEYS.          try all PF keys 1-32
          
-	___	(4) TEST COMPLEX MUTIPLE DIMENSIONS. (3D table)
-					Just see that it displays.
+    ___ (4) TEST COMPLEX MUTIPLE DIMENSIONS. (3D table)
+                    Just see that it displays.
 
-+		(7) DISPLAY AND READ TOTAL TEST.  This tests all the clauses
-		    of DISPLAY AND READ. It is run repeatedly from a loop.
-	___	    Press (1)	message NO MODS WERE MADE ON THIS SCREEN
-	___	    Rerun (2) 	message NO MODS WERE MADE ON THIS SCREEN
-	___	    Rerun (3)	message ON-PFKEY: PFKEY 03 WAS PRESSED
-	___	    Rerun (4)	message ON-PFKEY: PFKEY 04 WAS PRESSED
++        (7) DISPLAY AND READ TOTAL TEST.  This tests all the clauses
+            of DISPLAY AND READ. It is run repeatedly from a loop.
+    ___     Press (1)    message NO MODS WERE MADE ON THIS SCREEN
+    ___     Rerun (2)    message NO MODS WERE MADE ON THIS SCREEN
+    ___     Rerun (3)    message ON-PFKEY: PFKEY 03 WAS PRESSED
+    ___     Rerun (4)    message ON-PFKEY: PFKEY 04 WAS PRESSED
 
-	___	    Rerun (ENTER) should beep
-	___	    Enter "NO " (1)  should end with no message
-	___	    Rerun enter "YES" (3) 
-				message ON-PFKEY: PFKEY 03 WAS PRESSED
-	___	    Rerun, field should still say "NO "
-	___	    Enter "XXX" (1) field should blink
-	___	    (3) should end with 
-				message ON-PFKEY: PFKEY 03 WAS PRESSED
-		    (16) Exit loop
+    ___     Rerun (ENTER) should beep
+    ___     Enter "NO " (1)  should end with no message
+    ___     Rerun enter "YES" (3) 
+                message ON-PFKEY: PFKEY 03 WAS PRESSED
+    ___     Rerun, field should still say "NO "
+    ___     Enter "XXX" (1) field should blink
+    ___     (3) should end with 
+                message ON-PFKEY: PFKEY 03 WAS PRESSED
+            (16) Exit loop
 
-	___	(8) MULTIPLE COLUMNS		Should display 4 double cols
+    ___ (8) MULTIPLE COLUMNS        Should display 4 double cols
 
-	___	(9) ALL FACS TEST - see that facs display unique.
+    ___ (9) ALL FACS TEST - see that facs display unique.
 
-	___	(10) COLUMN TEST. 	Should display column twice.
-			Test the RANGE clause.
-				-100   *	(* = should fail)
-				-99
-				0
-				999
-				1000   *
-				(rest are blank)
+    ___ (10) COLUMN TEST.     Should display column twice.
+            Test the RANGE clause.
+                -100   *    (* = should fail)
+                -99
+                0
+                999
+                1000   *
+                (rest are blank)
 
     ___ (12) ADDITIONAL TESTS - QASCRN2 
      
-+		(1) ROW REWRITE & READ Test ROW oriented screen I/O
-					This will write over top of the
-					existing screen.
-	___	At row 10 **** REWRITE TEST *** Cursor should be positioned
-		at row 10 col 2.
-	___	TAB should take you to row 11 col 5. This should be 
-		BRITE MODIFIABLE enter text here.
-	___	ENTER.
- 		Row 11 should be duplicated on row 12 but DIM NO-MOD.
-	___	ENTER.
-		Should Row 16 message CENTER CURSOR (blinking+brite), 
-		cursor should be centered on screen row 12 col 40. 
-	___	ENTER.
-		Cursor should postion row 1 col 40 with no other changes
-		on the screen (write order-area only test). 
-	___	ENTER 
-		Screen should be repainted.
++        (1) ROW REWRITE & READ Test ROW oriented screen I/O
+                    This will write over top of the
+                    existing screen.
+    ___ At row 10 **** REWRITE TEST *** Cursor should be positioned
+        at row 10 col 2.
+    ___ TAB should take you to row 11 col 5. This should be 
+        BRITE MODIFIABLE enter text here.
+    ___ ENTER.
+         Row 11 should be duplicated on row 12 but DIM NO-MOD.
+    ___ ENTER.
+        Should Row 16 message CENTER CURSOR (blinking+brite), 
+        cursor should be centered on screen row 12 col 40. 
+    ___ ENTER.
+        Cursor should postion row 1 col 40 with no other changes
+        on the screen (write order-area only test). 
+    ___ ENTER 
+        Screen should be repainted.
 
  
-		**** NOTE ****	First change your pseudo blank to a 
-				character in "N" normal rendition. 
-				(something other then underline)
+        **** NOTE ****    First change your pseudo blank to a 
+                character in "N" normal rendition. 
+                (something other then underline)
 
 
-		(2) REWRITE & READ CRT (ALL FAC).   
-		This does 4 rewrites & reads of the screen. The first 2
-		are with the MODIFIABLE clause, the second 2 with ALTERED.
-		Should be pseudo blanks in the first half of the last 2
-		lines only.	
+        (2) REWRITE & READ CRT (ALL FAC).   
+        This does 4 rewrites & reads of the screen. The first 2
+        are with the MODIFIABLE clause, the second 2 with ALTERED.
+        Should be pseudo blanks in the first half of the last 2
+        lines only.    
 
-		**** NOTE ****  Do not type over all of the pseudo blanks
-				as we need some on the screen to test
-				how the read handles them.
+        **** NOTE ****  Do not type over all of the pseudo blanks
+                as we need some on the screen to test
+                how the read handles them.
 
-	___	Enter stuff on all modifiable lines. This should test all
-		of the FAC's BLINK BOLD HIDDEN UNDERLINE DIM
-	___	"ENTER" the pseudo blanks should be replaced with spaces.
-	___	"ENTER" the pseudo blanks are back. 
-	___	"ENTER" the pseudo blanks are NOT replaced with spaces.
-		"ENTER" to end
+    ___ Enter stuff on all modifiable lines. This should test all
+        of the FAC's BLINK BOLD HIDDEN UNDERLINE DIM
+    ___ "ENTER" the pseudo blanks should be replaced with spaces.
+    ___ "ENTER" the pseudo blanks are back. 
+    ___ "ENTER" the pseudo blanks are NOT replaced with spaces.
+        "ENTER" to end
 
 
-+	___	(6) REWRITE CRT with PAUSE. 	A message should flash
++    ___ (6) REWRITE CRT with PAUSE.     A message should flash
        
 
-	___	(8) EMBEDDED FAC TEST
-		    Type over the +++++ then press (ENTER). What you typed
-		    should remain on screen.
-		    Press (ENTER) again to exit.
+    ___ (8) EMBEDDED FAC TEST
+            Type over the +++++ then press (ENTER). What you typed
+            should remain on screen.
+            Press (ENTER) again to exit.
 
-		(11) TEST MONKEY BAR MENU.  
-	___	    TAB KEY should hit all fields
-	___	    SPACEBAR should hit only menu positions   
-	___	    "F" "T" "S" "M" should take you to menu positions
-	___	    ENTER at "THIRD MENU" to test the cursor position
-		    clause. 
-	___	    (16) to EXIT
+        (11) TEST MONKEY BAR MENU.  
+    ___     TAB KEY should hit all fields
+    ___     SPACEBAR should hit only menu positions   
+    ___     "F" "T" "S" "M" should take you to menu positions
+    ___     ENTER at "THIRD MENU" to test the cursor position
+            clause. 
+    ___     (16) to EXIT
 
                  
 
 
-		(16) to exit SCRN2 tests
-		(16) to exit SCREEN tests
-
-
-	(5) WANG VSSUBS TESTS (QASUBS)
-
-		This section tests all of the Wang VSSUBS.
-
-
-		(1) READFDR tests
-		
-			*** PREREQUISITE ***
-			***(3) FILE I/O TESTS
-			***  (1)  CREATE FILE-A
-			***  (32) FILE 2 TESTS
-			***    (14) Create EMPTY Files
-			***    (15) Create LIBSAM Files
-			***    (26) LOAD ALTVAR8 (MF)
-
-	___		(8) Run the autotests.
-			- You'll be asked to check the creation date of IDXFIX.
-			- MF: ALTVAR8 may be "NOT FOUND"
-			- You will get error:
-				%READFDR-E-NOTSUP Field ID of XX is NOT SUPPORTED
-			- All the rest of the tests are automatic.
-				*** PASSED *** ALL 0135 TESTS (Acu)
-			(16) EXIT Test
-
-	___	(2) FIND
-			(8) to run the AUTOTESTS.
-			(16) EXIT
-
-+	___	(3) PUTPARM & LINK TO DISPLAY   try with both D & E
-		You can display the file XYZ in LIBIN on VOLIN.
-		Just see that the PUTPARM & LINK works don't test 
-		DISPLAY yet.  
-			(16) EXIT Display
-
-	___	(5) GETPARM 		this tests getparmbuild, displays
-					a getparm only.
-
-+	___	(6) SUBMIT  (cobol)    
-
-		*** If you only have a single user license then use 
-		*** from WSHELL (12) SUBMIT.
-
-			(ACU)	FILE=QABCKGRD  in TESTACU   on SOURCE
-			(MF)	FILE=QABCKGRD  in TESTMF    on SOURCE
-			(ENTER) to Continue			
-			Creates	BACK#### in LIBSPOOL on VOLSPL.
-			(1) DISPRINT
-+	___		Check:  TASKTYPE=B  (in file created)
-				TERMNUM=-1
-			        PROGLIB=TESTxxx  PROGVOL=SOURCE
-			(16) EXIT Display
-			(16) EXIT Disprint
-			(16) EXIT Test
-
-	___	(6) SUBMIT (proc)
-			FILE=QABCKPRC   in TESTxxx   on SOURCE
-			(ENTER) to continue
-			This will submit qabckprc.wps which will set
-				INLIB  = QABCKPRC
-				OUTLIB = Vxxxxxxx  (Task #)
-			It will then run QABCKGRD twice each
-			time setting RUNLIB = BKA1 then BKA2.
-			Next it SUBMITS qabckpc2.wps; this sets
-				INLIB  = QABCKPC2
-				OUTLIB = Vxxxxxxx  (Task #)
-			and runs QABCKGRD twice each time 
-			setting RUNLIB = BKB1 then BKB2.
-
-			(1) DISPRINT
-		___  The files BKA1xx and BKA2xx should have INLIB=QABCKPRC
-		     and have the same OUTLIBs and WORKLIBs.
-
-		___  The files BKB1xx and BKB2xx should have INLIB=QABCKPC2
-		     and have the same OUTLIBs and WORKLIBs.
-
-		___   The WORKLIBs should be different for BKA1 and BKB1.
-			(16) EXIT Display (each time)
-			(16) EXIT Disprint
-			(16) EXIT Test
-
-	___	(6) (UNIX) SUBMIT a shell script (with parameters)
-		(ACU)	FILE=QABKPACU	in TESTACU	on SOURCE
-		(MF)	FILE=QABKPMF	in TESTMF 	on SOURCE
-		Press (1) and enter 2 parmeters (the INVOL & OUTVOL)
-			NEWIN
-			NEWOUT
-		The press (ENTER), (ENTER) this will submit a script/proc
-		that set INVOL to the first paramter and OUTVOL to the
-		second parameter. It will then run QABCKGRD and create
-			BCKP#### in LIBSPOOL on VOLSPL.
-
-			(1) DISPRINT
-		___	See printout of BCKP#### LIBSPOOL VOLSPL and 
-			verify that the	INVOL=NEWIN and OUTVOL=NEWOUT.
-			(16) EXIT Display (each time)
-			(16) EXIT Disprint
-			(16) EXIT Test
+        (16) to exit SCRN2 tests
+        (16) to exit SCREEN tests
+
+
+    (5) WANG VSSUBS TESTS (QASUBS)
+
+        This section tests all of the Wang VSSUBS.
+
+
+        (1) READFDR tests
+        
+            *** PREREQUISITE ***
+            ***(3) FILE I/O TESTS
+            ***  (1)  CREATE FILE-A
+            ***  (32) FILE 2 TESTS
+            ***    (14) Create EMPTY Files
+            ***    (15) Create LIBSAM Files
+            ***    (26) LOAD ALTVAR8 (MF)
+
+    ___     (8) Run the autotests.
+            - You'll be asked to check the creation date of IDXFIX.
+            - MF: ALTVAR8 may be "NOT FOUND"
+            - You will get error:
+                %READFDR-E-NOTSUP Field ID of XX is NOT SUPPORTED
+            - All the rest of the tests are automatic.
+                *** PASSED *** ALL 0135 TESTS (Acu)
+            (16) EXIT Test
+
+    ___ (2) FIND
+            (8) to run the AUTOTESTS.
+            (16) EXIT
+
++    ___ (3) PUTPARM & LINK TO DISPLAY   try with both D & E
+        You can display the file XYZ in LIBIN on VOLIN.
+        Just see that the PUTPARM & LINK works don't test 
+        DISPLAY yet.  
+            (16) EXIT Display
+
+    ___ (5) GETPARM         this tests getparmbuild, displays
+                    a getparm only.
+
++    ___ (6) SUBMIT  (cobol)    
+
+        *** If you only have a single user license then use 
+        *** from WSHELL (12) SUBMIT.
+
+            (ACU)    FILE=QABCKGRD  in TESTACU   on SOURCE
+            (MF)     FILE=QABCKGRD  in TESTMF    on SOURCE
+            (ENTER) to Continue            
+            Creates    BACK#### in LIBSPOOL on VOLSPL.
+            (1) DISPRINT
++    ___     Check:  TASKTYPE=B  (in file created)
+                TERMNUM=-1
+                    PROGLIB=TESTxxx  PROGVOL=SOURCE
+            (16) EXIT Display
+            (16) EXIT Disprint
+            (16) EXIT Test
+
+    ___ (6) SUBMIT (proc)
+            FILE=QABCKPRC   in TESTxxx   on SOURCE
+            (ENTER) to continue
+            This will submit qabckprc.wps which will set
+                INLIB  = QABCKPRC
+                OUTLIB = Vxxxxxxx  (Task #)
+            It will then run QABCKGRD twice each
+            time setting RUNLIB = BKA1 then BKA2.
+            Next it SUBMITS qabckpc2.wps; this sets
+                INLIB  = QABCKPC2
+                OUTLIB = Vxxxxxxx  (Task #)
+            and runs QABCKGRD twice each time 
+            setting RUNLIB = BKB1 then BKB2.
+
+            (1) DISPRINT
+        ___  The files BKA1xx and BKA2xx should have INLIB=QABCKPRC
+             and have the same OUTLIBs and WORKLIBs.
+
+        ___  The files BKB1xx and BKB2xx should have INLIB=QABCKPC2
+             and have the same OUTLIBs and WORKLIBs.
+
+        ___   The WORKLIBs should be different for BKA1 and BKB1.
+            (16) EXIT Display (each time)
+            (16) EXIT Disprint
+            (16) EXIT Test
+
+    ___ (6) (UNIX) SUBMIT a shell script (with parameters)
+        (ACU)    FILE=QABKPACU    in TESTACU    on SOURCE
+        (MF)     FILE=QABKPMF     in TESTMF     on SOURCE
+        Press (1) and enter 2 parmeters (the INVOL & OUTVOL)
+            NEWIN
+            NEWOUT
+        The press (ENTER), (ENTER) this will submit a script/proc
+        that set INVOL to the first paramter and OUTVOL to the
+        second parameter. It will then run QABCKGRD and create
+            BCKP#### in LIBSPOOL on VOLSPL.
+
+            (1) DISPRINT
+        ___ See printout of BCKP#### LIBSPOOL VOLSPL and 
+            verify that the    INVOL=NEWIN and OUTVOL=NEWOUT.
+            (16) EXIT Display (each time)
+            (16) EXIT Disprint
+            (16) EXIT Test
 
-		(8) LINK
+        (8) LINK
 
-		Link testing each LINK-TYPE
+        Link testing each LINK-TYPE
 
-		FILE	 LIB	 VOL	 	TYPE
-		=======	 ======= ======  	====
+        FILE        LIB     VOL         TYPE
+        =======     ======= ======      ====
 
-	___	WSORT                       S     (16) EXIT WSORT
+    ___ WSORT                           S     (16) EXIT WSORT
 
-		Link to a non-WISP program.
-+	___	UNIX:   VI			TYPE=S	(:q!) Exit vi
-		WIN32:  NOTEPAD
-		WIN32:  prtargs
+        Link to a non-WISP program.
++    ___ UNIX:   VI            TYPE=S    (:q!) Exit vi
+         WIN32:  NOTEPAD
+         WIN32:  prtargs
 
-		Link to a shell/batch
-+	___	UNIX:  PRTARGSH		TYPE=(blank)
-		WIN32: PRTARGNT
-		
-		Args are printed
-		(ENTER) to exit prtargs
-		(16) EXIT Test
+        Link to a shell/batch
++    ___ UNIX:  PRTARGSH        TYPE=(blank)
+         WIN32: PRTARGNT
+        
+        Args are printed
+        (ENTER) to exit prtargs
+        (16) EXIT Test
 
 
-
-		(9) MESSAGE	This requires two windows <W1> and <W2>.
+
+        (9) MESSAGE    This requires two windows <W1> and <W2>.
 
-		**** NOTE ****  If you don't have 2 windows then only do
-				the tests marked with 3 asterisks (***).
+        **** NOTE ****  If you don't have 2 windows then only do
+                the tests marked with 3 asterisks (***).
 
-	___ ***	<W1>	PORT=ABCD
-			(1) (create)	RC=0
+    ___ ***    <W1>    PORT=ABCD
+            (1) (create)    RC=0
 
-	___		(5) (wait)	should wait for next message
+    ___     (5) (wait)      should wait for next message
 
-	___	<W2>	PORT=ABCD
-			MESSAGE= HI THERE
-			(3) (transmit message)
+    ___ <W2>    PORT=ABCD
+            MESSAGE= HI THERE
+            (3) (transmit message)
 
-	___		(2) (destroy)	RC=8 (task didn't create port)
+    ___     (2) (destroy)    RC=8 (task didn't create port)
 
-	___ 	<W1>	(should have recieved message)
+    ___  <W1>    (should have recieved message)
 
-	___ ***		(6) (wait with timeout)  TIME=0500 (5 seconds)
-					Move cursor off field
-					wait 5 sec then RC=8 (timeout)
+    ___ ***        (6) (wait with timeout)  TIME=0500 (5 seconds)
+                    Move cursor off field
+                    wait 5 sec then RC=8 (timeout)
 
-			PORT=ABCD
-	___ ***		(7) (Wait with key interrupt)
-					You can now type regular keys,
-					when you type an AID char (PFKey)
-					cursor should jump back. 
-					RC=12 (keyboard interrupt)
+            PORT=ABCD
+    ___ ***  (7) (Wait with key interrupt)
+                    You can now type regular keys,
+                    when you type an AID char (PFKey)
+                    cursor should jump back. 
+                    RC=12 (keyboard interrupt)
 
-	___ 		(7) (Wait with key interrupt)
-					Type a couple regular keys
-					(Switch to <W2>)
+    ___      (7) (Wait with key interrupt)
+                    Type a couple regular keys
+                    (Switch to <W2>)
 
-	___	<W2>	MESSAGE=STOP
-			(3) (transmit)	<W1> should get message and
-					should stop waiting.
+    ___ <W2>    MESSAGE=STOP
+             (3) (transmit)    <W1> should get message and
+                    should stop waiting.
 
-	___ *** <W1>	(8) (Both Key & Time)  TIME=0500 (5 seconds)
-					Type regular keys for 5 seconds
-					until timeout.
-					RC=8 (timeout)
+    ___ *** <W1>    (8) (Both Key & Time)  TIME=0500 (5 seconds)
+                    Type regular keys for 5 seconds
+                    until timeout.
+                    RC=8 (timeout)
 
-	___ 		(8) (Both Key & Time)  TIME=3000 (30 seconds)
-					Type a couple regular keys
-					(Switch to <W2>)
+    ___      (8) (Both Key & Time)  TIME=3000 (30 seconds)
+                    Type a couple regular keys
+                    (Switch to <W2>)
 
-	___	<W2>	MESSAGE=BYE
-			(3) (transmit)	<W1> should get message and
-					should stop waiting.
+    ___ <W2>    MESSAGE=BYE
+            (3) (transmit)    <W1> should get message and
+                    should stop waiting.
 
-	___ ***	<W1>	(2) (destroy)	RC=0
-			(16) EXIT Test (both windows)
+    ___ ***    <W1>    (2) (destroy)    RC=0
+            (16) EXIT Test (both windows)
 
 
-	Run SAMPLE & (5) WANG VSSUBS TESTS (QASUBS)
+    Run SAMPLE & (5) WANG VSSUBS TESTS (QASUBS)
 
 
-		(12) PRINT   file PRTFILE2 in LIBSPOOL on VOLSPL
-	
-		Do twice:
+        (12) PRINT   file PRTFILE2 in LIBSPOOL on VOLSPL
+    
+        Do twice:
 
-	___	PRINT_MODE=S DISPOSITION=DS (save)    COPY=2
-		Verify that two copies are printed and the file is
-		not deleted.
-	___	PRINT_MODE=S DISPOSITION=DX (scratch) COPY=1
-		Verify that one copy is printed and the file is deleted.
+    ___ PRINT_MODE=S DISPOSITION=DS (save)    COPY=2
+        Verify that two copies are printed and the file is
+        not deleted.
+    ___ PRINT_MODE=S DISPOSITION=DX (scratch) COPY=1
+        Verify that one copy is printed and the file is deleted.
 
-	___	(13) LINKPROC 		This will link to a shell script 
-					or DCL proc passing args. 
-			UNIX: 	FILE=PRTARGSH in TESTxxx on SOURCE
-			WIN32:	FILE=PRTARGNT in TESTACU on SOURCE
-					Set up some args (remember to set 
-					lengths) the first 0 length will
-					terminate the list. This shell 
-					script will run	the program 
-					"prtargs" which will print out 
-					the args and return.
-	___		UNIX: The script does an EXIT 123 so COMPCODE=123
+    ___ (13) LINKPROC         This will link to a shell script 
+                              or DCL proc passing args. 
+            UNIX:     FILE=PRTARGSH in TESTxxx on SOURCE
+            WIN32:    FILE=PRTARGNT in TESTACU on SOURCE
+                    Set up some args (remember to set 
+                    lengths) the first 0 length will
+                    terminate the list. This shell 
+                    script will run    the program 
+                    "prtargs" which will print out 
+                    the args and return.
+    ___     UNIX: The script does an EXIT 123 so COMPCODE=123
 
-		(14) BELL/PAUSE
-	___	BELL 	(1)	5       Number of times to ring bell,
-					some systems optimize repeats.
-	___	PAUSE	(2)	300     Hunderths of seconds to pause,
-					you should move your cursor out
-					of the field before pressing (2)
-					so you can see it pop back when
-					complete.
-			(16) EXIT Test
-			
-		(19) GETPARM
-	___	Press (1) to SETUP for the tests.
-	___	Type="I " FORM=A PRNAME=XX1	(no display PF-KEY=A)
-	___	Type="I " FORM=A PRNAME=XX2	(display FILE=GETPARM2)
-	___	Type="I " FORM=A PRNAME=XX3	(no display PF-KEY=B)
-		Press (16) to exit
+        (14) BELL/PAUSE
+    ___ BELL     (1)    5       Number of times to ring bell,
+                                some systems optimize repeats.
+    ___ PAUSE    (2)    300     Hunderths of seconds to pause,
+                                you should move your cursor out
+                                of the field before pressing (2)
+                                so you can see it pop back when
+                                complete.
+            (16) EXIT Test
+            
+        (19) GETPARM
+    ___ Press (1) to SETUP for the tests.
+    ___ Type="I " FORM=A PRNAME=XX1    (no display PF-KEY=A)
+    ___ Type="I " FORM=A PRNAME=XX2    (display FILE=GETPARM2)
+    ___ Type="I " FORM=A PRNAME=XX3    (no display PF-KEY=B)
+        Press (16) to exit
 
-		(24) SORTCALL/WISPSORT
-	___	     (8) AUTOTEST
-		     MF 4.1 will **FAIL** on IDXFIXC and ALTVAR8
-	___	On WIN32 REPEAT with and without COSTAR
+        (24) SORTCALL/WISPSORT
+    ___      (8) AUTOTEST
+             MF 4.1 will **FAIL** on IDXFIXC and ALTVAR8
+    ___ On WIN32 REPEAT with and without COSTAR
 
 
-		WSORT utility (Do this now while fresh in your mind)
-	___	(8) LINK to QASORT to create BFILEX3
+        WSORT utility (Do this now while fresh in your mind)
+    ___ (8) LINK to QASORT to create BFILEX3
 
-	___	    The script will run DISPLAY on BFILEX3 (width=92)
-		    Order should be 3, 8, 2, 7, 6, 5, 4
-		    (16) EXIT Display
-		    (16) EXIT Test
+    ___     The script will run DISPLAY on BFILEX3 (width=92)
+            Order should be 3, 8, 2, 7, 6, 5, 4
+            (16) EXIT Display
+            (16) EXIT Test
 
-	___	WCOPY utility
-		(8) LINK to QACOPY
-		    (16) EXIT Test
+    ___ WCOPY utility
+        (8) LINK to QACOPY
+            (16) EXIT Test
 
-+	___	(29) WSXIO
++    ___ (29) WSXIO
 
-		___	(9) WSXIO UPDATE
-			Type and watch the WAIT-CNT update, there should
-			be no screen I/O interruption. 
-			Press (4) to interrrupt, AID="D".
-			(ENTER) Exit
-			(16) EXIT WSXIO-SCREEN 
+        ___ (9) WSXIO UPDATE
+            Type and watch the WAIT-CNT update, there should
+            be no screen I/O interruption. 
+            Press (4) to interrrupt, AID="D".
+            (ENTER) Exit
+            (16) EXIT WSXIO-SCREEN 
 
-	___	(31) COBLINK  	Does a LINK type " " and if file is not
-				found will then do a LINK of type "S".
+    ___ (31) COBLINK      Does a LINK type " " and if file is not
+                found will then do a LINK of type "S".
 
-				On UNIX so be sure your PATH includes your 
-				current dir.
+                On UNIX so be sure your PATH includes your 
+                current dir.
 
-+		___	COBLINK to TRIGGER  (16) (Type=" " current dir)
-		___	COBLINK to TRIGGER3 (16) (Type="S" on the PATH)
++       ___ COBLINK to TRIGGER  (16) (Type=" " current dir)
+        ___ COBLINK to TRIGGER3 (16) (Type="S" on the PATH)
 
 
-+	___	(17) LOGOFF		
-			UNIX: This should really logoff.	
-			WIN32: Terminate current process chain
++    ___ (17) LOGOFF        
+            UNIX: This should really logoff.    
+            WIN32: Terminate current process chain
 
-	___	Log back on and resetup you environment.
+    ___ Log back on and resetup you environment.
 
-		UNIX
-		$ cd ../testxx
-		$ startupxxx.sh
-		$ wrun SAMPLE
+        UNIX
+        $ cd ../testxx
+        $ startupxxx.sh
+        $ wrun SAMPLE
 
 
 
-	(7) PRINTING TESTS (SAMPLE)
+    (7) PRINTING TESTS (SAMPLE)
 
-		(1) CREATE A PRINT FILE
+        (1) CREATE A PRINT FILE
 
-	___	   (12) DISPRINT   - Delete PRFILE, PRFILE2, PRFILE3
+    ___    (12) DISPRINT   - Delete PRFILE, PRFILE2, PRFILE3
 
-	___	   (1) PRNTMODE=S  Should print & delete
-	___	   (2) PRNTMODE=H  Should hold
-	___	   (3) PRNTMODE=K  Getparm - change to PRFILE2
-	___	   (4) PRNTMODE=P  Getparm - change to PRFILE3 class=Z
-		
-		   (16) EXIT 
+    ___    (1) PRNTMODE=S  Should print & delete
+    ___    (2) PRNTMODE=H  Should hold
+    ___    (3) PRNTMODE=K  Getparm - change to PRFILE2
+    ___    (4) PRNTMODE=P  Getparm - change to PRFILE3 class=Z
+        
+           (16) EXIT 
 
-		Set MODE = P
+        Set MODE = P
 
-	___	(2) CREATE TEMP PRINT FILE (ADVANCING & OVERSTRIKE)
-					TST####  in LIBSPOOL on VOLSPL
+    ___ (2) CREATE TEMP PRINT FILE (ADVANCING & OVERSTRIKE)
+                    TST####  in LIBSPOOL on VOLSPL
 
-	___	(3) CREATE A PRINT FILE WITH MULTIPLE OVERSTRIKES
-					OVERSTRK in LIBSPOOL on VOLSPL
+    ___ (3) CREATE A PRINT FILE WITH MULTIPLE OVERSTRIKES
+                    OVERSTRK in LIBSPOOL on VOLSPL
 
-	___	(5) ZERO LENGTH PRINT FILE
-					ZERO#### in LIBSPOOL on VOLSPL
-					Should not print a empty file.
+    ___ (5) ZERO LENGTH PRINT FILE
+                    ZERO#### in LIBSPOOL on VOLSPL
+                    Should not print a empty file.
 
-	___	(6) NO NAME PRINT FILE
-					samp####   in LIBSPOOL on VOLSPL
-		(12) DISPRINT
-		(16) EXIT
+    ___ (6) NO NAME PRINT FILE
+                    samp####   in LIBSPOOL on VOLSPL
+        (12) DISPRINT
+        (16) EXIT
 
-		
+        
 
-	UTILITIES
+    UTILITIES
 
-		This section tests all of the Utilities.
-		NOTE: Not all of these are available on all platforms.
+        This section tests all of the Utilities.
+        NOTE: Not all of these are available on all platforms.
 
-	WUSAGE Utility
+    WUSAGE Utility
 
-+	___	wusage version
-	___	wusage shell		Give Command Processor
-		(2) SET Usage Constants
-	___	    Change constants to invalid values XXXXX
-		(16) Exit
++   ___ wusage version
+    ___ wusage shell        Give Command Processor
+        (2) SET Usage Constants
+    ___     Change constants to invalid values XXXXX
+        (16) Exit
 
-	___	wusage read		Restore PERSONALITY
+    ___ wusage read        Restore PERSONALITY
 
-		wshell
-		(2) Set Usage Constants
-	___	    Values should be restored
+        wshell
+        (2) Set Usage Constants
+    ___     Values should be restored
 
-	___	wusage flags
-		(1) EXIT
-		
-	___	UNIX: qaflags.sh
+    ___ wusage flags
+        (1) EXIT
+        
+    ___ UNIX: qaflags.sh
 
-	___	WIN32: wshell (1) Run QAFLAGS
+    ___ WIN32: wshell (1) Run QAFLAGS
 
 
-	DISPLAY utility
+    DISPLAY utility
 
-	___	display	 Should getparm  LIBIN VOLIN  ((16) to exit)
-+	___	UNIX: display volin/libin/xyz
-					Should go directly to display
-					On UNIX stays in 80 col mode.
-	___	HELP (^e)		Menu
-+	___	(3)			Bottom of file
-+	___	(2)			Top of file
-	___	(3)  + Interrupt before done by pressing any key
-	___	(5)			Next screen
-	___	(4)			Prev screen
-		(2) Top
+    ___ display     Should getparm  LIBIN VOLIN  ((16) to exit)
++   ___ UNIX: display volin/libin/xyz
+                    Should go directly to display
+                    On UNIX stays in 80 col mode.
+    ___ HELP (^e)        Menu
++   ___ (3)            Bottom of file
++   ___ (2)            Top of file
+    ___ (3)  + Interrupt before done by pressing any key
+    ___ (5)            Next screen
+    ___ (4)            Prev screen
+        (2) Top
 
-+	___	(7)			Find -enter "add" an existing string
-	___	(8)			Find Next (repeat until end)
-	___	(2)			Top
-	___	(7)			Find -enter "zzz" a non-extent string
-	___	(2)			Top
++   ___ (7)            Find -enter "add" an existing string
+    ___ (8)            Find Next (repeat until end)
+    ___ (2)            Top
+    ___ (7)            Find -enter "zzz" a non-extent string
+    ___ (2)            Top
 
-	___	(10)			Scroll right (several times)
-	___	(9)			Scroll left
+    ___ (10)            Scroll right (several times)
+    ___ (9)            Scroll left
 
-	___	(11)			Change records size "40"
-	___	(12)			Show position
-	___	(13)			Stream mode (ON)
-	___	(13)			Stream mode (OFF)
+    ___ (11)            Change records size "40"
+    ___ (12)            Show position
+    ___ (13)            Stream mode (ON)
+    ___ (13)            Stream mode (OFF)
 
-	___	(16)			EXIT
+    ___ (16)            EXIT
 
 
 
-	KCSI CRID
+    KCSI CRID
 
-	___	Run "wshell"
+    ___ Run "wshell"
 
-	___	(1) RUN  - CONTROL
+    ___ (1) RUN  - CONTROL
 
-	___	FILE= I1        LIBRARY= CONTROL   VOLUME= VOLIN
-		(2) Create a new file
+    ___ FILE= I1        LIBRARY= CONTROL   VOLUME= VOLIN
+        (2) Create a new file
 
-	___	RECLEN   = 80
-		FILEORG  = I
-		KEYFIELD = PKEY
-		(ENTER)
-		
-	___	PATH1    = AKEY1    DUPS1  = NO
-		PATH2	 = AKEY2    DUPS2  = YES
-		(ENTER)
+    ___ RECLEN   = 80
+        FILEORG  = I
+        KEYFIELD = PKEY
+        (ENTER)
+        
+    ___ PATH1    = AKEY1    DUPS1  = NO
+        PATH2    = AKEY2    DUPS2  = YES
+        (ENTER)
 
-	___	Name    Start  Format  IntLen Decimal
-		PKEY	1      C       10     
-		AKEY1	11     C       10     
-		AKEY2	21     C       10     
-		ZONE	31     Z       10     4
-		USIGN	41     U       10     4
-		PACK	51     P        8     2
-		BIN	59     B	4          Bin Edit = 1
-		X	63     C        3          Occurs   = 06
-		(ENTER)(ENTER) after each line
-		(16) exit
+    ___ Name    Start  Format  IntLen Decimal
+        PKEY    1      C       10     
+        AKEY1   11     C       10     
+        AKEY2   21     C       10     
+        ZONE    31     Z       10     4
+        USIGN   41     U       10     4
+        PACK    51     P        8     2
+        BIN     59     B        4          Bin Edit = 1
+        X       63     C        3          Occurs   = 06
+        (ENTER)(ENTER) after each line
+        (16) exit
 
-	___	(9) DATENTRY
-	
-	___	Data file: 
-		FILE    = I1    LIBRARY = DATA     VOLUME = VOLIN	
-		Control file:
-		CTLFILE = I1    CTLLIB  = CONTROL  CTLVOL = VOLIN	
-		(2) Create data file 
+    ___ (9) DATENTRY
+    
+    ___ Data file: 
+        FILE    = I1    LIBRARY = DATA     VOLUME = VOLIN    
+        Control file:
+        CTLFILE = I1    CTLLIB  = CONTROL  CTLVOL = VOLIN    
+        (2) Create data file 
 
-	___	(3) Add Records
-		PKEY AKEY1 AKEY2 ZONE USIGN PACK BIN X1  X2
-		AAA  AAA   AAA	 100  100   100  100 100 100  (ENTER) Add
-		BBB  BBB   AAA	 200  200   200  200 200 200  (ENTER) Add
-		CCC  AAA   BBB   300  300   300  300 300 300  (ENTER) Add
-		** ERROR ** Record already on file
-		- Change AKEY1=AA2  (ENTER) Add
-		(16) exit
+    ___ (3) Add Records
+        PKEY AKEY1 AKEY2  ZONE USIGN PACK  BIN X1  X2
+        AAA  AAA   AAA     100  100   100  100 100 100  (ENTER) Add
+        BBB  BBB   AAA     200  200   200  200 200 200  (ENTER) Add
+        CCC  AAA   BBB     300  300   300  300 300 300  (ENTER) Add
+        ** ERROR ** Record already on file
+        - Change AKEY1=AA2  (ENTER) Add
+        (16) exit
 
-	___	(4) Modify Records
-		(ENTER) use primary key
-		(2) First record
-		    (5) Next, (5) Next
-		(16) exit
+    ___ (4) Modify Records
+        (ENTER) use primary key
+        (2) First record
+            (5) Next, (5) Next
+        (16) exit
 
-	___	(9) INQUIRY
-		Data file:    FILE= I1  LIBRARY= DATA    VOLUME=VOLIN	
-		(ENTER)
+    ___ (9) INQUIRY
+        Data file:    FILE= I1  LIBRARY= DATA    VOLUME=VOLIN    
+        (ENTER)
 
-		Control file: FILE= I1  LIBRARY= CONTROL VOLUME=VOLIN
-		(ENTER)
+        Control file: FILE= I1  LIBRARY= CONTROL VOLUME=VOLIN
+        (ENTER)
 
-		LIST PKEY AKEY1 AKEY2 ZONE PACK BIN USIGN
+        LIST PKEY AKEY1 AKEY2 ZONE PACK BIN USIGN
                 WHEN PKEY < 'CCA'
 
-		(ENTER)
-	___	(16) Continue query
-		
-		    DISPLAY shows 2 records AAA, and BBB.
-		    (16) Exit DISPLAY
+        (ENTER)
+    ___ (16) Continue query
+        
+            DISPLAY shows 2 records AAA, and BBB.
+            (16) Exit DISPLAY
 
-	___	(2) Save Query 
-		    FILE=I1  LIBRARY=INQUIRY VOLUME=VOLOUT
-		    (ENTER)
+    ___ (2) Save Query 
+            FILE=I1  LIBRARY=INQUIRY VOLUME=VOLOUT
+            (ENTER)
 
-	___	(3) Create REPORT definition 
-		    FILE=I1  LIBRARY=REPORT VOLUME=VOLOUT
-		    (ENTER)
+    ___ (3) Create REPORT definition 
+            FILE=I1  LIBRARY=REPORT VOLUME=VOLOUT
+            (ENTER)
 
-	___	(16) Exit INQUIRY
+    ___ (16) Exit INQUIRY
 
-	___	(32) Exit DATENTRY
+    ___ (32) Exit DATENTRY
 
-	___	(10) Run REPORT
+    ___ (10) Run REPORT
 
-	___	(2) Create a Report
+    ___ (2) Create a Report
 
-		Report ID = I1
-		(ENTER)
-		Data     FILE= I1     LIBRARY= DATA    VOLUME= VOLIN
-		(ENTER)
-		Control  FILE= I1     LIBRARY= CONTROL VOLUME= VOLIN
-		(ENTER)
-		Place a 'X' on AKEY1, AKEY2, BIN, PKEY, USIGN, ZONE
-		(ENTER)
-		(ENTER)
-		(16) Exit report definition phase
+        Report ID = I1
+        (ENTER)
+        Data     FILE= I1     LIBRARY= DATA    VOLUME= VOLIN
+        (ENTER)
+        Control  FILE= I1     LIBRARY= CONTROL VOLUME= VOLIN
+        (ENTER)
+        Place a 'X' on AKEY1, AKEY2, BIN, PKEY, USIGN, ZONE
+        (ENTER)
+        (ENTER)
+        (16) Exit report definition phase
 
-	___	(4) Print a report
+    ___ (4) Print a report
 
-		DEVICE=DISPLAY
-		(ENTER)
+        DEVICE=DISPLAY
+        (ENTER)
 
-		   DISPLAY shows 3 records AAA, BBB, AA2 (unordered)
-		   (16) Exit DISPLAY
+           DISPLAY shows 3 records AAA, BBB, AA2 (unordered)
+           (16) Exit DISPLAY
 
-	___	(3) Modify a report
-		    FILE=I1  LIBRARY=REPORT VOLUME=VOLOUT
-		(ENTER)
-		(9) Sort Fields
-		    Field ID: AKEY1
+    ___ (3) Modify a report
+            FILE=I1  LIBRARY=REPORT VOLUME=VOLOUT
+        (ENTER)
+        (9) Sort Fields
+            Field ID: AKEY1
                     Level:    1
-		    Asc/Dsc:  D
-		(ENTER)
-		(16)
-		(16)
+            Asc/Dsc:  D
+        (ENTER)
+        (16)
+        (16)
 
-	___	(4) Print a report
+    ___ (4) Print a report
 
-		DEVICE=DISPLAY
-		(ENTER)
-		*** Check AKEY1 is descending ***
+        DEVICE=DISPLAY
+        (ENTER)
+        *** Check AKEY1 is descending ***
 
-		   DISPLAY shows 3 records BBB, AAA, AA2
-		   (16) Exit DISPLAY
+           DISPLAY shows 3 records BBB, AAA, AA2
+           (16) Exit DISPLAY
 
-	___	(16) Exit REPORT
+    ___ (16) Exit REPORT
 
-	___	(32) Exit CONTROL
+    ___ (32) Exit CONTROL
 
-	___	wshell	  Run saved Query
+    ___ wshell      Run saved Query
 
-		(1) RUN FILE=I1  LIBRARY=INQUIRY VOLUME=VOLOUT
+        (1) RUN FILE=I1  LIBRARY=INQUIRY VOLUME=VOLOUT
 
-		(16) Continue Query
-		
-		    DISPLAY shows 2 records AAA, and BBB.
-		    (16) Exit DISPLAY
+        (16) Continue Query
+        
+            DISPLAY shows 2 records AAA, and BBB.
+            (16) Exit DISPLAY
 
-		(16) EXIT INQUIRY
-
-
-		-------------------------------------------------
-	___	(1) RUN  - CONTROL (RELATIVE FILE)
-
-	___	FILE= R1        LIBRARY= CONTROL   VOLUME= VOLIN
-		(2) Create a new file
-
-	___	RECLEN   = 80
-		FILEORG  = R
-		(ENTER)
-
-	___	Name    Start  Format  IntLen Decimal
-		PKEY	1      C       10     
-		AKEY1	11     C       10     
-		AKEY2	21     C       10     
-		ZONE	31     Z       10     4
-		USIGN	41     U       10     4
-		PACK	51     P        8     2
-		BIN	59     B	4          Bin Edit = 1
-		X	63     C        3          Occurs   = 06
-		(ENTER)(ENTER) after each line
-		(16) exit
-
-	___	(9) DATENTRY
-	
-	___	Data file: FILE= R1  LIBRARY= DATA VOLUME=VOLIN	
-		(2) Create data file 
-
-	___	(3) Add Records
-		RECORD PKEY AKEY1 AKEY2 ZONE USIGN PACK BIN X1  X2
-		3      CCC  CCC   CCC	300  300   300  300 300 300  (ENTER) Add
-		2      BBB  BBB   BBB	200  200   200  200 200 200  (ENTER) Add
-		5      EEE  EEE   EEE   500  500   500  500 500 500  (ENTER) Add
-
-	___	(9) Exit to Modify
-		(2) First record
-		    (5) Next, (5) Next
-		(16) exit
-
-	___	(9) INQUIRY
-		Data file:    FILE= R1  LIBRARY= DATA    VOLUME=VOLIN	
-		(ENTER)
-
-		Control file: FILE= R1  LIBRARY= CONTROL VOLUME=VOLIN
-		(ENTER)
+        (16) EXIT INQUIRY
 
 
-		LIST PKEY AKEY1 AKEY2 ZONE PACK BIN USIGN
+        -------------------------------------------------
+    ___ (1) RUN  - CONTROL (RELATIVE FILE)
+
+    ___ FILE= R1        LIBRARY= CONTROL   VOLUME= VOLIN
+        (2) Create a new file
+
+    ___ RECLEN   = 80
+        FILEORG  = R
+        (ENTER)
+
+    ___ Name    Start  Format  IntLen Decimal
+        PKEY    1      C       10     
+        AKEY1   11     C       10     
+        AKEY2   21     C       10     
+        ZONE    31     Z       10     4
+        USIGN   41     U       10     4
+        PACK    51     P        8     2
+        BIN     59     B        4          Bin Edit = 1
+        X       63     C        3          Occurs   = 06
+        (ENTER)(ENTER) after each line
+        (16) exit
+
+    ___ (9) DATENTRY
+    
+    ___ Data file: FILE= R1  LIBRARY= DATA VOLUME=VOLIN    
+        (2) Create data file 
+
+    ___ (3) Add Records
+        RECORD PKEY AKEY1 AKEY2 ZONE USIGN PACK BIN X1  X2
+        3      CCC  CCC   CCC    300  300   300  300 300 300  (ENTER) Add
+        2      BBB  BBB   BBB    200  200   200  200 200 200  (ENTER) Add
+        5      EEE  EEE   EEE    500  500   500  500 500 500  (ENTER) Add
+
+    ___ (9) Exit to Modify
+        (2) First record
+            (5) Next, (5) Next
+        (16) exit
+
+    ___ (9) INQUIRY
+        Data file:    FILE= R1  LIBRARY= DATA    VOLUME=VOLIN    
+        (ENTER)
+
+        Control file: FILE= R1  LIBRARY= CONTROL VOLUME=VOLIN
+        (ENTER)
+
+
+        LIST PKEY AKEY1 AKEY2 ZONE PACK BIN USIGN
                 WHEN PKEY < 'CCA'
 
-		(ENTER)
-	___	(16) Continue query
-		
-		    DISPLAY shows 1 record BBB.
-		    (16) Exit DISPLAY
+        (ENTER)
+    ___ (16) Continue query
+        
+            DISPLAY shows 1 record BBB.
+            (16) Exit DISPLAY
 
 
-	___	(16) Exit INQUIRY
+    ___ (16) Exit INQUIRY
 
-	___	(32) Exit DATENTRY
+    ___ (32) Exit DATENTRY
 
-	___	(10) Run REPORT
+    ___ (10) Run REPORT
 
-	___	(2) Create a Report
+    ___ (2) Create a Report
 
-		Report ID = R1
-		(ENTER)
-		Data     FILE= R1     LIBRARY= DATA    VOLUME= VOLIN
-		(ENTER)
-		Control  FILE= R1     LIBRARY= CONTROL VOLUME= VOLIN
-		(ENTER)
-		Place a 'X' on AKEY1, AKEY2, BIN, PACK, X(01), ZONE
-		(ENTER)
-		(ENTER)
-		(16) Exit report definition phase
+        Report ID = R1
+        (ENTER)
+        Data     FILE= R1     LIBRARY= DATA    VOLUME= VOLIN
+        (ENTER)
+        Control  FILE= R1     LIBRARY= CONTROL VOLUME= VOLIN
+        (ENTER)
+        Place a 'X' on AKEY1, AKEY2, BIN, PACK, X(01), ZONE
+        (ENTER)
+        (ENTER)
+        (16) Exit report definition phase
 
-	___	(4) Print a report
+    ___ (4) Print a report
 
-		DEVICE=DISPLAY
-		(ENTER)
+        DEVICE=DISPLAY
+        (ENTER)
 
-		   DISPLAY shows 3 records BBB, CCC, EEE
-		   (16) Exit DISPLAY
+           DISPLAY shows 3 records BBB, CCC, EEE
+           (16) Exit DISPLAY
 
-	___	(3) Modify a report
+    ___ (3) Modify a report
 
-		Report ID = R1
-		(ENTER)
+        Report ID = R1
+        (ENTER)
 
-		(ENTER)
-		(9) Sort Fields
-		    Field ID: AKEY1
+        (ENTER)
+        (9) Sort Fields
+            Field ID: AKEY1
                     Level:    1
-		    Asc/Dsc:  D
-		(ENTER)
-		(16)
-		(16)
+            Asc/Dsc:  D
+        (ENTER)
+        (16)
+        (16)
 
-	___	(4) Print a report
+    ___ (4) Print a report
 
-		DEVICE=DISPLAY
-		(ENTER)
-		*** Check AKEY1 is descending ***
+        DEVICE=DISPLAY
+        (ENTER)
+        *** Check AKEY1 is descending ***
 
-		   DISPLAY shows 3 records EEE, CCC, BBB
-		   (16) Exit DISPLAY
-
-
-	___	(16) Exit REPORT
-
-	___	(32) Exit CONTROL
+           DISPLAY shows 3 records EEE, CCC, BBB
+           (16) Exit DISPLAY
 
 
+    ___ (16) Exit REPORT
 
-	KCSI CREATE
+    ___ (32) Exit CONTROL
 
-		From "wshell"
 
-	___	(1) RUN  - QACREATE
 
-		This will create a series of files then DISPLAY them.
-		For indexed files it will use WSORT to flatten them
-		then DISPLAY the sorted flat file.
+    KCSI CREATE
 
-		In DISPLAY you will need to use PF11 and set the
-		lenght=80. 
+        From "wshell"
 
-		___   I2     Indexed
+    ___ (1) RUN  - QACREATE
 
-		___   A3     Alternate Indexed
+        This will create a series of files then DISPLAY them.
+        For indexed files it will use WSORT to flatten them
+        then DISPLAY the sorted flat file.
 
-		___   R4     Relative		[MF (11) Length=81]
+        In DISPLAY you will need to use PF11 and set the
+        lenght=80. 
 
-		___   C5     Line Consecutive
+        ___   I2     Indexed
 
-		___   B6     Binary Consecutive
-		
+        ___   A3     Alternate Indexed
+
+        ___   R4     Relative        [MF (11) Length=81]
+
+        ___   C5     Line Consecutive
+
+        ___   B6     Binary Consecutive
+        
 
 
 
 #####################  This page is for UNIX only  ####################
 
 
-	WPUTPARM Utility  (UNIX ONLY)
+    WPUTPARM Utility  (UNIX ONLY)
 
-	___  	tstpp.sh	Test WPUTPARM		
-				Follow instructions
+    ___   tstpp.sh    Test WPUTPARM        
+                      Follow instructions
 
-	viewkey
-	___	viewkey
+    viewkey
+    ___ viewkey
 
-	wdelwrk
+    wdelwrk
 
-	___	wdelwrk		should delete current worklib
+    ___ wdelwrk        should delete current worklib
 
-	___	su				Remove all worklibs
-		rm -r -f `cat /usr/tmp/WLIBLIST`
-		rm /usr/tmp/WLIBLIST
-		
-	wrun
-	___	wrun				should give runcbl & options
-		export RUNCBL=xyz
-	___	wrun -b -w -?			should "xyz -b -w"
-		unset RUNCBL 			set RUNCBL back
+    ___ su                Remove all worklibs
+        rm -r -f `cat /usr/tmp/WLIBLIST`
+        rm /usr/tmp/WLIBLIST
+        
+    wrun
+    ___ wrun                should give runcbl & options
+        export RUNCBL=xyz
+    ___ wrun -b -w -?            should "xyz -b -w"
+        unset RUNCBL             set RUNCBL back
 
-	___	wrun SUB3 using AA BB CC	should start SUB3 with args
+    ___ wrun SUB3 using AA BB CC    should start SUB3 with args
 
-	================================================================
+    ================================================================
 
-		TO TEST wcopy, wexists, wrename, wscratch run qautils.sh
-	___	qautils.sh	(perform the following tests)
+        TO TEST wcopy, wexists, wrename, wscratch run qautils.sh
+    ___ qautils.sh    (perform the following tests)
 
-	================================================================
+    ================================================================
 
-	wcopy	(old style)
-	   __	wcopy XYZ LIBIN VOLIN XXX LIBIN VOLIN	  same lib
-		echo $?				should be 0
-	   __	wcopy QQQ LIBIN VOLIN XXX LIBIN VOLIN	  non-extent file
-		echo $?				should be 20
-	   __	wcopy XYZ LIBIN VOLIN XYZ NEWLIB VOLOUT	  make a new lib
-		echo $?				should be 0
-	   __	wcopy library NEWLIB VOLOUT NEWLIB VOLIN  copy a lib
-		echo $?				should be 0
+    wcopy    (old style)
+       __    wcopy XYZ LIBIN VOLIN  XXX   LIBIN VOLIN      same lib
+        echo $?                should be 0
+       __    wcopy QQQ LIBIN VOLIN  XXX   LIBIN VOLIN      non-extent file
+        echo $?                should be 20
+       __    wcopy XYZ LIBIN VOLIN  XYZ   NEWLIB VOLOUT    make a new lib
+        echo $?                should be 0
+       __    wcopy library   NEWLIB VOLOUT NEWLIB VOLIN    copy a lib
+        echo $?                should be 0
 
-	wexists
-	   __	wexists file XYZ LIBIN VOLIN
-		echo $?				should be 0  (exists)
-	   __	wexists file QQQ LIBIN VOLIN
-		echo $?				should be 1  (not found)
-	   __	wexists library LIBIN VOLIN
-		echo $?				should be 0
-	   __	wexists library QQQQ VOLIN	
-		echo $?				should be 1
-	   __	wexists volume VOLIN	
-		echo $?				should be 0
-	   __	wexists volume QQQQ		
-		echo $?				should be 1
-
-
-	wrename
-	   __	wrename XYZ NEWLIB VOLOUT NEW NEWLIB
-	   __	wrename NEW NEWLIB VOLOUT NEW2 NEWLIB2
-		echo $?				should be 0 (success)
-	   __	wrename NEW NEWLIB VOLOUT NEW2 NEWLIB2
-		echo $?				should be 20 (not found)
-	   __	wrename library NEWLIB2 VOLOUT NEWLIB3
-
-	wscratch
-	   __	wscratch NEW2 NEWLIB3 VOLOUT
-		echo $?				should be 0
-	   __	wscratch NEW2 NEWLIB3 VOLOUT
-		echo $?				should be 20
-	   __	wscratch library NEWLIB3 VOLOUT
-		echo $?				should be 0
-	   __	wscratch library NEWLIB3 VOLOUT
-		echo $?				should be 16
-
-	================================================================
-
-	___	ipcs				Check whats out there
-		wsysinit -v			Must be ROOT (SU)
-		ipcs				Should be cleaned-up
-		ls /usr/tmp			Temp files should be gone
+    wexists
+       __    wexists file XYZ LIBIN VOLIN
+        echo $?                should be 0  (exists)
+       __    wexists file QQQ LIBIN VOLIN
+        echo $?                should be 1  (not found)
+       __    wexists library LIBIN VOLIN
+        echo $?                should be 0
+       __    wexists library QQQQ VOLIN    
+        echo $?                should be 1
+       __    wexists volume VOLIN    
+        echo $?                should be 0
+       __    wexists volume QQQQ        
+        echo $?                should be 1
 
 
-	================================================================
+    wrename
+       __    wrename XYZ NEWLIB VOLOUT NEW NEWLIB
+       __    wrename NEW NEWLIB VOLOUT NEW2 NEWLIB2
+        echo $?                should be 0 (success)
+       __    wrename NEW NEWLIB VOLOUT NEW2 NEWLIB2
+        echo $?                should be 20 (not found)
+       __    wrename library NEWLIB2 VOLOUT NEWLIB3
 
-	Return to PORTUNIX.LIS
+    wscratch
+       __    wscratch NEW2 NEWLIB3 VOLOUT
+        echo $?                should be 0
+       __    wscratch NEW2 NEWLIB3 VOLOUT
+        echo $?                should be 20
+       __    wscratch library NEWLIB3 VOLOUT
+        echo $?                should be 0
+       __    wscratch library NEWLIB3 VOLOUT
+        echo $?                should be 16
 
-	================================================================
+    ================================================================
+
+    ___ ipcs                Check whats out there
+        wsysinit -v            Must be ROOT (SU)
+        ipcs                Should be cleaned-up
+        ls /usr/tmp            Temp files should be gone
+
+
+    ================================================================
+
+    Return to PORTUNIX.LIS
+
+    ================================================================
