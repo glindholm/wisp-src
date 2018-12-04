@@ -146,8 +146,8 @@ DONE - Update wispntsetup.txt
 
 DONE - Release notes
 
-- AIX support
-- Update wisp_packlist.txt (unix)
+DONE - AIX support
+DONE - Update wisp_packlist.txt (unix)
 
 - KSCI ACU for Extend 10.2
 - Finish acu102_prep_qa for KSCI

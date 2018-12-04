@@ -25,12 +25,6 @@ acu/ACUUSING.cob
 acu/ACUUSING.acu
 acu/acu.rules
 acu/acucobol.include
-acu/sub85_acu50.c
-acu/sub85_acu51.c
-acu/sub85_acu52.c
-acu/sub85_acu60.c
-acu/sub85_acu62.c
-acu/sub85_acu72.c
 acu/sub85_acu81.c
 acu/sub85_acu90.c
 acu/sub85_acu91.c
@@ -58,6 +52,8 @@ acu/acu90/Makefile_aix53_32sh.mak
 acu/acu90/Makefile_hpux1123_ia_32sh.mak
 acu/acu91/Makefile_aix53_32sh.mak
 acu/acu91/Makefile_hpux1123_ia_32sh.mak
+acu/acu102/Makefile_aix71_32sh.mak
+acu/acu102/sub85.c
 bin
 bin/bldmf
 bin/display

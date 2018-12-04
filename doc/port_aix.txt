@@ -1,0 +1,76 @@
+Port WISP to AIX
+================
+
+IBM Power Development Platform (was Virtual Loaner Program)
+https://www.ibm.com/partnerworld/wps/ent/pdp/web/MyProgramAccess
+
+www.ibm.com/partnerworld/pdp
+
+AIX 7.1
+IBM Power 8
+
+VPN Network Access
+------------------
+VPN appliance IP address
+129.33.247.60
+
+User ID
+u0009053
+
+Initial / last reset VPN password
+otyg5kuj
+
+PROJECT
+-------
+IP address
+172.29.153.70
+
+User id
+u0009053
+
+Initial/last root pw
+yndo1rem
+
+Initial/last user pw
+Free2Pass
+
+VPN Client: 
+----------
+Cisco AnyConnect
+
+
+Expand a File System
+chfs -a size=3G /
+chfs -a size=5G /home
+chfs -a size=10G /usr
+chfs -a size=3G /opt
+
+GIT
+----
+https://public.dhe.ibm.com/aix/freeSoftware/aixtoolbox/RPMS/ppc/git/git-2.18.0-1.aix6.1.ppc.rpm
+
+https://public.dhe.ibm.com/aix/freeSoftware/aixtoolbox/RPMS/noarch/yum/yum-3.4.3-6.aix6.1.noarch.rpm
+
+YUM
+https://sysadminfun.com/2017/01/13/install-and-configure-yum-on-aix/
+
+IBM C Compilers
+---------------
+/usr/vacpp/bin/* -> /usr/vac/vin/xlc
+
+export PATH=/usr/vacpp/bin:$PATH
+
+# add current dir to PATH
+export PATH-$PATH:.
+
+
+
+
+
+
+
+
+
+
+
+
