@@ -331,7 +331,27 @@ ACULIBS101=$(ACU_LIBDIR)/libruncbl.a \
 	$(ACU_LIBDIR)/libhpdf.a \
 	$(ACU_LIBDIR)/libz.a
 
-ACULIBS102=$(ACULIBS101)
+ACULIBS102=$(ACU_LIBDIR)/libruncbl.a \
+	$(ACU_LIBDIR)/libaclnt.a \
+	$(ACU_LIBDIR)/libacvt.a \
+	$(ACU_LIBDIR)/libfsi.a \
+	$(ACU_LIBDIR)/libfsi2.a \
+	$(ACU_LIBDIR)/libaxml.a \
+	$(ACU_LIBDIR)/libaregex.a  \
+	$(ACU_LIBDIR)/libacuterm.a \
+	$(ACU_LIBDIR)/libexpat.a \
+	$(ACU_LIBDIR)/libvision.a \
+	$(ACU_LIBDIR)/libsocks.a \
+	$(ACU_LIBDIR)/libmessage.a \
+	$(ACU_LIBDIR)/libcfg.a \
+	$(ACU_LIBDIR)/liblib.a \
+	$(ACU_LIBDIR)/libstdlib.a \
+	$(ACU_LIBDIR)/libmemory.a \
+	$(ACU_LIBDIR)/libpdf.a \
+	$(ACU_LIBDIR)/libhpdf.a \
+	$(ACU_LIBDIR)/libpng.a \
+	$(ACU_LIBDIR)/libz.a
+
 
 ACUMAIN50=
 ACUMAIN51=
@@ -355,7 +375,7 @@ ACUTEST81=$(ACU_LIBDIR)/libaxml.a
 ACUTEST90=$(ACU_LIBDIR)/libcobacme.a
 ACUTEST91=$(ACU_LIBDIR)/libcobacme.a
 ACUTEST101=$(ACU_LIBDIR)/libfsi2.a
-ACUTEST102=$(ACU_LIBDIR)/libfsi2.a
+ACUTEST102=$(ACU_LIBDIR)/libpng.a
 
 ACUCCFLAGS50= -DNO_ACUSQL=1
 ACUCCFLAGS51= -DNO_ACUSQL=1
