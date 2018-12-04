@@ -30,6 +30,33 @@ Serial: 333725
 ACUCOBOL-GT Runtime
 Product Code: 2QFJQUGB7MWBENCE
 Product Key: 7LM3NWGB7JJ5
+
+#  BLOCK_START_runtime_53_10.2.0
+#  Product code: SAJMY4TGAZ6LSF3C
+#  Product key.: T3X4W6TGAWA7
+#  Product........: runtime
+#  Version........: 10.2.0
+#  Machine-key....: 53
+#  Serial number..: 333725
+#  User count.....: 1
+
+--------------------------------------------------------------------------------------------------------------------
+ACUCOBOL-GT Runtime	10.2.1 	IBM pSeries running AIX 7.1 32 Bit
+Serial: 333725
+
+ACUCOBOL-GT Runtime
+Product Code: SAJMY4TGAZ6LSF3C
+Product Key: T3X4W6TGAWA7
+
+#  BLOCK_START_runtime_53_10.2.0
+#  Product code: SAJMY4TGAZ6LSF3C
+#  Product key.: T3X4W6TGAWA7
+#  Product........: runtime
+#  Version........: 10.2.0
+#  Machine-key....: 53
+#  Serial number..: 333725
+#  User count.....: 1
+
 --------------------------------------------------------------------------------------------------------------------
 ACUCOBOL-GT Runtime	10.2.0 	X86 running Linux (glibc 2.x) 32 Bit
 Serial: 88446
