@@ -78,6 +78,7 @@
 		the "installqa.sh" script but could be done from a WISP
 		kit.
 		
+		$ export WISPSRC=${HOME}/work/wisp/src
 		$ cd ${WISPSRC}/port
 		$ ./installqa.sh
 
@@ -93,8 +94,13 @@
 	___	Set the needed environment variables
 
 			$ export WISPGID=$$
-			$ export ACUDIR=/opt/acu
-			$ export COBDIR=/disk1/mfcobol
+			$ export WISPSRC=${HOME}/work/wisp/src
+			
+			$ export ACUDIR=${HOME}/work/acu/acu1020
+			$ export A_TERMCAP=${ACUDIR}/etc/a_termcap
+
+
+			export COBDIR=/disk1/mfcobol
 
 	___	Copy the "test" directory  based on the COBOL you are using.
 
@@ -349,7 +355,7 @@
 		(15) PRINT COMMAND Screen.
 		Check the printouts for correctness.
 		Files are id#### LIBSPOOL VOLSPL.
-		Verify the file	has been submited to a print queue.
+		Verify the file	has been submitted to a print queue.
 
 		(9) Use UTILITIES
 	___	(2) DISPLAY a file
