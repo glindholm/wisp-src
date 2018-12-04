@@ -2429,7 +2429,7 @@ static int nextfield(FILE *fp, char* name, char* cap)
 	while ( cap[cpos]==' '||  cap[cpos]=='\t')  cap[cpos--]=(char)0;	/* remove trailing whitespace			*/
 	while (name[npos]==' '|| name[npos]=='\t') name[npos--]=(char)0;
 
-	//VL_trace("%d [%s][%s][%s]", vcline, inbuf, name, cap);
+	/* VL_trace("%d [%s][%s][%s]", vcline, inbuf, name, cap); */
 
 	return TRUE;	
 }

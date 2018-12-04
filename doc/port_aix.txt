@@ -32,7 +32,7 @@ Initial/last root pw
 yndo1rem
 
 Initial/last user pw
-Free2Pass
+F2P
 
 VPN Client: 
 ----------
@@ -45,14 +45,16 @@ chfs -a size=5G /home
 chfs -a size=10G /usr
 chfs -a size=3G /opt
 
-GIT
-----
+INSTALL YUM
+-----------
+https://sysadminfun.com/2017/01/13/install-and-configure-yum-on-aix/
+
+INSTALL GIT
+-----------
 https://public.dhe.ibm.com/aix/freeSoftware/aixtoolbox/RPMS/ppc/git/git-2.18.0-1.aix6.1.ppc.rpm
 
-https://public.dhe.ibm.com/aix/freeSoftware/aixtoolbox/RPMS/noarch/yum/yum-3.4.3-6.aix6.1.noarch.rpm
+yum install git
 
-YUM
-https://sysadminfun.com/2017/01/13/install-and-configure-yum-on-aix/
 
 IBM C Compilers
 ---------------
@@ -63,8 +65,13 @@ export PATH=/usr/vacpp/bin:$PATH
 # add current dir to PATH
 export PATH-$PATH:.
 
+Other ENVVARs
+--------------
+export ACUDIR=${HOME}/work/acu/acu1020
+export A_TERMCAP=${ACUDIR}/etc/a_termcap
 
-
+export WISPGID=$$
+export WISPSRC=${HOME}/work/wisp/src
 
 
 

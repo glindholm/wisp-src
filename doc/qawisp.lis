@@ -534,7 +534,7 @@
     ___ wshell
         (1) Run SAMPLE in TESTxxx on SOURCE
 
-    Run SAMPLE and (3) FILE I/O TESTS
+    (3) FILE I/O TESTS
 
         FILE-B tests.    These test all the INDEXED file I/O operations.
                          Check FILE-B-STAT field after each operation.
@@ -562,7 +562,7 @@
     ___ wshell
         (1) Run SAMPLE in TESTxxx on SOURCE
 
-    Run SAMPLE and (3) FILE I/O TESTS
+    (3) FILE I/O TESTS
 
     ___ (15) OPEN FILE-B INPUT   
     ___ (15) OPEN FILE-B INPUT  Error-getparm   (85) [41]
@@ -576,7 +576,7 @@
         (1) Run SAMPLE in TESTxxx on SOURCE
 
 
-    Run SAMPLE and (3) FILE I/O TESTS
+    (3) FILE I/O TESTS
 
         RECORD & FILE LOCKING TESTS
     
@@ -669,12 +669,12 @@
     (32) NEXT SCREEN
 
     ___ (1) SEQ/DYN LOGGING    Should give three screens, an OPEN
-                    WRITE and CLOSE. Each screen shows
-                    the file status, 05 is fine for
-                    the OPEN.
-                    Run three times waiting a minute
-                    between each one. This will write
-                    three timestamps out to the file.
+                               WRITE and CLOSE. Each screen shows
+                               the file status, 05 is fine for
+                               the OPEN.
+                               Run three times waiting a minute
+                               between each one. This will write
+                               three timestamps out to the file.
     ___ DISPLAY file (1) file=@TRNSLOG lib=@LOGFIL@ vol=VOLOUT
                     (16) Exit DISPLAY
             (16) Exit SES/DYN LOGGING Test
