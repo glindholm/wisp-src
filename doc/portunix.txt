@@ -218,6 +218,7 @@
 	[ ]	 ${WISPSRC}/kcsi/kcsi_acu_XXXX.ship
 	[ ]	 ${WISPSRC}/kcsi/kcsi_mf_XXXX.ship
 
+	[_] copy kits to devel.shellstream.net ${HOME}/Shipping
 
 
 	========================= END OF DOCUMENT ==========================

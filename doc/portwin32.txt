@@ -112,7 +112,7 @@
 	[_] Zip wisp51xx folder
 	[_] rename wisp51xx.zip to wisp_51xx_win32.zip
 	[_] copy kits to C:\ShellStream\WISP_Shipping
-	[_] copy kits to devel.shellstream.net
+	[_] copy kits to devel.shellstream.net ${HOME}/Shipping
 	
 	
 	Save ACU QA Objects
