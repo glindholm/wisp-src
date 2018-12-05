@@ -90,15 +90,15 @@
     ___ Change directory to your "test" dir based on the COBOL you
         are using.
 
-        ACU    $ cd ${WISPSRC}/testacu
-        MF     $ cd ${WISPSRC}/testmf
+        ACU	$ cd ${WISPSRC}/testacu
+        MF	$ cd ${WISPSRC}/testmf
 
     ___ Run the "startup" file to setup environment variables.  
         This will set your $WISPCONFIG plus COBOL specific variables.
         It will also set $QA to point to your test directory.
 
-        ACU    $ ./startupacu.sh
-        MF     $ ./startupmf.sh
+        ACU	$ ./startupacu.sh
+        MF	$ ./startupmf.sh
 
     ****
     ****    THE ABOVE STEPS MUST BE DONE EVERYTIME YOU RE-START.
@@ -114,7 +114,7 @@
 
     *** If COBOL complier is NOT available
     
-        $ make -f sampleacu.umf setup
+    ___ $ make -f sampleacu.umf setup
 
 
     ___ Build the SAMPLE programs.  
@@ -372,7 +372,7 @@
 
     WIN32:
     ___ Create a Shortcut on the desktop using Command line:
-        "C:\WISPxxx\BIN\WPROC \\SERVER\TESTACU\QASTART"
+            "C:\WISPxxx\BIN\WPROC \\SERVER\TESTACU\QASTART"
            
         [ ] startqa.bat
             D:\work\shellstream\WISP\src\test\QA\wisp\bin\wproc.exe \\BLACKCLAW\TESTACU\QASTART
@@ -395,14 +395,14 @@
     ___ (09) WL0018  - MESSAGE  (Takes a few seconds to finish)
         ___ (1)  WL0018 (SINGLE USER)
 
-            The WL0018A & B test the MESSAGE routine automatically.
-            Each program opens a message port then they handshake and
-            send and receive 100 numbered messages.
+                The WL0018A & B test the MESSAGE routine automatically.
+                Each program opens a message port then they handshake and
+                send and receive 100 numbered messages.
         ___ (2)  WL0018A (TWO USER - A)
         ___ (3)  WL0018B (TWO USER - B)
-            Once both programs have started, press Enter on both
-            screens and they should run for a few seconds (10-15) then
-            report that they sent 100 messages.
+                Once both programs have started, press Enter on both
+                screens and they should run for a few seconds (10-15) then
+                report that they sent 100 messages.
 
     ___ (10) WL0019  - SEARCH
     ___ (11) WL0020  - SORT
@@ -499,36 +499,36 @@
         FILE-A tests.        Assume these work if no errors
                              are reported.
 
-+    ___ (1) CREATE FILE-A AND WRITE IT
-             Should create AFILE LIBOUT VOLOUT
-+    ___ (4) DELETE RECORDS FROM FILE-A
-+    ___ (1) CREATE FILE-A AND WRITE IT
-             Should get a PF3 getparm screen.
-             Change FILE from AFILE to AAA and press Enter.
-             Should create AAA   LIBOUT VOLOUT
++   ___ (1) CREATE FILE-A AND WRITE IT
+                    Should create AFILE LIBOUT VOLOUT
++   ___ (4) DELETE RECORDS FROM FILE-A
++   ___ (1) CREATE FILE-A AND WRITE IT
+                Should get a PF3 getparm screen.
+                Change FILE from AFILE to AAA and press (ENTER).
+                    Should create AAA   LIBOUT VOLOUT
 
         SEQUENTIAL FILE tests.
 
-+    ___ (6) CREATE A SEQUENTIAL FILE 
++   ___ (6) CREATE A SEQUENTIAL FILE 
                     Leave the lib and vol blank.
                     Should create SEQFILE LIBOUT VOLOUT
-            (16) back to menu.
+        (16) back to menu.
     
     ___ (22) OPEN EXTEND SEQUENTIAL (should be no getparm)
     ___ (24) CLOSE SEQUENTIAL        
     ___ (23) OPEN OUTPUT SEQUENTIAL (getparm - Press PF3)
     ___ (24) CLOSE SEQUENTIAL        
 
-+    ___ (6)(again): At PF3 option FILE=SEQFILE1
-            (16) back to menu.
++   ___ (6)(again): At PF3 option FILE=SEQFILE1
+        (16) back to menu.
 
-+    ___ (25) WRITE SEQUENTIAL    (ENTER) - File not OPEN
++   ___ (25) WRITE SEQUENTIAL    (ENTER) - File not OPEN
                     Should ERROR getparm  (85) [48][02]
                                           (74) [91][02]
         (16) to EXIT program.
 
-+    ___ UNIX: echo $?         Should be 16
-               wretcode        Should return 16
++   ___ UNIX:   echo $?         Should be 16
+                wretcode        Should return 16
 
 
     ___ wshell
@@ -547,7 +547,7 @@
 
     ___ Display BFILESEQ in LIBOUT on VOLOUT with (11) record width=92
         and ensure it is in descending order. (7,8,3,2,4,5,6,1)
-            (16) EXIT Display
+        (16) EXIT Display
 
     ___ (15) OPEN FILE-B INPUT    Press (ENTER)  (file status 00)
     ___ (11) WRITE FILE-B        (ENTER)         (85) [48]
@@ -621,9 +621,9 @@
 
     STEP 20    <W1> READ HOLD             key=BBBB    (should succeed)
     STEP 21    <W2> READ TIMEOUT          key=BBBB 
-                    Should wait 5 secs then come back
-                    with **** TIMEOUT **** filestatus 
-                    REC LOCKED (92 or 99 or 9D)
+                        Should wait 5 secs then come back
+                        with **** TIMEOUT **** filestatus 
+                        REC LOCKED (92 or 99 or 9D)
 
         Next we try a non-timeout this is tricky and you need to
         be fast. <W1> has BBBB locked now, <W2> is going to try
@@ -677,7 +677,7 @@
                                three timestamps out to the file.
     ___ DISPLAY file (1) file=@TRNSLOG lib=@LOGFIL@ vol=VOLOUT
                     (16) Exit DISPLAY
-            (16) Exit SES/DYN LOGGING Test
+        (16) Exit SES/DYN LOGGING Test
 
     ___ (Set PRINTMODE = Keep) -- (^E) HELP (3) SET PRINT Defaults
 
@@ -689,7 +689,7 @@
                     (16) Exit DISPLAY
 
     ___ (2) OPEN OUT PRINT WRITE CLOSE (again)
-                ********
+            ********
             At the PF3 screen change FILE=PRTFILE2. (Needed later)
             ********
             (ENTER) Exit Test
@@ -708,25 +708,27 @@
             a screen image and there should be a line following
             it that has a name and timestamp.
 
-+    ___ (13) CREATE A LARGE FILE (Takes a couple seconds)
++   ___ (13) CREATE A LARGE FILE (Takes a couple seconds)
 
-+    ___ (14) CREATE EMPTY Files (ENTER) (ENTER)
++   ___ (14) CREATE EMPTY Files (ENTER) (ENTER)
 
-+    ___ (15) CREATE LIBSAM Files (Creates each type of data file)
++   ___ (15) CREATE LIBSAM Files (Creates each type of data file)
 
-+    ___ (26) LOAD ALTVAR8 (IDX8) -- (MF ONLY may error)
++   ___ (26) LOAD ALTVAR8 (IDX8) -- (MF ONLY may error)
 
     (16) to EXIT FILE I/O TESTS
 
 
-        
+
     (4) SCREEN I/O TESTS (QASCREEN)
 
         This section tests all the screen I/O functionality.
 
-+    ___ (1) DISPLAY A COMPLEX SCREEN.
++   ___ (1) DISPLAY A COMPLEX SCREEN.
         ___  Enter XXX in NO-ECHO FIELD
         ___  Enter one valid and one invalid range.
+				RANGE (YES, NO)		XXX
+				RANGE (ONE-TEN)		FOUR
         ___  Enter a letter in a numeric field
 
     ___ (2) TRY THE PF KEYS.          try all PF keys 1-32
@@ -766,7 +768,7 @@
 
     ___ (12) ADDITIONAL TESTS - QASCRN2 
      
-+        (1) ROW REWRITE & READ Test ROW oriented screen I/O
++       (1) ROW REWRITE & READ Test ROW oriented screen I/O
                     This will write over top of the
                     existing screen.
     ___ At row 10 **** REWRITE TEST *** Cursor should be positioned
@@ -786,8 +788,8 @@
 
  
         **** NOTE ****    First change your pseudo blank to a 
-                character in "N" normal rendition. 
-                (something other then underline)
+                          character in "N" normal rendition. 
+                          (something other then underline)
 
 
         (2) REWRITE & READ CRT (ALL FAC).   
@@ -797,8 +799,8 @@
         lines only.    
 
         **** NOTE ****  Do not type over all of the pseudo blanks
-                as we need some on the screen to test
-                how the read handles them.
+                        as we need some on the screen to test
+                        how the read handles them.
 
     ___ Enter stuff on all modifiable lines. This should test all
         of the FAC's BLINK BOLD HIDDEN UNDERLINE DIM
@@ -808,7 +810,7 @@
         "ENTER" to end
 
 
-+    ___ (6) REWRITE CRT with PAUSE.     A message should flash
++   ___ (6) REWRITE CRT with PAUSE.     A message should flash
        
 
     ___ (8) EMBEDDED FAC TEST
@@ -856,36 +858,42 @@
             (16) EXIT Test
 
     ___ (2) FIND
-            (8) to run the AUTOTESTS.
+            (8)  to run the AUTOTESTS.
             (16) EXIT
 
-+    ___ (3) PUTPARM & LINK TO DISPLAY   try with both D & E
-        You can display the file XYZ in LIBIN on VOLIN.
-        Just see that the PUTPARM & LINK works don't test 
-        DISPLAY yet.  
++   ___ (3) PUTPARM & LINK TO DISPLAY   try with both D & E
+            You can display the file XYZ in LIBIN on VOLIN.
+            Just see that the PUTPARM & LINK works don't test 
+            DISPLAY yet.  
             (16) EXIT Display
 
     ___ (5) GETPARM         this tests getparmbuild, displays
-                    a getparm only.
+                            a getparm only.
 
-+    ___ (6) SUBMIT  (cobol)    
++   ___ (6) SUBMIT  (cobol)    
 
         *** If you only have a single user license then use 
         *** from WSHELL (12) SUBMIT.
 
             (ACU)    FILE=QABCKGRD  in TESTACU   on SOURCE
             (MF)     FILE=QABCKGRD  in TESTMF    on SOURCE
-            (ENTER) to Continue            
+            (ENTER) to Continue
+
             Creates    BACK#### in LIBSPOOL on VOLSPL.
-            (1) DISPRINT
-+    ___     Check:  TASKTYPE=B  (in file created)
-                TERMNUM=-1
+            (1) DISPRINT or (9) UTILITIES -> (4) DISPRINT
++   ___     Check:  TASKTYPE=B  (in file created)
+                    TERMNUM=-1
                     PROGLIB=TESTxxx  PROGVOL=SOURCE
+
             (16) EXIT Display
             (16) EXIT Disprint
             (16) EXIT Test
 
     ___ (6) SUBMIT (proc)
+
+        *** If you only have a single user license then use 
+        *** from WSHELL (12) SUBMIT.
+
             FILE=QABCKPRC   in TESTxxx   on SOURCE
             (ENTER) to continue
             This will submit qabckprc.wps which will set
@@ -899,30 +907,34 @@
             and runs QABCKGRD twice each time 
             setting RUNLIB = BKB1 then BKB2.
 
-            (1) DISPRINT
-        ___  The files BKA1xx and BKA2xx should have INLIB=QABCKPRC
+            (1) DISPRINT or (9) UTILITIES -> (4) DISPRINT
+        ___  The files BKA1#### and BKA2#### should have INLIB=QABCKPRC
              and have the same OUTLIBs and WORKLIBs.
 
-        ___  The files BKB1xx and BKB2xx should have INLIB=QABCKPC2
+        ___  The files BKB1#### and BKB2#### should have INLIB=QABCKPC2
              and have the same OUTLIBs and WORKLIBs.
 
         ___   The WORKLIBs should be different for BKA1 and BKB1.
+
             (16) EXIT Display (each time)
             (16) EXIT Disprint
             (16) EXIT Test
 
     ___ (6) (UNIX) SUBMIT a shell script (with parameters)
+
+        *** The test requires a 2 user license.
+
         (ACU)    FILE=QABKPACU    in TESTACU    on SOURCE
         (MF)     FILE=QABKPMF     in TESTMF     on SOURCE
-        Press (1) and enter 2 parmeters (the INVOL & OUTVOL)
+        Press (1) and enter 2 parameters (the INVOL & OUTVOL)
             NEWIN
             NEWOUT
         The press (ENTER), (ENTER) this will submit a script/proc
-        that set INVOL to the first paramter and OUTVOL to the
+        that set INVOL to the first parameter and OUTVOL to the
         second parameter. It will then run QABCKGRD and create
             BCKP#### in LIBSPOOL on VOLSPL.
 
-            (1) DISPRINT
+            (1) DISPRINT 
         ___ See printout of BCKP#### LIBSPOOL VOLSPL and 
             verify that the    INVOL=NEWIN and OUTVOL=NEWOUT.
             (16) EXIT Display (each time)
@@ -939,13 +951,13 @@
     ___ WSORT                           S     (16) EXIT WSORT
 
         Link to a non-WISP program.
-+    ___ UNIX:   VI            TYPE=S    (:q!) Exit vi
-         WIN32:  NOTEPAD
-         WIN32:  prtargs
++   ___ UNIX:   VI            TYPE=S    (:q!) Exit vi
+        WIN32:  NOTEPAD
+        WIN32:  prtargs
 
         Link to a shell/batch
-+    ___ UNIX:  PRTARGSH        TYPE=(blank)
-         WIN32: PRTARGNT
++   ___ UNIX:  PRTARGSH        TYPE=(blank)
+        WIN32: PRTARGNT
         
         Args are printed
         (ENTER) to exit prtargs
@@ -953,57 +965,58 @@
 
 
 
-        (9) MESSAGE    This requires two windows <W1> and <W2>.
+        (9) MESSAGE     This requires two windows <W1> and <W2>.
 
         **** NOTE ****  If you don't have 2 windows then only do
-                the tests marked with 3 asterisks (***).
+                        the tests marked with 3 asterisks (***).
 
-    ___ ***    <W1>    PORT=ABCD
-            (1) (create)    RC=0
+    ___     <W1>    PORT=ABCD
+        ***         (1) (create)    RC=0
 
-    ___     (5) (wait)      should wait for next message
+    ___             (5) (wait)      should wait for next message
 
-    ___ <W2>    PORT=ABCD
-            MESSAGE= HI THERE
-            (3) (transmit message)
+    ___     <W2>    PORT=ABCD
+                    MESSAGE= HI THERE
+                    (3) (transmit message)
 
-    ___     (2) (destroy)    RC=8 (task didn't create port)
+    ___             (2) (destroy)    RC=8 (task didn't create port)
 
-    ___  <W1>    (should have recieved message)
+    ___     <W1>    (should have received message)
 
-    ___ ***        (6) (wait with timeout)  TIME=0500 (5 seconds)
-                    Move cursor off field
-                    wait 5 sec then RC=8 (timeout)
+    ___ ***         (6) (wait with timeout)  TIME=0500 (5 seconds)
+                        Move cursor off field
+                        wait 5 sec then RC=8 (timeout)
 
-            PORT=ABCD
-    ___ ***  (7) (Wait with key interrupt)
-                    You can now type regular keys,
-                    when you type an AID char (PFKey)
-                    cursor should jump back. 
-                    RC=12 (keyboard interrupt)
+                    PORT=ABCD
+    ___ ***         (7) (Wait with key interrupt)
+                        You can now type regular keys,
+                        when you type an AID char (PFKey)
+                        cursor should jump back. 
+                        RC=12 (keyboard interrupt)
 
-    ___      (7) (Wait with key interrupt)
-                    Type a couple regular keys
-                    (Switch to <W2>)
+    ___             (7) (Wait with key interrupt)
+                        Type a couple regular keys
+                        (Switch to <W2>)
 
-    ___ <W2>    MESSAGE=STOP
-             (3) (transmit)    <W1> should get message and
-                    should stop waiting.
+    ___     <W2>    MESSAGE=STOP
+                    (3) (transmit)  <W1> should get message and
+                                    should stop waiting.
 
     ___ *** <W1>    (8) (Both Key & Time)  TIME=0500 (5 seconds)
-                    Type regular keys for 5 seconds
-                    until timeout.
-                    RC=8 (timeout)
+                        Type regular keys for 5 seconds
+                        until timeout.
+                        RC=8 (timeout)
 
-    ___      (8) (Both Key & Time)  TIME=3000 (30 seconds)
-                    Type a couple regular keys
-                    (Switch to <W2>)
+    ___             (8) (Both Key & Time)  TIME=3000 (30 seconds)
+                        Type a couple regular keys
+                        (Switch to <W2>)
 
-    ___ <W2>    MESSAGE=BYE
-            (3) (transmit)    <W1> should get message and
-                    should stop waiting.
+    ___     <W2>    MESSAGE=BYE
+                    (3) (transmit)  <W1> should get message and
+                                    should stop waiting.
 
-    ___ ***    <W1>    (2) (destroy)    RC=0
+    ___ *** <W1>    (2) (destroy)    RC=0
+
             (16) EXIT Test (both windows)
 
 
@@ -1020,33 +1033,32 @@
     ___ PRINT_MODE=S DISPOSITION=DX (scratch) COPY=1
         Verify that one copy is printed and the file is deleted.
 
-    ___ (13) LINKPROC         This will link to a shell script 
-                              or DCL proc passing args. 
+    ___ (13) LINKPROC       This will link to a script passing args. 
             UNIX:     FILE=PRTARGSH in TESTxxx on SOURCE
             WIN32:    FILE=PRTARGNT in TESTACU on SOURCE
-                    Set up some args (remember to set 
-                    lengths) the first 0 length will
-                    terminate the list. This shell 
-                    script will run    the program 
-                    "prtargs" which will print out 
-                    the args and return.
+                            Set up some args (remember to set 
+                            lengths) the first 0 length will
+                            terminate the list. This shell 
+                            script will run    the program 
+                            "prtargs" which will print out 
+                            the args and return.
     ___     UNIX: The script does an EXIT 123 so COMPCODE=123
 
         (14) BELL/PAUSE
     ___ BELL     (1)    5       Number of times to ring bell,
                                 some systems optimize repeats.
-    ___ PAUSE    (2)    300     Hunderths of seconds to pause,
+    ___ PAUSE    (2)    300     Hundredths of seconds to pause,
                                 you should move your cursor out
                                 of the field before pressing (2)
                                 so you can see it pop back when
                                 complete.
-            (16) EXIT Test
+        (16) EXIT Test
             
         (19) GETPARM
     ___ Press (1) to SETUP for the tests.
-    ___ Type="I " FORM=A PRNAME=XX1    (no display PF-KEY=A)
-    ___ Type="I " FORM=A PRNAME=XX2    (display FILE=GETPARM2)
-    ___ Type="I " FORM=A PRNAME=XX3    (no display PF-KEY=B)
+    ___ Type="I " FORM=A PRNAME=XX1  (ENTER)  - no display PF-KEY=A
+    ___ Type="I " FORM=A PRNAME=XX2  (ENTER)  - display FILE=GETPARM2
+    ___ Type="I " FORM=A PRNAME=XX3  (ENTER)  - no display PF-KEY=B
         Press (16) to exit
 
         (24) SORTCALL/WISPSORT
@@ -1067,30 +1079,30 @@
         (8) LINK to QACOPY
             (16) EXIT Test
 
-+    ___ (29) WSXIO
++   ___ (29) WSXIO
 
         ___ (9) WSXIO UPDATE
             Type and watch the WAIT-CNT update, there should
             be no screen I/O interruption. 
-            Press (4) to interrrupt, AID="D".
+            Press (4) to interrupt, AID="D".
             (ENTER) Exit
             (16) EXIT WSXIO-SCREEN 
 
-    ___ (31) COBLINK      Does a LINK type " " and if file is not
-                found will then do a LINK of type "S".
+    ___ (31) COBLINK    Does a LINK type " " and if file is not
+                        found will then do a LINK of type "S".
 
-                On UNIX so be sure your PATH includes your 
-                current dir.
+                        On UNIX so be sure your PATH includes your 
+                        current dir.
 
 +       ___ COBLINK to TRIGGER  (16) (Type=" " current dir)
         ___ COBLINK to TRIGGER3 (16) (Type="S" on the PATH)
 
 
-+    ___ (17) LOGOFF        
++   ___ (17) LOGOFF        
             UNIX: This should really logoff.    
             WIN32: Terminate current process chain
 
-    ___ Log back on and resetup you environment.
+    ___ Log back on and re-setup you environment.
 
         UNIX
         $ cd ../testxx
@@ -1112,7 +1124,7 @@
         
            (16) EXIT 
 
-        Set MODE = P
+        (HELP) > (3) Set MODE = P
 
     ___ (2) CREATE TEMP PRINT FILE (ADVANCING & OVERSTRIKE)
                     TST####  in LIBSPOOL on VOLSPL
@@ -1162,9 +1174,9 @@
 
     ___ display     Should getparm  LIBIN VOLIN  ((16) to exit)
 +   ___ UNIX: display volin/libin/xyz
-                    Should go directly to display
-                    On UNIX stays in 80 col mode.
-    ___ HELP (^e)        Menu
+                       Should go directly to display
+                       On UNIX stays in 80 col mode.
+    ___ HELP (^e)      Menu
 +   ___ (3)            Bottom of file
 +   ___ (2)            Top of file
     ___ (3)  + Interrupt before done by pressing any key
@@ -1178,15 +1190,15 @@
     ___ (7)            Find -enter "zzz" a non-extent string
     ___ (2)            Top
 
-    ___ (10)            Scroll right (several times)
+    ___ (10)           Scroll right (several times)
     ___ (9)            Scroll left
 
-    ___ (11)            Change records size "40"
-    ___ (12)            Show position
-    ___ (13)            Stream mode (ON)
-    ___ (13)            Stream mode (OFF)
+    ___ (11)           Change records size "40"
+    ___ (12)           Show position
+    ___ (13)           Stream mode (ON)
+    ___ (13)           Stream mode (OFF)
 
-    ___ (16)            EXIT
+    ___ (16)           EXIT
 
 
 
@@ -1251,7 +1263,7 @@
         (ENTER)
 
         LIST PKEY AKEY1 AKEY2 ZONE PACK BIN USIGN
-                WHEN PKEY < 'CCA'
+        WHEN PKEY < 'CCA'
 
         (ENTER)
     ___ (16) Continue query
@@ -1273,7 +1285,7 @@
 
     ___ (10) Run REPORT
 
-    ___ (2) Create a Report
+    ___ (2)  Create a Report
 
         Report ID = I1
         (ENTER)
@@ -1299,7 +1311,7 @@
         (ENTER)
         (9) Sort Fields
             Field ID: AKEY1
-                    Level:    1
+            Level:    1
             Asc/Dsc:  D
         (ENTER)
         (16)
@@ -1358,7 +1370,7 @@
         (2) Create data file 
 
     ___ (3) Add Records
-        RECORD PKEY AKEY1 AKEY2 ZONE USIGN PACK BIN X1  X2
+        RECORD PKEY AKEY1 AKEY2  ZONE USIGN PACK BIN X1  X2
         3      CCC  CCC   CCC    300  300   300  300 300 300  (ENTER) Add
         2      BBB  BBB   BBB    200  200   200  200 200 200  (ENTER) Add
         5      EEE  EEE   EEE    500  500   500  500 500 500  (ENTER) Add
@@ -1377,7 +1389,7 @@
 
 
         LIST PKEY AKEY1 AKEY2 ZONE PACK BIN USIGN
-                WHEN PKEY < 'CCA'
+        WHEN PKEY < 'CCA'
 
         (ENTER)
     ___ (16) Continue query
@@ -1421,7 +1433,7 @@
         (ENTER)
         (9) Sort Fields
             Field ID: AKEY1
-                    Level:    1
+            Level:    1
             Asc/Dsc:  D
         (ENTER)
         (16)
@@ -1454,7 +1466,7 @@
         then DISPLAY the sorted flat file.
 
         In DISPLAY you will need to use PF11 and set the
-        lenght=80. 
+        length=80. 
 
         ___   I2     Indexed
 
@@ -1484,15 +1496,15 @@
 
     ___ wdelwrk        should delete current worklib
 
-    ___ su                Remove all worklibs
+    ___ su                          Remove all worklibs
         rm -r -f `cat /usr/tmp/WLIBLIST`
         rm /usr/tmp/WLIBLIST
         
     wrun
-    ___ wrun                should give runcbl & options
+    ___ wrun                        should give runcbl & options
         export RUNCBL=xyz
-    ___ wrun -b -w -?            should "xyz -b -w"
-        unset RUNCBL             set RUNCBL back
+    ___ wrun -b -w -?               should "xyz -b -w"
+        unset RUNCBL                set RUNCBL back
 
     ___ wrun SUB3 using AA BB CC    should start SUB3 with args
 
@@ -1505,27 +1517,27 @@
 
     wcopy    (old style)
        __    wcopy XYZ LIBIN VOLIN  XXX   LIBIN VOLIN      same lib
-        echo $?                should be 0
+        echo $?                                 should be 0
        __    wcopy QQQ LIBIN VOLIN  XXX   LIBIN VOLIN      non-extent file
-        echo $?                should be 20
+        echo $?                                 should be 20
        __    wcopy XYZ LIBIN VOLIN  XYZ   NEWLIB VOLOUT    make a new lib
-        echo $?                should be 0
+        echo $?                                 should be 0
        __    wcopy library   NEWLIB VOLOUT NEWLIB VOLIN    copy a lib
-        echo $?                should be 0
+        echo $?                                 should be 0
 
     wexists
        __    wexists file XYZ LIBIN VOLIN
-        echo $?                should be 0  (exists)
+        echo $?                            should be 0  (exists)
        __    wexists file QQQ LIBIN VOLIN
-        echo $?                should be 1  (not found)
+        echo $?                            should be 1  (not found)
        __    wexists library LIBIN VOLIN
-        echo $?                should be 0
+        echo $?                            should be 0
        __    wexists library QQQQ VOLIN    
-        echo $?                should be 1
+        echo $?                            should be 1
        __    wexists volume VOLIN    
-        echo $?                should be 0
+        echo $?                            should be 0
        __    wexists volume QQQQ        
-        echo $?                should be 1
+        echo $?                            should be 1
 
 
     wrename

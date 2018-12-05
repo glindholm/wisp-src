@@ -55,7 +55,9 @@ https://public.dhe.ibm.com/aix/freeSoftware/aixtoolbox/RPMS/ppc/git/git-2.18.0-1
 
 yum install git
 
-
+git config --global user.email "glindholm@shellstream.com"
+git config --global user.name "Greg Lindholm"
+ 
 IBM C Compilers
 ---------------
 /usr/vacpp/bin/* -> /usr/vac/vin/xlc
