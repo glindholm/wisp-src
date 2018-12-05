@@ -10,7 +10,7 @@
 #				8.1
 #				
 #		WISP		5.1.20  [WISPVER]
-#		KCSI		4.2.00  [KCSIVER]
+#		KCSI		4.2.01  [KCSIVER]
 #
 #	Function:
 #		The UNIX makefile for building the ACUCOBOL runtime

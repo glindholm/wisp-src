@@ -5,11 +5,11 @@ Title:          RELEASE NOTES FOR KCSI UTILITIES
 
 Document:       kcsi_relnotes.lis
 Products:       CONTROL, REPORT, INQUIRY, DATENTRY, CREATE
-KCSIVER:        4.2.00
+Version:        4.2.01 [KCSIVER]
 
 Summary:        Release notes for changes to CONTROL, REPORT,
                 INQUIRY, DATENTRY, CREATE utilities since initial 
-		release.
+                release.
                 Supplemental documents.
 
 ====================================================================
@@ -27,11 +27,16 @@ Summary:        Release notes for changes to CONTROL, REPORT,
 
 
 
+CHANGES IN 4.2.01
+=================
+Added support for WISP 5.1.20. [WISPVER]
+
+
 CHANGES IN 4.2.00
 =================
-Added support for WISP 5.1.00. [WISPVER]
+Added support for WISP 5.1.00. 
 
-Change Copyright notices to Shell Stream Sotfware LLC.
+Change Copyright notices to Shell Stream Software LLC.
 
 
 CHANGES IN 4.1.00

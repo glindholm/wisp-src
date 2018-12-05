@@ -21,7 +21,7 @@
 #endif
 
 /*
-# To change the version for KCSI, change KCSI_VERSION here. 
+# To change the version for KCSI, change KCSI_VERSION and KCSIVER here. 
 #	wisp/src/kcsi/cridvers.c
 #	wisp/src/kcsi/version.c
 #	wisp/src/kcsi/kcsilibs.umf
@@ -37,7 +37,7 @@
 #	wisp/src/acu/wrun32wisp_kcsi_acu51.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 */
-#define KCSI_VERSION	4200
+#define KCSI_VERSION	4201
 
 /*
 **	Static data

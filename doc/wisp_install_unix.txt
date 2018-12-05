@@ -43,7 +43,7 @@ distribution media.
 
 3)  Unload the tar file with this command:
 
-	$ uncompress -c wisp_XXXX.tar.Z | tar -xvpf -
+    $ uncompress -c wisp_XXXX.tar.Z | tar -xvpf -
 
     This will create directory /usr/local/wisp_XXXX.
 

@@ -5,7 +5,7 @@ Title:          KCSI for Acucobol on Windows (WIN32) Setup
 
 Document:       kcsintsetup.txt
 Products:       KCSI/WIN32 for Acucobol
-KCSIVER:        4.2.00 
+Version:        4.2.01 [KCSIVER]
 
 Summary:        Quick setup steps for KCSI on Windows.
 
