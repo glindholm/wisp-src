@@ -181,6 +181,10 @@ ACUOTHER=
 #----------------------------------------------------------------------------
 #	On LINUX (32-bit) with GNU gcc
 #
+## Acu 10.2
+#ACUOTHER= -ldl -lpthread
+#SYSCCFLAGS = -std=gnu99 -m32 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_XOPEN_SOURCE=500 -D_BSD_SOURCE
+#
 ## Acu 9.0, 9.1
 #ACUOTHER= -ldl -lpthread
 #SYSCCFLAGS = -m32 -D_LARGEFILE64_SOURCE

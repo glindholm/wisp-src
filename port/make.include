@@ -342,9 +342,9 @@ SYSDEF = "Error SYSDEF not defined"
 #SYSDEF = -DLINUX
 #CC_STD  = gcc
 #CC_ANSI = gcc
-#CC_SYS_FLAGS = -m32 -Wall
+#CC_SYS_FLAGS = -m32 -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 #CCC = g++
-#CCC_SYS_FLAGS = -m32 -DBOOL_TYPE -fsigned-char -Wall
+#CCC_SYS_FLAGS = -m32 -DBOOL_TYPE -fsigned-char -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 #CCC_SYS_LINK = 
 #LEX_LINK = 
 

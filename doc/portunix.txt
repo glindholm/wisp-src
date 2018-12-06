@@ -88,7 +88,8 @@
 	[ ]	SET ENVIRONMENT VARIABLES
 
 		Set ACUDIR to the ACUCOBOL directory.
-		Set COBDIR to the Micro Focus directory
+		
+			$ export ACUDIR=${HOME}/acu/acu1020
 
 		Change directory to the wisp/src/port and run portenvs.sh
 		to set the WISPSRC and WISPDIR variables.
@@ -105,8 +106,7 @@
 			$ WISPSRC=/home/user/work/wisp/src 
 			$ WISPDIR=${WISPSRC}
 			$ ACUDIR=/usr/local/acucobol
-			$ COBDIR=/usr/local/mf41
-			$ export WISPSRC WISPDIR ACUDIR COBDIR
+			$ export WISPSRC WISPDIR ACUDIR
 
 
 	MODIFIY WISP SYSTEM DEPENDENT FILES
