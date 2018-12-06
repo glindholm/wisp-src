@@ -148,6 +148,7 @@
 	does not build the COBOL runtime systems or SAMPLE.
 
 	[ ]	$ cd ${WISPSRC}/port
+		$ ./maketail.sh clean		# remove previous builds and make.err
 		$ ./maketail.sh shipkit		# build WISP & EDE
 		
 		

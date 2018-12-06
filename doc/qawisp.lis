@@ -922,7 +922,7 @@
 
     ___ (6) (UNIX) SUBMIT a shell script (with parameters)
 
-        *** The test requires a 2 user license.
+        *** The test requires a 2 user license. (LINUX)
 
         (ACU)    FILE=QABKPACU    in TESTACU    on SOURCE
         (MF)     FILE=QABKPMF     in TESTMF     on SOURCE
