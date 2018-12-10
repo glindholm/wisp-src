@@ -43,6 +43,27 @@ Windows 10
 	wispXXXX_unix_acuXXXX
 		
 
+		
+		
+KCSI
+----
+* Update the Visual Studio project files to:
+	Add libraries: Project > Add Existing Items...
+		wisp.lib
+		video.lib
+		kcsiacu.lib
+	Add file: Source Files > Add Existing Items...
+		wisp_sub85_inc.c 	(Properties > Exclude from build : YES)
+		kcsi_sub85_inc.c 	(Properties > Exclude from build : YES)
+	Add resource: (needed for crun and atm runtimes)
+		wisp.rc
+	Add Preprocessor Definitions: 
+		Properties > Configuration Properties > C/C++ > Preprocessor > Preprocessor Definitions > Edit
+		add _CRT_SECURE_NO_DEPRECATE
+		add KCSI
+
+
+
 Linux
 -----
 
@@ -151,7 +172,7 @@ DONE - Update wisp_packlist.txt (unix)
 
 DONE - KSCI ACU for Extend 10.2 (UNIX)
 
-- KSCI ACU for Extend 10.2 (WINDOWS)
-- Finish acu102_prep_qa for KSCI
+DONE - KSCI ACU for Extend 10.2 (WINDOWS)
+DONE - Finish acu102_prep_qa for KSCI
 
 

@@ -197,10 +197,10 @@
             to \\SERVER\ACUDIR\bin
 
         Console runtime
-        ___ Copy \acu\acu91\acu91_prep_qa\acu_lib_kcsi\crun32.exe
+        ___ Copy \acu\acu102\acu102_prep_qa\acu_lib_kcsi\crun32.exe
             to \\SERVER\ACUDIR\bin
         ___ Copy ACU license file:
-            - C:\ProgramData\Micro Focus\extend\9.1.0\x86
+            - C:\ProgramData\Micro Focus\extend\10.2.0\x86
             - cp wrun32.3lc to crun32.3lc
         
         

@@ -21,8 +21,7 @@ header: $(WISPKITDIR) $(ACUDIR)
 	@echo ">>>>"
 
 
-#prepare:  header prep_wisp prep_kcsi
-prepare:  header prep_wisp 
+prepare:  header prep_wisp prep_kcsi
 
 prep_wisp: clean_wisp
 	mkdir $(BLDDIR_WISP)
