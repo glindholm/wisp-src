@@ -1,14 +1,11 @@
 /* 
-        Copyright (c) 1997 NeoMedia Technologies, Inc., All rights reserved.
-        $Id:$
+        Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 */
 
 /*
 **      File:           kcsimem.h
 **
 **      Project:        kcsi/common
-**
-**      RCS:            $Source:$
 **
 **      Purpose:        Support memory routines
 **

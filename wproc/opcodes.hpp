@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
@@ -129,7 +127,7 @@ char *opcode_name(opcode an_opcode);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/opcodes.hpp,v
+//
 //	Working file: opcodes.hpp
 //	head: 1.4
 //	branch:

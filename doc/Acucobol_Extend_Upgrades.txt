@@ -1,0 +1,178 @@
+Acucobol Extend Upgrades - Instructions for new releases
+========================================================
+
+Windows 10
+----------
+* Install Windows release to *WRITABLE* folder %ACUDIR%=C:\data\Acucorp\AcucblXXXX (not default location)
+	%ACUDIR%=C:\data\Acucorp\AcucblXXXX\AcuGT
+
+* Save original copies of %ACUDIR%\lib and %ACUDIR%\bin
+	%ACUDIR%\lib - Original
+	%ACUDIR%\bin - Original
+
+* Copy acu source files from %ACUDIR%\lib to %WISPSRC%\acu\acu_source\acuXXXX
+	*.c	*.h *.rc *.def *.inc *.res *.sln *.vcxproj
+
+* Create %WISPSRC%\acu\sub85_acuXXXX.c file
+	* Start with the %ACUDIR%\lib\sub85.c file
+	* Apply WISP changes (copy from earlier versions)
+
+* Update the Visual Studio project files to:
+	Add libraries: Project > Add Existing Items...
+		wisp.lib
+		video.lib
+	Add file: Source Files > Add Existing Items...
+		wisp_sub85_inc.c
+			(Properties > Exclude from build : YES)
+	Add resource: (needed for crun and atm runtimes)
+		wisp.rc
+	Add Preprocessor Definitions: 
+		Properties > Configuration Properties > C/C++ > Preprocessor > Preprocessor Definitions > Edit
+		add _CRT_SECURE_NO_DEPRECATE
+		
+* Create WISP/ACU Distribution files in %WISPSRC%\acu\acuXXXX
+
+* Build Patch distribution
+	wispXXXX_win32_acuXXXX
+		README.txt
+		wisp_sub85_inc.c
+		acuXXXX
+			build_wisp_acuXXX_*_rts.txt
+			*.vcxproj
+			sub85.c
+	wispXXXX_unix_acuXXXX
+		
+
+		
+		
+KCSI
+----
+* Update the Visual Studio project files to:
+	Add libraries: Project > Add Existing Items...
+		wisp.lib
+		video.lib
+		kcsiacu.lib
+	Add file: Source Files > Add Existing Items...
+		wisp_sub85_inc.c 	(Properties > Exclude from build : YES)
+		kcsi_sub85_inc.c 	(Properties > Exclude from build : YES)
+	Add resource: (needed for crun and atm runtimes)
+		wisp.rc
+	Add Preprocessor Definitions: 
+		Properties > Configuration Properties > C/C++ > Preprocessor > Preprocessor Definitions > Edit
+		add _CRT_SECURE_NO_DEPRECATE
+		add KCSI
+
+
+
+Linux
+-----
+
+AIX 7
+-----
+IBM's Virtual Loaner Program is now Power Development Platform (PDP)
+https://www-356.ibm.com/partnerworld/wps/ent/pdp/web/MyProgramAccess
+
+
+
+
+
+Micro Focus - extend 10.2.0
+###########################
+
+Windows 10
+==========
+Default Install folder: C:\Program Files (x86)\Micro Focus\extend 10.2.0
+
+Install to: C:\data\Acucorp\Acucbl1020
+%ACUDIR% = C:\data\Acucorp\Acucbl1020\AcuGT
+
+
+Visual Studio 2017 Community
+----------------------------
+- Desktop Developement with C++
+	Add
+	- Visual C++ MFC for x86 and x64
+	- Windows 8.1 SDK and UCRT SDK
+	- C++/CLI support
+- .NET desktop development
+
+
+Clean Rebuild w/o WISP
+----------------------
+Copy %ACUDIR%\lib - %ACUDIR%\lib-no-wisp
+
+VS2017 - open wrun32.sln
+rebuild project - wrundll  (Release Win32)
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	MSB8036	The Windows SDK version 8.1 was not found. Install the required version of Windows SDK or change the SDK version in the project property pages or by right-clicking the solution and selecting "Retarget solution".	wrundll	C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.WindowsSDK.targets	46	
+
+VS2017 Installer: Added - Windows 8.1 SDK and UCRT SDK
+
+VS2017 - open wrun32.sln
+rebuild project - wrundll  (Release Win32)
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Warning	MSB8012	TargetPath(C:\data\Acucorp\Acucbl1020\AcuGT\lib-no-wisp\Release\wrundll.dll) does not match the Linker's OutputFile property value (C:\data\Acucorp\Acucbl1020\AcuGT\lib-no-wisp\wrun32.dll). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).	wrundll	C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets	1216	
+Warning	MSB8012	TargetName(wrundll) does not match the Linker's OutputFile property value (wrun32). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).	wrundll	C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppBuild.targets	1218	
+Error	LNK2019	unresolved external symbol _HPDF_New referenced in function _c_pdf	wrundll	C:\data\Acucorp\Acucbl1020\AcuGT\lib-no-wisp\wrunlib.lib(cpdf.obj)	1	
+
+Severity	Code	Description	Project	File	Line	Suppression State
+Error	LNK2019	unresolved external symbol _pdf_get_current_document referenced in function _get_hpdfdoc	wrundll	C:\data\Acucorp\Acucbl1020\AcuGT\lib-no-wisp\wrunlib.lib(cpdf.obj)	1	
+
+## Acu 10.2.0 is missing PDF library on Windows
+## Add apdf32.lib to AcuGT\lib folder and add library to project in VS2017 
+
+
+Upgrade WISP to Visual Studio 2017
+==================================
+
+Acucobol 10.2 is built using Visual Studio 2017 which is incompatible with libraries built with 
+Visual Studio 2012 and earlier. Earlier versions of WISP were built with Visual Studio 2010 (or 2005) 
+and these libraries will not link against the Acucobol 10.2 libraries.
+
+Microsoft introduced some incompatibilities starting in Visual Studio 2015 that prevent libraries 
+compiled with previous versions of Visual Studio to be linked together if certain features of the 
+standard IO library are being used.  The way standard file handles (stdin, stdout, stderr) are 
+represented have changed in an incompatible way so they cannot be resolved by the linker.
+
+Acucobol 10.2 targets Windows SDK 8.1
+
+
+Errors
+------
+videolib\vrawntcn.c
+	- GetVersionEx(&osVer); deprecated
+
+wispcommon\wisplib.h
+	'time_t': name in formal parameter list illegal	wisplib	d:\work\shellstream\wisp\src\wispcommon\wisplib.h	88	
+
+	>> add #include <time.h>
+	
+nt_wisptran build failing:
+	>> add #include <windows.h> as the first include
+
+
+fgets() EOL handling appeared to change.
+	>> Added code to handle CR, LF End Of Line on Windows
+	
+TODO
+----
+DONE - Add support for new Vision file types
+DONE - Remove incompatable cobol versions from distribution
+DONE - Add support for Acucobol Extend 10.2 
+DONE - Remove old MS Redist files
+DONE - Update wisp_packlist.txt (windows)
+DONE - Update wispntsetup.txt
+
+DONE - Release notes
+
+DONE - AIX support
+DONE - Update wisp_packlist.txt (unix)
+
+DONE - KSCI ACU for Extend 10.2 (UNIX)
+
+DONE - KSCI ACU for Extend 10.2 (WINDOWS)
+DONE - Finish acu102_prep_qa for KSCI
+
+

@@ -3,14 +3,14 @@
 **
 ** KCSI - King Computer Services Inc.
 **
-** $Id:$
+**
 **
 ** 
 ** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
+**
+**
+**
+**
 ******************************************************************************
 */
 
@@ -20,7 +20,7 @@
 **
 **	Project:	wisp/kcsi/common
 **
-**	RCS:		$Source:$
+**
 **
 **	Purpose:	Support routines for memory allocation/administration
 ** 			Indirect memory allocation to allow leak detection and debugging

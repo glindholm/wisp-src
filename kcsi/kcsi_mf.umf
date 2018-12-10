@@ -1,12 +1,9 @@
 #-----------------------------------------------------------------------
 #	Copyright (c) Shell Stream Software LLC, All rights reserved.
-#	$Id:$
 #
 #	File:		kcsi_mf.umf
 #
 #	Project:	KCSI for MICRO FOCUS COBOL
-#
-#	RCS:		$Source:$
 #
 #	Purpose:	To re-build the KCSI executables.
 #

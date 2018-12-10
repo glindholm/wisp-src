@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
@@ -124,7 +122,7 @@ expression *stack::top(int offset) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/stack.cpp,v
+//
 //	Working file: stack.cpp
 //	head: 1.5
 //	branch:

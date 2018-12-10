@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //
 // Copyright (c) Lexical Software, 1991.  All rights reserved.
@@ -824,7 +822,7 @@ char *tracer::symbol_data(symbol &a_symbol, int array_index) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/tracer.cpp,v
+//
 //	Working file: tracer.cpp
 //	head: 1.8
 //	branch:

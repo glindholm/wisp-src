@@ -1,32 +1,23 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 */
 
 /*
 **	File:		vwang.c
 **
 **	Project:	wisp/lib
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Wang workstation emulation
 **
@@ -108,6 +99,7 @@
 #include "wispcfg.h"
 
 #include "werrlog.h"									/* Include error logging definitions.	*/
+#include "idsisubs.h"
 
 /*
 **	Structures and Defines
@@ -6832,10 +6824,7 @@ void vwang_load_charmap(int force)
 			*/
 			while(fgets(inlin,sizeof(inlin)-1,the_file))
 			{
-				if ((ptr = strchr(inlin, '\n'))) 
-				{
-					*ptr = '\0';
-				}
+				WL_remove_eol(inlin);
 
 				if (strlen(inlin) > 0 && inlin[0] != '#') /* Not a comment */
 				{

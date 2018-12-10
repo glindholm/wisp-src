@@ -4,9 +4,8 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 Title:          WISP/UNIX INSTALLATION NOTES
 
 Document:       wisp_install_unix.txt
-Last Updated:   $Date:$
 Products:       WISP/UNIX
-WISPVER:        5.1.10
+WISPVER:        5.1.20
 
 Summary:        How to install WISP from the distribution media.
 
@@ -44,7 +43,7 @@ distribution media.
 
 3)  Unload the tar file with this command:
 
-	$ uncompress -c wisp_XXXX.tar.Z | tar -xvpf -
+    $ uncompress -c wisp_XXXX.tar.Z | tar -xvpf -
 
     This will create directory /usr/local/wisp_XXXX.
 

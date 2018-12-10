@@ -1,6 +1,5 @@
 /*
 ** Copyright (c) 2010, Shell Stream Software LLC. All Rights Reserved.
-** $Id:$
 */
 
 

@@ -1,6 +1,4 @@
 #	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
-#	$Id:$
-#
 #
 #	File:	wacu.mak
 #
@@ -44,7 +42,7 @@
 #ACUDIR=C:\data\Acucorp\ACUCBL910\ACUGT
 
 ## [WISPVER]
-#WISPDIR=C:\WISP5110
+#WISPDIR=C:\WISP5112
 
 COBOL=$(ACUDIR)\bin\ccbl32.exe
 COBFLAGS = -Da4 -Gd -Te 800 -C50 -Z50

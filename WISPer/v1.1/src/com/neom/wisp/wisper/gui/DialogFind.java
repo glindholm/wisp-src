@@ -7,8 +7,7 @@ import java.awt.event.*;
 /**
  * @author Kevin Hunter
  *
- * Copyright (c) 2003, NeoMedia Technologies, Inc.
- * All rights reserved.
+ * Copyright (c) Shell Stream Software LLC, All Rights Reserved.
  */
 public class DialogFind extends JDialog
 {

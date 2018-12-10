@@ -1,25 +1,18 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 ******************************************************************************
 */
 
@@ -27,8 +20,6 @@
 **	File:		wisplib.h
 **
 **	Project:	WISPLIB
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Function prototypes for WISPLIB subs
 **
@@ -39,6 +30,7 @@
 /*
 **	Includes
 */
+#include <time.h>
 #include <sys/types.h>
 #include "intdef.h"
 
@@ -93,6 +85,7 @@ long WL_inode(const char* name);
 #ifdef WIN32
 typedef unsigned short mode_t;
 #endif
+
 int WL_stat_mode(const char* name, mode_t *mode);
 int WL_stat_ctime(const char* name, time_t *create_time);
 int WL_stat_mtime(const char* name, time_t *mod_time);

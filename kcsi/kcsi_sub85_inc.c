@@ -1,8 +1,6 @@
 /*
 **	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
-**	$Id:$
-**
 **	KCSI fragments for include into sub85.c 
 **
 **	This file is divided into three fragments, each is enclosed 

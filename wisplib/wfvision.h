@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 1998 NeoMedia Technologies, All rights reserved.
+	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 	$Id:$
 */
 
@@ -8,7 +8,7 @@
 **
 **	Project:	WISP/LIB
 **
-**	RCS:		$Source:$
+**
 **
 **	Purpose:	Vision file routines
 **
@@ -32,6 +32,8 @@
 #define VISION4D_MAGIC 		"\x10\x12\x14\x19\x00\x04"
 #define VISION5I_MAGIC 		"\x10\x12\x14\x18\x00\x05"
 #define VISION5D_MAGIC 		"\x10\x12\x14\x19\x00\x05"
+#define VISION6I_MAGIC 		"\x10\x12\x14\x18\x00\x06"
+#define VISION6D_MAGIC 		"\x10\x12\x14\x19\x00\x06"
 
 /*
 **	Function Prototypes

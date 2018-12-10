@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
@@ -248,7 +246,7 @@ symbol *compiler::declare_label(const char *a_name, Boolean is_subroutine) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_decl.cpp,v
+//
 //	Working file: p_decl.cpp
 //	head: 1.6
 //	branch:

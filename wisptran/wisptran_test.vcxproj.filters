@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Cobol Files">
+      <UniqueIdentifier>{fd5b0cfe-5ae6-4bea-9302-748b8f43cac7}</UniqueIdentifier>
+      <Extensions>wcb</Extensions>
+    </Filter>
+    <Filter Include="Cob files">
+      <UniqueIdentifier>{18c92373-83fb-4542-b022-2fe86a751bc6}</UniqueIdentifier>
+      <Extensions>cob</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="DOCSRC01.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_accept.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_add.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_call.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_close.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_commit.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_delete.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_display.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_free.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_go.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_hold.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_if.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_literal.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_merge.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_move.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_open.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_perform.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_progid.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_read.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_rewrite.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_search.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_set.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_sort.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_start.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_stop.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_string.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="t_write.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="test0000.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="test0001.wcb">
+      <Filter>Cobol Files</Filter>
+    </None>
+    <None Include="DOCSRC01.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_accept.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_add.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_call.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_close.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_commit.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_delete.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_display.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_free.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_go.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_hold.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_if.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_literal.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_merge.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_move.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_open.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_perform.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_progid.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_read.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_rewrite.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_search.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_set.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_sort.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_start.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_stop.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_string.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="t_write.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="test0000.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="test0001.cob">
+      <Filter>Cob files</Filter>
+    </None>
+    <None Include="all_options_test.txt" />
+    <None Include="wisp.opt" />
+    <None Include="wisptran_test.mak" />
+  </ItemGroup>
+</Project>

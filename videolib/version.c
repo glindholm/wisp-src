@@ -1,14 +1,7 @@
 /*
 ******************************************************************************
 ** Copyright (c) Shell Stream Software LLC. All Rights Reserved.
-**
-** $Id:$
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 ******************************************************************************
 */
 
@@ -17,8 +10,6 @@
 **	File:		version.c
 **
 **	Project:	video/lib
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	VIDEO screen handler version
 **

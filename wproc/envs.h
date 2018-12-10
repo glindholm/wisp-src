@@ -1,13 +1,11 @@
 /*
-	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 */
 
 /*
 **	File:		envs.h
 **
 **	Project:	wproc
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Defines for wproc environment variables.
 **

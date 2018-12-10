@@ -1,32 +1,23 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 */
 
 /*
 **	File:		wsb.c
 **
 **	Project:	WISPLIB
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Construct, display, and retrieve screen buffers
 **
@@ -871,7 +862,7 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 			if ((ptr = strchr(l_keylist,'X')))
 			{
 				*ptr = (char)0;
-				key_cnt = strlen(l_keylist) / 2;
+				key_cnt = (uint2)(strlen(l_keylist) / 2);
 			}
 			if (key_cnt < 1)
 			{

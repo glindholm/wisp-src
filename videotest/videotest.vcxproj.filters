@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{3190ac10-b97d-4a38-8eb8-7f0dea5bfcb9}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{208f6f6a-c833-435f-a79d-17f673826912}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{8a6a3d00-c88f-4c70-912b-d3d01b75f64a}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dump_map.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtest0.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtesta.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vteste.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtesth.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtesti.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestj.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestk.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestn.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtesto.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestq.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtests.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestv.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestw.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestx.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtesty.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtestz.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

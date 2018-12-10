@@ -1,5 +1,4 @@
 /*
-** $Id:$
 ** WISP - Wang Interchange Source Processor
 ** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 */
@@ -923,7 +922,7 @@ int define_acu(const char* rts)
 	{
 		FILE 	*the_file;
 		char	keyword[80];
-		int	cnt,len;
+		int	cnt;
 
 		print_config_file(a_config);
 
@@ -940,8 +939,7 @@ int define_acu(const char* rts)
 				while(fgets(inlin,sizeof(inlin)-1,the_file))
 				{
 					char* equalsPtr;
-					len=strlen(inlin);
-					if (len>0 && inlin[len-1] == '\n') inlin[len-1] = '\0';	/* Null out the newline char	*/
+					WL_remove_eol(inlin);
 					cnt = sscanf(inlin,"%s",keyword);
 					if ( cnt < 1 ) continue;
 
@@ -1392,13 +1390,8 @@ int run_command(char *command)
 	{
 		while (fgets(buff, sizeof(buff), file) != NULL)
 		{
-			char	*ptr;
+			WL_remove_eol(buff);
 
-			if ((ptr=strchr(buff,'\n')))
-			{
-				*ptr = '\0';
-			}
-			
 			print_inset_nl(buff);
 		}
 		pclose(file);
@@ -1505,13 +1498,8 @@ static void cat_file(const char* file_path)
 		printf("%s:\n",file_path);
 		while(fgets(inlin,sizeof(inlin)-1,the_file))
 		{
-			char *ptr;
-			
-			if ((ptr=strchr(inlin,'\n')))
-			{
-				*ptr = '\0';
-			}
-			
+			WL_remove_eol(inlin);
+
 			print_inset_nl(inlin);
 		}
 		fclose(the_file);
@@ -1536,11 +1524,8 @@ void print_config_file(const char* options_path)
 	{
 		while(fgets(inlin,sizeof(inlin)-1,the_file))
 		{
+			WL_remove_eol(inlin);
 			len=strlen(inlin);
-			if (len>0 && inlin[len-1] == '\n') 
-			{
-				inlin[--len] = '\0';	/* Null out the newline char	*/
-			}
 
 			/*
 			 *	If not continued (a new line) then set the comment flag

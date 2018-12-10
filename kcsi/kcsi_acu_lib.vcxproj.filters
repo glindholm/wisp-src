@@ -1,0 +1,317 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{50024eb3-0f99-4e4c-b9b0-a8c31a75b108}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{fdf53a04-a48e-40ea-913e-40e8c9cab601}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="brlio.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bub.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ccsioerr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cridebug.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cridvers.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dadd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="daux.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dbsc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dchg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ddel.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dglb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dkey.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dmnt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dtedat.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dtekey.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dval.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="igen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="iglb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="inidio.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="iprs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="itkn.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="iwrt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kcsio.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kcsit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kdisp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kexists.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kv3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ll.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="piclen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rbld.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rcal.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rcmp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rcvs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rcvt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rfmt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rglb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rpln.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rsel.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rsrt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtie.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rwhlp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rwop.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rwrt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rwsrt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="seqio.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="strtkn.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="valflv.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vcsio.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="version.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vscrbchk.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vscrblk.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vscrdbg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vscreoj.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vscrffld.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vscrfile.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vscrglb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vscrhelp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vscrout.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vscrspky.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="assert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cobioblk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cobstat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="create.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="crec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="crid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cridebug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="datcob.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dbsc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dcontrol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dglb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="disam.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dmnt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dtype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dtype2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="iglb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="intdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="iocode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="itkn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kcsifunc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kcsimem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kcsio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kcsit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kisam.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kwisp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mffcd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mffcd01.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rlmg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rptcob.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rptglb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rptprm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rptsrt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shrthand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="strtkn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="visn2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="visn3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vscrglb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wispscr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

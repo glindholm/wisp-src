@@ -1,32 +1,23 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 */
 
 /*
 **	File:		wperson.c
 **
 **	Project:	wisp/lib
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Loading personality and other options.
 **
@@ -860,13 +851,10 @@ int WL_load_options(void)					/* Load the runtime OPTIONS file.		*/
 				bContinued = 0;
 				if (NULL!=fgets(inlin,sizeof(inlin)-1,the_file))
 				{
+					WL_remove_eol(inlin);
 					len=strlen(inlin);
-					if (len>0 && '\n'==inlin[len-1]) 	/* Strip off the newline char */
-					{
-						inlin[--len] = '\0';
-					}
 
-				        /*
+				    /*
 					 *	Check for continued line
 					 */
 					if (len>0 && '\\'==inlin[len-1])
@@ -1719,10 +1707,12 @@ static void load_lpmap(void)
 
 		while (fgets(inlin,sizeof(inlin),the_file))
 		{
-			if (inlin[0]=='\n')
+			WL_remove_eol(inlin);
+			if (strlen(inlin) == 0 )
 			{
 				continue;
 			}
+
 			if (!prt_list)						/* first time?				*/
 			{
 				prt_list = (prt_id *)wisp_malloc(sizeof(prt_id));/* get some memory			*/
@@ -1734,11 +1724,6 @@ static void load_lpmap(void)
 				prt_ptr->next = (struct prt_id *)wisp_malloc(sizeof(prt_id));/* get some memory		*/
 				prt_ptr = (prt_id *)prt_ptr->next;		/* set pointer				*/
 				prt_ptr->next = NULL;				/* set next pointer to zero		*/
-			}
-
-			if ('\n' == inlin[strlen(inlin)-1])
-			{
-				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
 			}
 
 			if ( strlen(inlin) < 4 )				/* 4 = class + space + code + NL 	*/
@@ -2179,10 +2164,7 @@ static void load_scmap(void)
 				wexit(WERRCODE(83024));
 			}
 
-			if (inlin[strlen(inlin)-1]=='\n')
-			{
-				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
-			}
+			WL_remove_eol(inlin);
 
 			scmap_ptr->class = toupper(inlin[0]);			/* get the class			*/
 			scmap_ptr->nice = atoi(&inlin[2]);			/* convert nice to int			*/
@@ -2255,10 +2237,7 @@ static void load_cqmap(void)
 				wexit(WERRCODE(83024));
 			}
 
-			if (inlin[strlen(inlin)-1]=='\n')
-			{
-				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
-			}
+			WL_remove_eol(inlin);
 			cqmap_ptr->class = toupper(inlin[0]);			/* get the class			*/
 			cqmap_ptr->queue = wisp_strdup(&inlin[2]);		/* dupe the queue name 			*/
 		}
@@ -2303,10 +2282,7 @@ static void load_forms(void)
 				forms_ptr->next = NULL;				/* set next pointer to zero		*/
 			}
 
-			if (inlin[strlen(inlin)-1]=='\n')
-			{
-				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
-			}
+			WL_remove_eol(inlin);
 
 			inlin[3] = '\0';					/* null term after form#		*/
 			forms_ptr->form_num = atoi(inlin);			/* convert formnum to int		*/
@@ -2351,7 +2327,7 @@ static void load_prmap(void)
 
 		while (fgets(inlin,sizeof(inlin),the_file))
 		{
-			if (inlin[0]=='\n')
+			if (inlin[0] == '#' || inlin[0] == '\n' || inlin[0] == '\r')
 			{
 				continue;
 			}
@@ -2381,10 +2357,7 @@ static void load_prmap(void)
 				wexit(WERRCODE(83028));
 			}
 
-			if (inlin[strlen(inlin)-1]=='\n')
-			{
-				inlin[strlen(inlin)-1] = '\0';			/* remove trailing NL			*/
-			}
+			WL_remove_eol(inlin);
 
 			inlin[3] = '\0';					/* null term after printer #		*/
 			prmap_ptr->prmap_num = atoi(inlin);			/* convert printer # to int		*/
@@ -2445,7 +2418,7 @@ static void load_dispfac(void)
 {
 static	int	first=1;
 	FILE 	*the_file;
-	int	cnt, i, ndx, len;
+	int	cnt, i, ndx;
 	char	inlin[132], *ptr;
 	int	t_dchar;
 	char dispfac_path[WPATH_LEN];
@@ -2468,8 +2441,7 @@ static	int	first=1;
 		{
 			if (*inlin != '#')						/* Check if a comment.			*/
 			{
-				len=strlen(inlin);
-				if (len>0 && inlin[len-1] == '\n') inlin[len-1] = '\0';	/* Null out the newline char		*/
+				WL_remove_eol(inlin);
 				cnt = sscanf(inlin,"%x",&ndx);
 
 				if ( cnt < 1 ) continue;

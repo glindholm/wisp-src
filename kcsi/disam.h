@@ -1,4 +1,3 @@
-/* $Id:$ */
 #ifndef _DISAM_H
 #define _DISAM_H
 /*----

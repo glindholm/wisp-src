@@ -1,32 +1,23 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 */
 
 /*
 **	File:		win32msg.c
 **
 **	Project:	WISPLIB
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	unix message queue compatibility
 **
@@ -67,6 +58,14 @@ typedef struct win32msg_s {
 #define WIN32MSGERRCHK(cond, txt, arg) if (cond) { \
   char errtxt1[1024], *errtxt2;\
   sprintf(errtxt1,txt,arg);\
+  errtxt2=WL_GetWin32Error(errtxt1);\
+  WL_werrlog_error(WERRCODE(104),"WIN32MSG","ERRCHK", "%s", errtxt2);\
+  errno=EINVAL;\
+  return -1;} 
+
+#define WIN32MSGERRCHK0(cond, txt) if (cond) { \
+  char errtxt1[1024], *errtxt2;\
+  sprintf(errtxt1,txt);\
   errtxt2=WL_GetWin32Error(errtxt1);\
   WL_werrlog_error(WERRCODE(104),"WIN32MSG","ERRCHK", "%s", errtxt2);\
   errno=EINVAL;\
@@ -251,14 +250,14 @@ int WL_win32msgsnd(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nFlag)
 	}
 
 	bSuccess=ReadFile(hTheFile, (void*)&nMagic, (DWORD)sizeof(nMagic), &nRead, NULL);
-	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: ReadFile failed (magic number)",0);
+	WIN32MSGERRCHK0(!bSuccess,"WL_win32msgsnd: ReadFile failed (magic number)");
 	WIN32MSGERRCHK(nMagic != WIN32MAGIC, "WL_win32msgsnd: ReadFile read invalid magic number %08X",nMagic);
 
 	bSuccess=ReadFile(hTheFile, (void*)&nMsgCount, (DWORD)sizeof(nMsgCount), &nRead, NULL);
-	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: ReadFile failed (message count)",0);
+	WIN32MSGERRCHK0(!bSuccess,"WL_win32msgsnd: ReadFile failed (message count)");
 	
 	bSuccess=ReadFile(hTheFile, (void*)&nByteCount, (DWORD)sizeof(nByteCount), &nRead, NULL);
-	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: ReadFile failed (byte count)",0);
+	WIN32MSGERRCHK0(!bSuccess,"WL_win32msgsnd: ReadFile failed (byte count)");
 
 	/*
 	** position the pointer at the end of the file.. 
@@ -288,7 +287,7 @@ int WL_win32msgsnd(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nFlag)
 	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: Writefile failed (message length %d)",nPassedMsgLen);
 
 	bSuccess = WriteFile(hTheFile, (void*)pData, nPassedMsgLen, &nWritten, NULL);
-	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: Writefile failed (message data)",0);
+	WIN32MSGERRCHK0(!bSuccess,"WL_win32msgsnd: Writefile failed (message data)");
 
 	/*
 	** reposition the pointer to right after the magic to update the msgcount and bytecount
@@ -375,11 +374,11 @@ int WL_win32msgrcv(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nPassedMsg
 		}
 		
 		bSuccess=ReadFile(hTheFile, (void*)&nMagic, (DWORD)sizeof(nMagic), &nRead, NULL);
-		WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: ReadFile failed (magic number)",0);
+		WIN32MSGERRCHK0(!bSuccess,"WL_win32msgrcv: ReadFile failed (magic number)");
 		WIN32MSGERRCHK(nMagic != WIN32MAGIC, "WL_win32msgrcv: ReadFile read invalid magic number %08X",nMagic);
 
 		nFileSize=GetFileSize(hTheFile,NULL);
-		WIN32MSGERRCHK(nFileSize == WIN32BADFILEPOS, "WL_win32msgrcv: GetFileSize failed",0);
+		WIN32MSGERRCHK0(nFileSize == WIN32BADFILEPOS, "WL_win32msgrcv: GetFileSize failed");
 
 		/*
 		** compute the size of the data area we need; it is the actual filesize reported
@@ -394,10 +393,10 @@ int WL_win32msgrcv(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nPassedMsg
 		** now read the msgcount, bytecount, and message data
 		*/
 		bSuccess=ReadFile(hTheFile, (void*)&nMsgCount, (DWORD)sizeof(nMsgCount), &nRead, NULL);
-		WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: ReadFile failed (message count)",0);
+		WIN32MSGERRCHK0(!bSuccess,"WL_win32msgrcv: ReadFile failed (message count)");
 
 		bSuccess=ReadFile(hTheFile, (void*)&nByteCount, (DWORD)sizeof(nByteCount), &nRead, NULL);
-		WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: ReadFile failed (byte count)",0);
+		WIN32MSGERRCHK0(!bSuccess,"WL_win32msgrcv: ReadFile failed (byte count)");
 
 		bSuccess=ReadFile(hTheFile, (void*)pData, nAdjFileSize, &nRead, NULL);
 		WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: ReadFile failed (message data %d bytes)",nAdjFileSize);
@@ -596,11 +595,11 @@ int WL_win32msgctl(int nTheKey, int nFunction, struct msqid_ds *mctlbuf)
 		}
 
 		bSuccess=ReadFile(hTheFile, (void*)&nMagic, (DWORD)sizeof(nMagic), &nRead, NULL);
-		WIN32MSGERRCHK(!bSuccess,"WL_win32msgctl: ReadFile failed (magic number)",0);
+		WIN32MSGERRCHK0(!bSuccess,"WL_win32msgctl: ReadFile failed (magic number)");
 		WIN32MSGERRCHK(nMagic != WIN32MAGIC, "WL_win32msgctl: ReadFile read invalid magic number %08X",nMagic);
 
 		bSuccess=ReadFile(hTheFile, (void*)&nMsgCount, (DWORD)sizeof(nMsgCount), &nRead, NULL);
-		WIN32MSGERRCHK(!bSuccess,"WL_win32msgctl: ReadFile failed (message count)",0);
+		WIN32MSGERRCHK0(!bSuccess,"WL_win32msgctl: ReadFile failed (message count)");
 
 		mctlbuf->msg_qnum = nMsgCount;
 		bSuccess=CloseHandle(hTheFile);

@@ -1,7 +1,12 @@
+# Temp files
 *~
 .#*
+
+# CVS
 CVS/
 .cvsignore
+
+# Generated
 /bin/
 /ede/bin/
 /WISPer/*/bin/
@@ -9,22 +14,45 @@ CVS/
 /kit/
 /lib/
 /QA/
+/testacu/
+/testmf/
+*.ship
+.wisper
+
+/wisp.opt
+
+# Binaries
+*.o
+*.a
+*.lib
+*.exe
+*.obj
+
+# Build
 Debug/
 Release/
 x64/
-#/testacu/
-#/testmf/
 *_Win32_Release/
 *_Win32_Debug/
-/wisp.ncb
-/wisp.opt
-/wisp.suo
-Thumbs.db
-make.err
-*.vcproj.*.*.user
-*.ship
+
+*.ncb
+*.suo
 *.plg
 *.ilk
 *.pdb
 *.aps
 
+*.vcproj.*.*.user
+*.log
+*.err
+
+# Windows
+Thumbs.db
+
+
+*.sdf
+*.opensdf
+*.bsc
+ipch/
+.vs/
+wdiag.txt

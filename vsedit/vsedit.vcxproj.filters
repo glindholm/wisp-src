@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{c7f13d0f-1617-43cf-a6c6-d15c1a7e02b6}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{f59de8c2-98e7-4792-aaa9-293cfdd8ff78}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{d2cea542-67d7-4483-b84d-126a8737f0ae}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="vsebasic.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsedel.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsedfnd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsedins.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsedit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsedmod.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsedscr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vseglb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsegp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsegps.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vseinp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsemain.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsemov.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsenaf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsescr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsespmnu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsestmnu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsetxt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vseutl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="vsebasic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsedel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsedfnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsedit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsedit_rc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsedmod.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsedscr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vseglb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsegp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsegps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsemov.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsescr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vsetxt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vseutl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="vsedit.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\wispcommon\wispicon.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

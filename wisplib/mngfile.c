@@ -1,30 +1,21 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** $Id:$
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 */
 
 /*
 **	File:		mngfile.c
 **
 **	Project:	wisp/lib
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Emulate Wang Manage Files and Libraries
 **
@@ -211,6 +202,8 @@ static int	file_screen_return;							/* Return to from file_screen		*/
 #define FILE_SHELL	17
 #define FILE_VISION5D	18
 #define FILE_VISION5I	19
+#define FILE_VISION6D	20
+#define FILE_VISION6I	21
 
 #define VOL_OPTION_NONE		0
 #define VOL_OPTION_WANG		1
@@ -1981,7 +1974,7 @@ static int select_rename(int file_type)
 					ecnt=0;
 					while( ecnt<8 && fgets(pbuf,80,fp) != NULL )
 					{
-						pbuf[strlen(pbuf)-1] = '\0';		/* remove the newline			*/
+						WL_remove_eol(pbuf);
 						strcpy(ebuf[ecnt],pbuf);
 						ecnt++;
 					}
@@ -2439,10 +2432,16 @@ static int build_file_screen(HWSB hWsb, char* pf_list, int protect, int filetype
 			strcpy(type,"VISION 4 (INDEX)");
 			break;
 		case FILE_VISION5D:
-			strcpy(type,"VISION 5 (DATA)");
+			strcpy(type, "VISION 5 (DATA)");
 			break;
 		case FILE_VISION5I:
-			strcpy(type,"VISION 5 (INDEX)");
+			strcpy(type, "VISION 5 (INDEX)");
+			break;
+		case FILE_VISION6D:
+			strcpy(type, "VISION 6 (DATA)");
+			break;
+		case FILE_VISION6I:
+			strcpy(type, "VISION 6 (INDEX)");
 			break;
 		case FILE_TEXT:
 			strcpy(type,"TEXT");
@@ -3021,6 +3020,16 @@ static int typefile(const char* file)
 	if (0==memcmp(header, VISION5D_MAGIC, VISION_MAGIC_LEN))
 	{
 		return FILE_VISION5D;
+	}
+
+	if (0 == memcmp(header, VISION6I_MAGIC, VISION_MAGIC_LEN))
+	{
+		return FILE_VISION6I;
+	}
+
+	if (0 == memcmp(header, VISION6D_MAGIC, VISION_MAGIC_LEN))
+	{
+		return FILE_VISION6D;
 	}
 
 	if ( header[0] == 0xFE && header[1] == 0x53 )

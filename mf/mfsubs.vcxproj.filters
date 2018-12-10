@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{01518754-09ea-4c05-83c5-91edbc7b475b}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{a85b25ec-d3ca-4a92-92c9-ed3e09d2303e}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="wisp4400.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wispmf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="mf.rules" />
+    <None Include="MFLINK.cob" />
+    <None Include="..\doc\mfnativescreens.txt" />
+    <None Include="wrunmf.umf" />
+  </ItemGroup>
+</Project>

@@ -1,7 +1,7 @@
       * FILESYS.DEF - contains useful variables and values for use with
       * the ACUCOBOL file handler.
 
-      * $Id: filesys.def,v 1.1 2004/03/09 20:52:02 gsl Exp $
+      * $Id: filesys.def,v 1.25.2.2 2002/10/22 14:56:56 mark Exp $
 
       * Limits and ranges
 

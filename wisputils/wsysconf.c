@@ -4,13 +4,13 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
+**
 ** 
 ** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
+**
+**
+**
+**
 ******************************************************************************
 */
 

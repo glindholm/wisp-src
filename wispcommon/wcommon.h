@@ -15,11 +15,6 @@
 */
 
 /*
- * $Id:$
- * $Source:$
- */
-
-/*
 **	File:		wcommon.h
 **
 **	Project:	wisp
@@ -50,20 +45,41 @@
 	- acu/wacu.mak			WISPVER
 	- kcsi/kcsi_relnotes.txt	WISPVER
 	- kcsi/kcsintsetup.txt		WISPVER
-	- vsedit/vsedit.rc		PRODUCTVERSION
-	- wisputils/display.rc		PRODUCTVERSION
-	- wisputils/wusage.rc		PRODUCTVERSION
+
+	*** Search for "PRODUCTVERSION" ***
+	
+	Each RC file has four (4) places that need changing.
+		- FILEVERSION 5, 1, 2, 0
+		- PRODUCTVERSION 5, 1, 2, 0
+		- VALUE "FileVersion", "5, 1, 2, 0"
+		- VALUE "ProductVersion", "5.1.20"
+
+
+	nt/wisptran/_WispWin.rc:	PRODUCTVERSION
+	nt/wconfig/_ConfigUtil.rc:	PRODUCTVERSION
+	vsedit/vsedit.rc:		PRODUCTVERSION
+	wisptran/wisptran.rc:		PRODUCTVERSION
+	wisputils/wcopy.rc:		PRODUCTVERSION
+	wisputils/wrun.rc:		PRODUCTVERSION
+	wisputils/wsort.rc:		PRODUCTVERSION
+	wisputils/wlicense.rc:		PRODUCTVERSION
+	wisputils/wshell.rc:		PRODUCTVERSION
+	wisputils/wdiag.rc:		PRODUCTVERSION
+	wisputils/display.rc:		PRODUCTVERSION
+	wisputils/wusage.rc:		PRODUCTVERSION
+	wproc/wproc.rc:			PRODUCTVERSION
+
 */
-#define WISP_VERSION		"V5.1.11"	/* WISPTRAN version (char[20])		*/
-#define WISP_VERSION_NUM	5111		/* WISPVER */
+#define WISP_VERSION		"V5.1.20"	/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION_NUM	5120		/* WISPVER */
 #define WISP_LICENSE_VERSION	51
 
 #define WISP_SCREEN_VERSION	22		/* SCREEN version number.		*/
 
 /* CHANGE-COPYRIGHT-DATE */
 #define WISP_OWNER "Shell Stream Software LLC"
-#define WISP_COPYRIGHT_YEAR_STR	"2012"
-#define WISP_COPYRIGHT_YEAR_INT	2012
+#define WISP_COPYRIGHT_YEAR_STR	"2018"
+#define WISP_COPYRIGHT_YEAR_INT	2018
 #define WISP_PHONE_NUMBER "(813) 425-6344"
 #define WISP_EMAIL "wisp@shellstream.com"
 #define WISP_WEBSITE "www.shellstream.com"

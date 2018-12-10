@@ -4,9 +4,8 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 Title:          KCSI PACKING LIST
 
 Document:       kcsi_packlist.lis
-Last Updated:   $Date:$
 Products:       KCSI
-Versions:       4.2.00
+Versions:       4.2.01 [KCSIVER]
 
 Summary:        Packing list for the KCSI utilities shipping kit.
 
@@ -51,31 +50,24 @@ INQUIRY                   - INQUIRY  utility (ACUCOBOL object file)
 DATENTRY                  - DATENTRY utility (ACUCOBOL object file)
 CREATE                    - CREATE   utility (ACUCOBOL object file)
 
-acu91\build_kcsi_acu91_rts.txt		- Build instructions for ACUCOBOL 9.1.x 
-acu91\build_kcsi_acu91_con_rts.txt	- Build instructions for ACUCOBOL 9.1.x Console 
-acu91\wrundll.vcxproj			- Project file for ACUCOBOL 9.1.x
-acu91\wrun32.sln			- Project file for ACUCOBOL 9.1.x
-acu91\crun32.vcxproj			- Project file for ACUCOBOL 9.1.x Console
-acu91\crun32.sln			- Project file for ACUCOBOL 9.1.x Console
+acu102\build_kcsi_acu102_rts.txt     - Build instructions for ACUCOBOL 10.2.x 
+acu102\build_kcsi_acu102_atm_rts.txt - Build instructions for ACUCOBOL 10.2.x ATM 
+acu102\build_kcsi_acu102_con_rts.txt - Build instructions for ACUCOBOL 10.2.x Console 
+acu102\wrundll.vcxproj               - Project file for ACUCOBOL 10.2.x
+acu102\crun32.vcxproj                - Project file for ACUCOBOL 10.2.x Console
+acu102\run32.vcxproj                 - Project file for ACUCOBOL 10.2.x ATM
 
-acu90\build_kcsi_acu90_rts.txt		- Build instructions for ACUCOBOL 9.0.x 
-acu90\build_kcsi_acu90_con_rts.txt	- Build instructions for ACUCOBOL 9.0.x Console 
-acu90\wrundll.vcproj			- Project file for ACUCOBOL 9.0.x
-acu90\crun32.vcproj			- Project file for ACUCOBOL 9.0.x Console
+acu91\build_kcsi_acu91_rts.txt     - Build instructions for ACUCOBOL 9.1.x 
+acu91\build_kcsi_acu91_con_rts.txt - Build instructions for ACUCOBOL 9.1.x Console 
+acu91\wrundll.vcxproj              - Project file for ACUCOBOL 9.1.x
+acu91\wrun32.sln                   - Project file for ACUCOBOL 9.1.x
+acu91\crun32.vcxproj               - Project file for ACUCOBOL 9.1.x Console
+acu91\crun32.sln                   - Project file for ACUCOBOL 9.1.x Console
 
-acu72\build_kcsi_acu72_rts.txt - Build instructions for ACUCOBOL 7.2.x
-acu72\wrundll.vcproj           - Project file for ACUCOBOL 7.2.x
-
-acu62\build_kcsi_acu62_rts.txt - Build instructions for ACUCOBOL 6.2
-acu62\wrundll.vcproj           - Project file for ACUCOBOL 6.2
-
-acu60\build_kcsi_acu60_rts.txt - Build instructions for ACUCOBOL 6.0
-acu60\wrundll_wisp_acu60.mak   - Makefile for ACUCOBOL 6.0 runtime
-acu60\wrundll_wisp_acu60.dsp   - Project file for ACUCOBOL 6.0 runtime
-
-acu5\wrun32wisp_kcsi_acu50.mak - Makefile for ACUCOBOL 5.0 runtime
-acu5\wrun32wisp_kcsi_acu51.mak - Makefile for ACUCOBOL 5.1 runtime
-acu5\wrun32wisp_kcsi_acu52.mak - Makefile for ACUCOBOL 5.2 runtime
+acu90\build_kcsi_acu90_rts.txt     - Build instructions for ACUCOBOL 9.0.x 
+acu90\build_kcsi_acu90_con_rts.txt - Build instructions for ACUCOBOL 9.0.x Console 
+acu90\wrundll.vcproj               - Project file for ACUCOBOL 9.0.x
+acu90\crun32.vcproj                - Project file for ACUCOBOL 9.0.x Console
 
 kcsiacu.lib               - KCSI library for building runtime
 kcsi_sub85_inc.c          - C include file for building runtime

@@ -1,0 +1,693 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{f93cf457-f025-4ffa-bf0d-5fe945547d36}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{17c7f096-8fed-458c-bbfa-36f7e9978563}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{d1062a92-8235-4e49-b176-35266ca81fce}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="acustubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="backgrnd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bell.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bit_x.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bits.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="breakacp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cancel.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cexit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="checkacp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="closeacp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="coblink.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cobpic.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cobscrn.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="costar.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="customvw.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="date.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="day.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dbfile.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="edestubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="errgparm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="extract.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fcopy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fexists.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filecopy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filesize.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filgparm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="find.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="findcase.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="findexts.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fxzone.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wispcommon\getopt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="getparm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gparmbld.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hexunpk.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="idsisubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="initglbs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="initwisp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="isexec.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="level.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="licwisp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="link.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="linkproc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="linksubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="linkvect.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="logoff.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="longarg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="machid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="makepath.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="menu_go.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="menu_key.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="menuread.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="menuscan.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="message.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mfstubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mngfile.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mwconv.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nextfile.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="onhelp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="openacp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="operator.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="packer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="paths.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="platsubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="print.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="putparm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pwdname.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="readacp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="readfdr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="readvtoc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rename.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="retcode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wispcommon\ring.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="runtype.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rvmap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scratch.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="screen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="search.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="set.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="setenvst.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="setfile.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="setprgid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="settrigp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sharemem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shutexit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sort.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sortcall.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sortlink.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sortseqf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="submit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="untabify.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="updatfdr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="upper.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vdisplay.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vssort.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vwang.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="waccept.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wangmenu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wanguid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wassert.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wauthsub.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wchain.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wcmatch.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wdisplay.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="werrlog.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="werrpath.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="werrvre.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wexit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wexith.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wfaccess.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wfcisam.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wfclose.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wfilechk.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wfiledis.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wfileext.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wfname.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wfopen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wftok.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wfvision.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wfwait.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wgetpgrp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wglobals.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win32err.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win32msg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win32prt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="win32spn.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="winnt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wispcommon\wisp_pic.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wispcfg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wispexit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wispsort.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wispsync.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wispvers.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wlickey.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wmalloc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wpause.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wperson.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wprint.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="writeacp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wrunconf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wsb.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wsclose.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wscreen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wsfnm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wsfns.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wshelp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wswap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wsxio.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wsystem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wvaset.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wwaitpid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="acp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="assert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cobpic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cobrun.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cobscrn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\costar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="day.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fcopy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\filext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="filgparm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\getopt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\hexunpk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\idsistd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\idsisubs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\intdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\isonames.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\level.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\link.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linkvect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\machid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="menu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="osddefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="p0x386.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="p2x386.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\paths.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\platsubs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\prompt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\putparm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\ring.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="runtype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rvmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\scnfacs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="screen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\setenvst.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="setprgid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\sharemem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\sortseqf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="submit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vdispidx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="visint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="visn2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="visn3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\vssort.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\vwang.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wangkeys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wanguid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wcommon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wdefines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\werrlog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wexit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wfaccess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wfiledis.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wfiles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wfname.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wglobals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win32err.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win32msg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="win32spn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\win32std.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wisp_pic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wispcfg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wisplib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wispnt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wispvers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wlicense.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wmalloc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wperson.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wplatdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wrunconf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wsb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wsfns.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wispcommon\wsysconf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="libwisp.umf" />
+  </ItemGroup>
+</Project>

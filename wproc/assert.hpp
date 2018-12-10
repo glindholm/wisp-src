@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
@@ -37,7 +35,7 @@ void assert_error(char *source_file, int line_number);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/assert.hpp,v
+//
 //	Working file: assert.hpp
 //	head: 1.5
 //	branch:

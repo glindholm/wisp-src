@@ -4,9 +4,8 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 Title:          KCSI for Acucobol on Windows (WIN32) Setup
 
 Document:       kcsintsetup.txt
-Last Updated:   $Date:$
 Products:       KCSI/WIN32 for Acucobol
-KCSIVER:        4.2.00 
+Version:        4.2.01 [KCSIVER]
 
 Summary:        Quick setup steps for KCSI on Windows.
 
@@ -54,17 +53,9 @@ The Steps
     Follow the build instructions for your version of 
     Acucobol.
 
-       For Acucobol-GT 9.1 see:
-        - C:\KCSIACUxxxx\acu91\build_kcsi_acu91_rts.txt
+       For Acucobol-GT 10.2 see:
+        - C:\KCSIACUxxxx\acu102\build_kcsi_acu102_rts.txt
 
-       For Acucobol-GT 9.0 see:
-        - C:\KCSIACUxxxx\acu90\build_kcsi_acu90_rts.txt
-
-       For Acucobol-GT 7.2 see:
-        - C:\KCSIACUxxxx\acu72\build_kcsi_acu72_rts.txt
-
-       For Acucobol-GT 6.0 see:
-        - C:\KCSIACUxxxx\acu60\build_kcsi_acu60_rts.txt
 
 4) Setup the WRUN.CFG configuration file.
 

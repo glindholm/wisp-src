@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1992.  All rights reserved.
 //
@@ -1347,7 +1345,7 @@ void compiler::p_wang_cleanup() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_wang.cpp,v
+//
 //	Working file: p_wang.cpp
 //	head: 1.6
 //	branch:

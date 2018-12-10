@@ -6,7 +6,6 @@
         Title:          WPROC - WISP PROCEDURE INTERPRETER
         
         Document:       wproc.txt
-        Last Updated:   $Date:$
         Products:       WPROC
         Versions:       5.0.00
         

@@ -1,1 +1,1 @@
-This project will install WISP, KCSI, and EDE in the QA folder.
+This project will install WISP, and KCSI in the QA folder.

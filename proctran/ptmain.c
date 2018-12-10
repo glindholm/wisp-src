@@ -3,14 +3,7 @@
 ** Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
-**
-** $Id:$
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 ******************************************************************************
 */
 

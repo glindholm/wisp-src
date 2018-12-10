@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
@@ -164,7 +162,7 @@ int compiler::parse_variable(symbol *a_symbol, range &a_range) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_var.cpp,v
+//
 //	Working file: p_var.cpp
 //	head: 1.5
 //	branch:

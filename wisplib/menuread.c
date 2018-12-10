@@ -1,22 +1,15 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** $Id:$
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 */
 
 
@@ -101,8 +94,9 @@ struct menu *WL_menu_read(char* pmenufile)
 	themenu->curritem = -1;								/* can't be any default item to select 	*/
 	themenu->menustat = 0;								/* And the menu hasn't been drawn yet	*/
 	fgets( &(themenu->menutitle[0]),80,infile);  					/* read in the menu title 		*/
-	j = strlen( &(themenu->menutitle[0]))-1;
-	if (themenu->menutitle[j] == 10) themenu->menutitle[j] = 0;			/* get rid of the newline		*/
+	j = strlen( &(themenu->menutitle[0]));
+	if (j>0 && themenu->menutitle[j-1] == '\n') themenu->menutitle[--j] = 0;			/* get rid of the newline		*/
+	if (j>0 && themenu->menutitle[j-1] == '\r') themenu->menutitle[--j] = 0;			/* get rid of the CR		*/
 
 	for (;;)
 	{
@@ -124,14 +118,17 @@ struct menu *WL_menu_read(char* pmenufile)
 		fgets( &(themenu->menulist[i].filename[0]),80,infile);			/* read item filename 			*/
 		fgets( &(themenu->menulist[i].message[0]),80,infile);			/* read item return message 		*/  
 
-		j = strlen( &(themenu->menulist[i].title[0]))-1;
-		if (themenu->menulist[i].title[j] == 10) themenu->menulist[i].title[j] = 0;
+		j = strlen( &(themenu->menulist[i].title[0]));
+		if (j > 0 && themenu->menulist[i].title[j-1] == '\n') themenu->menulist[i].title[--j] = 0;
+		if (j > 0 && themenu->menulist[i].title[j-1] == '\r') themenu->menulist[i].title[--j] = 0;
 
-		j = strlen( &(themenu->menulist[i].filename[0]))-1;
-		if (themenu->menulist[i].filename[j] == 10) themenu->menulist[i].filename[j] = 0;
+		j = strlen( &(themenu->menulist[i].filename[0]));
+		if (j > 0 && themenu->menulist[i].filename[j-1] == '\n') themenu->menulist[i].filename[--j] = 0;
+		if (j > 0 && themenu->menulist[i].filename[j-1] == '\r') themenu->menulist[i].filename[--j] = 0;
 
-		j = strlen( &(themenu->menulist[i].message[0]))-1;
-		if (themenu->menulist[i].message[j] == 10) themenu->menulist[i].message[j] = 0;
+		j = strlen( &(themenu->menulist[i].message[0]));
+		if (j > 0 && themenu->menulist[i].message[j-1] == '\n') themenu->menulist[i].message[--j] = 0;
+		if (j > 0 && themenu->menulist[i].message[j-1] == '\r') themenu->menulist[i].message[--j] = 0;
 	}
 }
 /*

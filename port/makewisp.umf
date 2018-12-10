@@ -1,6 +1,5 @@
 #
 #	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
-#	$Id:$
 #
 #
 #	File:		makewisp.umf
@@ -13,7 +12,7 @@
 #				$ make -f makewisp.umf
 #
 
-WISPVER=5110
+WISPVER=5120
 
 
 include $(WISPSRC)/port/make.include
@@ -87,6 +86,11 @@ kcsi_mf:	wisptran wisplib videolib
 kcsi_acu:	wisptran wisplib videolib
 		@echo Making $@
 		(cd $(WISPSRC)/kcsi;		$(MAKE) -f kcsilibs.umf WISPSRC=$(WISPSRC) kcsi_acu)
+		@echo KCSI for ACUCOBOL is up-to-date.
+
+kcsi_acu_nc:	wisptran wisplib videolib
+		@echo Making $@
+		(cd $(WISPSRC)/kcsi;		$(MAKE) -f kcsilibs.umf WISPSRC=$(WISPSRC) kcsi_acu_nc)
 		@echo KCSI for ACUCOBOL is up-to-date.
 
 edelib:	

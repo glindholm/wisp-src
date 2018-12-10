@@ -4,9 +4,8 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 Title:          Installation of KCSI for ACUCOBOL on UNIX
 
 Document:       kcsi_acu_install.txt
-Last Updated:   $Date:$
 Products:       KCSI Utilities
-Versions:       4.2.00
+Versions:       4.2.01 [KCSIVER]
 
 Summary:        Installation instructions for the KCSI Utilities
                 using the ACUCOBOL compiler.
@@ -23,15 +22,15 @@ ACUCOBOL WISP runtime by following the instructions supplied
 with your WISP distribution. This will ensure that all current
 pieces are up to date for WISP.
 
-KCSI will normally be distributed on CDROM as a tar file named
-"kcsi_acu_XXXX.tar".  It is recommended that you install KCSI in your 
-WISP directory ($WISPDIR). 
+KCSI will normally be distributed as a tar.Z file named
+"kcsi_acu_XXXX.tar.Z".  It is recommended that you install KCSI in 
+your WISP directory ($WISPDIR). 
 
-Extract the distribution files from "kcsi_acu_XXXX.tar" using the
+Extract the distribution files from "kcsi_acu_XXXX.tar.Z" using the
 following command:
 
         $ cd $WISPDIR
-        $ tar -xvpf kcsi_acu_XXXX.tar
+        $ uncompress -c kcsi_acu_XXXX.tar.Z | tar -xvpf -
 
 This will create a directory "kcsi_acu_XXXX" where XXXX is a version
 number.  Refer to kcsi_packlist.txt in the distribution for a listing 

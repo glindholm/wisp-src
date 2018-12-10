@@ -1,14 +1,11 @@
 #
 #	Copyright (c) Shell Stream Software LLC. All Rights Reserved. 
-#	$Id:$
 #
 #
 #
 #	File:		wisptran_test.mak
 #
 #	Project:	wisptran
-#
-#	RCS:		$Source:$
 #
 #	Function:	The nmake makefile for wisptran tests
 #

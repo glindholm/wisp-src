@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 	$Id:$
 */
 
@@ -8,7 +8,7 @@
 **
 **	Project:	WISPLIB
 **
-**	RCS:		$Source:$
+**
 **
 **	Purpose:	Function prototypes for VSSUBS subs
 **

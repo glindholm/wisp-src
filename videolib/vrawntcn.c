@@ -1,23 +1,16 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** $Id:$
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 ******************************************************************************
 */
 
@@ -25,8 +18,6 @@
 **	File:		vrawntcn.c
 **
 **	Project:	VIDEOLIB
-**
-**	RCS:		$Source:$
 **
 ** 	Purpose:     	This is the implementation file for the vraw package
 **			for Wisp for Windows NT using Console mode I/O
@@ -59,6 +50,8 @@
 #include <conio.h>
 #include <assert.h>
 #include <crtdbg.h>
+
+#include <VersionHelpers.h>
 
 #include "video.h"
 #include "vlocal.h"
@@ -287,18 +280,12 @@ static int vrawinit(void)
 	}
 	else
 	{
-		OSVERSIONINFO osVer;
-
-		osVer.dwOSVersionInfoSize = sizeof(osVer);
-		bSuccess = GetVersionEx(&osVer);
-		PERR(bSuccess, "GetVersionEx");
-
-		if (osVer.dwPlatformId == VER_PLATFORM_WIN32s) 
+		if (!IsWindowsXPOrGreater())
 		{
 			localMessageBox(NULL, 
-					"This application cannot run on Windows 3.1.\n"
+					"This application requires Windows XP or greater.\n"
 					"This application will now terminate.",
-					"Error: Windows NT or Windows 95 Required to Run",  
+					"Error: Windows XP Required to Run",  
 					MB_OK );
 			exit(0);
 			return FAILURE;
@@ -1063,7 +1050,7 @@ static int repositionParentConsole(void)
 	{
 		return 0;
 	}
-	sscanf(env,"%d",&hwndParent);
+	sscanf(env,"%d",(int *)&hwndParent);
 	if (NULL == hwndParent)
 	{
 		return 0;
@@ -1074,7 +1061,7 @@ static int repositionParentConsole(void)
 	}
 
 	/*
-	**	Get the position of this window an move the parent window to the same location
+	**	Get the position of this window and move the parent window to the same location
 	*/
 	bSuccess = GetWindowRect(hwndConsole, &rectWin);
 	if (bSuccess)

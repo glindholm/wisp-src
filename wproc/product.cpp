@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-2003 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
@@ -26,8 +24,8 @@
 #	wisp/src/wproc/product.cpp
 #	wisp/src/doc/wproc.txt
 */
-#define WPROC_VERSION		5000
-#define WPROC_VERSION_STR	"v5.0.00"
+#define WPROC_VERSION		5001
+#define WPROC_VERSION_STR	"v5.0.01"
 
 extern "C" char *wisp_version(void);
 extern "C" char *WL_platform_name(void);
@@ -156,7 +154,7 @@ char *demo_notice() {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/product.cpp,v
+//
 //	Working file: product.cpp
 //	head: 1.11
 //	branch:

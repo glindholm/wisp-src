@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1992.  All rights reserved.
 //
@@ -38,7 +36,7 @@ Boolean drive_ready(int drive);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/critical.hpp,v
+//
 //	Working file: critical.hpp
 //	head: 1.4
 //	branch:

@@ -13,7 +13,7 @@
 #undef	ACU_SOURCE_FILENAME
 #endif	/* ACU_SOURCE_FILENAME */
 #define	ACU_SOURCE_FILENAME	"lib/sub.c"
-const char what_lib_sub_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date:$$Rev: 58074 $";
+const char what_lib_sub_c_str[] = "@(#) " ACU_SOURCE_FILENAME " $Date: 2010-05-14 23:52:15 +0100 (Fri, 14 May 2010) $$Rev: 58074 $";
 
 #include <stdio.h>
 #include <string.h>

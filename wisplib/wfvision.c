@@ -1,24 +1,17 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 */
 
 
@@ -161,6 +154,17 @@ struct vision3_struct
 #define V5_COMPRESS_OFF		158
 
 /*
+* Vision 6
+*/
+#define V6_REC_COUNT_OFF	62
+#define V6_REC_COUNT_LEN	4
+#define V6_MAX_REC_OFF		134
+#define V6_REC_SIZE_LEN		4
+#define V6_MIN_REC_OFF		138
+#define V6_NUM_KEYS_B		142
+#define V6_COMPRESS_OFF		143
+
+/*
 **	ROUTINE:	WL_visioninfo()
 **
 **	FUNCTION:	Get info about a vision file.
@@ -284,6 +288,7 @@ int WL_visioninfo_header( const char* path, const char* code, void* raw_field, c
 		struct	vision3_struct v3;				/* Vision 3 struct					*/
 		char	v4[VISION_HEADER_SIZE];				/* Vision 4 header					*/
 		char	v5[VISION_HEADER_SIZE];				/* Vision 5 header					*/
+		char	v6[VISION_HEADER_SIZE];				/* Vision 6 header					*/
 	} header;
 
 	int4	*size;
@@ -306,7 +311,11 @@ int WL_visioninfo_header( const char* path, const char* code, void* raw_field, c
 
 	memcpy((char*)&header, raw_header, VISION_HEADER_SIZE);
 
-	if (0==memcmp(raw_header, VISION5D_MAGIC, VISION_MAGIC_LEN)) /* We are looking at the data file vs the ".vix" index */
+	if (0 == memcmp(raw_header, VISION6D_MAGIC, VISION_MAGIC_LEN)) /* We are looking at the data file vs the ".vix" index */
+	{
+		vision = 6;
+	}
+	else if (0 == memcmp(raw_header, VISION5D_MAGIC, VISION_MAGIC_LEN)) /* We are looking at the data file vs the ".vix" index */
 	{
 		vision = 5;
 	}
@@ -344,12 +353,19 @@ int WL_visioninfo_header( const char* path, const char* code, void* raw_field, c
 		**	V3	Vision 3
 		**	V4	Vision 4
 		**	V5	Vision 5
+		**	V6	Vision 6
 		*/
-		if ( 5 == vision )
+		if (6 == vision)
+		{
+			field[0] = 'V';
+			field[1] = '6';
+			return(READFDR_RC_0_SUCCESS);
+		}
+		if (5 == vision)
 		{
 			field[0] = 'V';
 			field[1] = '5';
-			return( READFDR_RC_0_SUCCESS );
+			return(READFDR_RC_0_SUCCESS);
 		}
 		if ( 4 == vision )
 		{
@@ -373,13 +389,21 @@ int WL_visioninfo_header( const char* path, const char* code, void* raw_field, c
 	
 	if ( memcmp( code, "RC", 2 ) == 0 )				/* If looking for record count				*/
 	{
-		if ( 5 == vision )
+		if (6 == vision)
 		{
-			if ( !WL_bytenormal() ) 
+			if (!WL_bytenormal())
 			{
-				WL_reversebytes(&header.v5[V5_REC_COUNT_OFF],V5_REC_COUNT_LEN);
+				WL_reversebytes(&header.v6[V6_REC_COUNT_OFF], V6_REC_COUNT_LEN);
 			}
-			memcpy(size,&header.v5[V5_REC_COUNT_OFF],V5_REC_COUNT_LEN);
+			memcpy(size, &header.v6[V6_REC_COUNT_OFF], V6_REC_COUNT_LEN);
+		}
+		else if (5 == vision)
+		{
+			if (!WL_bytenormal())
+			{
+				WL_reversebytes(&header.v5[V5_REC_COUNT_OFF], V5_REC_COUNT_LEN);
+			}
+			memcpy(size, &header.v5[V5_REC_COUNT_OFF], V5_REC_COUNT_LEN);
 		}
 		else if ( 4 == vision )
 		{
@@ -410,16 +434,27 @@ int WL_visioninfo_header( const char* path, const char* code, void* raw_field, c
 	if ( memcmp( code, "RS", 2 ) == 0 ||				/* If looking for record size/lenght			*/
 	     memcmp( code, "RL", 2 ) == 0    )
 	{
-		if ( 5 == vision )
+		if (6 == vision)
 		{
 			/*
 			**	4-byte int
 			*/
-			if ( !WL_bytenormal() ) 
+			if (!WL_bytenormal())
 			{
-				WL_reversebytes(&header.v5[V5_MAX_REC_OFF],V5_REC_SIZE_LEN);
+				WL_reversebytes(&header.v6[V6_MAX_REC_OFF], V6_REC_SIZE_LEN);
 			}
-			memcpy(size,&header.v5[V5_MAX_REC_OFF],V5_REC_SIZE_LEN);
+			memcpy(size, &header.v6[V6_MAX_REC_OFF], V6_REC_SIZE_LEN);
+		}
+		else if (5 == vision)
+		{
+			/*
+			**	4-byte int
+			*/
+			if (!WL_bytenormal())
+			{
+				WL_reversebytes(&header.v5[V5_MAX_REC_OFF], V5_REC_SIZE_LEN);
+			}
+			memcpy(size, &header.v5[V5_MAX_REC_OFF], V5_REC_SIZE_LEN);
 		}
 		else if ( 4 == vision )
 		{
@@ -456,7 +491,11 @@ int WL_visioninfo_header( const char* path, const char* code, void* raw_field, c
 	{
 		int num_keys = 1;
 		
-		if ( 5 == vision )
+		if (6 == vision)
+		{
+			num_keys = header.v6[V6_NUM_KEYS_B];
+		}
+		else if (5 == vision)
 		{
 			num_keys = header.v5[V5_NUM_KEYS_B];
 		}
@@ -493,14 +532,24 @@ int WL_visioninfo_header( const char* path, const char* code, void* raw_field, c
 
 	if ( memcmp( code, "RT", 2 ) == 0 )				/* If looking for record type				*/
 	{
-		if (5 == vision)
+		if (6 == vision)
 		{
-			if ( memcmp(&header.v5[V5_MAX_REC_OFF],&header.v5[V5_MIN_REC_OFF],V5_REC_SIZE_LEN) == 0 ) 
+			if (memcmp(&header.v6[V6_MAX_REC_OFF], &header.v6[V6_MIN_REC_OFF], V6_REC_SIZE_LEN) == 0)
 				*field = 'F';
 			else
-			    	*field = 'V';
+				*field = 'V';
 
-			if ( header.v5[V5_COMPRESS_OFF] ) 
+			if (header.v6[V6_COMPRESS_OFF])
+				*field = 'C';
+		}
+		else if (5 == vision)
+		{
+			if (memcmp(&header.v5[V5_MAX_REC_OFF], &header.v5[V5_MIN_REC_OFF], V5_REC_SIZE_LEN) == 0)
+				*field = 'F';
+			else
+				*field = 'V';
+
+			if (header.v5[V5_COMPRESS_OFF])
 				*field = 'C';
 		}
 		else if (4 == vision)

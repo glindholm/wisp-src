@@ -1,7 +1,5 @@
 #!/bin/sh
 #
-#	$Id:$
-#
 #	File:		startupmf.sh
 #
 #	Usage:		$ cd .../wisp/src/testmf

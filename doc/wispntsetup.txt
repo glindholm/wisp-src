@@ -4,9 +4,8 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 Title:          WISP for Windows Quick Set-Up Steps
 
 Document:       wispntsetup.txt
-Last Updated:   $Date:$
 Products:       WISP/WIN32
-WISPVER:        5.1.10
+WISPVER:        5.1.20
 
 Summary:        WISP for Windows installation and setup steps
 
@@ -161,32 +160,8 @@ The Steps
     Follow the build instructions for your version of 
     Acucobol.
 
-       For Acucobol-GT 9.1 see:
-        - C:\WISPxxxx\acu\acu91\build_wisp_acu91_rts.txt
-
-       For Acucobol-GT 9.0 see:
-        - C:\WISPxxxx\acu\acu90\build_wisp_acu90_rts.txt
-
-       For Acucobol-GT 8.1 see:
-        - C:\WISPxxxx\acu\acu81\build_wisp_acu81_rts.txt
-
-       For Acucobol-GT 7.2 see:
-        - C:\WISPxxxx\acu\acu72\build_wisp_acu72_rts.txt
-
-       For Acucobol-GT 6.2 see:
-        - C:\WISPxxxx\acu\acu62\build_wisp_acu62_rts.txt
-
-       For Acucobol-GT 6.0 see:
-        - C:\WISPxxxx\acu\acu60\build_wisp_acu60_rts.txt
-
-       For Acucobol-GT 5.2 see:
-        - C:\WISPxxxx\acu\acu52\wrun32wisp_acu52.mak
-
-       For Acucobol-GT 5.1 see:
-        - C:\WISPxxxx\acu\acu51\wrun32wisp_acu51.mak
-
-       For Acucobol-GT 5.0 see:
-        - C:\WISPxxxx\acu\acu50\wrun32wisp_acu50.mak
+       For Acucobol-GT 10.2 see:
+        - C:\WISPxxxx\acu\acu102\build_wisp_acu102_rts.txt
 
 
 6) Setup the WISPCONFIG files
@@ -194,7 +169,7 @@ The Steps
    Follow the instructions in Appendix B of the WISP manual.
 
    Share the Acucobol installation directory. (E.g. Share
-   "C:\Acucorp\acucbl910\acugt") as "ACUDIR".  
+   "C:\Acucorp\acucbl1020\acugt") as "ACUDIR".  
 
    Edit the WRUN.CFG configuration file in the WISPCONFIG
    directory and change the RUNCBL= option to point to the new

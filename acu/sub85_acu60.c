@@ -1,5 +1,4 @@
 /*
-**	Id:	$Id:$
 **	File:	sub85_acu60.c		
 **
 **	This is the WISP compatable version of sub85.c for use with 

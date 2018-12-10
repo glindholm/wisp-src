@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{fc55518b-ed70-4a89-ad3a-13232e7674d2}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="QA">
+      <UniqueIdentifier>{aae6e62b-adf3-4551-851f-5df01353a598}</UniqueIdentifier>
+      <Extensions>wps</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{8fe5d73b-770e-4037-bb9e-2ecbbe81055b}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{e65eee32-319c-49d5-99fe-3206d46b23c5}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sswsort.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="QASS000.bat">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="QASS000P.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="QASS001P.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="QASS002P.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="QASS003P.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="QASS004P.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="QASS005P.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="QASS006P.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="QASS007P.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="QASS008P.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="QASS009P.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="QASS010P.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="t1.wps">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="t1run.bat">
+      <Filter>QA</Filter>
+    </None>
+    <None Include="sswsort.umf" />
+    <None Include="SyncSort_Wsort.txt" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,22 @@
+wc105*.cob
+wc225*.cob
+ACULINK.cob
+
+*.alc
+
+/wruncbl
+/wruncble
+
+acu_lib_wisp/
+acu_lib_kcsi/
+acu_lib_ede/
+
+bld_ede/
+bld_kcsi/
+bld_wisp/
+
+# Local copies 
+/callc.c
+/filetbl.c
+/sub.c
+/sub85.c

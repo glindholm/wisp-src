@@ -1,6 +1,5 @@
 #
 #	Copyright (c) Shell Stream Software LLC, All rights reserved.
-#	$Id:$
 #
 # makefile for WISP for WIN32 utilities DISPRINT.
 #

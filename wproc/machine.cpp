@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
@@ -350,7 +348,7 @@ symbol *machine::locate_label_symbol(const char *name, offset label_table) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/machine.cpp,v
+//
 //	Working file: machine.cpp
 //	head: 1.6
 //	branch:

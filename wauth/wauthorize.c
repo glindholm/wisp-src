@@ -15,12 +15,6 @@
 */
 
 /*
- * $Id:$
- * $Source:$
- */
-
-
-/*
 **	File:		wauthorize.c
 **
 **	Purpose:	The wauthorize utility
@@ -998,7 +992,6 @@ static void putheader(void)
 /*		123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567890				*/
 	printf("\n");
 	printf("                   **** %s LICENSE AUTHORIZATION TOOL ****\n",WLIC_product_name());
-	printf("                               $Revision:$\n");
 	printf("         Copyright (c) 1994-" WISP_COPYRIGHT_YEAR_STR " by Shell Stream Software, LLC.\n");
 	printf("\n");
 	printf("This program will generate %s license keys and validation codes for use with\n",WLIC_product_name());
@@ -1810,7 +1803,8 @@ static int readtabfile(FILE* fp,
 	{
 		return 1;
 	}
-	buff[strlen(buff)-1] = '\0';
+	
+	WL_remove_eol(buff);
 
 	bptr = buff;
 	for(i=0; i<NUMARGS; i++)
@@ -2417,7 +2411,7 @@ static void cgi_display_license_sheet(
 	/*
 	 * Display the record.
 	 */
-	printf("<h3 align=center>NeoMedia Technologies Inc.</h3>\n");
+	printf("<h3 align=center>Shell Stream Software LLC</h3>\n");
 	printf("<p>&nbsp</p>\n");
 
 	printf("<hr width=40%% align=center>\n");
@@ -2495,7 +2489,7 @@ static void cgi_display_license_sheet(
 	printf("To license a machine for the WISP runtime run the program \"wlicense\" "
 	       "and enter the LICENSE KEY as written above. "
 	       "<br><br>"
-	       "If you have any questions, please contact NeoMedia Technical support "
+	       "If you have any questions, please contact Shell Stream Software support "
 	       "at " WISP_PHONE_NUMBER ".");
 	printf("</table>");
 

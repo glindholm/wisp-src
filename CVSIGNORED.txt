@@ -1,0 +1,337 @@
+### All the old .cvsignore files
+find . -type f -name '.cvsignore' -exec echo '####' {} \; -exec cat {} \; >CVSIGNORED.txt
+
+#### ./.cvsignore
+acu60_wisp___win32_release
+bin
+config
+kit
+lib
+release
+wisp.ncb
+wisp.opt
+debug
+*.ship
+testacu
+testmf
+wisp.suo
+_UpgradeReport_Files
+UpgradeLog.XML
+wisp.suo.old
+wisp.sln.old
+x64
+QA
+.git
+#### ./acu/.cvsignore
+*.plg
+aculink.cob
+wc001005.cpy
+wc002211.cpy
+release
+wruncbl
+wruncble
+*.alc
+callc.c
+filetbl.c
+sub.c
+sub85.c
+*.o
+wc105*.cob
+wc225*.cob
+Debug
+#### ./acu/acu50/.cvsignore
+bld_wisp
+Release
+Debug
+#### ./acu/acu51/.cvsignore
+bld_wisp
+Release
+Debug
+#### ./acu/acu52/.cvsignore
+bld_ede
+bld_kcsi
+bld_wisp
+Release
+Debug
+#### ./acu/acu60/.cvsignore
+wrundll_kcsi_acu60.dsw
+wrundll_kcsi_acu60.ncb
+wrundll_kcsi_acu60.opt
+acu60_wisp___win32_release
+bld_kcsi
+bld_wisp
+release
+acu60_ede___Win32_Release
+acu60_wisp_atm___Win32_Release
+bld_ede
+bld_wisp_atm
+Debug
+*.plg
+#### ./acu/acu62/.cvsignore
+acu62_wisp___Win32_Release
+bld_wisp
+Release
+Debug
+#### ./acu/acu72/.cvsignore
+acu72_wisp___Win32_Release
+bld_wisp
+Release
+Debug
+#### ./acu/acu90/acu90_prep_qa/.cvsignore
+acu_lib_wisp
+acu_lib_kcsi
+acu_lib_ede
+Release
+Debug
+#### ./acu/acu91/acu91_prep_qa/.cvsignore
+acu_lib_wisp
+acu_lib_kcsi
+acu_lib_ede
+Release
+Debug
+#### ./doc/.cvsignore
+Release
+#### ./ede/.cvsignore
+*.lib
+bin
+release
+*.a
+good
+*.o
+Debug
+#### ./ivslib/.cvsignore
+*.a
+#### ./kcsi/.cvsignore
+*.cbx
+*.cob
+*.lib
+wc*.cpy
+kcsi_acu___win32_release
+kcsi_acu_lib___win32_release
+*.ship
+*.alc
+*.a
+*.idy
+wruncblk
+filetbl.c
+sub.c
+sub85.c
+callc.c
+wisp_sub85_inc.c
+wruncbl.umf
+control
+create
+datentry
+inquiry
+report
+kcsi_acu_cob___Win32_Release
+kcsi_acu_lib___Win32_Debug
+kcsi_acu___Win32_Debug
+kcsi_acu_cob___Win32_Debug
+#### ./mf/.cvsignore
+*.idy
+*.int
+wc*.cpy
+release
+*.o
+wrunmf
+wrunmfe
+wrunmf_x4400
+mfn___Win32_Release
+mfsubs___Win32_Debug
+Debug
+#### ./nt/VS2005/amd64/.cvsignore
+Microsoft.VC80.CRT
+Microsoft.VC80.MFC
+#### ./nt/VS2005/x86/.cvsignore
+Microsoft.VC80.CRT
+Microsoft.VC80.MFC
+#### ./nt/wconfig/.cvsignore
+_configutil.aps
+wconfig.exe
+release
+Debug
+*.ilk
+wconfig_d.exe
+*.pdb
+#### ./nt/wisptran/.cvsignore
+nt_wisptran.plg
+wisptran.exe
+release
+Debug
+*.exe
+*.aps
+#### ./port/.cvsignore
+*.plg
+debug
+release
+make.err
+shipkitede___Win32_Release
+shipkitkcsiacu___Win32_Release
+shipkitede___Win32_Debug
+shipkitkcsiacu___Win32_Debug
+#### ./proctran/.cvsignore
+*.plg
+*.log
+release
+*.a
+proctran
+Debug
+x64
+#### ./setup/wisp/Setup_WISP/.cvsignore
+Debug
+Release
+#### ./sswsort/.cvsignore
+*.plg
+Debug
+Release
+#### ./test/.cvsignore
+*.acu
+*.cob
+*.cpy
+*.err
+*.exe
+*.log
+*.obj
+.wisper
+config
+disprint.wcb
+message
+release
+volin
+volout
+volrun
+volspl
+volwrk
+Debug
+*.plg
+temp
+wdiag.txt
+#### ./test/QA/.cvsignore
+ede
+kcsiacu
+wisp
+#### ./test/QA/install_qa/.cvsignore
+Release
+#### ./videolib/.cvsignore
+*.plg
+debug
+release
+*.a
+x64
+#### ./videotest/.cvsignore
+release
+*.o
+vtest
+Debug
+#### ./vsedit/.cvsignore
+debug
+release
+*.o
+vsedit
+*.aps
+#### ./wauth/.cvsignore
+wauthorize.log
+wauthorize.tab
+doc
+wauthori
+wauthorize
+Debug
+Release
+#### ./wispcommon/.cvsignore
+*.aps
+#### ./WISPer/v1.0/.cvsignore
+bin
+WISPer.jar
+#### ./WISPer/v1.1/.cvsignore
+bin
+WISPer.jar
+#### ./wisplib/.cvsignore
+*.plg
+*.log
+debug
+release
+*.a
+x64
+#### ./wisptran/.cvsignore
+*.acu
+*.cob
+*.dcl
+*.log
+*.tab
+release
+wisptran_test___win32_release
+.wisper
+*.cpy
+Debug
+*.a
+wisp
+TEST0*
+wisptran_test___Win32_Debug
+*.plg
+*.aps
+x64
+#### ./wisputils/.cvsignore
+*.exe
+*.log
+debug
+release
+release_vsx
+release_wrunt
+*.o
+bldmf
+display
+hexed
+qapic
+selectpg
+testftok
+testints
+vcapkeys
+viewkey
+vsx
+wcopy
+wdelay
+wdelwrk
+wdiag
+wexists
+wfind
+wlicense
+wlictest
+wputparm
+wrename
+wretcode
+wrun
+wscratch
+wshell
+wsort
+wsubmit
+wsysconf
+wsysinit
+wusage
+bldmf_l.c
+SOFTLINK.cob
+WISPPLAT.cob
+Debug_vsx
+Debug_wrunt
+disprint___Win32_Release
+disprint___Win32_Debug
+wrunt
+*.aps
+x64
+DISPRINT.cob
+wc225100.cob
+wc105100.cob
+#### ./wprint64/.cvsignore
+Release
+x64
+#### ./wprint64/wprint64kit/.cvsignore
+Release
+#### ./wproc/.cvsignore
+*.plg
+*.log
+release
+*.o
+wproc
+Debug
+*.aps
+x64

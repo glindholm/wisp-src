@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
@@ -92,7 +90,7 @@ typedef          int  int_32;
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/environ.hpp,v
+//
 //	Working file: environ.hpp
 //	head: 1.9
 //	branch:

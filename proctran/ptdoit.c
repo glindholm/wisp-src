@@ -1,25 +1,18 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 ******************************************************************************
 */
 
@@ -27,8 +20,6 @@
 **	File:		ptdoit.c
 **
 **	Project:	wisp/proctran
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	???
 **
@@ -113,7 +104,7 @@ int doit(void)										/* Do the COBOL generation.		*/
 	while (fgets(rline,STRBUFF,infile))						/* Read in STRBUFF chars until EOF.	*/
 	{
 		num_lineins++;
-		if (*rline == LNFD || *rline == '\0') *linein = '\0';			/* If an empty line.			*/
+		if (*rline == LNFD || *rline == '\r' || *rline == '\0') *linein = '\0';			/* If an empty line.			*/
 		else
 		{
 			strcpy(linein,rline);						/* Copy in local variables.		*/

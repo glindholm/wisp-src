@@ -1,30 +1,21 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** $Id:$
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 */
 
 /*
 **	File:		getparm.c
 **
 **	Project:	wisp/lib
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	???
 **
@@ -1749,7 +1740,7 @@ static void gdisp_getparm(char* keylist, unsigned char *aid_char)
 		if ((ptr = strchr(keylist,'X')))
 		{
 			*ptr = (char)0;
-			key_cnt = strlen(keylist) / 2;
+			key_cnt = (uint2)(strlen(keylist) / 2);
 		}
 		if (key_cnt < 1)
 		{

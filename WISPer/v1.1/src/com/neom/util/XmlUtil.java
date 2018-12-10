@@ -32,8 +32,7 @@ import org.xml.sax.SAXException;
  * 
  * @author Kevin Hunter
  * 
- * Copyright (c) 2003, NeoMedia Technologies, Inc.
- * All rights reserved.
+ * Copyright (c) Shell Stream Software LLC, All Rights Reserved.
  * 
  */
 

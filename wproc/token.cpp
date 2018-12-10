@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Design, 1991
 //
@@ -153,7 +151,7 @@ void token::dump() const {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/token.cpp,v
+//
 //	Working file: token.cpp
 //	head: 1.5
 //	branch:

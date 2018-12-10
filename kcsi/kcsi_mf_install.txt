@@ -4,9 +4,8 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 Title:          Installation of KCSI for Micro Focus COBOL on UNIX
 
 Document:       kcsi_mf_install.txt
-Last Updated:   $Date:$
 Products:       KCSI Utilities
-Versions:       4.2.00
+Versions:       4.2.01  [KCSIVER]
 
 Summary:        Installation instructions for the KCSI Utilities
                 using the Micro Focus COBOL compiler.
@@ -20,15 +19,15 @@ INSTALLATION
 First install WISP and setup the WISP runtime environment.  This
 must be in place before KCSI can be used.
 
-KCSI will normally be distributed on CDROM as a tar file named
-"kcsi_mf_XXXX.tar".  It is recommended that you install KCSI
+KCSI will normally be distributed as a tar.Z file named
+"kcsi_mf_XXXX.tar.Z".  It is recommended that you install KCSI
 in your WISP directory ($WISPDIR). 
 
 Extract the distribution files from "kcsi_mf_XXXX.tar" using the
 following tar command:
 
         $ cd $WISPDIR
-        $ tar -xvf kcsi_mf_XXXX.tar
+        $ uncompress -c kcsi_mf_XXXX.tar.Z | tar -xvpf -
 
 This will create a directory "kcsi_mf_XXXX" where XXXX is a version
 number.  Refer to kcsi_packlist.txt in the distribution for a listing

@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{c9e27e36-0d1d-4f7d-a486-26c9589b1403}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{8cac47f4-18ca-41b3-bfb1-053936341061}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{a055b33a-ed14-4d56-8875-fb1dc1b6953c}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="callc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="config85.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="direct.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filetbl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mswinsub.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85rm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="rtcallbk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sub.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="acucobol.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="acucobol2.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="acudbg.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="acudebug.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="acudebug2.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="arrows.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="divider.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="go.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="help.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="acme.lib" />
+    <Library Include="axfd32.lib" />
+    <Library Include="thinapp.lib" />
+    <Library Include="axml32.lib" />
+    <Library Include="con32.lib" />
+    <Library Include="crunlib.lib" />
+    <Library Include="wcvt32.lib" />
+    <Library Include="wfsi32.lib" />
+    <Library Include="avision6.lib" />
+    <Library Include="libhpdf.lib" />
+    <Library Include="libpdf.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="wrundll.res" />
+  </ItemGroup>
+</Project>

@@ -162,7 +162,7 @@
            03  FILLER  PIC X(08) ROW 2 COL 18
                SOURCE AMU-VERSION.
            03  FILLER  PIC X(50) ROW 2 COL 27 VALUE
-               "- (c) Copyright NeoMedia Technologies In.c 1993-97".
+               "- Copyright (c) Shell Stream Software LLC.".
            03  AMUEM000-4 PIC X(21) ROW 4 COL 30 VALUE
                "Record Type Selection".
            03  AMUEM000-6 PIC X(54) ROW 6 COL 13 VALUE

@@ -1,4 +1,3 @@
-rem $Id:$
 rem
 rem Test environment variables overriding registry values
 rem
@@ -7,7 +6,7 @@ set WISPCONFIG=%WISPDIR%\config
 set WISPSERVER=CYCLONE
 set WISPUSERSDIR=C:\Documents and Settings
 set VIDEOCAP=%WISPCONFIG%\videocap
-set WISPLINKPATH=C:\dev\wisp\src\bin;C:\dev\wisp\src\acu
+set WISPLINKPATH=%WISPSRC%\bin;%WISPSRC%\acu
 set WISPTMPDIR=C:\temp\wisptmpdir
 set WISPSYSTMPDIR=C:\temp\wispsystmpdir
 set WISPSORTMEM=4048

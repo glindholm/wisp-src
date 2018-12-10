@@ -1,7 +1,7 @@
-# $Id:$
+# wprint64kit.mak
 #
-BASEDIR=C:\dev\wisp\src
-KITDIR=C:\dev\wisp\src\kit\wprint64_1.0
+#WISPSRC=..\..\..
+KITDIR=$(WISPSRC)\kit\wprint64_1.0
 
 
 dist_list=	$(KITDIR) \
@@ -25,16 +25,16 @@ $(KITDIR):
 	mkdir $@
 	
 $(KITDIR)\wprint64.exe	\
-:	$(BASEDIR)\bin\$(@F)
+:	$(WISPSRC)\bin\$(@F)
 	copy $** $@
 	
 $(KITDIR)\wprint64_readme.txt	\
 $(KITDIR)\wprint64_usage.txt	\
 $(KITDIR)\wprint64_redist.txt	\
-:	$(BASEDIR)\wprint64\$(@F)
+:	$(WISPSRC)\wprint64\$(@F)
 	copy $** $@
 
 $(KITDIR)\Microsoft.VC80.CRT \
-:	$(BASEDIR)\nt\VS2005\amd64\$(@F)
+:	$(WISPSRC)\nt\VS2005\amd64\$(@F)
 	xcopy /S /I /Q  $** $@
 

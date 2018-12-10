@@ -202,7 +202,7 @@
            03  FILLER  PIC X(08) ROW 2 COL 18
                SOURCE AMU-VERSION.
            03  FILLER  PIC X(50) ROW 2 COL 27 VALUE
-               "- (c) Copyright NeoMedia Technologies Inc. 1993-97".
+               "- Copyright (c) Shell Stream Software LLC.".
            03  AMU-4 PIC X(31) ROW 4 COL 26 VALUE
                "Menu Definition File Assignment".
            03  FILLER     PIC X(15) ROW 6  COL 5 VALUE

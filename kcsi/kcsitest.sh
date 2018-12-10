@@ -1,11 +1,5 @@
 #!/bin/sh
-#/************************************************************************/
-#/*                                                                      */
-#/*              		Copyright (c) 1997        		 */
-#/*      	An unpublished work of NeoMedia Technologies Inc.    	 */
-#/*                         All rights reserved.                         */
-#/*                                                                      */
-#/************************************************************************/
+# Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 #
 #
 #       File:           kcsitest.sh

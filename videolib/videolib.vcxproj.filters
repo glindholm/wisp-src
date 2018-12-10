@@ -1,0 +1,264 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{717b5c05-7591-4d6c-b997-b0cf82d3ab17}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{07b70ae0-c257-4320-95e7-48e4ef43e3fe}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{7e7c9759-3d5e-44ac-955b-207217478f67}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="gcal2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gcalc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gcalend.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gclock.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gnotepad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gpuzzle.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gzones.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sleepdos.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="valert.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vbell.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vcap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vcharset.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vchstubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vcontrol.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vcut.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vdefer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vedge.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="verase.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="version.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vexit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vfnkey.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vgets0.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vgrid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vinput.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="visdebug.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkeymap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vline.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vlist.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vmacro.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vmap.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vmenu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vmode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vmove.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vnewline.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vonexit.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vopenf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vpaste.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vpopscr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vprint.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vpushscr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vrawdos.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vrawntcn.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vrawunix.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vrefresh.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vrelease.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vroll.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vscreen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsection.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vset.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vslew.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vstate.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsynch.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vsystem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtext.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtrigger.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vtrim.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vuip.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vuserex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vutil.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vwait.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="vcap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vchinese.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vdata.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="verase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="video.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vintdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkeymap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vlist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vlocal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vmenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vmodules.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vmove.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vprint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vraw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vrawdos.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vrawunix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vscreen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vtrim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vutil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="libvideo.umf" />
+  </ItemGroup>
+</Project>

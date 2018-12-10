@@ -1,18 +1,16 @@
 #	Copyright (c) Shell Stream Software LLC, All rights reserved.
-#	$Id:$
 #
 #
 #	File:	wruncbl.umf
 #
 #	Versions:
 #		Acucobol-GT/Extend  (Statically linked)
+#				10.2, 
 #				9.1, 9.0, 
-#				8.1, 7.2, 
-#				6.2, 6.1, 6.0, 
-#				5.2, 5.1, 5.0
+#				8.1
 #				
-#		WISP		5.1.10  [WISPVER]
-#		KCSI		4.2.00  [KCSIVER]
+#		WISP		5.1.20  [WISPVER]
+#		KCSI		4.2.01  [KCSIVER]
 #
 #	Function:
 #		The UNIX makefile for building the ACUCOBOL runtime
@@ -22,8 +20,8 @@
 #		version of the Acucobol runtime. To build the Shared
 #		version see the platform and version specific
 #		makefiles:
-#			acu/acu81/Makefile_aix53sh_32.mak
-#			acu/acu81/Makefile_hpux1123sh_32.mak
+#			acu/acu102/Makefile_aix71_32sh.mak
+#			acu/acu91/Makefile_hpux1123_ia_32sh.mak
 #
 #	Description:
 #		This makefile can generate the following versions
@@ -32,10 +30,6 @@
 #		wruncbl		The standard runtime for ACUCOBOL.
 #
 #		wruncblk	The KCSI version of the runtime.
-#
-#		wruncble	The EDE version of the runtime.
-#
-#		wruncblke	The KCSI + EDE version of the runtime.
 #
 #
 #	Instructions:
@@ -109,13 +103,6 @@
 #				Runtime = wruncblk
 #				Macro   = RTSK
 #
-#		ede		The EDE runtime.
-#				Runtime = wruncble
-#				Macro   = RTSE
-#
-#		kcsi_ede	The KCSI + EDE runtime.
-#				Runtime = wruncblke
-#				Macro   = RTSKE
 #
 #		clean		This target is used to remove any files 
 #				created by this makefile.
@@ -152,10 +139,8 @@ ACUDIR=/opt/acu
 ACU_LIBDIR=$(ACUDIR)/lib
 
 #
-# EDEDIR	The EDE lib directory
 # KCSIDIR	The KCSI directory
 # 
-EDEDIR=$(WISPDIR)/ede_5100
 KCSIDIR=$(WISPDIR)/kcsi_acu_4200
 
 #============================================================================
@@ -188,17 +173,13 @@ CFLAGS= -g -Dunix
 #
 L_WISP=wisp
 L_VIDEO=video
-L_EDE=ede
 LIBWISP=lib$(L_WISP).a
 LIBVIDEO=lib$(L_VIDEO).a
-LIBEDE=lib$(L_EDE).a
 
 WISP_LIB_PATH  		= $(WISP_LIBDIR)/$(LIBWISP)
 VIDEO_LIB_PATH 		= $(WISP_LIBDIR)/$(LIBVIDEO)
-EDE_LIB_PATH   		= $(EDEDIR)/$(LIBEDE)
 
 WISP_LIBS_PATHS 	= $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
-WISPEDE_LIBS_PATHS	= $(EDE_LIB_PATH) $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
 
 OTHER_LINK		= -lm $(LIBCURSES)
 
@@ -207,9 +188,7 @@ OTHER_LINK		= -lm $(LIBCURSES)
 # Default RTS names
 #
 RTS=wruncbl
-RTSE=wruncble
 RTSK=wruncblk
-RTSKE=wruncblke
 
 #============================================================================
 # ACUCOBOL version information
@@ -242,7 +221,6 @@ ACUFILES=$(ACUSRCDIR)/sub.c \
 #
 WISPFILES=$(WISP_LIBDIR)/$(LIBWISP) \
 	$(WISP_LIBDIR)/$(LIBVIDEO) \
-	$(WISP_LIBDIR)/$(LIBEDE) \
 	$(WISPDIR)/acu/sub85.c \
 	$(WISPDIR)/acu/wisp_sub85_inc.c 
 
@@ -287,28 +265,6 @@ header_kcsi: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(KCSIDIR)
 	@echo ">>>> CFLAGS  = " $(CFLAGS)
 	@echo ">>>>"
 
-header_ede: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(EDE_LIB_PATH)
-	@echo ">>>> BUILDING ACUCOBOL RUNTIME WITH WISP+EDE"
-	@echo ">>>>"
-	@echo ">>>> WISPDIR = " $(WISPDIR)
-	@echo ">>>> EDELIB  = " $(EDE_LIB_PATH)
-	@echo ">>>> ACUDIR  = " $(ACUDIR)
-	@echo ">>>> PWD     = " `pwd`
-	@echo ">>>> CC      = " `which $(CC)`
-	@echo ">>>> CFLAGS  = " $(CFLAGS)
-	@echo ">>>>"
-
-header_kcsi_ede: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(KCSIDIR) $(EDE_LIB_PATH)
-	@echo ">>>> BUILDING ACUCOBOL RUNTIME WITH WISP+KCSI+EDE"
-	@echo ">>>>"
-	@echo ">>>> WISPDIR = " $(WISPDIR)
-	@echo ">>>> KCSIDIR = " $(KCSIDIR)
-	@echo ">>>> EDELIB  = " $(EDE_LIB_PATH)
-	@echo ">>>> ACUDIR  = " $(ACUDIR)
-	@echo ">>>> PWD     = " `pwd`
-	@echo ">>>> CC      = " `which $(CC)`
-	@echo ">>>> CFLAGS  = " $(CFLAGS)
-	@echo ">>>>"
 
 $(WISPDIR):
 	@echo ">>>> ERROR: The WISP directory was not found!"
@@ -379,43 +335,23 @@ rts:	header $(RTS) $(RTS).alc
 	@echo ">>>> The WISP runtime RTS=" $(RTS) is up to date.
 	@echo
 
-ede:	header_ede $(RTSE) $(RTSE).alc
-	@echo
-	@echo ">>>> The WISP + EDE runtime RTSE=" $(RTSE) is up to date.
-	@echo
-
 rtsk:	header_kcsi $(RTSK) $(RTSK).alc
 	@echo
 	@echo ">>>> The WISP + KCSI runtime RTSK=" $(RTSK) is up to date.
 	@echo
 
-rtske:	header_kcsi_ede $(RTSKE) $(RTSKE).alc
-	@echo
-	@echo ">>>> The WISP + KCSI + EDE runtime RTSKE=" $(RTSKE) is up to date.
-	@echo
 
 kcsi:	rtsk
 
-kcsi_ede:	rtske
 
 $(RTS): $(ACUSUBS:.o=.c) sub85.c $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
 		$(ACULIBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTSE): $(ACUSUBS:.o=.c) sub85.c $(WISPEDE_LIBS_PATHS)
-	$(CC) -DEDE $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
-		$(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
-	@echo ">>>> RTS     = " $@ has been built.
-
 $(RTSK): $(ACUSUBS:.o=.c) sub85.c $(WISP_LIBS_PATHS) $(KCSI_LIB_PATH)
 	$(CC) $(CFLAGS) $(KCSI_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
 		$(KCSI_LIB_PATH) $(ACULIBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
-	@echo ">>>> RTS     = " $@ has been built.
-
-$(RTSKE): $(ACUSUBS:.o=.c) sub85.c $(WISPEDE_LIBS_PATHS) $(KCSI_LIB_PATH)
-	$(CC) -DEDE $(CFLAGS) $(KCSI_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
-		$(KCSI_LIB_PATH) $(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
 CP=cp -f
@@ -438,7 +374,7 @@ wisp_sub85_inc.c: $(WISPDIR)/acu/wisp_sub85_inc.c
 $(RTSALC):
 	@echo WARNING $(RTSALC) NOT FOUND
 
-$(RTS).alc $(RTSE).alc $(RTSK).alc $(RTSKE).alc : $(RTSALC)
+$(RTS).alc $(RTSK).alc  : $(RTSALC)
 	@if [ -f $(RTSALC) ] ; then \
 		cmp -s $(RTSALC) $@ || $(CP) $(RTSALC) $@ ; \
 	else \
@@ -455,7 +391,7 @@ $(RTS).alc $(RTSE).alc $(RTSK).alc $(RTSKE).alc : $(RTSALC)
 # CLEANUP is a list of files that are created by this
 # makefile and can be deleted.
 #
-CLEANUP=$(RTS) $(RTSE) $(RTSK) $(RTSKE) \
+CLEANUP=$(RTS) $(RTSK)  \
 	*.alc \
 	$(ACUSUBS:.o=.c) $(ACUSUBS) sub85.c
 

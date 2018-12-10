@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
@@ -36,7 +34,7 @@
 
 
 extern "C" void WL_wtrace(const char* routine, const char* code, const char* format, ... /* args */);
-extern "C"void WL_werr_write(const char* buff);
+extern "C" void WL_werr_write(const char* buff);
 
 
 char *const error_label   = "ERROR ";
@@ -781,7 +779,7 @@ void report_status(const char *msg1, const char *msg2, const char *msg3) {
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/report.cpp,v
+//
 //	Working file: report.cpp
 //	head: 1.5
 //	branch:

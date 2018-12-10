@@ -3,14 +3,7 @@
 **
 ** KCSI - King Computer Services Inc.
 **
-** $Id:$
-**
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 ******************************************************************************
 */
 
@@ -19,8 +12,6 @@
 **	File:		kcsit.c
 **
 **	Project:	WISP/KCSI/COMMON
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Tracing and Error logging
 **

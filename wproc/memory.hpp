@@ -1,9 +1,7 @@
 //
-//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 //
 //	Project:	WPROC
-//	Id:		$Id:$
-//	RCS:		$Source:$
 //	
 //// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
@@ -44,7 +42,7 @@ void show_memory(char *kind, void* ptr, size_t size);
 //
 
 //	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/memory.hpp,v
+//
 //	Working file: memory.hpp
 //	head: 1.4
 //	branch:

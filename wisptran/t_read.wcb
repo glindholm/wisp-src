@@ -1,9 +1,9 @@
-000100* Copyright (c) 1998 NeoMedia Technologies, All rights reserved.
-000200* $Id:$
+000100* Copyright (c) Shell Stream Software LLC, All Rights Reserved.
+000200*
 000300*
 000400* FILE:   T_READ.WCB
 000500*
-000600* RCS:    $Source:$
+000600*
 000700*
 000800* FUNCTION: Test READ statements.
 000900*

@@ -1,23 +1,16 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** $Id:$
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
+** any means without the written permission of Shell Stream Software LLC
+** is strictly prohibited.
 ** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
 ******************************************************************************
 */
 
@@ -430,6 +423,21 @@ void VL_varb(int row, int col, int rows, int cols)						/* Invalidate map sectio
 void VL_vtitle(const char *titlestr)
 {
 	vrawtitle(titlestr);
+}
+
+/*----
+Truncate trailing whitespace
+----*/
+void VL_truncate(char *inbuf)
+{
+	int len;
+
+	len = strlen(inbuf);
+	while (len > 0 && (' ' == inbuf[len - 1] || '\t' == inbuf[len - 1] || '\n' == inbuf[len - 1] || '\r' == inbuf[len - 1]))
+	{
+		inbuf[--len] = '\0';
+	}
+
 }
 
 

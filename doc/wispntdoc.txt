@@ -6,7 +6,6 @@
 	Title:		WISP for NT Technical Notes
 	
 	Document:	wispntdoc.txt
-	Last Updated:	$Date:$
 	Products:	WISP for Windows NT
 	Versions:	5.0.00
 	

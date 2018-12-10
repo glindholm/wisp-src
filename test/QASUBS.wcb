@@ -1,4 +1,4 @@
-000100* $Id:$
+000100*
 000200/*****************************************************************
 000300*                                                                *
 000400*                       IDENTIFICATION DIVISION                  *
@@ -3225,6 +3225,9 @@
       *    Acucobol
       *    ALTVARV2 VISION 2                  A   V  90  1334
       *    ALTVARV3 VISION 3                  A   V  90  1334
+      *    ALTVARV3 VISION 4                  A   V  90  1334
+      *    ALTVARV3 VISION 5                  A   V  90  1334
+      *    ALTVARV3 VISION 6                  A   V  90  1334
       *
       *    Micro Focus
       *    ALTVAR4 IDXFORMAT"4"               A   V  90  1334
@@ -4236,6 +4239,94 @@
       *    MOVE "IV"   TO READFDR-FUNCTION.
       *    MOVE 0      TO READFDR-EXPECT-RC-X.
       *    MOVE "V4"    TO READFDR-EXPECT-CHAR8.
+      *    PERFORM TEST-READFDR4-CHAR8.
+      *$ACU_END
+
+      ************************************          
+      *	   VISION 5 file
+      *$ACU_CODE PROCESS
+      *    MOVE "ALTVARV5"  TO READFDR-FILE.
+      *    MOVE "LIBSAM" TO READFDR-LIB.
+      *    MOVE "VOLOUT" TO READFDR-VOL.
+      *
+      *    MOVE 2501    TO READFDR-TEST-ID.
+      *    MOVE "FT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "A"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2502    TO READFDR-TEST-ID.
+      *    MOVE "RT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2503    TO READFDR-TEST-ID.
+      *    MOVE "RS"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE 90     TO READFDR-EXPECT-INT4-X.
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2504    TO READFDR-TEST-ID.
+      *    MOVE "RC"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X
+      *    MOVE 1334   TO READFDR-EXPECT-INT4-X
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2505    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2506    TO READFDR-TEST-ID.
+      *    MOVE "IV"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V5"    TO READFDR-EXPECT-CHAR8.
+      *    PERFORM TEST-READFDR4-CHAR8.
+      *$ACU_END
+
+      ************************************          
+      *	   VISION 6 file
+      *$ACU_CODE PROCESS
+      *    MOVE "ALTVARV6"  TO READFDR-FILE.
+      *    MOVE "LIBSAM" TO READFDR-LIB.
+      *    MOVE "VOLOUT" TO READFDR-VOL.
+      *
+      *    MOVE 2601    TO READFDR-TEST-ID.
+      *    MOVE "FT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "A"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2602    TO READFDR-TEST-ID.
+      *    MOVE "RT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2603    TO READFDR-TEST-ID.
+      *    MOVE "RS"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE 90     TO READFDR-EXPECT-INT4-X.
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2604    TO READFDR-TEST-ID.
+      *    MOVE "RC"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X
+      *    MOVE 1334   TO READFDR-EXPECT-INT4-X
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2605    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2606    TO READFDR-TEST-ID.
+      *    MOVE "IV"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V6"    TO READFDR-EXPECT-CHAR8.
       *    PERFORM TEST-READFDR4-CHAR8.
       *$ACU_END
 
