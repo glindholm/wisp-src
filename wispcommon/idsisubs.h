@@ -87,6 +87,7 @@ extern void  WL_cstr2cobx(char *dest, const char *src, int size);	/* honor embed
 extern void  WL_cobx2cstr(char *dest, const char *src, int size);
 extern void  WL_dqw_strcpy(char *dest, const char *src);
 extern void  WL_dqw_strcat(char *dest, const char *src);
+extern void  WL_remove_eol(char *str);
 
 #endif /* idsisubs_H */
 /*

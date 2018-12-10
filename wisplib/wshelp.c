@@ -2035,7 +2035,8 @@ static void wsh_env_info(void)
 	/*
 	**	Bottom of screen
 	*/
-	sprintf(buff,"PATH (env)    = %s", (ptr=getenv("PATH")) ? ptr : "(nil)");
+	sprintf(buff,"PATH (env)    = %-.703s", (ptr=getenv("PATH")) ? ptr : "(nil)");  /* 703 = 9 line * 80 columns - 17 */
+
 	wsb_add_text(hWsb, row++, 2,buff);
 	
 
@@ -2186,7 +2187,7 @@ static void wsh_info(void)
 	wsb_add_text(hWsb, row++, col,buff);
 	
 
-	sprintf(buff,"LINKPATH = %s", wisplinkpath());
+	sprintf(buff,"LINKPATH    = %-.305s", wisplinkpath()); /* 308 = 4 * 80 - 15 */
 	wsb_add_text(hWsb, 20, 2,buff);
 	
 

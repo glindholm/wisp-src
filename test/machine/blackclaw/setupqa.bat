@@ -15,6 +15,6 @@ set WISPCONFIG=D:\work\shellstream\WISP\src\test\config
 set WISPDEBUG=FULL
 set WISPSHAREDIR=D:\work\shellstream\WISP\src\test\message
 set WISPTMPDIR=D:\work\shellstream\WISP\src\test\temp
-set WISPLINKPATH=D:\work\shellstream\WISP\src\QA\WISP\bin;D:\work\shellstream\WISP\src\QA\WISP\acu;D:\work\shellstream\WISP\src\test;D:\work\shellstream\WISP\src\test\VOLRUN\ONPATH;D:\work\shellstream\WISP\src\QA\KCSIACU
+set WISPLINKPATH=D:\work\shellstream\WISP\src\QA\wisp\bin;D:\work\shellstream\WISP\src\QA\wisp\acu;D:\work\shellstream\WISP\src\test;D:\work\shellstream\WISP\src\test\VOLRUN\ONPATH;D:\work\shellstream\WISP\src\QA\kcsiacu
 set PATH=%WISPDIR%\bin;%PATH%
 rem set VCOLORS=0A0CA0ACEAECBABCA0C00ACAAECEABCB

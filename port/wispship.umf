@@ -21,6 +21,7 @@ dist_dir_list= \
 	$(WISPKIT)/acu/acu81 	\
 	$(WISPKIT)/acu/acu90 	\
 	$(WISPKIT)/acu/acu91 	\
+	$(WISPKIT)/acu/acu102 	\
 	$(WISPKIT)/bin 	\
 	$(WISPKIT)/config 	\
 	$(WISPKIT)/config/videocap 	\
@@ -44,12 +45,6 @@ wisp_dist_list=	\
 	$(WISPKIT)/acu/ACUUSING.acu 	\
 	$(WISPKIT)/acu/acu.rules 	\
 	$(WISPKIT)/acu/acucobol.include 	\
-	$(WISPKIT)/acu/sub85_acu50.c 	\
-	$(WISPKIT)/acu/sub85_acu51.c 	\
-	$(WISPKIT)/acu/sub85_acu52.c 	\
-	$(WISPKIT)/acu/sub85_acu60.c 	\
-	$(WISPKIT)/acu/sub85_acu62.c 	\
-	$(WISPKIT)/acu/sub85_acu72.c 	\
 	$(WISPKIT)/acu/sub85_acu81.c 	\
 	$(WISPKIT)/acu/sub85_acu90.c 	\
 	$(WISPKIT)/acu/sub85_acu91.c 	\
@@ -77,6 +72,8 @@ wisp_dist_list=	\
 	$(WISPKIT)/acu/acu90/Makefile_hpux1123_ia_32sh.mak 	\
 	$(WISPKIT)/acu/acu91/Makefile_aix53_32sh.mak 	\
 	$(WISPKIT)/acu/acu91/Makefile_hpux1123_ia_32sh.mak 	\
+	$(WISPKIT)/acu/acu102/sub85.c 	\
+	$(WISPKIT)/acu/acu102/Makefile_aix71_32sh.mak 	\
 	$(WISPKIT)/bin 	\
 	$(WISPKIT)/bin/bldmf 	\
 	$(WISPKIT)/bin/display 	\
@@ -368,6 +365,11 @@ $(WISPKIT)/acu/acu91/Makefile_aix53_32sh.mak \
 $(WISPKIT)/acu/acu91/Makefile_hpux1123_ia_32sh.mak \
 : 	$(SRCDIR)/acu/acu91/$(@F)
 	$(COPY) $(SRCDIR)/acu/acu91/$(@F) $@
+
+$(WISPKIT)/acu/acu102/sub85.c \
+$(WISPKIT)/acu/acu102/Makefile_aix71_32sh.mak \
+: 	$(SRCDIR)/acu/acu102/$(@F)
+	$(COPY) $(SRCDIR)/acu/acu102/$(@F) $@
 
 #
 #	$(WISPKIT)/bin

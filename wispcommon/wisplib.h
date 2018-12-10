@@ -30,6 +30,7 @@
 /*
 **	Includes
 */
+#include <time.h>
 #include <sys/types.h>
 #include "intdef.h"
 
@@ -84,6 +85,7 @@ long WL_inode(const char* name);
 #ifdef WIN32
 typedef unsigned short mode_t;
 #endif
+
 int WL_stat_mode(const char* name, mode_t *mode);
 int WL_stat_ctime(const char* name, time_t *create_time);
 int WL_stat_mtime(const char* name, time_t *mod_time);

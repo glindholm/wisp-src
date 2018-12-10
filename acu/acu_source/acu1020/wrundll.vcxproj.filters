@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{7239d792-09d5-4c07-91fe-de2c1d2382c2}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{26a46426-dbaf-4480-8d1e-d7e2f51e3dbc}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="callc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="config85.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="direct.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="filetbl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mswinsub.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sub85rm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="wrundll.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="rtcallbk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sub.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="acme.lib" />
+    <Library Include="atermmgr.lib" />
+    <Library Include="axfd32.lib" />
+    <Library Include="axml32.lib" />
+    <Library Include="thinapp.lib" />
+    <Library Include="wcvt32.lib" />
+    <Library Include="wfsi32.lib" />
+    <Library Include="wrunlib.lib" />
+    <Library Include="avision6.lib" />
+    <Library Include="libhpdf.lib" />
+    <Library Include="libpdf.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="wrundll.res" />
+  </ItemGroup>
+</Project>

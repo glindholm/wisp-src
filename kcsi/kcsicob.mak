@@ -49,7 +49,7 @@ MAKEFILE=kcsicob.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu51.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 #
-KCSI_VERSION=4200
+KCSI_VERSION=4201
 
 #-----------------------------------------------------------------------
 #

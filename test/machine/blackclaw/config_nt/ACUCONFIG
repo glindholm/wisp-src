@@ -1,6 +1,8 @@
 FILE-STATUS-CODES	74
 CODE_PREFIX		. D:\work\shellstream\WISP\src\test D:\work\shellstream\WISP\src\test\QA\wisp\acu D:\work\shellstream\WISP\src\test\QA\kcsiacu
 
+ALTVARV6-VERSION 6
+ALTVARV5-VERSION 5
 ALTVARV4-VERSION 4
 ALTVARV3-VERSION 3
 ALTVARV2-VERSION 2

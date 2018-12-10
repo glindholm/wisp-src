@@ -110,6 +110,8 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\doc\wispntsetup.txt" />
+    <None Include="..\doc\wisp_packlist.txt" />
     <None Include="makewisp.umf" />
     <None Include="shipnt.mak" />
   </ItemGroup>

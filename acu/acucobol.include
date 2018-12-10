@@ -39,6 +39,8 @@
 # 81	ACUCOBOL Version 8.1
 # 90	ACUCOBOL Version 9.0
 # 91	ACUCOBOL Version 9.1
+# 101	ACUCOBOL Version 10.11
+# 102	ACUCOBOL Version 10.20
 #
 #============================================================================
 #
@@ -124,6 +126,19 @@ ACUOTHER=
 #ACUOTHER= -lnsl -lsocket
 #
 #----------------------------------------------------------------------------
+#	On AIX 7.1 (32-bit) with IBM cc_r 
+#
+## Acu 10.2
+#CC = xlc_r
+#ACUOTHER= 
+#SYSCCFLAGS = -q32 -qarch=com -qmaxmem=16384 -bmaxdata:0x80000000 -D_LARGE_FILES 
+#
+## Acu 10.1
+#CC = cc_r
+#ACUOTHER= 
+#SYSCCFLAGS = -q32 -qlanglvl=extc89 -qkeyword=inline -qcpluscmt -qarch=com -qmaxmem=16384 -bmaxdata:0x80000000 -D_LARGE_FILES 
+#
+#----------------------------------------------------------------------------
 #	On AIX 5.3 (32-bit) with IBM cc 
 #
 ## Acu 9.0, 9.1
@@ -165,6 +180,10 @@ ACUOTHER=
 #
 #----------------------------------------------------------------------------
 #	On LINUX (32-bit) with GNU gcc
+#
+## Acu 10.2
+#ACUOTHER= -ldl -lpthread
+#SYSCCFLAGS = -std=gnu99 -m32 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_XOPEN_SOURCE=500 -D_BSD_SOURCE
 #
 ## Acu 9.0, 9.1
 #ACUOTHER= -ldl -lpthread
@@ -296,6 +315,48 @@ ACULIBS90=$(ACU_LIBDIR)/libruncbl.a \
 
 ACULIBS91=$(ACULIBS90)
 
+ACULIBS101=$(ACU_LIBDIR)/libruncbl.a \
+	$(ACU_LIBDIR)/libaclnt.a \
+	$(ACU_LIBDIR)/libacvt.a \
+	$(ACU_LIBDIR)/libfsi.a \
+	$(ACU_LIBDIR)/libfsi2.a \
+	$(ACU_LIBDIR)/libaxml.a \
+	$(ACU_LIBDIR)/libaregex.a  \
+	$(ACU_LIBDIR)/libacuterm.a \
+	$(ACU_LIBDIR)/libexpat.a \
+	$(ACU_LIBDIR)/libvision.a \
+	$(ACU_LIBDIR)/libsocks.a \
+	$(ACU_LIBDIR)/libmessage.a \
+	$(ACU_LIBDIR)/libcfg.a \
+	$(ACU_LIBDIR)/liblib.a \
+	$(ACU_LIBDIR)/libstdlib.a \
+	$(ACU_LIBDIR)/libmemory.a \
+	$(ACU_LIBDIR)/libpdf.a \
+	$(ACU_LIBDIR)/libhpdf.a \
+	$(ACU_LIBDIR)/libz.a
+
+ACULIBS102=$(ACU_LIBDIR)/libruncbl.a \
+	$(ACU_LIBDIR)/libaclnt.a \
+	$(ACU_LIBDIR)/libacvt.a \
+	$(ACU_LIBDIR)/libfsi.a \
+	$(ACU_LIBDIR)/libfsi2.a \
+	$(ACU_LIBDIR)/libaxml.a \
+	$(ACU_LIBDIR)/libaregex.a  \
+	$(ACU_LIBDIR)/libacuterm.a \
+	$(ACU_LIBDIR)/libexpat.a \
+	$(ACU_LIBDIR)/libvision.a \
+	$(ACU_LIBDIR)/libsocks.a \
+	$(ACU_LIBDIR)/libmessage.a \
+	$(ACU_LIBDIR)/libcfg.a \
+	$(ACU_LIBDIR)/liblib.a \
+	$(ACU_LIBDIR)/libstdlib.a \
+	$(ACU_LIBDIR)/libmemory.a \
+	$(ACU_LIBDIR)/libpdf.a \
+	$(ACU_LIBDIR)/libhpdf.a \
+	$(ACU_LIBDIR)/libpng.a \
+	$(ACU_LIBDIR)/libz.a
+
+
 ACUMAIN50=
 ACUMAIN51=
 ACUMAIN52=$(ACU_LIBDIR)/amain.o
@@ -305,6 +366,8 @@ ACUMAIN72=$(ACU_LIBDIR)/amain.o
 ACUMAIN81=$(ACU_LIBDIR)/amain.o
 ACUMAIN90=$(ACU_LIBDIR)/amain.o
 ACUMAIN91=$(ACU_LIBDIR)/amain.o
+ACUMAIN101=$(ACU_LIBDIR)/amain.o
+ACUMAIN102=$(ACU_LIBDIR)/amain.o
 
 ACUTEST50=$(ACU_LIBDIR)/libcfg.a
 ACUTEST51=$(ACU_LIBDIR)/libcfg.a
@@ -315,6 +378,8 @@ ACUTEST72=$(ACU_LIBDIR)/libaxml.a
 ACUTEST81=$(ACU_LIBDIR)/libaxml.a
 ACUTEST90=$(ACU_LIBDIR)/libcobacme.a
 ACUTEST91=$(ACU_LIBDIR)/libcobacme.a
+ACUTEST101=$(ACU_LIBDIR)/libfsi2.a
+ACUTEST102=$(ACU_LIBDIR)/libpng.a
 
 ACUCCFLAGS50= -DNO_ACUSQL=1
 ACUCCFLAGS51= -DNO_ACUSQL=1
@@ -325,6 +390,8 @@ ACUCCFLAGS72= -DNO_ACUSQL=1 -DUSE_XML=1 -DUSE_EXTSM=0 -DNO_CICS=1 -DNO_MQSERIES=
 ACUCCFLAGS81= -DNO_ACUSQL=1 -DUSE_XML=1 -DUSE_EXTSM=0 -DNO_CICS=1 -DNO_MQSERIES=1
 ACUCCFLAGS90= -DNO_ACUSQL=1 -DUSE_XML=1 -DUSE_EXTSM=0 -DNO_CICS=1 -DNO_MQSERIES=1 -DUSE_RMFM
 ACUCCFLAGS91= -DNO_ACUSQL=1 -DUSE_XML=1 -DUSE_EXTSM=0 -DNO_CICS=1 -DNO_MQSERIES=1 -DUSE_RMFM
+ACUCCFLAGS101= -DNO_ACUSQL=1 -DUSE_XML=1 -DUSE_EXTSM=0 -DNO_CICS=1 -DNO_MQSERIES=1 -DUSE_RMFM
+ACUCCFLAGS102= -DNO_ACUSQL=1 -DUSE_XML=1 -DUSE_EXTSM=0 -DNO_CICS=1 -DNO_MQSERIES=1 -DUSE_RMFM
 
 SUB85ACU50=sub85_acu50.c
 SUB85ACU51=sub85_acu51.c
@@ -335,6 +402,8 @@ SUB85ACU72=sub85_acu72.c
 SUB85ACU81=sub85_acu81.c
 SUB85ACU90=sub85_acu90.c
 SUB85ACU91=sub85_acu91.c
+SUB85ACU101=acu101/sub85.c
+SUB85ACU102=acu102/sub85.c
 
 #
 #	DEFINE COMMON MACROS FOR ALL VERSIONS OF ACUCOBOL
@@ -426,12 +495,30 @@ ACUSRCDIR=$(ACU_LIBDIR)
 #
 # 91	ACUCOBOL Version 9.1
 #
+#ACUSUBS=callc.o sub.o filetbl.o
+#ACULIBS=$(ACULIBS91) $(ACUOTHER)
+#ACUMAIN=$(ACUMAIN91)
+#ACUTEST=$(ACUTEST91)
+#ACUCCFLAGS=$(ACUCCFLAGS91) $(SYSCCFLAGS)
+#SUB85ACU=$(SUB85ACU91)
+#
+# 101	ACUCOBOL Version 10.11
+#
+#ACUSUBS=callc.o sub.o filetbl.o
+#ACULIBS=$(ACULIBS101) $(ACUOTHER)
+#ACUMAIN=$(ACUMAIN101)
+#ACUTEST=$(ACUTEST101)
+#ACUCCFLAGS=$(ACUCCFLAGS101) $(SYSCCFLAGS)
+#SUB85ACU=$(SUB85ACU101)
+#
+# 102	ACUCOBOL Version 10.20
+#
 ACUSUBS=callc.o sub.o filetbl.o
-ACULIBS=$(ACULIBS91) $(ACUOTHER)
-ACUMAIN=$(ACUMAIN91)
-ACUTEST=$(ACUTEST91)
-ACUCCFLAGS=$(ACUCCFLAGS91) $(SYSCCFLAGS)
-SUB85ACU=$(SUB85ACU91)
+ACULIBS=$(ACULIBS102) $(ACUOTHER)
+ACUMAIN=$(ACUMAIN102)
+ACUTEST=$(ACUTEST102)
+ACUCCFLAGS=$(ACUCCFLAGS102) $(SYSCCFLAGS)
+SUB85ACU=$(SUB85ACU102)
 
 #
 #============================================================================

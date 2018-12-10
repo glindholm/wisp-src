@@ -154,13 +154,14 @@ SYSDEF = "Error SYSDEF not defined"
 #==================================================================
 #	IBM AIX RS/6000 (32-bit)
 #
+#	AIX 7.1
 #	AIX 5
 #
 #SYSDEF = -DAIX
 #
 # IBM XLC Compilers
-#CC_STD  = cc
-#CC_ANSI = cc
+#CC_STD  = xlc
+#CC_ANSI = xlc
 #CC_SYS_FLAGS = -q32 -qlanglvl=extc89 -qarch=com -qmaxmem=16384 -qthreaded
 #
 #CCC = xlC
@@ -341,9 +342,9 @@ SYSDEF = "Error SYSDEF not defined"
 #SYSDEF = -DLINUX
 #CC_STD  = gcc
 #CC_ANSI = gcc
-#CC_SYS_FLAGS = -m32 -Wall
+#CC_SYS_FLAGS = -m32 -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 #CCC = g++
-#CCC_SYS_FLAGS = -m32 -DBOOL_TYPE -fsigned-char -Wall
+#CCC_SYS_FLAGS = -m32 -DBOOL_TYPE -fsigned-char -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 #CCC_SYS_LINK = 
 #LEX_LINK = 
 

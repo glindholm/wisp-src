@@ -13,6 +13,7 @@
 ** 
 ******************************************************************************
 */
+#include <Windows.h>
 
 #if !defined  DEFINES_H
 #define DEFINES_H

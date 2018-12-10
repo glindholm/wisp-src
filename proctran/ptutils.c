@@ -114,7 +114,7 @@ int nexttok(void)										/* Get psn of next token from linein,	*/
 
 	if (aptr - linein >= WPLMAX)							/* Test if past valid code.		*/
 	{
-		while (*aptr != LNFD) aptr++;						/* Step to the end of the line.		*/
+		while (*aptr != LNFD && *aptr != '\r') aptr++;						/* Step to the end of the line.		*/
 		return(FALSE);
 	}
 
@@ -125,7 +125,7 @@ int nexttok(void)										/* Get psn of next token from linein,	*/
 	}
 	while (!tststrt(next_ptr) && *next_ptr != '=' )					/* While a space, null or LNFD then step.*/
 	{
-		if (*next_ptr == '\0' || *next_ptr == LNFD) break;			/* No more characters on line to test.	*/
+		if (*next_ptr == '\0' || *next_ptr == LNFD || *next_ptr == '\r') break;			/* No more characters on line to test.	*/
 		next_ptr++;								/* Step over all spacing chars.		*/
 	}
 	aptr = next_ptr;								/* Save the current token position.	*/
@@ -133,13 +133,13 @@ int nexttok(void)										/* Get psn of next token from linein,	*/
 	{
 		next_ptr++;								/* Step over current token.		*/
 	}
-	if (*aptr == '\0' || *aptr == LNFD || (aptr - linein >= WPLMAX)) return(FALSE); /* No more tokens left to process.	*/ 
+	if (*aptr == '\0' || *aptr == LNFD || *aptr == '\r' || (aptr - linein >= WPLMAX)) return(FALSE); /* No more tokens left to process.	*/
 	else return(TRUE);
 }
 
 int tststrt(char* cptr)									/* Test if valid start for token pson.	*/
 {
-	if (*cptr == ' '  || *cptr == ',' || *cptr == HT || *cptr == '\0' || *cptr == LNFD ||
+	if (*cptr == ' '  || *cptr == ',' || *cptr == HT || *cptr == '\0' || *cptr == LNFD || *cptr == '\r' ||
 		(cptr - linein >= WPLMAX) )						/* In the mod code/comment area.	*/
 	{										
 		return FALSE;
@@ -150,7 +150,7 @@ int tststrt(char* cptr)									/* Test if valid start for token pson.	*/
 static int tstkey(char* cptr,char* list[])						/* Test if valid end for key position.	*/
 {
 	if (*cptr == ' '  || *cptr == ',' || *cptr == '=' || *cptr == '(' || *cptr == '\'' ||
-	    *cptr == HT || *cptr == '\0' || *cptr == LNFD || 
+	    *cptr == HT || *cptr == '\0' || *cptr == LNFD || *cptr == '\r' ||
 	    ( in_prompt && *cptr == '\'') ||
 	    ((list != built_in_funcs && list != search_equations) && *cptr == '&'))
 	{                              
@@ -246,7 +246,7 @@ void set_value(char* num_buf,int* num_asn,int current_row)				/* Init the screen
 	while (cont)									/* Copy text into value.		*/
 	{										/* Copy test to temp var and get length.*/
 		convert_to_dbl();							/* Convert ' within string to ".	*/
-		while (*aptr != '\'' && *aptr != LNFD && *aptr != '\0' && (aptr - linein < WPLMAX))
+		while (*aptr != '\'' && *aptr != LNFD && *aptr != '\r' && *aptr != '\0' && (aptr - linein < WPLMAX))
 		{
 			if (*aptr == '"')
 			{
@@ -564,7 +564,7 @@ void setup_line(char* lptr)								/* Put linein into expectd format.	*/
 	cstr = lptr;									/* Set the local copy of the line ptr.	*/
 	qcnt = 0;
 	concat = 0;
-	while (*cstr != '\0' && *cstr != LNFD)
+	while (*cstr != '\0' && *cstr != LNFD && *cstr != '\r')
 	{
 		if (*cstr == '!' && *(cstr+1) == '!' )					/* Change all occurance of !! in the	*/
 		{									/* current line to 2 spaces.		*/
@@ -601,7 +601,7 @@ void setup_line(char* lptr)								/* Put linein into expectd format.	*/
 				else if (strncmp(cstr,"S ",2) && strncmp(cstr,"s ",2)	/*  else set paired ' to ~ also.	*/
 					 && strncmp(cstr,"S.",2) && strncmp(cstr,"s.",2))
 				{
-					while (*cstr != '\'' && *cstr != LNFD && *cstr != '\0') cstr++;
+					while (*cstr != '\'' && *cstr != LNFD && *cstr != '\r' && *cstr != '\0') cstr++;
 					if (*cstr == '\'') *cstr = '~';
 				}
 			}
@@ -655,7 +655,7 @@ static void adj_quotes(char* lptr, int qcnt)						/* Change quotes within string
 				while (*lptr == ' ') lptr++;				/* Step to next char.			*/
 				if ( !match_sgl )					/* If have matched all the single '.	*/
 				{
-					if (*lptr == '\0' || *lptr == LNFD)  break;	/* At the end of the line.		*/
+					if (*lptr == '\0' || *lptr == LNFD || *lptr == '\r')  break;	/* At the end of the line.		*/
 					else write_log(util,'I','R',"NOQUOTE","No matching quote.  Check procedure code.");
 				}
 				else
@@ -738,7 +738,7 @@ static void convert_to_dbl(void)							/* Convert ' within string to ".	*/
 	laptr = aptr;									/* Set the local pointer to position.	*/
 	if (*laptr == '\'') *laptr = '"';						/* Change beginning quote to double.	*/
 	cnt = 0;
-	while (*laptr != ',' && *laptr != '\0' && *laptr != LNFD) 			/* Count the single quotes.		*/
+	while (*laptr != ',' && *laptr != '\0' && *laptr != LNFD && *laptr != '\r') 			/* Count the single quotes.		*/
 	{
 		if (*laptr == '\'') cnt++;
 		else if (*laptr == '~') *laptr = '"';
@@ -754,7 +754,7 @@ static void convert_to_dbl(void)							/* Convert ' within string to ".	*/
 	}
 	laptr = aptr;									/* Set ptr back to the beginning.	*/
 	i = 1;
-	while (*laptr != ',' && *laptr != '\0' && *laptr != LNFD)			/* Change ' to ".			*/
+	while (*laptr != ',' && *laptr != '\0' && *laptr != LNFD && *laptr != '\r')			/* Change ' to ".			*/
 	{
 		if (*laptr == '\'')
 		{

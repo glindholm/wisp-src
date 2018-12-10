@@ -54,3 +54,5 @@ Thumbs.db
 *.opensdf
 *.bsc
 ipch/
+.vs/
+wdiag.txt

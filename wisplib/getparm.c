@@ -1740,7 +1740,7 @@ static void gdisp_getparm(char* keylist, unsigned char *aid_char)
 		if ((ptr = strchr(keylist,'X')))
 		{
 			*ptr = (char)0;
-			key_cnt = strlen(keylist) / 2;
+			key_cnt = (uint2)(strlen(keylist) / 2);
 		}
 		if (key_cnt < 1)
 		{

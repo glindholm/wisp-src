@@ -32,6 +32,8 @@
 #define VISION4D_MAGIC 		"\x10\x12\x14\x19\x00\x04"
 #define VISION5I_MAGIC 		"\x10\x12\x14\x18\x00\x05"
 #define VISION5D_MAGIC 		"\x10\x12\x14\x19\x00\x05"
+#define VISION6I_MAGIC 		"\x10\x12\x14\x18\x00\x06"
+#define VISION6D_MAGIC 		"\x10\x12\x14\x19\x00\x06"
 
 /*
 **	Function Prototypes

@@ -41,7 +41,7 @@ int VL_vpaste(max) int max;
 	{
 		fgets((char *)VL_paste_buffer, MAX_COLUMNS_PER_LINE, fp);		/* Yes, so read the paste line.		*/
 		i = 0;
-		while (VL_paste_buffer[i] != '\n') i++;					/* Trim off the trailing new line.	*/
+		while (VL_paste_buffer[i] != '\n' && VL_paste_buffer[i] != '\r') i++;					/* Trim off the trailing new line.	*/
 		VL_paste_buffer[i] = CHAR_NULL;						/* Terminate the paste buffer.		*/
 		if (max && (max < MAX_COLUMNS_PER_LINE)) VL_paste_buffer[max] = CHAR_NULL; /* Don't allow more than requested.	*/
 		VL_paste_index = 0;							/* Set the paste index to 0.		*/

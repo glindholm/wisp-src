@@ -1803,7 +1803,8 @@ static int readtabfile(FILE* fp,
 	{
 		return 1;
 	}
-	buff[strlen(buff)-1] = '\0';
+	
+	WL_remove_eol(buff);
 
 	bptr = buff;
 	for(i=0; i<NUMARGS; i++)

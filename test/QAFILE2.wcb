@@ -177,6 +177,28 @@
       *                             IS AV4-R1-ALT2 DUPLICATES
       *        FILE STATUS          IS FILE-AV4-STAT.
       *$ACU_END
+
+
+      *	   VISION 5	
+           SELECT FILE-AV5
+               ASSIGN TO "ALTVARV5",    "DISK",     NODISPLAY,
+               ORGANIZATION         IS INDEXED
+               ACCESS MODE          IS DYNAMIC
+               RECORD KEY           IS AV5-R1-KEY
+               ALTERNATE RECORD KEY IS AV5-R1-ALT1
+                                    IS AV5-R1-ALT2 DUPLICATES
+               FILE STATUS          IS FILE-AV5-STAT.
+
+
+      *	   VISION 6	
+           SELECT FILE-AV6
+               ASSIGN TO "ALTVARV6",    "DISK",     NODISPLAY,
+               ORGANIZATION         IS INDEXED
+               ACCESS MODE          IS DYNAMIC
+               RECORD KEY           IS AV6-R1-KEY
+               ALTERNATE RECORD KEY IS AV6-R1-ALT1
+                                    IS AV6-R1-ALT2 DUPLICATES
+               FILE STATUS          IS FILE-AV6-STAT.
            
       *$MF_CODE PROCESS
       $SET IDXFORMAT"4"
@@ -449,6 +471,44 @@
            03  AV4-R2-F2                       PIC X(35).
 
       ************
+       FD  FILE-AV5
+           RECORD VARYING FROM 55 TO 90 CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-AV5
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  AV5-R1.
+           03  AV5-R1-KEY                      PIC 9(10).
+           03  AV5-R1-ALT1                     PIC 9(5).
+           03  AV5-R1-ALT2                     PIC 9(5).
+           03  AV5-R1-F1                       PIC X(35).
+       01  AV5-R2.
+           03  AV5-R2-KEY                      PIC 9(10).
+           03  AV5-R2-ALT1                     PIC 9(5).
+           03  AV5-R2-ALT2                     PIC 9(5).
+           03  AV5-R2-F1                       PIC X(35).
+           03  AV5-R2-F2                       PIC X(35).
+
+      ************
+       FD  FILE-AV6
+           RECORD VARYING FROM 55 TO 90 CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-AV6
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  AV6-R1.
+           03  AV6-R1-KEY                      PIC 9(10).
+           03  AV6-R1-ALT1                     PIC 9(5).
+           03  AV6-R1-ALT2                     PIC 9(5).
+           03  AV6-R1-F1                       PIC X(35).
+       01  AV6-R2.
+           03  AV6-R2-KEY                      PIC 9(10).
+           03  AV6-R2-ALT1                     PIC 9(5).
+           03  AV6-R2-ALT2                     PIC 9(5).
+           03  AV6-R2-F1                       PIC X(35).
+           03  AV6-R2-F2                       PIC X(35).
+
+      ************
        FD  FILE-AV8
            RECORD VARYING FROM 55 TO 90 CHARACTERS
            VALUE OF FILENAME IS FIL-FOR-FILE-AV8
@@ -551,6 +611,8 @@
        01  FILE-AV2-STAT                    PIC X(2).
        01  FILE-AV3-STAT                    PIC X(2).
        01  FILE-AV4-STAT                    PIC X(2).
+       01  FILE-AV5-STAT                    PIC X(2).
+       01  FILE-AV6-STAT                    PIC X(2).
        01  FILE-AV8-STAT                    PIC X(2).
        
        01  FILE-HUGE-STAT                   PIC X(2).
@@ -576,12 +638,9 @@
 
        01  FIL-FOR-FILE-AV2                PIC X(8) VALUE "ALTVARV2".
        01  FIL-FOR-FILE-AV3                PIC X(8) VALUE "ALTVARV3".
-      *$ACU_CODE PROCESS
-      *01  FIL-FOR-FILE-AV4                PIC X(8) VALUE "ALTVARV4".
-      *$ACU_END
-      *$MF_CODE PROCESS
-      *01  FIL-FOR-FILE-AV4                PIC X(8) VALUE "ALTVAR4".
-      *$MF_END
+       01  FIL-FOR-FILE-AV4                PIC X(8) VALUE "ALTVARV4".
+       01  FIL-FOR-FILE-AV5                PIC X(8) VALUE "ALTVARV5".
+       01  FIL-FOR-FILE-AV6                PIC X(8) VALUE "ALTVARV6".
        01  FIL-FOR-FILE-AV8                PIC X(8) VALUE "ALTVAR8".
 
        01  FIL-FOR-FILE-HUGE               PIC X(8) VALUE "HUGE".
@@ -656,6 +715,20 @@
            03  AV4-WS-ALT2                  PIC 9(5).
            03  AV4-WS-F1                    PIC X(35).
            03  AV4-WS-F2                    PIC X(35).
+
+       01  AV5-WS-DATA.
+           03  AV5-WS-KEY                   PIC 9(10).
+           03  AV5-WS-ALT1                  PIC 9(5).
+           03  AV5-WS-ALT2                  PIC 9(5).
+           03  AV5-WS-F1                    PIC X(35).
+           03  AV5-WS-F2                    PIC X(35).
+
+       01  AV6-WS-DATA.
+           03  AV6-WS-KEY                   PIC 9(10).
+           03  AV6-WS-ALT1                  PIC 9(5).
+           03  AV6-WS-ALT2                  PIC 9(5).
+           03  AV6-WS-F1                    PIC X(35).
+           03  AV6-WS-F2                    PIC X(35).
 
        01  AV8-WS-DATA.
            03  AV8-WS-KEY                   PIC 9(10).
@@ -1317,6 +1390,8 @@
       **   PERFORM LOAD-FILE-AV2.  - Comment out VISION 2 tests
       *    PERFORM LOAD-FILE-AV3.
       *    PERFORM LOAD-FILE-AV4.
+      *    PERFORM LOAD-FILE-AV5.
+      *    PERFORM LOAD-FILE-AV6.
       *$ACU_END
       *$MF_CODE PROCESS	       
       *    PERFORM LOAD-FILE-AV4.
@@ -2512,6 +2587,218 @@
 
 	   STRING " LOADED  ", FIL-FOR-FILE-AV4,  
 	       " WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
+
+
+      ******************************************************************
+      * ALTVARV5 (ALTERNATE INDEXED VARYING VISION ) FILE-AV5
+      ******************************************************************
+
+       WRITE-AV5-R1.
+
+           MOVE SPACES       TO AV5-R1.
+           MOVE AV5-WS-KEY   TO AV5-R1-KEY.
+           MOVE AV5-WS-ALT1  TO AV5-R1-ALT1.
+           MOVE AV5-WS-ALT2  TO AV5-R1-ALT2.
+           MOVE AV5-WS-F1    TO AV5-R1-F1.
+           WRITE AV5-R1
+             INVALID KEY 
+             DISPLAY "WRITE ALTVARV5 REC-1 INVALID KEY " AV5-WS-KEY.
+
+       WRITE-AV5-R2.
+
+           MOVE SPACES       TO AV5-R2.
+           MOVE AV5-WS-KEY   TO AV5-R2-KEY.
+           MOVE AV5-WS-ALT1  TO AV5-R2-ALT1.
+           MOVE AV5-WS-ALT2  TO AV5-R2-ALT2.
+           MOVE AV5-WS-F1    TO AV5-R2-F1.
+           MOVE AV5-WS-F2    TO AV5-R2-F2.
+           WRITE AV5-R2
+             INVALID KEY 
+             DISPLAY "WRITE ALTVARV5 REC-2 INVALID KEY " AV5-WS-KEY.
+
+       LOAD-FILE-AV5.       
+	   MOVE " LOADING ALTVARV5" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-AV5.
+           CLOSE FILE-AV5.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-AV5.
+
+      *    Write all the odd numbers records 
+           PERFORM VARYING AV5-WS-KEY FROM 1 BY 2 
+               UNTIL AV5-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV5-WS-ALT1 = 1000 + AV5-WS-KEY 
+               COMPUTE AV5-WS-ALT2 = 1000 + AV5-WS-KEY / 10
+               
+               MOVE SPACES TO AV5-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   AV5-WS-KEY DELIMITED BY SIZE
+                   INTO AV5-WS-F1
+
+               PERFORM WRITE-AV5-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING AV5-WS-KEY FROM 2 BY 2 
+               UNTIL AV5-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV5-WS-ALT1 = 2000 + AV5-WS-KEY 
+               COMPUTE AV5-WS-ALT2 = 2000 + AV5-WS-KEY / 10 
+
+               MOVE SPACES TO AV5-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   AV5-WS-KEY DELIMITED BY SIZE
+                   INTO AV5-WS-F1
+
+               MOVE SPACES TO AV5-WS-F2
+               STRING "Field 2 EVEN RECORD " DELIMITED BY SIZE
+                   AV5-WS-KEY DELIMITED BY SIZE
+                   INTO AV5-WS-F2
+
+               PERFORM WRITE-AV5-R2
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING AV5-WS-KEY FROM 3 BY 3 
+               UNTIL AV5-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE AV5-WS-KEY TO AV5-R1-KEY
+               DELETE FILE-AV5 RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE ALTVARV5 INVALID KEY ", 
+                           AV5-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO AV5-R1-KEY.
+           START FILE-AV5 KEY EQUAL AV5-R1-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-AV5-STAT NOT = "00" 
+               READ FILE-AV5 NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-AV5.
+
+	   STRING " LOADED  ALTVARV5 WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
+	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
+
+
+      ******************************************************************
+      * ALTVARV6 (ALTERNATE INDEXED VARYING VISION ) FILE-AV6
+      ******************************************************************
+
+       WRITE-AV6-R1.
+
+           MOVE SPACES       TO AV6-R1.
+           MOVE AV6-WS-KEY   TO AV6-R1-KEY.
+           MOVE AV6-WS-ALT1  TO AV6-R1-ALT1.
+           MOVE AV6-WS-ALT2  TO AV6-R1-ALT2.
+           MOVE AV6-WS-F1    TO AV6-R1-F1.
+           WRITE AV6-R1
+             INVALID KEY 
+             DISPLAY "WRITE ALTVARV6 REC-1 INVALID KEY " AV6-WS-KEY.
+
+       WRITE-AV6-R2.
+
+           MOVE SPACES       TO AV6-R2.
+           MOVE AV6-WS-KEY   TO AV6-R2-KEY.
+           MOVE AV6-WS-ALT1  TO AV6-R2-ALT1.
+           MOVE AV6-WS-ALT2  TO AV6-R2-ALT2.
+           MOVE AV6-WS-F1    TO AV6-R2-F1.
+           MOVE AV6-WS-F2    TO AV6-R2-F2.
+           WRITE AV6-R2
+             INVALID KEY 
+             DISPLAY "WRITE ALTVARV6 REC-2 INVALID KEY " AV6-WS-KEY.
+
+       LOAD-FILE-AV6.       
+	   MOVE " LOADING ALTVARV6" TO NEXT-PROGRESS-ROW.
+	   PERFORM WRITE-NEXT-PROGRESS-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-AV6.
+           CLOSE FILE-AV6.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-AV6.
+
+      *    Write all the odd numbers records 
+           PERFORM VARYING AV6-WS-KEY FROM 1 BY 2 
+               UNTIL AV6-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV6-WS-ALT1 = 1000 + AV6-WS-KEY 
+               COMPUTE AV6-WS-ALT2 = 1000 + AV6-WS-KEY / 10
+               
+               MOVE SPACES TO AV6-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   AV6-WS-KEY DELIMITED BY SIZE
+                   INTO AV6-WS-F1
+
+               PERFORM WRITE-AV6-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING AV6-WS-KEY FROM 2 BY 2 
+               UNTIL AV6-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV6-WS-ALT1 = 2000 + AV6-WS-KEY 
+               COMPUTE AV6-WS-ALT2 = 2000 + AV6-WS-KEY / 10 
+
+               MOVE SPACES TO AV6-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   AV6-WS-KEY DELIMITED BY SIZE
+                   INTO AV6-WS-F1
+
+               MOVE SPACES TO AV6-WS-F2
+               STRING "Field 2 EVEN RECORD " DELIMITED BY SIZE
+                   AV6-WS-KEY DELIMITED BY SIZE
+                   INTO AV6-WS-F2
+
+               PERFORM WRITE-AV6-R2
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING AV6-WS-KEY FROM 3 BY 3 
+               UNTIL AV6-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE AV6-WS-KEY TO AV6-R1-KEY
+               DELETE FILE-AV6 RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE ALTVARV6 INVALID KEY ", 
+                           AV6-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO AV6-R1-KEY.
+           START FILE-AV6 KEY EQUAL AV6-R1-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-AV6-STAT NOT = "00" 
+               READ FILE-AV6 NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-AV6.
+
+	   STRING " LOADED  ALTVARV6 WITH ", RECORD-CNT, " RECORDS" 
 	       DELIMITED BY SIZE INTO NEXT-PROGRESS-ROW.
 	   SUBTRACT 1 FROM PROGRESS-ROW-NUM.
 	   PERFORM WRITE-NEXT-PROGRESS-ROW.

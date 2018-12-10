@@ -5,7 +5,7 @@
 	
 	Document:	portwin32.txt
 	Products:	WISP/WIN32 EDE KCSI
-	WISPVER:	5.1.XX and later
+	WISPVER:	5.1.20 and later
 	
 	Summary:	Instructions on re-porting WISP to WIN32
 
@@ -36,38 +36,39 @@
 
 	[ ] Set the environment variable WISPSRC={base}\wisp\src
 
-	[_] Set the environment variable ACUDIR=C:\data\Acucorp\Acucbl910\AcuGT
+	[_] Set the environment variable ACUDIR=C:\data\Acucorp\Acucbl1020\AcuGT
 	
 		Note: The Acucobol license files are generated here:
-			C:\ProgramData\Micro Focus\extend\9.1.0\x86\
+			C:\ProgramData\Micro Focus\extend\10.2.0\x86\
 
 	[ ] Ensure envvar COMPUTERNAME is set (should be set by default)
 	
 	
 	Build the Project
 	-----------------
-	Run the MSVS 2010 using the wisp project solution
+	Run the MS VS2017 using the wisp project solution
 	file "wisp\src\wisp.sln" . 
 
-	[_] Clean "SHIPKIT - Release - Win32" 
 
-	[_] Build "SHIPKIT - Release - Win32" 
+	[_] Build "SHIPKITWISP - Release - Win32" 
+
+	[_] Build "SHIPKITKCSIACU - Release - Win32" 
 
 	[_] Rebuild "TESTACU - Release - Win32"
 
 	[_] Build the Acucobol runtimes
 		   
-	   [_]	Build "acu91_prep_qa"
+	   [_]	Build "acu102_prep_qa"
 	   
-		- Prepares to build the Acucobol 9.1 runtimes 
-		- Copy all the needed files into a build area(src\acu\acu91\acu91_prep_qa\acu_lib_wisp)
+		- Prepares to build the Acucobol 10.2 runtimes 
+		- Copy all the needed files into a build area(src\acu\acu102\acu102_prep_qa\acu_lib_wisp)
 		- The files from ${ACUDIR)\lib will be copied from the Acucobol install area
 		- The WISP files will be copied from the ship kit build area (src\kit\wisp)
 	   
-	   [_]  Open folder src\acu\acu91\acu91_prep_qa and build each of 
+	   [_]  Open folder src\acu\acu102\acu102_prep_qa and build each of 
 		the Acucobol runtimes 
 		
-		- For each solution file open it to open Visual Studio 10.
+		- For each solution file open it to open Visual Studio 2017.
 		- Change the configuration from Debug to Release
 		- Right-click on the solution and "Rebuild Solution"
 		
@@ -86,14 +87,6 @@
 		[_] acu_lib_kcsi\run32.sln
 
 		[_] acu_lib_kcsi\crun32.sln
-		
-		WISP + EDE runtimes:
-		
-		[_] acu_lib_ede\wrun32.sln
-
-		[_] acu_lib_ede\run32.sln
-
-		[_] acu_lib_ede\crun32.sln
 
 
 
@@ -103,35 +96,39 @@
 
 		wisp\src\kit
 		wisp\src\kit\wisp	The WISP kit
-		wisp\src\kit\ede	The EDE kit
 		wisp\src\kit\kcsiacu	The KCSI/Acucobol kit
 
 	Detailed instructions for building Ship Kits
 	--------------------------------------------
 	
-	- Ensure Build SHIPKIT completes without error
-	- Check in any changes to source control
-	- Clean SHIPKIT
-	- Build SHIPKIT
-	- Remove the kits from wisp\src\kit
-	- CVS diff / revert acu changes
-	- Build SHIPKIT
-	- Rename src\kit\wisp to src\kit\wisp51xx
-	- Zip wisp51xx folder
-	- rename wisp51xx.zip to wisp_51xx_win32.zip
-	- copy kits to C:\ShellStream\WISP_Shipping
-	- copy kits to devel.shellstream.net
+	[_] Ensure Build SHIPKIT completes without error
+	[_] Check in any changes to source control
+	[_] Clean SHIPKIT
+	[_] Build SHIPKIT
+	[_] Remove the kits from wisp\src\kit
+	[_] GIT diff / revert acu changes
+	[_] Build SHIPKIT
+	[_] Rename src\kit\wisp to src\kit\wisp51xx
+	[_] Zip wisp51xx folder
+	[_] rename wisp51xx.zip to wisp_51xx_win32.zip
+	[_] copy kits to C:\ShellStream\WISP_Shipping
+	[_] copy kits to devel.shellstream.net ${HOME}/Shipping
 	
 	
 	Save ACU QA Objects
 	-------------------
 	
-	- Clean TESTACU
-	- Build TESTACU
-	- mkdir acuqa.wisp5150.acu910
-	- copy *.acu to acuqa.wispxxx.acuxxx (expect 72 items)
-	- zip folder
-	- check in to source control
+	[_] Clean TESTACU
+	[_] Build TESTACU
+	[_] mkdir acuqa.wisp5120.acu1020
+	[_] copy *.acu to acuqa.wispxxx.acuxxx (expect 72 items)
+	[_] Create tar.Z file from contents
+		- Copy to a UNIX machine
+		- cd acuqa.wisp????.acu????
+		- tar -cvf - *.acu | compress > acuqa.wisp????.acu????.tar.Z
+		- mv *.tar.Z ..
+	[_] check .tar.Z file in to source control
+	[_] update test/sampleacu.umf ACUQA_TAR_Z file
 	
 	QA TEST WISP
 	------------

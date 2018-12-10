@@ -5,9 +5,10 @@ Title:          RELEASE NOTES FOR WISP VERSION 5.1
 
 Document:       wisp_relnotes.txt
 Products:       WISP for UNIX, WISP for Windows (WIN32)
-WISPVER:        5.1.12
+WISPVER:        5.1.20
+Updated:        28 Nov. 2018
 
-Summary:        Release notes for changes to WISP since version 3.3c.
+Summary:        Release notes for changes to WISP.
 
 ====================================================================
 
@@ -23,14 +24,27 @@ Summary:        Release notes for changes to WISP since version 3.3c.
         FAQ   http://www.shellstream.com/faq
 
 
+CHANGES FOR RELEASE 5.1.20
+==========================
+The following items describe corrections and improvements that have
+been made to the WISP toolkit for release 5.1.20.
+
+Support for (Acucobol) Extend 10.2 has been added. 
+
+Support for Vision 6 files has been added.
+
+This release of WISP on Windows, only supports Extend 10.2 (and later) as 
+it requires Visual Studio 2017 which is incompatible with earlier versions
+of Extend. 
+
+
 CHANGES FOR RELEASE 5.1.12
 ==========================
 The following items describe corrections and improvements that have
-been made to the WISP toolkit for release 5.1.xx.
+been made to the WISP toolkit for release 5.1.12.
 
 On Intel (Little-Endian) machines WPROC was returning the wrong value for
 the EXTRACT RECORDS statement.
-
 
 
 CHANGES FOR RELEASE 5.1.11

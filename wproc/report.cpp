@@ -34,7 +34,7 @@
 
 
 extern "C" void WL_wtrace(const char* routine, const char* code, const char* format, ... /* args */);
-extern "C"void WL_werr_write(const char* buff);
+extern "C" void WL_werr_write(const char* buff);
 
 
 char *const error_label   = "ERROR ";

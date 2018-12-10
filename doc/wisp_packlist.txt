@@ -5,7 +5,7 @@ Title:          WISP PACKING LIST
 
 Document:       wisp_packlist.lis
 Products:       WISP
-WISPVER:        5.1.12
+WISPVER:        5.1.20
 
 Summary:        Packing list for the WISP shipping kit.
 
@@ -25,12 +25,6 @@ acu/ACUUSING.cob
 acu/ACUUSING.acu
 acu/acu.rules
 acu/acucobol.include
-acu/sub85_acu50.c
-acu/sub85_acu51.c
-acu/sub85_acu52.c
-acu/sub85_acu60.c
-acu/sub85_acu62.c
-acu/sub85_acu72.c
 acu/sub85_acu81.c
 acu/sub85_acu90.c
 acu/sub85_acu91.c
@@ -58,6 +52,8 @@ acu/acu90/Makefile_aix53_32sh.mak
 acu/acu90/Makefile_hpux1123_ia_32sh.mak
 acu/acu91/Makefile_aix53_32sh.mak
 acu/acu91/Makefile_hpux1123_ia_32sh.mak
+acu/acu102/Makefile_aix71_32sh.mak
+acu/acu102/sub85.c
 bin
 bin/bldmf
 bin/display
@@ -189,49 +185,6 @@ acu\WACUWSB.cob
 acu\wacu.mak
 acu\wispicon.ico
 acu\wisp_sub85_inc.c
-acu\acu50
-acu\acu50\sub85.c
-acu\acu50\wisprts.rc
-acu\acu50\wrun32wisp_acu50.mak
-acu\acu51
-acu\acu51\sub85.c
-acu\acu51\wisprts.rc
-acu\acu51\wrun32wisp_acu51.mak
-acu\acu52
-acu\acu52\run32wisp_acu52.mak
-acu\acu52\sub85.c
-acu\acu52\wisprts.rc
-acu\acu52\wrun32wisp_acu52.mak
-acu\acu60
-acu\acu60\build_wisp_acu60_rts.txt
-acu\acu60\build_wisp_acu60atm_rts.txt
-acu\acu60\run32.rc
-acu\acu60\run32_wisp_acu60.dsp
-acu\acu60\run32_wisp_acu60.mak
-acu\acu60\sub85.c
-acu\acu60\wrundll.rc
-acu\acu60\wrundll_wisp_acu60.dsp
-acu\acu60\wrundll_wisp_acu60.mak
-acu\acu62
-acu\acu62\build_wisp_acu62_rts.txt
-acu\acu62\sub85.c
-acu\acu62\wisp.rc
-acu\acu62\wrundll.vcproj
-acu\acu72
-acu\acu72\build_wisp_acu72_atm_rts.txt
-acu\acu72\build_wisp_acu72_rts.txt
-acu\acu72\run32.vcproj
-acu\acu72\sub85.c
-acu\acu72\wisp.rc
-acu\acu72\wrundll.vcproj
-acu\acu81
-acu\acu81\build_wisp_acu81_atm_rts.txt
-acu\acu81\build_wisp_acu81_rts.txt
-acu\acu81\run32.vcproj
-acu\acu81\sub85.c
-acu\acu81\wisp.rc
-acu\acu81\wrundll.rc
-acu\acu81\wrundll.vcproj
 acu\acu90
 acu\acu90\build_wisp_acu90_atm_rts.txt
 acu\acu90\build_wisp_acu90_rts.txt
@@ -249,11 +202,19 @@ acu\acu91\run32.vcxproj
 acu\acu91\sub85.c
 acu\acu91\wisp.rc
 acu\acu91\wrundll.vcxproj
+acu\acu102
+acu\acu102\build_wisp_acu102_atm_rts.txt
+acu\acu102\build_wisp_acu102_rts.txt
+acu\acu102\build_wisp_acu102_con_rts.txt
+acu\acu102\crun32.vcxproj
+acu\acu102\run32.vcxproj
+acu\acu102\sub85.c
+acu\acu102\wisp.rc
+acu\acu102\wrundll.vcxproj
 bin
 bin\display.exe
 bin\hexed.exe
 bin\proctran.exe
-bin\rexec.exe
 bin\vsedit.exe
 bin\vtest.exe
 bin\wconfig.exe
@@ -269,8 +230,6 @@ bin\wrunt.exe
 bin\wshell.exe
 bin\wsort.exe
 bin\wusage.exe
-bin\Microsoft.VC80.CRT\*
-bin\Microsoft.VC80.MFC\*
 config
 config\ACUCONFIG
 config\CHARMAP
