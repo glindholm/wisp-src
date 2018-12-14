@@ -49,10 +49,10 @@
 	*** Search for "PRODUCTVERSION" ***
 	
 	Each RC file has four (4) places that need changing.
-		- FILEVERSION 5, 1, 2, 0
-		- PRODUCTVERSION 5, 1, 2, 0
-		- VALUE "FileVersion", "5, 1, 2, 0"
-		- VALUE "ProductVersion", "5.1.20"
+		- FILEVERSION 5, 1, 2, 1
+		- PRODUCTVERSION 5, 1, 2, 1
+		- VALUE "FileVersion", "5, 1, 2, 1"
+		- VALUE "ProductVersion", "5.1.21"
 
 
 	nt/wisptran/_WispWin.rc:	PRODUCTVERSION
@@ -70,8 +70,8 @@
 	wproc/wproc.rc:			PRODUCTVERSION
 
 */
-#define WISP_VERSION		"V5.1.20"	/* WISPTRAN version (char[20])		*/
-#define WISP_VERSION_NUM	5120		/* WISPVER */
+#define WISP_VERSION		"V5.1.21"	/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION_NUM	5121		/* WISPVER */
 #define WISP_LICENSE_VERSION	51
 
 #define WISP_SCREEN_VERSION	22		/* SCREEN version number.		*/
