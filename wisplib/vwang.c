@@ -528,8 +528,15 @@ int vwang(
 	}
 	
 	vwang_init_video();
-	vrawprint(0); /* Hack to force vrawinit() */
-	
+	if (wisp_winsshd() && !wbackground())
+	{
+		/*
+		** Hack to force vrawinit()
+		** Added in 5.1.10 (5.1.50) to support WinSSHD - What problem was being solved?
+		*/
+		vrawprint(0);
+	}
+
 	if (use_custom_vwang())
 	{
 		if (0 == custom_vwang(function,wsb,lines,terminate_list,term,no_mod))

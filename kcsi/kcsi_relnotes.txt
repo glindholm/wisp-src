@@ -29,7 +29,7 @@ Summary:        Release notes for changes to CONTROL, REPORT,
 
 CHANGES IN 4.2.01
 =================
-Added support for WISP 5.1.20. [WISPVER]
+Added support for WISP 5.1.21. [WISPVER]
 
 Adds support for Acucobol-GT 10.2.x
 

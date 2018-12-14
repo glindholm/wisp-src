@@ -253,8 +253,8 @@ MainIcon                ICON                    "wisp.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION 5, 1, 2, 0
-PRODUCTVERSION 5, 1, 2, 0
+FILEVERSION 5, 1, 2, 1
+PRODUCTVERSION 5, 1, 2, 1
 FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -271,12 +271,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Shell Stream Software LLC"
             VALUE "FileDescription", "WISP Translate and Compile GUI"
-            VALUE "FileVersion", "5, 1, 2, 0"
+            VALUE "FileVersion", "5, 1, 2, 1"
             VALUE "InternalName", "wisptran"
 			VALUE "LegalCopyright", "Copyright (C) 2010,2011,2018 Shell Stream Software LLC"
 			VALUE "OriginalFilename", "wisptran.exe"
             VALUE "ProductName", "wisptran Application"
-            VALUE "ProductVersion", "5.1.20"
+            VALUE "ProductVersion", "5.1.21"
         END
     END
     BLOCK "VarFileInfo"

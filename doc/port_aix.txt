@@ -18,20 +18,22 @@ User ID
 u0009053
 
 Initial / last reset VPN password
-otyg5kuj
+rkyg6qwe
+
 
 PROJECT
 -------
 IP address
-172.29.153.70
+172.29.157.113
 
 User id
 u0009053
 
 Initial/last root pw
-yndo1rem
+becv7xtp
 
 Initial/last user pw
+dtgs6fjl
 F2P
 
 VPN Client: 
@@ -49,11 +51,28 @@ INSTALL YUM
 -----------
 https://sysadminfun.com/2017/01/13/install-and-configure-yum-on-aix/
 
+rpm --version
+
+# download yum_bundle.tar from ftp://ftp.software.ibm.com/aix/freeSoftware/aixtoolbox/ezinstall/ppc/
+# copy yum_bundle.tar ~/yum
+
+root> cd ~/yum
+root> tar xvf yum_bundle.tar
+root> rpm -ivh *.rpm
+
+## Had to remove these as they had conflicts 
+rm glib2-2.14.6-2.aix5.2.ppc.rpm
+rm gettext-0.19.7-1.aix6.1.ppc.rpm
+
+
 INSTALL GIT
 -----------
 https://public.dhe.ibm.com/aix/freeSoftware/aixtoolbox/RPMS/ppc/git/git-2.18.0-1.aix6.1.ppc.rpm
 
-yum install git
+root> yum update yum
+root> yum update curl
+
+root> yum install git
 
 git config --global user.email "glindholm@shellstream.com"
 git config --global user.name "Greg Lindholm"
@@ -62,20 +81,18 @@ IBM C Compilers
 ---------------
 /usr/vacpp/bin/* -> /usr/vac/vin/xlc
 
+## Add to .profile
+#-----------------
 export PATH=/usr/vacpp/bin:$PATH
+export PATH=$PATH:.
 
-# add current dir to PATH
-export PATH-$PATH:.
-
-Other ENVVARs
---------------
-export ACUDIR=${HOME}/work/acu/acu1020
+export ACUDIR=${HOME}/work/acu/acu1021
 export A_TERMCAP=${ACUDIR}/etc/a_termcap
 
 export WISPGID=$$
 export WISPSRC=${HOME}/work/wisp/src
 
-
+export SHELL=/usr/bin/bash
 
 
 

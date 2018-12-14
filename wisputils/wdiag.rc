@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5, 1, 2, 0
- PRODUCTVERSION 5, 1, 2, 0
+ FILEVERSION 5, 1, 2, 1
+ PRODUCTVERSION 5, 1, 2, 1
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -71,12 +71,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Shell Stream Software LLC"
             VALUE "FileDescription", "WISP Diagnostics Utility"
-            VALUE "FileVersion", "5, 1, 2, 0"
+            VALUE "FileVersion", "5, 1, 2, 1"
             VALUE "InternalName", "wdiag"
             VALUE "LegalCopyright", "Copyright (C) 2010,2011,2018 Shell Stream Software LLC"
             VALUE "OriginalFilename", "wdiag.exe"
             VALUE "ProductName", "wdiag Application"
-            VALUE "ProductVersion", "5.1.20"
+            VALUE "ProductVersion", "5.1.21"
         END
     END
     BLOCK "VarFileInfo"

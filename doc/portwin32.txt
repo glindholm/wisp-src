@@ -5,7 +5,7 @@
 	
 	Document:	portwin32.txt
 	Products:	WISP/WIN32 EDE KCSI
-	WISPVER:	5.1.20 and later
+	WISPVER:	5.1.21 and later
 	
 	Summary:	Instructions on re-porting WISP to WIN32
 
@@ -51,6 +51,10 @@
 
 
 	[_] Build "SHIPKITWISP - Release - Win32" 
+
+		If ACU files are not found then build acu and acn projects:
+		[_] Build "acu - Release - Win32" 
+		[_] Build "acn - Release - Win32" 
 
 	[_] Build "SHIPKITKCSIACU - Release - Win32" 
 
