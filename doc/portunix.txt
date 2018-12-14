@@ -25,13 +25,13 @@
 
 	The following components are required to port WISP.
 
-	[ ]	WISP source kit  e.g.  wispXXXX.src.tar.Z
+	[ ] WISP source kit  e.g.  wispXXXX.src.tar.Z
 
-	[ ] 	Acucobol COBOL compiler
+	[ ] Acucobol COBOL compiler
 
-	[ ] 	Micro Focus COBOL compiler
+	[ ] Micro Focus COBOL compiler
 
-	[ ]	C and C++ compiler
+	[ ] C and C++ compiler
 
 
 	INSTALL THE COBOL
@@ -39,8 +39,19 @@
 
 	If COBOL is not already on the system then install it.
 
-	[ ]	Install ACUCOBOL.
-	[ ]	Install Micro Focus COBOL.
+	[ ] Install ACUCOBOL.
+	
+		- upload the setup_acucob* file
+		
+			mkdir -p ~/work/acu
+			mv setup_acucob* ~/work/acu
+			cd ~/work/acu
+			chmod +x setup_acucob*
+			mkdir -p $ACUDIR
+			./setup_acucob* -d $ACUDIR
+			$ACUDIR/bin/activator
+	
+	[ ] Install Micro Focus COBOL.
 
 
 	[ ] Find version of ACUCOBOL
@@ -103,7 +114,7 @@
 		You will need the variable WISPSRC set for the whole porting 
 		process.  Alway ensure that it is set correctly.
 
-			$ WISPSRC=/home/user/work/wisp/src 
+			$ WISPSRC=${HOME}/work/wisp/src 
 			$ WISPDIR=${WISPSRC}
 			$ ACUDIR=/usr/local/acucobol
 			$ export WISPSRC WISPDIR ACUDIR
@@ -149,7 +160,10 @@
 
 	[ ]	$ cd ${WISPSRC}/port
 		$ ./maketail.sh clean		# remove previous builds and make.err
+									# Ctrl-C to exit from maketail.sh
+			
 		$ ./maketail.sh shipkit		# build WISP & EDE
+									# Ctrl-C to exit from maketail.sh
 		
 		
 	[ ] IF ACUCOBOL COMPILER 

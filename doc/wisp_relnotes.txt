@@ -5,8 +5,8 @@ Title:          RELEASE NOTES FOR WISP VERSION 5.1
 
 Document:       wisp_relnotes.txt
 Products:       WISP for UNIX, WISP for Windows (WIN32)
-WISPVER:        5.1.20
-Updated:        28 Nov. 2018
+WISPVER:        5.1.21
+Updated:        14 Dec 2018
 
 Summary:        Release notes for changes to WISP.
 
@@ -24,10 +24,10 @@ Summary:        Release notes for changes to WISP.
         FAQ   http://www.shellstream.com/faq
 
 
-CHANGES FOR RELEASE 5.1.20
+CHANGES FOR RELEASE 5.1.21
 ==========================
 The following items describe corrections and improvements that have
-been made to the WISP toolkit for release 5.1.20.
+been made to the WISP toolkit for release 5.1.21.
 
 Support for (Acucobol) Extend 10.2 has been added. 
 
@@ -3130,6 +3130,7 @@ three part version number.
 
     WISP VERSION      CUTOVER DATE 
     ------------      ------------
+        5.1.21          12/14/18        Support for Acucobol-GT 10.2
         5.1.11          07/08/11        Patch for READFDR bug on Windows
         5.1.10          11/05/11        WinSSHD on Windows
         5.1.00          02/01/10        Shell Stream Software

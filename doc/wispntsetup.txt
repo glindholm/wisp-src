@@ -5,7 +5,7 @@ Title:          WISP for Windows Quick Set-Up Steps
 
 Document:       wispntsetup.txt
 Products:       WISP/WIN32
-WISPVER:        5.1.20
+WISPVER:        5.1.21
 
 Summary:        WISP for Windows installation and setup steps
 
