@@ -52,6 +52,10 @@
 
 	[_] Build "SHIPKITWISP - Release - Win32" 
 
+		If ACU files are not found then build acu and acn projects:
+		[_] Build "acu - Release - Win32" 
+		[_] Build "acn - Release - Win32" 
+
 	[_] Build "SHIPKITKCSIACU - Release - Win32" 
 
 	[_] Rebuild "TESTACU - Release - Win32"
