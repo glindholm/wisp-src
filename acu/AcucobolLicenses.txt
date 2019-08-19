@@ -1,4 +1,15 @@
 ----------------------------------------------------------------------------
+10.2.1
+----------------------------------------------------------------------------
+
+ACUCOBOL-GT Runtime	10.2.1 	X86 running Linux (glibc 2.x) 64 Bit
+Serial: 88446
+
+ACUCOBOL-GT Runtime	
+Product Code: MASSSS24JYNQG7WG
+Product Key: G99BUY24JXUJ
+
+----------------------------------------------------------------------------
 10.2.0
 ----------------------------------------------------------------------------
 ACUCOBOL-GT Dev Sys	10.2.0 	X86 running XP, Vista, Win 7, 8, 10, Server 2003, 2008 32 Bit
@@ -114,6 +125,17 @@ ACUCOBOL-GT Runtime	10.1.1	X86 running Linux (glibc 2.x) 32 Bit
 ACUCOBOL-GT Runtime	
 Product Code: LBSSSS24J8WGG7WC
 Product Key: H87BUY24J7RA	
+License Type: UPDATE
+Users/Devs: 2
+Serial: 88446
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+ACUCOBOL-GT Runtime	10.1.1	X86 running Linux (glibc 2.x) 64 Bit
+
+ACUCOBOL-GT Runtime	
+Product Code: VBA5CNVNJU2MUEFC
+Product Key: UG7LALVNJTGB
 License Type: UPDATE
 Users/Devs: 2
 Serial: 88446
