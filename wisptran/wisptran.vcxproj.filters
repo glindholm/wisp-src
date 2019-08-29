@@ -227,4 +227,8 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="wisp.umf" />
+    <None Include="wispd.umf" />
+  </ItemGroup>
 </Project>

@@ -3154,7 +3154,7 @@ static void wsdmp_scrn(unsigned char *wsb, int type_d)
 	{
 		werrlog(WERRCODE(67022),terminal_error,0,0,0,0,0,0,0);			/* Something wrong with output	*/
 		ptr = "%%VW-W-DUMPSCREEN Abnormal condition, dump of current screen is:\n\n";
-		printf(ptr);
+		printf("%s",ptr);
 		if (WL_get_wispdebug() != WISPDEBUG_NONE) WL_werr_write(ptr);		/* write to error log		*/
 	}
 	else if (type_d == 1) VL_vset(VSET_PRINTER,ON);					/* On printer for output.	*/

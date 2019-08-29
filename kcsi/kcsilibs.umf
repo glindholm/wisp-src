@@ -238,7 +238,7 @@ CFLAGS_CRID= $(CFLAGS) -DKCSI_UNIX -I ../wispcommon
 .wcb.a:
 	$(WISPTRAN) -VMF $(WISPFLAGS) $<
 	$(MF_COBOL) -xc $(MF_FLAGS) $*.cob
-	ar rv $@ $*.o
+	ar $(ARFLAGS) $@ $*.o
 	rm -f $*.o $*.int
 
 

@@ -148,5 +148,5 @@ qapic: qapic.c $(WISP_LIBS_PATHS)
 run_qapic: qapic
 	@echo '*****'
 	@echo 'Running QAPIC tests'
-	qapic
+	./qapic
 	@echo '*****'

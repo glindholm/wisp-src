@@ -69,7 +69,7 @@ void system_environment::create_vector() {
       the_vector[i] = dup_string(os_environ[i]);
       i += 1;
    }
-   the_vector[i] = '\0';
+   the_vector[i] = NULL;
 
    // Fool C++ runtime into thinking our vector is theirs so that Spawn
    // and System calls will be able to convert the vector into a DOS
@@ -172,7 +172,7 @@ int system_environment::set(const char* a_name, const char* a_value) {
          os_environ = the_vector;
       }
       the_vector[entry_count - 1] = s;
-      the_vector[entry_count] = '\0';
+      the_vector[entry_count] = NULL;
    }
    return 0;
 }
