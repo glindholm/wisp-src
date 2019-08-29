@@ -633,7 +633,7 @@ static int getyn(char* pr)
 {
 	char ch;
 
-	printf(pr);
+	printf("%s",pr);
 	rawmode();
 	do
 	{

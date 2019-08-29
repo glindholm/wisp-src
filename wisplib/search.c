@@ -114,7 +114,7 @@ static int4 bsrch(char* table, int4 n_elem, int4 e_len, char* s_item, int4 s_len
 	if (memcmp(IND(bottom),IND(top),(int)e_len)<0) order = ASCENDING;
 	else order = DESCENDING;
 
-	while (order*memcmp(s_item,IND(middle),(int)s_len) && bottom<=top)
+	while ((order*memcmp(s_item,IND(middle),(int)s_len) != 0) && bottom<=top)
 	{
 		if (order*memcmp(s_item,IND(middle),(int)s_len)<0) top=middle-1;
 		if (order*memcmp(s_item,IND(middle),(int)s_len)>0) bottom=middle+1;

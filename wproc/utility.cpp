@@ -260,14 +260,15 @@ int match(
 
    if (same_string(s, s1))
       which = 1;
-   else if (s2)
-      if (same_string(s, s2))
-         which = 2;
-      else
-         if (s3)
-            if (same_string(s, s3))
-               which = 3;
-
+   else if (s2) {
+	   if (same_string(s, s2))
+		   which = 2;
+	   else if (s3) {
+		   if (same_string(s, s3)) {
+			   which = 3;
+		   }
+	   }
+   }
    delete s;
    return which;
 }
@@ -622,7 +623,7 @@ char *formatted_time(
    char ss[3];
    char ds[3];
 
-   Boolean colon = BOOLEAN(format >= 7 && format <= 14 || format >= 18 && format <= 21);
+   Boolean colon = BOOLEAN((format >= 7 && format <= 14) || (format >= 18 && format <= 21));
 
    // Format hour
    if ((format >= 14 || format % 2 == 0) && hour > 12)

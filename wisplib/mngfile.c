@@ -2508,7 +2508,7 @@ static int build_file_screen(HWSB hWsb, char* pf_list, int protect, int filetype
 	}
 
 #ifdef USE_FILE64
-	sprintf(buff,"%lld",filestat.st_size);
+	sprintf(buff,"%lld",(long long int)filestat.st_size);
 #else
 	sprintf(buff,"%ld",filestat.st_size);
 #endif

@@ -692,7 +692,7 @@ int define_os(char* ut)
 	char	buff[256];
 #endif
 
-	char	temp[256];
+	char	temp[512];
 	
 	char	*ptr;
 
