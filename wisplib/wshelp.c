@@ -2596,13 +2596,13 @@ static int wsh_uc_submit(void)								/* Set the usage constants.		*/
 		wsb_get_field(hWsb,17,74,t_min,2);
 		wsb_get_field(hWsb,17,79,t_sec,2);
 
-		valid = TRUE;								/* Assume we're valid.			*/
+		valid = 1;								/* Assume we're valid.			*/
 		if (0 == pfkey)								/* Should we validate?			*/
 		{
 			mode[0] = toupper(mode[0]);					/* Make sure the char is uppercase.	*/
 			if (strpos("RH",mode) < 0)					/* Was a valid print class given?	*/
 			{
-				valid = FALSE;						/* Oops, then not valid.		*/
+				valid = 0;						/* Oops, then not valid.		*/
 				wsb_add_field(hWsb,11,69,FAC_ERROR_FIELD,mode,1);	/* Make it blink.			*/
 				currow = 11;
 				curcol = 69;
@@ -2617,7 +2617,7 @@ static int wsh_uc_submit(void)								/* Set the usage constants.		*/
 			if (!isdigit((int)t_sec[1])) t_sec[1] = '0';
 		}
 
-		if(TRUE == valid)
+		if(valid != 0)
 		{
 			break;
 		}
