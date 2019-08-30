@@ -1565,14 +1565,14 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	wsb_add_text(hWsb, 6, 0, WISP_ADDRESS_FULL);
 	wsb_add_text(hWsb, 7, 0, "Web: " WISP_WEBSITE "   Email: " WISP_EMAIL);
 
-	sprintf(buff, "Version=[%s]", wisp_version());
+	sprintf(buff, "WISP Version=[%s]", wisp_version());
 	wsb_add_text(hWsb, 12, 0, buff);
 
 	sprintf(temp, "Platform = %s (%2.2s - %s)",
 		WL_platform_name(),
 		WL_platform_code(),
 		WL_platform_define());
-	wsb_add_text(hWsb, 10, 0, temp);
+	wsb_add_text(hWsb, 14, 0, temp);
 
 #ifdef FUNC_UNAME
 	{
@@ -1594,7 +1594,7 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 #endif
 #ifdef WIN32
 	sprintf(temp, "Windows %.65s", WL_computername(NULL));
-	wsb_add_text(hWsb, 20, 0, temp);
+	wsb_add_text(hWsb, 16, 0, temp);
 #endif
 
 	/*
