@@ -106,6 +106,7 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="installqa.sh" />
     <None Include="make.include" />
     <None Include="makewisp.umf" />
     <None Include="..\doc\portunix.txt" />

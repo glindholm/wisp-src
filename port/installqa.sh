@@ -145,7 +145,7 @@ echo
 
 cd ${WISPDIR}/acu
 make ACUDIR=${ACUDIR} WISPDIR=${WISPDIR} -f wruncbl.umf
-make ACUDIR=${ACUDIR} WISPDIR=${WISPDIR} EDEDIR=${WISPDIR}/ede -f wruncbl.umf ede
+#make ACUDIR=${ACUDIR} WISPDIR=${WISPDIR} EDEDIR=${WISPDIR}/ede -f wruncbl.umf ede
 
 
 echo
