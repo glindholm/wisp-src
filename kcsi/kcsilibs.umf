@@ -300,11 +300,11 @@ kcsi_acu_nc_go: header_acu required kcsi_acux kcsi_acu_shipkit wruncblk_rts
 
 ACUSHIPDIR=kcsi_acu_$(KCSI_VERSION).ship
 ACUDISTDIR=kcsi_acu_$(KCSI_VERSION)
-ACUDISTTAZ=kcsi_acu_$(KCSI_VERSION).tar.Z
+ACUDISTTAZ=kcsi_acu_$(KCSI_VERSION).tar.gz
 
 MFXSHIPDIR=kcsi_mf_$(KCSI_VERSION).ship
 MFXDISTDIR=kcsi_mf_$(KCSI_VERSION)
-MFXDISTTAZ=kcsi_mf_$(KCSI_VERSION).tar.Z
+MFXDISTTAZ=kcsi_mf_$(KCSI_VERSION).tar.gz
 
 
 kcsi_acu_shipkit: $(ACUSHIPDIR)
@@ -319,7 +319,7 @@ $(ACUSHIPDIR): $(ACUDIST)
 	cp $(ACUDIST) $(ACUSHIPDIR)/$(ACUDISTDIR)
 	chmod a=r $(ACUSHIPDIR)/$(ACUDISTDIR)/*
 	chmod a+w $(ACUSHIPDIR)/$(ACUDISTDIR)/*.umf
-	(cd $(ACUSHIPDIR); tar -cvf - $(ACUDISTDIR)|compress>$(ACUDISTTAZ))
+	(cd $(ACUSHIPDIR); tar -czvf $(ACUDISTTAZ) $(ACUDISTDIR))
 	cp kcsi_relnotes.txt $(ACUSHIPDIR)
 	cp kcsi_acu_install.txt $(ACUSHIPDIR)
 	chmod a+r *
@@ -339,7 +339,7 @@ $(MFXSHIPDIR): $(MFXDIST)
 	chmod a=r $(MFXSHIPDIR)/$(MFXDISTDIR)/*
 	chmod a+w $(MFXSHIPDIR)/$(MFXDISTDIR)/*.umf
 	(cd $(MFXSHIPDIR)/$(MFXDISTDIR); chmod a=rx control report inquiry datentry create)
-	(cd $(MFXSHIPDIR); tar -cvf - $(MFXDISTDIR)|compress>$(MFXDISTTAZ))
+	(cd $(MFXSHIPDIR); tar -czvf $(MFXDISTTAZ) $(MFXDISTDIR))
 	cp kcsi_relnotes.txt $(MFXSHIPDIR)
 	cp kcsi_mf_install.txt $(MFXSHIPDIR)
 	chmod a+r *
@@ -412,11 +412,11 @@ wruncblk_rts: $(LIBC_ACU_A) wruncbl.umf
 wruncbl.umf: $(WISPSRC)/acu/wruncbl.umf
 	cp -f $(WISPSRC)/acu/wruncbl.umf $@
 
-kcsi_acux.tar.Z: $(ACUXDIST)
-	tar -cvf - $(ACUXDIST) | compress > $@
+kcsi_acux.tar.gz: $(ACUXDIST)
+	tar -czvf $@ $(ACUXDIST)
 	
 kcsi_acux:
-	uncompress -c kcsi_acux.tar.Z | tar -xvf -
+	tar -xzvf kcsi_acux.tar.gz
 	touch $(ACUXDIST)
 
 #-----------------------------------------------------------------------

@@ -25,8 +25,6 @@
 
 	The following components are required to port WISP.
 
-	[ ] WISP source kit  e.g.  wispXXXX.src.tar.Z
-
 	[ ] Acucobol COBOL compiler
 		
 	[ ] C and C++ compiler
@@ -91,7 +89,7 @@
                git checkout {BRANCH}
 
 		or
-		    $ uncompress -c wispXXXX.src.tar.Z | tar -xvf -
+		    $ tar -xzvf wispXXXX.src.tar.gz
 		or
 		    $ uncompress -c wispXXXX.src.cpio.Z | cpio -icvd
 			
