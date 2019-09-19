@@ -214,10 +214,10 @@ wisp_dist_list2 = \
 	$(WISPKIT)/Info
 
 wisp_dist_list3 = \
-	$(KITDIR)/$(WISPNAME).tar.Z
+	$(KITDIR)/$(WISPNAME).tar.gz
 
 ede_dist_list3 = \
-	$(KITDIR)/$(EDENAME).tar.Z
+	$(KITDIR)/$(EDENAME).tar.gz
 
 
 PHASE1 = \
@@ -264,7 +264,7 @@ $(KITDIR)/wisp_relnotes.txt \
 	$(COPY) $(SRCDIR)/doc/$(@F) $@
 	chmod a=r $@
 
-$(KITDIR)/$(WISPNAME).tar.Z: $(PHASE1) $(PHASE2)
+$(KITDIR)/$(WISPNAME).tar.gz: $(PHASE1) $(PHASE2)
 	@echo
 	@echo BUILDING $@
 	@echo
@@ -278,12 +278,12 @@ $(KITDIR)/$(WISPNAME).tar.Z: $(PHASE1) $(PHASE2)
 	chmod a+w $(WISPKIT)/config/*
 	chmod a+w $(WISPKIT)/mf/*.o
 	rm -f $@
-	(cd $(KITDIR); tar -cf - $(WISPNAME) | compress > $@)
+	(cd $(KITDIR); tar -czf $@ $(WISPNAME) )
 	chmod a=r $@
 	ls -l $@
 	@echo
 
-$(KITDIR)/$(EDENAME).tar.Z: $(PHASE1) $(PHASE2)
+$(KITDIR)/$(EDENAME).tar.gz: $(PHASE1) $(PHASE2)
 	@echo
 	@echo BUILDING $@
 	@echo
@@ -292,7 +292,7 @@ $(KITDIR)/$(EDENAME).tar.Z: $(PHASE1) $(PHASE2)
 	chmod a+x $(EDEKIT)/good
 	chmod a+w $(EDEKIT)/demo/*.umf
 	rm -f $@
-	(cd $(KITDIR); tar -cf - $(EDENAME) | compress > $@)
+	(cd $(KITDIR); tar -czf $@ $(EDENAME) )
 	chmod a=r $@
 	ls -l $@
 	@echo

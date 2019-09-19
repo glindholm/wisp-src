@@ -20,7 +20,7 @@ WISP/UNIX INSTALLATION NOTES
 ============================
 
 WISP is normally distributed as a compressed tar file named
-"wisp_XXXX.tar.Z".
+"wisp_XXXX.tar.gz".
 
 Follow these instructions to unload the WISP kit from the
 distribution media.
@@ -37,13 +37,13 @@ distribution media.
     "/usr/local/wisp_XXXX" where "XXXX" is the WISP version number.
 
 
-2)  Copy the tar.Z file ("wisp_XXXX.tar.Z") from to the
+2)  Copy the tar.gz file ("wisp_XXXX.tar.gz") to the
     installation directory "/usr/local".
 
 
-3)  Unload the tar file with this command:
+3)  Unload the tar.gz file with this command:
 
-    $ uncompress -c wisp_XXXX.tar.Z | tar -xvpf -
+    $ tar -xzvpf wisp_XXXX.tar.gz
 
     This will create directory /usr/local/wisp_XXXX.
 

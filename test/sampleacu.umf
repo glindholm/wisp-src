@@ -23,7 +23,7 @@ WISPFLAGS= -V $(WISPLANG) -I$(WISPDIR)/etc -M
 COBOL = ccbl
 COBFLAGS = -Da4 -Gd -Za -Te 800
 
-ACUQA_TAR_Z = acuqa.wisp5120.acu1020.tar.Z
+ACUQA_TAR_GZ = acuqa.wisp5120.acu1020.tar.gz
 
 .SUFFIXES: .acu .cob .wcb
 
@@ -152,10 +152,10 @@ $(ALL_COBOL_COBS): $(WISPTRAN)
 
 all_cobol_objs: COMPILER_LICENSE $(ALL_COBOL_OBJS)
 
-extract_cobol_objs: $(ACUQA_TAR_Z)
-	@echo Extracting Acucobol QA files from $(ACUQA_TAR_Z)
+extract_cobol_objs: $(ACUQA_TAR_GZ)
+	@echo Extracting Acucobol QA files from $(ACUQA_TAR_GZ)
 	rm -f $(ALL_COBOL_OBJS)
-	uncompress -c $(ACUQA_TAR_Z) | tar -xvf -
+	tar -xzvf $(ACUQA_TAR_GZ)
 	touch -c $(ALL_COBOL_OBJS)
 
 test_dirs_head:
@@ -163,10 +163,10 @@ test_dirs_head:
 
 test_dirs: test_dirs_head $(TEST_DIRS)
 
-acuqa:	acuqa.tar.Z
+acuqa:	acuqa.tar.gz
 
-acuqa.tar.Z: $(ALL_COBOL_OBJS)
-	tar -cvf - $(ALL_COBOL_OBJS) | compress > $@
+acuqa.tar.gz: $(ALL_COBOL_OBJS)
+	tar -czvf $@ $(ALL_COBOL_OBJS)
 
 #
 #==============================================================

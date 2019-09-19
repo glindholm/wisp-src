@@ -19,15 +19,15 @@ INSTALLATION
 First install WISP and setup the WISP runtime environment.  This
 must be in place before KCSI can be used.
 
-KCSI will normally be distributed as a tar.Z file named
-"kcsi_mf_XXXX.tar.Z".  It is recommended that you install KCSI
+KCSI will normally be distributed as a tar.gz file named
+"kcsi_mf_XXXX.tar.gz".  It is recommended that you install KCSI
 in your WISP directory ($WISPDIR). 
 
-Extract the distribution files from "kcsi_mf_XXXX.tar" using the
+Extract the distribution files from "kcsi_mf_XXXX.tar.gz" using the
 following tar command:
 
         $ cd $WISPDIR
-        $ uncompress -c kcsi_mf_XXXX.tar.Z | tar -xvpf -
+        $ tar -xzvpf kcsi_mf_XXXX.tar.gz
 
 This will create a directory "kcsi_mf_XXXX" where XXXX is a version
 number.  Refer to kcsi_packlist.txt in the distribution for a listing
