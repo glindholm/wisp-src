@@ -117,7 +117,7 @@ KCSISHIP=${WISPSRC}/kcsi/kcsi_acu_*.ship
 if [ -d ${KCSISHIP} ]
 then
 	cd ${WISPDIR}
-	utar -xzvpf $KCSISHIP/kcsi_acu_*.tar.gz
+	tar -xzvpf $KCSISHIP/kcsi_acu_*.tar.gz
 	ln -s kcsi_acu_* kcsiacu
 else
 	echo
