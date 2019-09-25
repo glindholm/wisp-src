@@ -31,9 +31,15 @@ then
 	COBDIR=/usr/lib/cobol
 	export COBDIR
 fi
+if [ "${WISPTMPDIR}" = "" ]
+then
+	WISPTMPDIR=/var/tmp
+	export WISPTMPDIR
+fi
 
 echo WISPSRC=${WISPSRC}
 echo WISPDIR=${WISPDIR}
+echo WISPTMPDIR=${WISPTMPDIR}
 echo ACUDIR=${ACUDIR}
 if [ ! -d ${ACUDIR} ]
 then
@@ -43,6 +49,10 @@ echo COBDIR=${COBDIR}
 if [ ! -d ${COBDIR} ]
 then
 	echo '**** COBDIR not found ****'
+fi
+if [ ! -d ${WISPTMPDIR} ]
+then
+	echo '**** WISPTMPDIR not found ****'
 fi
 echo SHELL=${SHELL}
 echo
