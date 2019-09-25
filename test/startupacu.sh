@@ -42,7 +42,7 @@ wisp|grep Version
 # If needed create ${WISPCONFIG} dir 
 if [ ! -d ${WISPCONFIG} ]
 then
-	configacu.sh
+	./configacu.sh
 fi
 wusage set PROGVOL=SOURCE
 wusage set PROGLIB=TESTACU

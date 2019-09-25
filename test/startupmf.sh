@@ -51,7 +51,7 @@ wisp|grep Version
 # If needed create ${WISPCONFIG} 
 if [ ! -d ${WISPCONFIG} ]
 then
-	configmf.sh
+	./configmf.sh
 fi
 wusage set PROGVOL=SOURCE
 wusage set PROGLIB=TESTMF
