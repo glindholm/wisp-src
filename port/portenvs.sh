@@ -26,6 +26,10 @@ then
 	ACUDIR=/usr/local/acucobol
 	export ACUDIR
 fi
+if [ "${A_TERMCAP}" = "" ]
+then
+	 export A_TERMCAP=${ACUDIR}/etc/a_termcap
+fi
 if [ "$COBDIR" = "" ]
 then
 	COBDIR=/usr/lib/cobol
@@ -33,9 +37,13 @@ then
 fi
 if [ "${WISPTMPDIR}" = "" ]
 then
-	WISPTMPDIR=/var/tmp
-	export WISPTMPDIR
+	export WISPTMPDIR=/var/tmp
 fi
+if [ "${WISPGID}" = "" ]
+then
+	export WISPGID=$$
+fi
+
 
 echo WISPSRC=${WISPSRC}
 echo WISPDIR=${WISPDIR}

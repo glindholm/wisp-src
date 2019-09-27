@@ -821,9 +821,6 @@ int define_os(char* ut)
 
 	print_nl();
 
-	print_access("TEMP","/usr/tmp",ACC_DIR_READ_WRITE,&errsw);
-	print_access("TEMP","/tmp",    ACC_DIR_READ_WRITE,&errsw);
-
 	if ((ptr = getenv("TMPDIR")))
 	{
 		print_access("TMPDIR", ptr, ACC_DIR_READ_WRITE, &errsw);

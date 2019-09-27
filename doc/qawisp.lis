@@ -1497,8 +1497,8 @@
     ___ wdelwrk        should delete current worklib
 
     ___ su                          Remove all worklibs
-        rm -r -f `cat /usr/tmp/WLIBLIST`
-        rm /usr/tmp/WLIBLIST
+        rm -r -f `cat ${WISPTMPDIR}/WLIBLIST`
+        rm ${WISPTMPDIR}/WLIBLIST
         
     wrun
     ___ wrun                        should give runcbl & options
@@ -1563,7 +1563,7 @@
     ___ ipcs                Check whats out there
         wsysinit -v            Must be ROOT (SU)
         ipcs                Should be cleaned-up
-        ls /usr/tmp            Temp files should be gone
+        ls ${WISPTMPDIR}    Temp files should be gone
 
 
     ================================================================
