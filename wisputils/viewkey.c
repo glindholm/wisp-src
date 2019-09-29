@@ -82,7 +82,7 @@ sleep(3);
 }
 static char *makeprintable(unsigned char value)
 {
-	static char buf[4];
+	static char buf[5];
 	
 	memset(buf,0,sizeof(buf));
 	if (value<' ')

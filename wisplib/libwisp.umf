@@ -825,12 +825,12 @@ $(THE_LIB)(wwaitpid.o): wwaitpid.c $(WC)/idsistd.h $(WC)/intdef.h
 
 $(THE_LIB)(ring.o): $(WC)/ring.c $(WC)/ring.h
 	$(CC) -c $(CFLAGS) $(WC)/$(%:.o=.c)
-	ar rv $@ $%
+	ar $(ARFLAGS) $@ $%
 	rm -f $%
 
 $(THE_LIB)(wisp_pic.o): $(WC)/wisp_pic.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wisp_pic.h
 	$(CC) -c $(CFLAGS) $(WC)/$(%:.o=.c)
-	ar rv $@ $%
+	ar $(ARFLAGS) $@ $%
 	rm -f $%
 
 

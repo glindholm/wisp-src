@@ -106,10 +106,13 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="installqa.sh" />
     <None Include="make.include" />
+    <None Include="maketail.sh" />
     <None Include="makewisp.umf" />
     <None Include="..\doc\portunix.txt" />
     <None Include="..\doc\portwin32.txt" />
+    <None Include="portenvs.sh" />
     <None Include="wispship.umf" />
   </ItemGroup>
   <ItemGroup>

@@ -26,23 +26,49 @@ then
 	ACUDIR=/usr/local/acucobol
 	export ACUDIR
 fi
+if [ "${A_TERMCAP}" = "" ]
+then
+	 export A_TERMCAP=${ACUDIR}/etc/a_termcap
+fi
 if [ "$COBDIR" = "" ]
 then
 	COBDIR=/usr/lib/cobol
 	export COBDIR
 fi
+if [ "${WISPTMPDIR}" = "" ]
+then
+	export WISPTMPDIR=/var/tmp
+fi
+if [ "${WISPGID}" = "" ]
+then
+	export WISPGID=$$
+fi
+
 
 echo WISPSRC=${WISPSRC}
 echo WISPDIR=${WISPDIR}
+echo WISPTMPDIR=${WISPTMPDIR}
 echo ACUDIR=${ACUDIR}
 if [ ! -d ${ACUDIR} ]
 then
 	echo '**** ACUDIR not found ****'
+else
+	# Setup Shared library vars
+	export LD_LIBRARY_PATH=${ACUDIR}/lib:${LD_LIBRARY_PATH}
+	export LIBPATH=${ACUDIR}/lib:${LIBPATH}
+	export SHARED_LIBRARY_PREFIX=${ACUDIR}/lib
+	echo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+	echo LIBPATH=${LIBPATH}
+	echo SHARED_LIBRARY_PREFIX=${SHARED_LIBRARY_PREFIX}
 fi
 echo COBDIR=${COBDIR}
 if [ ! -d ${COBDIR} ]
 then
 	echo '**** COBDIR not found ****'
+fi
+if [ ! -d ${WISPTMPDIR} ]
+then
+	echo '**** WISPTMPDIR not found ****'
 fi
 echo SHELL=${SHELL}
 echo

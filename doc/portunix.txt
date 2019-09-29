@@ -25,13 +25,16 @@
 
 	The following components are required to port WISP.
 
-	[ ] WISP source kit  e.g.  wispXXXX.src.tar.Z
-
 	[ ] Acucobol COBOL compiler
-
-	[ ] Micro Focus COBOL compiler
-
+		
 	[ ] C and C++ compiler
+
+		Ubuntu:
+			sudo apt-get update
+			sudo apt-get install build-essential
+			sudo apt-get install ncurses-dev
+			sudo apt-get install bison flex
+			sudo apt-get install ncompress
 
 
 	INSTALL THE COBOL
@@ -43,16 +46,12 @@
 	
 		- upload the setup_acucob* file
 		
-			mkdir -p ~/work/acu
-			mv setup_acucob* ~/work/acu
-			cd ~/work/acu
-			chmod +x setup_acucob*
+			export ACUDIR=$HOME/work/acu/acuXXXX
 			mkdir -p $ACUDIR
+			chmod +x setup_acucob*
 			./setup_acucob* -d $ACUDIR
 			$ACUDIR/bin/activator
 	
-	[ ] Install Micro Focus COBOL.
-
 
 	[ ] Find version of ACUCOBOL
 		$ $ACUDIR/bin/runcbl -v
@@ -90,7 +89,7 @@
                git checkout {BRANCH}
 
 		or
-		    $ uncompress -c wispXXXX.src.tar.Z | tar -xvf -
+		    $ tar -xzvf wispXXXX.src.tar.gz
 		or
 		    $ uncompress -c wispXXXX.src.cpio.Z | cpio -icvd
 			
@@ -233,7 +232,7 @@
 	[ ]	 ${WISPSRC}/kcsi/kcsi_acu_XXXX.ship
 	[ ]	 ${WISPSRC}/kcsi/kcsi_mf_XXXX.ship
 
-	[_] copy kits to devel.shellstream.net ${HOME}/Shipping
+	[_] copy ship kits to Shipping
 
 
 	========================= END OF DOCUMENT ==========================

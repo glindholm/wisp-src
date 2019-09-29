@@ -499,12 +499,15 @@ Boolean compiler::keyword_matches(
       found = BOOLEAN(lexeme_is(s1));
       if (! found && s2) {
          found = BOOLEAN(lexeme_is(s2));
-         if (! found && s3)
-            found = BOOLEAN(lexeme_is(s3));
-            if (! found && s4)
-               found = BOOLEAN(lexeme_is(s4));
-               if (! found && s5)
-                  found = BOOLEAN(lexeme_is(s5));
+		 if (!found && s3) {
+			 found = BOOLEAN(lexeme_is(s3));
+			 if (!found && s4) {
+				 found = BOOLEAN(lexeme_is(s4));
+				 if (!found && s5) {
+					 found = BOOLEAN(lexeme_is(s5));
+				 }
+			 }
+		 }
       }
    }
    return found;

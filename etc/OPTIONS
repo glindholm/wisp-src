@@ -371,6 +371,7 @@ UTILSWINDOWS
 # The WISPTMPDIR option allows you to change the location of WISP
 # runtime temporary files.
 #
+#WISPTMPDIR /var/tmp
 #WISPTMPDIR /usr/tmp
 #WISPTMPDIR C:\TEMP
 

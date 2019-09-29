@@ -58,12 +58,9 @@
 #include "wanguid.h"
 #include "machid.h"
 
-#if defined(unix) && !defined(LINUX)
-extern char	*sys_errlist[];
-#endif
+const char* WL_strerror(int errnum);
 
 #define DOCTEMPLATE	"license.template"
-
 
 struct license_s
 {
@@ -1157,7 +1154,7 @@ static void logkeyinfo(const char *custname,
 	if (!fp)
 	{
 		printf("\n*** ERROR ***\n");
-		printf("Unable to open log file %s [errno=%d %s]\n\n",WLIC_authlogfile(),errno,sys_errlist[errno]);
+		printf("Unable to open log file %s [errno=%d %s]\n\n",WLIC_authlogfile(),errno,WL_strerror(errno));
 		return;
 	}
 
@@ -1232,7 +1229,7 @@ static void logvalinfo(const char* custname,
 	if (!fp)
 	{
 		printf("\n**** ERROR ****\n");
-		printf("Unable to open log file %s [errno=%d %s]\n\n",WLIC_authlogfile(),errno,sys_errlist[errno]);
+		printf("Unable to open log file %s [errno=%d %s]\n\n",WLIC_authlogfile(),errno,WL_strerror(errno));
 		return;
 	}
 
@@ -1349,7 +1346,7 @@ static 	void printkeydoc(const char* custname,
 	if (!tp)
 	{
 		printf("\n**** ERROR ****\n");
-		printf("Unable to open template file %s [errno=%d %s]\n\n",DOCTEMPLATE,errno,sys_errlist[errno]);
+		printf("Unable to open template file %s [errno=%d %s]\n\n",DOCTEMPLATE,errno,WL_strerror(errno));
 		return;
 	}
 
@@ -1366,7 +1363,7 @@ static 	void printkeydoc(const char* custname,
 	if (!fp)
 	{
 		printf("\n**** ERROR ****\n");
-		printf("Unable to open doc file %s [errno=%d %s]\n\n",docfile,errno,sys_errlist[errno]);
+		printf("Unable to open doc file %s [errno=%d %s]\n\n",docfile,errno,WL_strerror(errno));
 		fclose(tp);
 		return;
 	}
@@ -1406,12 +1403,7 @@ static 	void printkeydoc(const char* custname,
 
 static const char *operatorId()
 {
-#ifdef unix
-	return cuserid(NULL);
-#endif
-#ifdef WIN32
 	return WL_longuid();
-#endif
 }
 
 
@@ -1626,7 +1618,7 @@ static void logtabfile(const char* r_type,		/* "VALCODE" or "LICKEY" */
 	if (!fp)
 	{
 		printf("\n**** ERROR ****\n");
-		printf("Unable to open tab file %s [errno=%d %s]\n\n",tabfilepath(),errno,sys_errlist[errno]);
+		printf("Unable to open tab file %s [errno=%d %s]\n\n",tabfilepath(),errno,WL_strerror(errno));
 		return;
 	}
 

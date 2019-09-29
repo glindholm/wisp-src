@@ -321,7 +321,7 @@ char 	*o_argv[];
 
 	strcpy(prname,argv[2]);								/* third parm is prname.		*/
 	capitalize(prname);
-	if (strchr(prname,'=') != '\0')							/* Is missing the prname parameter.	*/
+	if (strchr(prname,'=') != NULL)							/* Is missing the prname parameter.	*/
 	{
 		fprintf(stderr,"*** missing prname\n");
 		usage();

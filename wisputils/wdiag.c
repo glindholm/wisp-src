@@ -692,7 +692,7 @@ int define_os(char* ut)
 	char	buff[256];
 #endif
 
-	char	temp[256];
+	char	temp[512];
 	
 	char	*ptr;
 
@@ -788,6 +788,17 @@ int define_os(char* ut)
 	}
 
 #ifdef unix
+	if ((ptr = getenv("LD_LIBRARY_PATH")))
+	{
+		print_pair_nl("LD_LIBRARY_PATH", ptr);
+		check_path(ptr);
+	}
+	if ((ptr = getenv("LIBPATH")))
+	{
+		print_pair_nl("LIBPATH", ptr);
+		check_path(ptr);
+	}
+
 	if ((ptr = getenv("SHELL")) )
 	{
 		print_pair("SHELL",ptr);
@@ -820,9 +831,6 @@ int define_os(char* ut)
 	print_envvar("TERM",&errsw);
 
 	print_nl();
-
-	print_access("TEMP","/usr/tmp",ACC_DIR_READ_WRITE,&errsw);
-	print_access("TEMP","/tmp",    ACC_DIR_READ_WRITE,&errsw);
 
 	if ((ptr = getenv("TMPDIR")))
 	{
@@ -1127,7 +1135,12 @@ int define_acu(const char* rts)
 		print_pair_nl("ACULINK","(Unknown)");
 		print_pair_nl("ACUUSING","(Unknown)");
 	}
-	
+
+	if ((ptr = getenv("SHARED_LIBRARY_PREFIX")))
+	{
+		print_pair_nl("SHARED_LIBRARY_PREFIX", ptr);
+		check_path(ptr);
+	}
 
 	
 #ifdef unix

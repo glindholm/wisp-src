@@ -52,26 +52,28 @@ struct platform_struct
 static struct platform_struct	platform_table[] = 
 {
 	/*			"12"	"12345678901234567890"	"1234567890"	*/
-	{PLATFORM_UNKNOWN,	"UK",	"Unknown",		"UNKNOWN"},
+	{PLATFORM_UNKNOWN,      "UK",	"Unknown",		"UNKNOWN"},
 
 	{PLATFORM_OSF1_ALPHA,	"A1",	"Tru64 Alpha",		"OSF1_ALPHA"},	/* Tru64 Digital->Compaq->HP */
-	{PLATFORM_AIX,		"AX",	"AIX RS/6000 (32-bit)",	"AIX"},
-	{PLATFORM_AIX_64,	"A6",	"AIX RS/6000 (64-bit)",	"AIX_64"},
-	{PLATFORM_DGUX,		"DG",	"DG/UX Aviion",		"DGUX"},
-	{PLATFORM_DGUX_INTEL,	"DI",	"DG/UX Intel",		"DGUX_INTEL"},	
-	{PLATFORM_HPUX,		"HP",	"HP-UX PA-RISC 32-bit",	"HPUX"},
-	{PLATFORM_HPUX_64,	"H6",	"HP-UX PA-RISC 64-bit",	"HPUX_64"},
-	{PLATFORM_HPUX_IA,	"IA",	"HP-UX IA 32-bit",	"HPUX_IA"},
-	{PLATFORM_HPUX_IA_64,	"I6",	"HP-UX IA 64-bit",	"HPUX_IA_64"},
-	{PLATFORM_LINUX,	"LX",	"LINUX Intel",		"LINUX"},
-	{PLATFORM_MSDOS,	"DS",	"MSDOS",		"MSDOS"},
-	{PLATFORM_SCO,		"SC",	"SCO UNIX Intel",	"SCO"},
+	{PLATFORM_AIX,          "AX",	"AIX RS/6000 (32-bit)",	"AIX"},
+	{PLATFORM_AIX_64,       "A6",	"AIX RS/6000 (64-bit)",	"AIX_64"},
+	{PLATFORM_DGUX,         "DG",	"DG/UX Aviion",		"DGUX"},
+	{PLATFORM_DGUX_INTEL,   "DI",	"DG/UX Intel",		"DGUX_INTEL"},	
+	{PLATFORM_HPUX,         "HP",	"HP-UX PA-RISC 32-bit",	"HPUX"},
+	{PLATFORM_HPUX_64,      "H6",	"HP-UX PA-RISC 64-bit",	"HPUX_64"},
+	{PLATFORM_HPUX_IA,      "IA",	"HP-UX IA 32-bit",	"HPUX_IA"},
+	{PLATFORM_HPUX_IA_64,   "I6",	"HP-UX IA 64-bit",	"HPUX_IA_64"},
+	{PLATFORM_LINUX,        "LX",	"LINUX Intel",		"LINUX"},
+	{PLATFORM_LINUX_64,     "L6",	"LINUX Intel 64-bit",		"LINUX_64"},
+	{PLATFORM_MSDOS,        "DS",	"MSDOS",		"MSDOS"},
+	{PLATFORM_SCO,          "SC",	"SCO UNIX Intel",	"SCO"},
 	{PLATFORM_SOLARIS,      "SO",   "Solaris Sparc 32-bit",	"SOLARIS"},
 	{PLATFORM_SOLARIS_64,   "S6",   "Solaris Sparc 64-bit",	"SOLARIS_64"},
-	{PLATFORM_SEQUENT,	"SQ",	"Sequent",		"SEQUENT"},
-	{PLATFORM_ULTRIX,	"UL",	"Ultrix (DEC RISC)",	"ULTRIX"},
-	{PLATFORM_UNIXWARE,	"UW",	"UNIXWARE Intel",	"UNIXWARE"},
+	{PLATFORM_SEQUENT,      "SQ",	"Sequent",		"SEQUENT"},
+	{PLATFORM_ULTRIX,       "UL",	"Ultrix (DEC RISC)",	"ULTRIX"},
+	{PLATFORM_UNIXWARE,     "UW",	"UNIXWARE Intel",	"UNIXWARE"},
 	{PLATFORM_WINDOWS_NT,	"WN",	"Windows (WIN32)",	"WIN32"},
+	{PLATFORM_WINDOWS_64,	"W6",	"Windows (WIN64)",	"WIN64"},
 	{-1,			(char *)0, (char *)0,		(char *)0}
 
 #ifdef OLD
@@ -201,6 +203,9 @@ int WL_platform_number(void)
 #endif
 #endif
 
+#ifdef LINUX_64
+	return PLATFORM_LINUX_64;
+#endif
 #ifdef LINUX
 	return PLATFORM_LINUX;
 #endif

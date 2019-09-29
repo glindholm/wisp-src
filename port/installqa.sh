@@ -48,8 +48,8 @@ echo Using Version=[${VER}]
 WISP_VER=wisp_${VER}
 EDE_VER=ede_${VER}
 SHIP=${WISPSRC}/${WISP_VER}.ship
-SHIPWISPTARZ=$SHIP/${WISP_VER}.tar.Z
-SHIPEDETARZ=$SHIP/${EDE_VER}.tar.Z
+SHIPWISPTARZ=$SHIP/${WISP_VER}.tar.gz
+SHIPEDETARZ=$SHIP/${EDE_VER}.tar.gz
 QABASE=${WISPSRC}/QA
 WISPDIR=${WISPSRC}/QA/wisp
 
@@ -99,7 +99,7 @@ echo "        in ${WISPDIR}"
 echo
 
 cd ${QABASE}
-uncompress -c ${SHIPWISPTARZ} | tar -xvpf - 
+tar -xzvpf ${SHIPWISPTARZ}
 ln -s ${WISP_VER} wisp
 
 echo
@@ -108,7 +108,7 @@ echo "        to  ${WISPDIR}/ede"
 echo
 
 cd ${WISPDIR}
-uncompress -c ${SHIPEDETARZ} | tar -xvpf - 
+tar -xzvpf ${SHIPEDETARZ}
 ln -s ${EDE_VER} ede
 
 echo
@@ -117,7 +117,7 @@ KCSISHIP=${WISPSRC}/kcsi/kcsi_acu_*.ship
 if [ -d ${KCSISHIP} ]
 then
 	cd ${WISPDIR}
-	uncompress -c $KCSISHIP/kcsi_acu_*.tar.Z|tar -xvpf -
+	tar -xzvpf $KCSISHIP/kcsi_acu_*.tar.gz
 	ln -s kcsi_acu_* kcsiacu
 else
 	echo
@@ -131,7 +131,7 @@ KCSISHIP=${WISPSRC}/kcsi/kcsi_mf_*.ship
 if [ -d ${KCSISHIP} ]
 then
 	cd ${WISPDIR}
-	uncompress -c ${KCSISHIP}/kcsi_mf_*.tar.Z|tar -xvpf -
+	tar -xzvpf ${KCSISHIP}/kcsi_mf_*.tar.gz
 	ln -s kcsi_mf_* kcsimf
 else
 	echo
@@ -145,7 +145,7 @@ echo
 
 cd ${WISPDIR}/acu
 make ACUDIR=${ACUDIR} WISPDIR=${WISPDIR} -f wruncbl.umf
-make ACUDIR=${ACUDIR} WISPDIR=${WISPDIR} EDEDIR=${WISPDIR}/ede -f wruncbl.umf ede
+#make ACUDIR=${ACUDIR} WISPDIR=${WISPDIR} EDEDIR=${WISPDIR}/ede -f wruncbl.umf ede
 
 
 echo

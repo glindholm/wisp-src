@@ -305,7 +305,7 @@ int WL_wsh_help(int prog_running)							/* Put up the shell screen.		*/
 
 			if ( -1 != uname(&unix_name) )
 			{
-				sprintf(temp, "Welcome to %s - %s", unix_name.sysname, unix_name.nodename);
+				sprintf(temp, "Welcome to %.32s - %.32s", unix_name.sysname, unix_name.nodename);
 			}
 		}
 #endif
@@ -316,7 +316,7 @@ int WL_wsh_help(int prog_running)							/* Put up the shell screen.		*/
 		}
 		else
 		{
-			sprintf(temp, "Welcome to Windows - %s", WL_computername(NULL));
+			sprintf(temp, "Welcome to Windows - %.50s", WL_computername(NULL));
 		}
 #endif
 		if (!temp[0])
@@ -1559,38 +1559,42 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	curcol = 0;
 	hWsb = wsb_new();
 
-	wsb_add_text(hWsb, 1, 0,"*** Copyright Information ***");
-	wsb_add_text(hWsb, 4, 0,"The WISP runtime library");
-	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR "  " WISP_OWNER);
-	wsb_add_text(hWsb, 6, 0,WISP_ADDRESS_FULL);
-	wsb_add_text(hWsb, 7, 0,"Web: " WISP_WEBSITE "   Email: " WISP_EMAIL);
+	wsb_add_text(hWsb, 1, 0, "*** Copyright Information ***");
+	wsb_add_text(hWsb, 4, 0, "The WISP runtime library");
+	wsb_add_text(hWsb, 5, 0, "Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR "  " WISP_OWNER);
+	wsb_add_text(hWsb, 6, 0, WISP_ADDRESS_FULL);
+	wsb_add_text(hWsb, 7, 0, "Web: " WISP_WEBSITE "   Email: " WISP_EMAIL);
 
-	sprintf(buff,"Version=[%s]", wisp_version());
-	wsb_add_text(hWsb, 22, 0,buff);
+	sprintf(buff, "WISP Version=[%s]", wisp_version());
+	wsb_add_text(hWsb, 12, 0, buff);
 
-	sprintf(temp, "Platform = %s (%2.2s - %s)", 
+	sprintf(temp, "Platform = %s (%2.2s - %s)",
 		WL_platform_name(),
 		WL_platform_code(),
 		WL_platform_define());
-	wsb_add_text(hWsb, 18, 0, temp);
+	wsb_add_text(hWsb, 14, 0, temp);
 
 #ifdef FUNC_UNAME
 	{
 		struct utsname unix_name;
-		if ( -1 != uname(&unix_name) )
+		if (-1 != uname(&unix_name))
 		{
-			sprintf(temp, "%s %s %s %s %s", unix_name.sysname, 
-							unix_name.nodename,
-							unix_name.release,
-							unix_name.version,
-							unix_name.machine);
+			sprintf(temp, "OS Sysname: %.65s", unix_name.sysname);
+			wsb_add_text(hWsb, 16, 0, temp);
+			sprintf(temp, "OS Nodename: %.65s", unix_name.nodename);
+			wsb_add_text(hWsb, 17, 0, temp);
+			sprintf(temp, "OS Release: %.65s", unix_name.release);
+			wsb_add_text(hWsb, 18, 0, temp);
+			sprintf(temp, "OS Version: %.65s", unix_name.version);
+			wsb_add_text(hWsb, 19, 0, temp);
+			sprintf(temp, "OS Machine: %.65s", unix_name.machine);
 			wsb_add_text(hWsb, 20, 0, temp);
 		}
 	}
 #endif
 #ifdef WIN32
-	sprintf(temp, "Windows %s", WL_computername(NULL));
-	wsb_add_text(hWsb, 20, 0, temp);
+	sprintf(temp, "Windows %.65s", WL_computername(NULL));
+	wsb_add_text(hWsb, 16, 0, temp);
 #endif
 
 	/*
@@ -2455,13 +2459,13 @@ static int wsh_uc_print(void)								/* Set the usage constants.		*/
 		wsb_get_field(hWsb,16,75,number,3);
 		wsb_get_field(hWsb,18,75,dplines,3);
 
-		valid = TRUE;								/* Assume we're valid.			*/
+		valid = 1;								/* Assume we're valid.			*/
 		if (0 == pfkey)								/* Should we validate?			*/
 		{
 			mode[0] = toupper(mode[0]);					/* Make sure the char is uppercase.	*/
 			if (strpos("OSHKP",mode) < 0)					/* Was a valid print class given?	*/
 			{
-				valid = FALSE;						/* Oops, then not valid.		*/
+				valid = 0;						/* Oops, then not valid.		*/
 				wsb_add_field(hWsb, 4,75,FAC_ERROR_FIELD,mode,1);	/* Make it blink.			*/
 				currow = 4;
 				curcol = 75;
@@ -2471,14 +2475,14 @@ static int wsh_uc_print(void)								/* Set the usage constants.		*/
 			tlines = atoi(dplines);						/* Convert lines to integer.		*/
 			if (tlines < 0 || tlines > 255)
 			{
-				valid = FALSE;						/* Oops, then not valid.		*/
+				valid = 0;						/* Oops, then not valid.		*/
 				wsb_add_field(hWsb,18,75,FAC_NUM_ERROR_FIELD,dplines,3);	/* Make it blink.		*/
 				currow = 18;
 				curcol = 75;
 			}
 		}
 
-		if (TRUE == valid)
+		if (valid != 0)
 		{
 			break;
 		}
@@ -2592,13 +2596,13 @@ static int wsh_uc_submit(void)								/* Set the usage constants.		*/
 		wsb_get_field(hWsb,17,74,t_min,2);
 		wsb_get_field(hWsb,17,79,t_sec,2);
 
-		valid = TRUE;								/* Assume we're valid.			*/
+		valid = 1;								/* Assume we're valid.			*/
 		if (0 == pfkey)								/* Should we validate?			*/
 		{
 			mode[0] = toupper(mode[0]);					/* Make sure the char is uppercase.	*/
 			if (strpos("RH",mode) < 0)					/* Was a valid print class given?	*/
 			{
-				valid = FALSE;						/* Oops, then not valid.		*/
+				valid = 0;						/* Oops, then not valid.		*/
 				wsb_add_field(hWsb,11,69,FAC_ERROR_FIELD,mode,1);	/* Make it blink.			*/
 				currow = 11;
 				curcol = 69;
@@ -2613,7 +2617,7 @@ static int wsh_uc_submit(void)								/* Set the usage constants.		*/
 			if (!isdigit((int)t_sec[1])) t_sec[1] = '0';
 		}
 
-		if(TRUE == valid)
+		if(valid != 0)
 		{
 			break;
 		}

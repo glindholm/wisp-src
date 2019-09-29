@@ -1017,6 +1017,10 @@
     <ClInclude Include="wt_disp.h" />
     <ClInclude Include="wt_procd.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="wisp.umf" />
+    <None Include="wispd.umf" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

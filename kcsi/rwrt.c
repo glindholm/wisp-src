@@ -478,6 +478,7 @@ int idx;
 static void build_a_break(rfl,level,code)
 RPT_RFL *rfl;
 int level;
+int code;
 {
 	RPT_RFL wrfl;
 	SUM *val;

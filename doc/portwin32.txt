@@ -126,13 +126,13 @@
 	[_] Build TESTACU
 	[_] mkdir acuqa.wisp5120.acu1020
 	[_] copy *.acu to acuqa.wispxxx.acuxxx (expect 72 items)
-	[_] Create tar.Z file from contents
+	[_] Create tar.gz file from contents
 		- Copy to a UNIX machine
 		- cd acuqa.wisp????.acu????
-		- tar -cvf - *.acu | compress > acuqa.wisp????.acu????.tar.Z
-		- mv *.tar.Z ..
-	[_] check .tar.Z file in to source control
-	[_] update test/sampleacu.umf ACUQA_TAR_Z file
+		- tar -czvf acuqa.wisp????.acu????.tar.gz *.acu
+		- mv *.tar.gz ..
+	[_] check .gz file in to source control
+	[_] update test/sampleacu.umf ACUQA_TAR_GZ file
 	
 	QA TEST WISP
 	------------
@@ -152,11 +152,8 @@
 	[ ]	Tag the release in CVS (e.g. V5_1_10)
 	[ ]	Build source kit
 		cd tmp (on UNIX)
-		cvs co -P -d src wisp/src
-		-- or --
-		cvs co -P -r V5_1_10 -d src wisp/src
-		$WISP/src/port/tarz src
-		mv src.tar.Z wisp5150.src.tar.Z
-		ftp to C:\ShellStream\WISP_Source
+		-- checkout git branch --
+		tar -czvf  wisp5150.src.tar.gz
+		copy to C:\ShellStream\WISP_Source
 
 	========================= END OF DOCUMENT ==========================
