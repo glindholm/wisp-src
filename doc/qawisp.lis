@@ -107,7 +107,7 @@
 
     LICENSE THE MACHINE
 
-    ___ $WISPDIR/bin/wlicense
+    ___ wlicense
 
 
 +    BUILD SAMPLE
@@ -333,16 +333,23 @@
     ___ (14) PRINT PROGRAM Screen.
         (15) PRINT COMMAND Screen.
         Check the printouts for correctness.
-        Files are id#### LIBSPOOL VOLSPL.
-        Verify the file    has been submitted to a print queue.
+			(5) Manage FILES/LIBRARIES
+				-- VOLSPL LIBSPOOL id####
+				__ Select file (11) DISPLAY
+					(16) Exit (Display)
+			(1) Return to Volume Display
+			(1) Exit (Manage Files)
+
 
         (9) Use UTILITIES
     ___ (2) DISPLAY a file
             FILE = XYZ     LIBRARY = LIBIN    VOLUME = VOLIN
+			(16) Exit
 
         (9) Use UTILITIES
     ___ (3) EDIT a file
-            FILE = SAMPLE  LIBRARY = TESTxxx  VOLUME = SOURCE
+            FILE = SAMPLE  LIBRARY = TESTACU  VOLUME = SOURCE
+			(16) Exit
 
         (9) Use UTILITIES
     ___ (4) DISPRINT
@@ -565,7 +572,7 @@
     (3) FILE I/O TESTS
 
     ___ (15) OPEN FILE-B INPUT   
-    ___ (15) OPEN FILE-B INPUT  Error-getparm   (85) [41]
+    ___ (15) OPEN FILE-B INPUT  Error-getparm   (85) [41][00]
                                 Already open    (74) [92][00]
 
     ___ (16) to EXIT program.
@@ -1165,7 +1172,7 @@
     ___ wusage flags
         (1) EXIT
         
-    ___ UNIX: qaflags.sh
+    ___ UNIX: ./qaflags.sh
 
     ___ WIN32: wshell (1) Run QAFLAGS
 
@@ -1486,7 +1493,7 @@
 
     WPUTPARM Utility  (UNIX ONLY)
 
-    ___   tstpp.sh    Test WPUTPARM        
+    ___   ./tstpp.sh    Test WPUTPARM        
                       Follow instructions
 
     viewkey
@@ -1511,7 +1518,7 @@
     ================================================================
 
         TO TEST wcopy, wexists, wrename, wscratch run qautils.sh
-    ___ qautils.sh    (perform the following tests)
+    ___ ./qautils.sh    (perform the following tests)
 
     ================================================================
 
