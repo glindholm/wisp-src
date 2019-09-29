@@ -788,6 +788,17 @@ int define_os(char* ut)
 	}
 
 #ifdef unix
+	if ((ptr = getenv("LD_LIBRARY_PATH")))
+	{
+		print_pair_nl("LD_LIBRARY_PATH", ptr);
+		check_path(ptr);
+	}
+	if ((ptr = getenv("LIBPATH")))
+	{
+		print_pair_nl("LIBPATH", ptr);
+		check_path(ptr);
+	}
+
 	if ((ptr = getenv("SHELL")) )
 	{
 		print_pair("SHELL",ptr);
@@ -1124,7 +1135,12 @@ int define_acu(const char* rts)
 		print_pair_nl("ACULINK","(Unknown)");
 		print_pair_nl("ACUUSING","(Unknown)");
 	}
-	
+
+	if ((ptr = getenv("SHARED_LIBRARY_PREFIX")))
+	{
+		print_pair_nl("SHARED_LIBRARY_PREFIX", ptr);
+		check_path(ptr);
+	}
 
 	
 #ifdef unix

@@ -33,10 +33,11 @@
 #	
 #	3) Setup your configuration to use the new runtime.
 #
-#	   Add $ACUDIR/lib to the LIBPATH per the Acucobol setup
+#	   Add $ACUDIR/lib to the LIBPATH or LD_LIBARY_PATH per the Acucobol setup
 #	   instructions.
 #
-#	   $ export LIBPATH=$ACUDIR/lib:$LIBPATH
+#	   $ export LIBPATH=${ACUDIR}/lib:${LIBPATH}
+#	   $ export LD_LIBARY_PATH=${ACUDIR}/lib:${LD_LIBARY_PATH}
 #
 #	   Edit $WISPCONFIG/wrunconfig and set the path to $ACUDIR/bin/runcbl.
 #	   You can rename runcbl if you prefer but you cannot rename the shared

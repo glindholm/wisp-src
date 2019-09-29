@@ -52,6 +52,14 @@ echo ACUDIR=${ACUDIR}
 if [ ! -d ${ACUDIR} ]
 then
 	echo '**** ACUDIR not found ****'
+else
+	# Setup Shared library vars
+	export LD_LIBRARY_PATH=${ACUDIR}/lib:${LD_LIBRARY_PATH}
+	export LIBPATH=${ACUDIR}/lib:${LIBPATH}
+	export SHARED_LIBRARY_PREFIX=${ACUDIR}/lib
+	echo LD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+	echo LIBPATH=${LIBPATH}
+	echo SHARED_LIBRARY_PREFIX=${SHARED_LIBRARY_PREFIX}
 fi
 echo COBDIR=${COBDIR}
 if [ ! -d ${COBDIR} ]
