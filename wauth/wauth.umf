@@ -28,7 +28,7 @@ all:	$(ALL)
 clean:
 	rm -f $(ALL) *.o core *~ 
 	rm -f wauthorize.tab wauthorize.log
-	rm -rf doc
+	rm -f doc/*
 
 wauthorize: wauthorize.c $(WU)/prompt.c $(WC)/wlicense.h $(WC)/intdef.h $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) -o $@ wauthorize.c $(WU)/prompt.c $(UTILS_LIBS_LINK)

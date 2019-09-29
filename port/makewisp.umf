@@ -141,6 +141,11 @@ wisputils:	wisplib videolib
 		(cd $(WISPSRC)/wisputils;	$(MAKE) -f utils.umf)
 		@echo WISPUTILS is up-to-date.
 
+wauth:	wisplib videolib
+		@echo Making $@
+		(cd $(WISPSRC)/wauth;	$(MAKE) -f wauth.umf)
+		@echo $@ is up-to-date.
+
 mfsubs:		
 		@echo Making $@
 		(cd $(WISPSRC)/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. CC="$(CC)" CFLAGS="$(CFLAGS)" subsonly)
