@@ -58,38 +58,9 @@
 #include "wanguid.h"
 #include "machid.h"
 
+const char* WL_strerror(int errnum);
+
 #define DOCTEMPLATE	"license.template"
-
-/* This is duplicated here to avoid pulling in all of wisplib and videolib */
-const char* WL_strerror(int errnum)
-{
-	const char* ptr = NULL;
-
-#ifdef USE_SYS_ERRLIST
-	extern char *sys_errlist[];
-	extern int   sys_nerr;
-
-
-	if (errnum >= 0 &&
-		errnum < sys_nerr)
-	{
-		ptr = sys_errlist[errnum];
-	}
-
-	if (NULL == ptr)
-	{
-		static char mess[30];
-		sprintf(mess, "Unknown errno=[%d]", errnum);
-		ptr = mess;
-	}
-#endif
-
-#ifndef USE_SYS_ERRLIST
-	ptr = strerror(errnum);
-#endif
-
-	return ptr;
-}
 
 struct license_s
 {
