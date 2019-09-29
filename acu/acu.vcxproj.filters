@@ -13,6 +13,9 @@
       <UniqueIdentifier>{3d12f380-382d-4cf7-836d-6b859d95f8ff}</UniqueIdentifier>
       <Extensions>mak;umf</Extensions>
     </Filter>
+    <Filter Include="acu102">
+      <UniqueIdentifier>{58ce8c9a-4116-4e2f-be7b-82fa9fe3b68e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sub85_acu50.c">
@@ -124,5 +127,32 @@
     <None Include="acu60\build_wisp_acu60_rts.txt" />
     <None Include="acu60\build_wisp_acu60atm_rts.txt" />
     <None Include="acu62\build_wisp_acu62_rts.txt" />
+    <None Include="acu102\Makefile_aix71_32sh.mak">
+      <Filter>acu102</Filter>
+    </None>
+    <None Include="acu102\Makefile_linux_32sh.mak">
+      <Filter>acu102</Filter>
+    </None>
+    <None Include="acu102\Makefile_linux_64sh.mak">
+      <Filter>acu102</Filter>
+    </None>
+    <None Include="acu102\build_wisp_acu102_atm_rts.txt">
+      <Filter>acu102</Filter>
+    </None>
+    <None Include="acu102\build_wisp_acu102_con_rts.txt">
+      <Filter>acu102</Filter>
+    </None>
+    <None Include="acu102\build_wisp_acu102_rts.txt">
+      <Filter>acu102</Filter>
+    </None>
+    <None Include="acu102\kcsi\build_kcsi_acu102_atm_rts.txt">
+      <Filter>acu102</Filter>
+    </None>
+    <None Include="acu102\kcsi\build_kcsi_acu102_con_rts.txt">
+      <Filter>acu102</Filter>
+    </None>
+    <None Include="acu102\kcsi\build_kcsi_acu102_rts.txt">
+      <Filter>acu102</Filter>
+    </None>
   </ItemGroup>
 </Project>

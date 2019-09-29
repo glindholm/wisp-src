@@ -121,6 +121,15 @@
     <ResourceCompile Include="acu60\wrundll.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="acu102\build_wisp_acu102_atm_rts.txt" />
+    <None Include="acu102\build_wisp_acu102_con_rts.txt" />
+    <None Include="acu102\build_wisp_acu102_rts.txt" />
+    <None Include="acu102\kcsi\build_kcsi_acu102_atm_rts.txt" />
+    <None Include="acu102\kcsi\build_kcsi_acu102_con_rts.txt" />
+    <None Include="acu102\kcsi\build_kcsi_acu102_rts.txt" />
+    <None Include="acu102\Makefile_aix71_32sh.mak" />
+    <None Include="acu102\Makefile_linux_32sh.mak" />
+    <None Include="acu102\Makefile_linux_64sh.mak" />
     <None Include="aculink.wcb" />
     <None Include="acuusing.cob" />
     <None Include="W%40FILESTATUSCHECK.cob" />
