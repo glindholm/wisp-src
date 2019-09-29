@@ -354,12 +354,12 @@ SYSDEF = "Error SYSDEF not defined"
 #==================================================================
 #	LINUX (64-bit)
 #
-#SYSDEF = -DLINUX
+#SYSDEF = -DLINUX -DLINUX_64
 #CC_STD  = gcc
 #CC_ANSI = gcc
-#CC_SYS_FLAGS = -m64 -Wall -Wno-unused-but-set-variable -Wno-unused-result
+#CC_SYS_FLAGS = -m64 -Wall -Wno-unused-but-set-variable -Wno-unused-result -fpic
 #CCC = g++
-#CCC_SYS_FLAGS = -m64 -DBOOL_TYPE -fsigned-char -Wall -Wno-write-strings
+#CCC_SYS_FLAGS = -m64 -DBOOL_TYPE -fsigned-char -Wall -Wno-write-strings -fpic
 #CCC_SYS_LINK = 
 #LEX_LINK = 
 #LEX=flex

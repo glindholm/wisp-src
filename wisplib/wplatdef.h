@@ -65,8 +65,8 @@
 #define		PLATFORM_PYRAMID	1031
 #define		PLATFORM_SONY		1032
 #define		PLATFORM_WYSE		1033
-#define         PLATFORM_SOLARIS        1034
-#define         PLATFORM_SOLARIS_PC     1035
+#define		PLATFORM_SOLARIS	1034
+#define		PLATFORM_SOLARIS_PC	1035
 #define		PLATFORM_OSF1_ALPHA	1036
 #define		PLATFORM_OSF1_DEC	1037
 #define		PLATFORM_SUN_3		1038
@@ -75,9 +75,10 @@
 #define		PLATFORM_LINUX		1041
 #define		PLATFORM_AIX_64		1042
 #define		PLATFORM_HPUX_64	1043
-#define         PLATFORM_SOLARIS_64     1044
-#define         PLATFORM_HPUX_IA        1045
-#define         PLATFORM_HPUX_IA_64     1046
+#define		PLATFORM_SOLARIS_64	1044
+#define		PLATFORM_HPUX_IA	1045
+#define		PLATFORM_HPUX_IA_64	1046
+#define		PLATFORM_LINUX_64	1047
 
 /*
 **	Non-UNIX
@@ -87,30 +88,6 @@
 #define		PLATFORM_HPMPE		2003
 #define		PLATFORM_VMS_ALPHA	2004
 #define		PLATFORM_WINDOWS_NT	2005
+#define		PLATFORM_WINDOWS_64	2006
 
 #endif
-
-/*
-**	History:
-**	$Log: wplatdef.h,v $
-**	Revision 1.11  2010/02/10 03:56:29  gsl
-**	add HPUX IA Itanium platform
-**	
-**	Revision 1.10  2003/02/07 17:55:21  gsl
-**	Rework the platform routines and add AIX HPUX SOLARIS 64-bit
-**	
-**	Revision 1.9  2003/01/31 19:18:00  gsl
-**	Fix copyright header  and -Wall warnings
-**	
-**	Revision 1.8  2002/08/28 01:32:01  gsl
-**	LINUX
-**	
-**	Revision 1.7  1997/09/09 18:28:03  scass
-**	Added DG/UX Intel as a platform
-**	
-**	Revision 1.6  1996-08-19 18:33:20-04  gsl
-**	drcs update
-**
-**
-**
-*/
