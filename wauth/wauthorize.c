@@ -1406,12 +1406,7 @@ static 	void printkeydoc(const char* custname,
 
 static const char *operatorId()
 {
-#ifdef unix
-	return cuserid(NULL);
-#endif
-#ifdef WIN32
 	return WL_longuid();
-#endif
 }
 
 
