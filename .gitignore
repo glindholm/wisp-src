@@ -16,6 +16,10 @@ CVS/
 /QA/
 /testacu/
 /testmf/
+/wauth/wauthorize
+/wauth/wauthorize.tab
+/wauth/wauthorise.log
+/wauth/doc/*
 *.ship
 .wisper
 
