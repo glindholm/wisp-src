@@ -309,6 +309,7 @@ $(WISPKIT)/Info: $(PHASE1)
 	date 						>  $@
 	uname -s -r -v					>> $@
 	$(WISPKIT)/bin/wisp|grep Version=		>> $@
+	cat /etc/os-release >> $@
 	@echo
 
 #
