@@ -30,11 +30,19 @@
 	[ ] C and C++ compiler
 
 		Ubuntu:
+			cat /etc/os-release
+			lsb_release -a
 			sudo apt-get update
 			sudo apt-get install build-essential
 			sudo apt-get install ncurses-dev
 			sudo apt-get install bison flex
 			sudo apt-get install ncompress
+			
+		Centos 7 (64-bit)
+			cat /etc/os-release
+			sudo yum groupinstall 'Development Tools'
+			sudo yum install ncurses-devel
+			sudo yum install ncompress
 
 
 	INSTALL THE COBOL
@@ -48,6 +56,7 @@
 		
 			export ACUDIR=$HOME/work/acu/acuXXXX
 			mkdir -p $ACUDIR
+			# upload setup_acucob* $HOME/work/acu
 			chmod +x setup_acucob*
 			./setup_acucob* -d $ACUDIR
 			$ACUDIR/bin/activator
@@ -79,7 +88,12 @@
 	 	Load the source kit from external media using tar.
 		Then uncompress it and un-tar it to create the "src"
 		directory.
+
+		git config --global user.name "Greg Lindholm"
+		git config --global user.email "glindholm@shellstream.com"
 		
+		cd  ~/work/wisp
+
 		From git:
 
         SSH:   git clone git@bitbucket.org:glindholm/wisp-src-main.git src

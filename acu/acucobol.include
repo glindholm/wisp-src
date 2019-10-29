@@ -183,6 +183,9 @@ ACUOTHER=
 #
 ## Acu 10.2
 #ACUOTHER= -ldl -lpthread
+#SYSCCFLAGS = -std=gnu99 -m64 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_XOPEN_SOURCE=500 -D_BSD_SOURCE
+#
+## Ubuntu needs the -no-pie
 #SYSCCFLAGS = -std=gnu99 -m64 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_XOPEN_SOURCE=500 -D_BSD_SOURCE -no-pie
 #
 #----------------------------------------------------------------------------
