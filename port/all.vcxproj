@@ -114,6 +114,7 @@
     <None Include="..\doc\portwin32.txt" />
     <None Include="portenvs.sh" />
     <None Include="wispship.umf" />
+    <None Include="wisp_platform_info.sh" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ede\ede.vcxproj">
