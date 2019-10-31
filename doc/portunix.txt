@@ -74,7 +74,7 @@
 		files. (If a WISP directory already exists don't recreate.)
 
 		Example:
-			$ mkdir ~/work/wisp
+			$ mkdir -p ~/work/wisp
 
 	[ ]	DELETE or RENAME THE OLD SOURCE DIRECTORY
 
@@ -111,14 +111,20 @@
 
 	[ ]	SET ENVIRONMENT VARIABLES
 
-		Set ACUDIR to the ACUCOBOL directory.
-		
-			$ export ACUDIR=${HOME}/acu/acu1020
+		Create a startup file to set ACUDIR to the ACUCOBOL directory.
+
+			$ vi ~/startup_xxx.sh
+				export ACUDIR=~/work/acu/acuXXXX
+				export WISPDIR=~/work/wisp/src
+	
+			$ chmod +x ~/startup*.sh
+			$ . ~/startup_xxx.sh
+
 
 		Change directory to the wisp/src/port and run portenvs.sh
 		to set the WISPSRC and WISPDIR variables.
 
-			$ cd wisp/src/port
+			$ cd $WISPDIR/port
 			$ ./portenvs.sh
 
 		This will set the variables WISPSRC and WISPDIR.
