@@ -306,10 +306,11 @@ $(WISPKIT)/Info: $(PHASE1)
 	@echo BUILDING $@
 	@echo
 	rm -f $@
-	date 						>  $@
-	uname -s -r -v					>> $@
-	$(WISPKIT)/bin/wisp|grep Version=		>> $@
-	cat /etc/os-release >> $@
+	date >  $@
+	$(WISPKIT)/bin/wisp|grep Version=    >> $@
+	$(SRCDIR)/port/wisp_platform_info.sh >> $@
+	@echo
+	cat $@
 	@echo
 
 #
