@@ -31,17 +31,73 @@
 
 	This will create a standard wisp source kit directory layout.
 
+
+	Install the lastest Acucobol Extend
+	-----------------------------------
+
+	[_] Select the installation folder
+
+		C:\data\Acucorp\Acucbl1031
+
+	[_] Select the products to install
+
+		- ACUCOBOL-GT Compiler
+		- ACUCOBOL-GT Runtime COBOL Virtual Machine
+		- Documentation
+
+	[_] Save copies of original folders
+
+		- cp AcuGT\bin to AcuGT\bin - original
+		- cp AcuGT\lib to AcuGT\lib - original
+
+	[_] Rebuild the runtime without WISP to ensure it builds
+
+		Acucobol extend Documentation:
+		> extend Programming Guides
+			> A Guide to Interoperating with ACUCOBOL-GT Version 10.3.1
+				> Working with C and C++ Programs
+					> Calling C Programs From COBOL
+						> Relinking the Run-time System
+
+		[_] Visual Studio 2019 (2017)
+
+			- Open Solution AcuGT\lib\wrun32.sln
+			- Build Release
+
+
+	Collect Acucobol Extend Artifacts
+	---------------------------------
+
+	[_] Create directory for artifacts
+
+		%WISPSRC%\acu\acu_source\acu1031
+
+	[_] Collect files from %ACUDIR%\lib
+
+		*.[ch]
+		*.sln
+		*.vcxproj
+		*.vcxproj.filters
+		wrundll.def
+		wrundll.rc
+		ver.inc
+
+
 	Set Up The Project
 	------------------
 
+	System Properties > Advanced > Environment Variables
+
 	[ ] Set the environment variable WISPSRC={base}\wisp\src
 
-	[_] Set the environment variable ACUDIR=C:\data\Acucorp\Acucbl1020\AcuGT
+	[_] Set the environment variable ACUDIR=C:\data\Acucorp\Acucbl1031\AcuGT
 	
 		Note: The Acucobol license files are generated here:
-			C:\ProgramData\Micro Focus\extend\10.2.0\x86\
+			C:\ProgramData\Micro Focus\extend\10.3.1\x86\
 
-	[ ] Ensure envvar COMPUTERNAME is set (should be set by default)
+	[ ] Ensure envvar COMPUTERNAME is set 
+
+		COMPUTERNAME BLACKSTAR
 	
 	
 	Build the Project
@@ -65,9 +121,16 @@
 	   [_]	Build "acu102_prep_qa"
 	   
 		- Prepares to build the Acucobol 10.2 runtimes 
+
+		WISP
 		- Copy all the needed files into a build area(src\acu\acu102\acu102_prep_qa\acu_lib_wisp)
 		- The files from ${ACUDIR)\lib will be copied from the Acucobol install area
 		- The WISP files will be copied from the ship kit build area (src\kit\wisp)
+
+		KCSI
+		- Copy all the needed files into a build area(src\acu\acu102\acu102_prep_qa\acu_lib_kcsi)
+		- The files from ${ACUDIR)\lib will be copied from the Acucobol install area
+		- The KCSI files will be copied from the ship kit build area (src\kit\kcsiacu)
 	   
 	   [_]  Open folder src\acu\acu102\acu102_prep_qa and build each of 
 		the Acucobol runtimes 
@@ -99,8 +162,8 @@
 	The build will have created a KIT directory with the shipping kits.
 
 		wisp\src\kit
-		wisp\src\kit\wisp	The WISP kit
-		wisp\src\kit\kcsiacu	The KCSI/Acucobol kit
+		wisp\src\kit\wisp       The WISP kit
+		wisp\src\kit\kcsiacu    The KCSI/Acucobol kit
 
 	Detailed instructions for building Ship Kits
 	--------------------------------------------
@@ -112,9 +175,10 @@
 	[_] Remove the kits from wisp\src\kit
 	[_] GIT diff / revert acu changes
 	[_] Build SHIPKIT
-	[_] Rename src\kit\wisp to src\kit\wisp51xx
-	[_] Zip wisp51xx folder
-	[_] rename wisp51xx.zip to wisp_51xx_win32.zip
+	[_] copy src\kit\wisp to src\kit\wisp_51xx_win32
+	[_] Zip wisp_51xx_win32 folder to wisp_51xx_win32.zip
+	[_] copy src\kit\kcsiacu to src\kit\kcsi_acu_42xx_win32
+	[_] Zip kcsi_acu_42xx_win32 folder to kcsi_acu_42xx_win32.zip
 	[_] copy kits to C:\ShellStream\WISP_Shipping
 	[_] copy kits to devel.shellstream.net ${HOME}/Shipping
 	
@@ -137,7 +201,7 @@
 	QA TEST WISP
 	------------
 
-	Follow QAWISP.LIS instructions.
+	Follow (testacu) doc\qawisp.lis instructions.
 
 	
 	CUT A WISP RELEASE
