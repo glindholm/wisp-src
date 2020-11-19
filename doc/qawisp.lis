@@ -180,7 +180,7 @@
         %WISPSRC%\test\QA\wisp  as WISP
         %WISPSRC%\TEST          as TESTACU (with write permission)
         %ACUDIR%
-        C:\data\Acucorp\Acucbl1020\AcuGT  as ACUDIR
+        C:\data\Acucorp\Acucbl1031\AcuGT  as ACUDIR
         C:\DEV\WISP                       as WISPDEV
         (D:\work\shellstream\WISP on Blackclaw)
         C:\Users                          as USERS   (with write permission)
