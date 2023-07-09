@@ -19,8 +19,6 @@ Summary:        Release notes for changes to CONTROL, REPORT,
         Oldsmar, FL 34677
         USA
 
-        Voice (813) 425-6344
-        Fax   (813) 425-6344
         Web   www.shellstream.com
         Email wisp@shellstream.com
         FAQ   http://www.shellstream.com/faq

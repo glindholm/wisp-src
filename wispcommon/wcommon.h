@@ -78,9 +78,9 @@
 
 /* CHANGE-COPYRIGHT-DATE */
 #define WISP_OWNER "Shell Stream Software LLC"
-#define WISP_COPYRIGHT_YEAR_STR	"2018"
-#define WISP_COPYRIGHT_YEAR_INT	2018
-#define WISP_PHONE_NUMBER "(813) 425-6344"
+#define WISP_COPYRIGHT_YEAR_STR	"2023"
+#define WISP_COPYRIGHT_YEAR_INT	2023
+#define WISP_PHONE_NUMBER "(727) 474-4078"
 #define WISP_EMAIL "wisp@shellstream.com"
 #define WISP_WEBSITE "www.shellstream.com"
 

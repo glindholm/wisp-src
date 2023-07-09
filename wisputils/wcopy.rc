@@ -73,7 +73,7 @@ BEGIN
             VALUE "FileDescription", "WISP COPY Utility"
             VALUE "FileVersion", "5, 1, 2, 1"
             VALUE "InternalName", "wcopy"
-            VALUE "LegalCopyright", "Copyright (C) 2010,2011,2018 Shell Stream Software LLC"
+            VALUE "LegalCopyright", "Copyright (C) 2010-2023 Shell Stream Software LLC"
             VALUE "OriginalFilename", "wcopy.exe"
             VALUE "ProductName", "wcopy Application"
             VALUE "ProductVersion", "5.1.21"

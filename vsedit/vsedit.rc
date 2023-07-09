@@ -73,7 +73,7 @@ BEGIN
             VALUE "FileDescription", "WISP Editor Utility"
             VALUE "FileVersion", "5.1.21"
             VALUE "InternalName", "vsedit"
-            VALUE "LegalCopyright", "Copyright (C) 2010,2011,2018 Shell Stream Software LLC"
+            VALUE "LegalCopyright", "Copyright (C) 2010-2023 Shell Stream Software LLC"
             VALUE "OriginalFilename", "vsedit.exe"
             VALUE "ProductName", "vsedit Application"
             VALUE "ProductVersion", "5.1.21"

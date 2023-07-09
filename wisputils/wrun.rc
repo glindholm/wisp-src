@@ -76,7 +76,7 @@ BEGIN
             VALUE "FileDescription", "WISP wrun utility"
             VALUE "FileVersion", "5, 1, 2, 1"
             VALUE "InternalName", "wrun"
-            VALUE "LegalCopyright", "Copyright (C) 2010,2011,2018 Shell Stream Software LLC"
+            VALUE "LegalCopyright", "Copyright (C) 2010-2023 Shell Stream Software LLC"
             VALUE "OriginalFilename", "wrun.exe"
             VALUE "ProductName", "wrun Application"
             VALUE "ProductVersion", "5.1.21"

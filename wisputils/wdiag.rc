@@ -73,7 +73,7 @@ BEGIN
             VALUE "FileDescription", "WISP Diagnostics Utility"
             VALUE "FileVersion", "5, 1, 2, 1"
             VALUE "InternalName", "wdiag"
-            VALUE "LegalCopyright", "Copyright (C) 2010,2011,2018 Shell Stream Software LLC"
+            VALUE "LegalCopyright", "Copyright (C) 2010-2023 Shell Stream Software LLC"
             VALUE "OriginalFilename", "wdiag.exe"
             VALUE "ProductName", "wdiag Application"
             VALUE "ProductVersion", "5.1.21"

@@ -273,7 +273,7 @@ BEGIN
             VALUE "FileDescription", "WISP Translate and Compile GUI"
             VALUE "FileVersion", "5, 1, 2, 1"
             VALUE "InternalName", "wisptran"
-			VALUE "LegalCopyright", "Copyright (C) 2010,2011,2018 Shell Stream Software LLC"
+			VALUE "LegalCopyright", "Copyright (C) 2010-2023 Shell Stream Software LLC"
 			VALUE "OriginalFilename", "wisptran.exe"
             VALUE "ProductName", "wisptran Application"
             VALUE "ProductVersion", "5.1.21"
