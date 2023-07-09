@@ -188,7 +188,7 @@
 	
 	[_] Clean TESTACU
 	[_] Build TESTACU
-	[_] mkdir acuqa.wisp5120.acu1020
+	[_] mkdir acuqa.wisp5121.acu1020
 	[_] copy *.acu to acuqa.wispxxx.acuxxx (expect 72 items)
 	[_] Create tar.gz file from contents
 		- Copy to a UNIX machine

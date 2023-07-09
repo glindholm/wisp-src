@@ -6,14 +6,14 @@ Title:          Build WISP for Acucobol 10.3 Runtime (WIN32)
 Document:       build_wisp_acu103_rts.txt
 Last Updated:   2020-11-17
 Products:       WISP/WIN32
-Versions:       5.1.20
+Versions:       5.1.21
 
 Summary:        Instructions to build Acucobol 10.3 runtime.
 
 ====================================================================
 
 Required Software: 
-	Microsoft Visual Studio 2017 C++
+	Microsoft Visual Studio 2019 C++ (with CRT and MFC)
 
 
 Follow these instructions carefully to build a custom Acucobol 
@@ -23,7 +23,7 @@ In these instructions these macros are used as follows:
 
 ${ACUDIR}     - Acucobol-GT 10.3 directory (C:\....\Micro Focus\extend10.3.1\AcuGT)
 ${ACUBLD}\lib - A copy of ${ACUDIR}\lib for performing the build (e.g. C:\data\acucbl1031\AcuGT\lib)
-${WISPDIR}    - WISP installation directory (C:\WISP5120)
+${WISPDIR}    - WISP installation directory (C:\WISP5121)
 
 Acucobol 10.3 requires that you rebuild the wrun32.dll file in order 
 to add C routines to the runtime.
@@ -49,11 +49,11 @@ for the build.
     ${WISPDIR}\acu\acu103\wrundll.vcxproj
 
 
-2) Open the file ${ACUBLD}\lib\wrun32.sln in Microsoft Visual Studio 2017.  
+2) Open the file ${ACUBLD}\lib\wrun32.sln in Microsoft Visual Studio 2019.  
 
 3) Select "Release" from the configuration manager, then from the Build 
 menu select "Rebuild Solution".  This will build wrun32.dll. 
-It should complete without errors (there may be warnings).
+It should complete without errors (there will be warnings).
 
 4) In order to use the new runtime you will need to copy the new 
 ${ACUBLD}\lib\wrun32.dll to ${ACUDIR}\bin\wrun32.dll and 
