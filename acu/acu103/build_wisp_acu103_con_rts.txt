@@ -1,14 +1,14 @@
 Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 ====================================================================
 
-Title:          Build WISP for Acucobol 10.3 Runtime (WIN32)
+Title:          Build WISP for Acucobol 10.3 Console Runtime (WIN32)
 
-Document:       build_wisp_acu103_rts.txt
+Document:       build_wisp_acu103_con_rts.txt
 Last Updated:   2023-07-09
 Products:       WISP/WIN32
 Versions:       5.1.21
 
-Summary:        Instructions to build Acucobol 10.3 runtime.
+Summary:        Instructions to build Acucobol 10.3 Console runtime.
 
 ====================================================================
 
@@ -17,7 +17,7 @@ Required Software:
 
 
 Follow these instructions carefully to build a custom Acucobol 
-runtime that includes the WISP runtime routines.  
+Console runtime that includes the WISP runtime routines.  
 
 In these instructions these macros are used as follows:
 
@@ -25,8 +25,10 @@ ${ACUDIR}     - Acucobol-GT 10.3 directory (C:\....\Micro Focus\extend10.3.1\Acu
 ${ACUBLD}\lib - A copy of ${ACUDIR}\lib for performing the build (e.g. C:\data\acucbl1031\AcuGT\lib)
 ${WISPDIR}    - WISP installation directory (C:\WISP5121)
 
-Acucobol 10.3 requires that you rebuild the wrun32.dll file in order 
-to add C routines to the runtime.
+This procedure will rebuild ${ACUDIR}\bin\crun32.exe the Console runtime.
+
+If you wish to preserve the original ${ACUDIR}\bin\crun32.exe then 
+you will need to rename it or copy it to a different location.
 
 The build requires all of the files in the ${ACUDIR}\lib folder plus 
 additions. Newer versions of Windows may not allow you to modify files 
@@ -45,37 +47,40 @@ for the build.
     ${WISPDIR}\lib\wisp.lib
     ${WISPDIR}\lib\video.lib
     ${WISPDIR}\acu\wisp_sub85_inc.c
+    ${WISPDIR}\acu\wispicon.ico
     ${WISPDIR}\acu\acu103\sub85.c
-    ${WISPDIR}\acu\acu103\wrundll.vcxproj
+    ${WISPDIR}\acu\acu103\crun32.vcxproj
 
 
-2) Open the file ${ACUBLD}\lib\wrun32.sln in Microsoft Visual Studio 2019.  
+2) Open the file ${ACUBLD}\lib\crun32.sln in Microsoft Visual Studio 2019.  
 
-3) Select "Release" from the configuration manager, then from the Build 
-menu select "Rebuild Solution".  This will build wrun32.dll. 
-It should complete without errors (there will be warnings).
+3) Select "Release" from the configuration manager, then from 
+the Build menu select "Rebuild Solution".  
+This will build ${ACUBLD}\lib\crun32.exe.
+It should complete without errors (there are many warnings).
 
-4) In order to use the new runtime you will need to copy the new 
-${ACUBLD}\lib\wrun32.dll to ${ACUDIR}\bin\wrun32.dll and 
-overwrite the wrun32.dll that came with Acucobol.
-If you wish to preserve the original wrun32.dll then you will need 
+You should notice that the new crun32.exe is larger then the 
+original and has the current date.
+
+4) Copy the new ${ACUBLD}\lib\crun32.exe to ${ACUDIR}\bin\crun32.exe and 
+overwrite the crun32.exe that came with Acucobol.
+If you wish to preserve the original crun32.exe then you will need 
 to rename it or copy it to a different location 
 
-You should notice that the new wrun32.dll is larger then the 
+You should notice that the new crun32.exe is larger then the 
 original and has the current date.
 
 5) Edit ${WISPCONFIG}\wrun.cfg and change the path to the runtime.
-The path of the Acucobol runtime is ${ACUDIR}\bin\wrun32.exe.
+The path of the Acucobol runtime is ${ACUDIR}\bin\crun32.exe.
 
-   RUNCBL=C:\....\Micro Focus\extend10.3.1\AcuGT\bin\wrun32.exe
+   RUNCBL=C:\....\Micro Focus\extend10.2.0\AcuGT\bin\crun32.exe
    or 
-   RUNCBL=\\SERVER\ACUDIR\bin\wrun32.exe
+   RUNCBL=\\SERVER\ACUDIR\bin\crun32.exe
 
-The file wrun32.exe is supplied by Acucobol and it can not be 
-renamed.  If you wish to move it to a different location then 
+If you wish to move the crun32.exe file to a different location then 
 you will also need to move all of the .dll files in the 
 ${ACUDIR}\bin folder (or set the PATH correctly). You will 
-also need to move the wrun32.alc license file.
+also need to move the crun32.alc license file.
 
 
 ========================= END OF DOCUMENT ==========================

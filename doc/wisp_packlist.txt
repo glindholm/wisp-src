@@ -211,6 +211,15 @@ acu\acu102\run32.vcxproj
 acu\acu102\sub85.c
 acu\acu102\wisp.rc
 acu\acu102\wrundll.vcxproj
+acu\acu103
+acu\acu103\build_wisp_acu103_atm_rts.txt
+acu\acu103\build_wisp_acu103_rts.txt
+acu\acu103\build_wisp_acu103_con_rts.txt
+acu\acu103\crun32.vcxproj
+acu\acu103\run32.vcxproj
+acu\acu103\sub85.c
+acu\acu103\wisp.rc
+acu\acu103\wrundll.vcxproj
 bin
 bin\display.exe
 bin\hexed.exe

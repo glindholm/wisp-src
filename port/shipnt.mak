@@ -109,6 +109,14 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\acu\acu102\sub85.c			\
 		$(WISPKIT)\acu\acu102\wisp.rc			\
 		$(WISPKIT)\acu\acu102\wrundll.vcxproj		\
+		$(WISPKIT)\acu\acu103\build_wisp_acu103_rts.txt	\
+		$(WISPKIT)\acu\acu103\build_wisp_acu103_atm_rts.txt	\
+		$(WISPKIT)\acu\acu103\build_wisp_acu103_con_rts.txt	\
+		$(WISPKIT)\acu\acu103\run32.vcxproj		\
+		$(WISPKIT)\acu\acu103\crun32.vcxproj		\
+		$(WISPKIT)\acu\acu103\sub85.c			\
+		$(WISPKIT)\acu\acu103\wisp.rc			\
+		$(WISPKIT)\acu\acu103\wrundll.vcxproj		\
 		$(WISPKIT)\demo\cursor.wps	\
 		$(WISPKIT)\demo\demo.wps	\
 		$(WISPKIT)\demo\dr.wps		\
@@ -249,6 +257,7 @@ wispkit_dir_list= \
 	$(WISPKIT)\acu\acu90		\
 	$(WISPKIT)\acu\acu91		\
 	$(WISPKIT)\acu\acu102		\
+	$(WISPKIT)\acu\acu103		\
 	$(WISPKIT)\bin			\
 	$(WISPKIT)\config		\
 	$(WISPKIT)\config\videocap	\
@@ -550,6 +559,18 @@ $(WISPKIT)\acu\acu102\wrundll.vcxproj \
 $(WISPKIT)\acu\acu102\run32.vcxproj \
 $(WISPKIT)\acu\acu102\crun32.vcxproj \
 :	$(BASEDIR)\acu\acu102\$(@F)
+	$(COPY) $** $@
+
+
+$(WISPKIT)\acu\acu103\build_wisp_acu103_rts.txt \
+$(WISPKIT)\acu\acu103\build_wisp_acu103_atm_rts.txt \
+$(WISPKIT)\acu\acu103\build_wisp_acu103_con_rts.txt \
+$(WISPKIT)\acu\acu103\wisp.rc \
+$(WISPKIT)\acu\acu103\sub85.c \
+$(WISPKIT)\acu\acu103\wrundll.vcxproj \
+$(WISPKIT)\acu\acu103\run32.vcxproj \
+$(WISPKIT)\acu\acu103\crun32.vcxproj \
+:	$(BASEDIR)\acu\acu103\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\demo\cursor.wps:	$(BASEDIR)\wproc\$(@F)
