@@ -1,19 +1,19 @@
 Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 ====================================================================
 
-Title:          Build WISP with KCSI for Acucobol 10.2 ATM Runtime (WIN32)
+Title:          Build WISP with KCSI for Acucobol 10.3 ATM Runtime (WIN32)
 
-Document:       build_kcsi_acu102_atm_rts.txt
-Last Updated:   2018-12-10
+Document:       build_kcsi_acu103_atm_rts.txt
+Last Updated:   2023-07-15
 Products:       KCSI/WIN32
 Versions:       4.2.01
 
-Summary:        Instructions to build Acucobol 10.2 ATM runtime.
+Summary:        Instructions to build Acucobol 10.3 ATM runtime.
 
 ====================================================================
 
 Required Software: 
-	Microsoft Visual Studio 2017 C++
+	Microsoft Visual Studio 2019 C++ (with CRT and MFC)
 
 
 Follow these instructions carefully to build a custom Acucobol 
@@ -22,8 +22,8 @@ runtime routines.
 
 In these instructions these macros are used as follows:
 
-${ACUDIR}     - Acucobol-GT 10.2 directory (C:\....\Micro Focus\extend10.2.0\AcuGT)
-${ACUBLD}\lib - A copy of ${ACUDIR}\lib for performing the build (e.g. C:\data\acucbl1020\AcuGT\lib)
+${ACUDIR}     - Acucobol-GT 10.3 directory (C:\....\Micro Focus\extend10.3.1\AcuGT)
+${ACUBLD}\lib - A copy of ${ACUDIR}\lib for performing the build (e.g. C:\data\acucbl1031\AcuGT\lib)
 ${WISPDIR}    - WISP installation directory (C:\WISP5121)
 ${KCSIDIR}    - KCSI installation directory (C:\KCSIACU4201)
 
@@ -50,14 +50,14 @@ for the build.
     ${WISPDIR}\lib\video.lib
     ${WISPDIR}\acu\wisp_sub85_inc.c
     ${WISPDIR}\acu\wispicon.ico
-    ${WISPDIR}\acu\acu102\sub85.c
-    ${WISPDIR}\acu\acu102\wisp.rc
+    ${WISPDIR}\acu\acu103\sub85.c
+    ${WISPDIR}\acu\acu103\wisp.rc
     ${KCSIDIR}\kcsiacu.lib
     ${KCSIDIR}\kcsi_sub85_inc.c
-    ${KCSIDIR}\acu102\run32.vcxproj
+    ${KCSIDIR}\acu103\run32.vcxproj
 
 	
-2) Open the file ${ACUBLD}\lib\run32.sln in Microsoft Visual Studio 2017.  
+2) Open the file ${ACUBLD}\lib\run32.sln in Microsoft Visual Studio 2019.  
 
 3) Select "Release" from the configuration manager, then from 
 the Build menu select "Rebuild Solution".  
@@ -78,7 +78,7 @@ original and has the current date.
 5) Edit ${WISPCONFIG}\wrun.cfg and change the path to the runtime.
 The path of the Acucobol runtime is ${ACUDIR}\bin\run32.exe.
 
-   RUNCBL=C:\....\Micro Focus\extend10.2.0\AcuGT\bin\run32.exe
+   RUNCBL=C:\....\Micro Focus\extend10.3.1\AcuGT\bin\run32.exe
    or 
    RUNCBL=\\SERVER\ACUDIR\bin\run32.exe
 

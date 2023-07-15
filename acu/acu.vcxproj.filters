@@ -174,5 +174,14 @@
     <Text Include="acu103\build_wisp_acu103_con_rts.txt">
       <Filter>acu103</Filter>
     </Text>
+    <Text Include="acu103\kcsi\build_kcsi_acu103_atm_rts.txt">
+      <Filter>acu103</Filter>
+    </Text>
+    <Text Include="acu103\kcsi\build_kcsi_acu103_con_rts.txt">
+      <Filter>acu103</Filter>
+    </Text>
+    <Text Include="acu103\kcsi\build_kcsi_acu103_rts.txt">
+      <Filter>acu103</Filter>
+    </Text>
   </ItemGroup>
 </Project>

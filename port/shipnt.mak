@@ -186,6 +186,12 @@ kcsiacu_dist_list= \
 		$(KCSIACUKIT)\kcsi_sub85_inc.c	\
 		$(KCSIACUKIT)\ctlcnvrt.wcb	\
 		$(KCSIACUKIT)\rptcnvrt.wcb	\
+		$(KCSIACUKIT)\acu103\build_kcsi_acu103_rts.txt	\
+		$(KCSIACUKIT)\acu103\build_kcsi_acu103_atm_rts.txt	\
+		$(KCSIACUKIT)\acu103\build_kcsi_acu103_con_rts.txt	\
+		$(KCSIACUKIT)\acu103\wrundll.vcxproj	\
+		$(KCSIACUKIT)\acu103\crun32.vcxproj	\
+		$(KCSIACUKIT)\acu103\run32.vcxproj	\
 		$(KCSIACUKIT)\acu102\build_kcsi_acu102_rts.txt	\
 		$(KCSIACUKIT)\acu102\build_kcsi_acu102_atm_rts.txt	\
 		$(KCSIACUKIT)\acu102\build_kcsi_acu102_con_rts.txt	\
@@ -285,7 +291,8 @@ kcsiacu_dir_list= \
 	$(KCSIACUKIT) \
 	$(KCSIACUKIT)\acu90 \
 	$(KCSIACUKIT)\acu91 \
-	$(KCSIACUKIT)\acu102
+	$(KCSIACUKIT)\acu102 \
+	$(KCSIACUKIT)\acu103
 
 kcsiacukitdirs: $(kcsiacu_dir_list)
 
@@ -786,6 +793,15 @@ $(KCSIACUKIT)\acu102\wrundll.vcxproj \
 $(KCSIACUKIT)\acu102\crun32.vcxproj \
 $(KCSIACUKIT)\acu102\run32.vcxproj \
 :	$(BASEDIR)\acu\acu102\kcsi\$(@F)
+	$(COPY) $** $@
+
+$(KCSIACUKIT)\acu103\build_kcsi_acu103_atm_rts.txt \
+$(KCSIACUKIT)\acu103\build_kcsi_acu103_con_rts.txt \
+$(KCSIACUKIT)\acu103\build_kcsi_acu103_rts.txt \
+$(KCSIACUKIT)\acu103\wrundll.vcxproj \
+$(KCSIACUKIT)\acu103\crun32.vcxproj \
+$(KCSIACUKIT)\acu103\run32.vcxproj \
+:	$(BASEDIR)\acu\acu103\kcsi\$(@F)
 	$(COPY) $** $@
 
 $(KCSIACUKIT)\kcsintsetup.txt:	$(BASEDIR)\kcsi\$(@F)

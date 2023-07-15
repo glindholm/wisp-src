@@ -173,6 +173,9 @@
     <Text Include="acu103\build_wisp_acu103_atm_rts.txt" />
     <Text Include="acu103\build_wisp_acu103_con_rts.txt" />
     <Text Include="acu103\build_wisp_acu103_rts.txt" />
+    <Text Include="acu103\kcsi\build_kcsi_acu103_atm_rts.txt" />
+    <Text Include="acu103\kcsi\build_kcsi_acu103_con_rts.txt" />
+    <Text Include="acu103\kcsi\build_kcsi_acu103_rts.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

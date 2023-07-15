@@ -65,7 +65,7 @@
 		- ACUCOBOL-GT Runtime COBOL Virtual Machine
 		- Documentation
 
-	[_] Save copies of original folders
+	[_] Save copies of original lib and bin folders (these get modified when rebuilding the runtimes)
 
 		- cp AcuGT\bin to AcuGT\bin - original
 		- cp AcuGT\lib to AcuGT\lib - original
@@ -85,7 +85,7 @@
 			- Build Release
 
 
-	Collect Acucobol Extend Artifacts
+	Collect Acucobol Extend Artifacts (when upgrading to support a new version)
 	---------------------------------
 
 	[_] Create directory for artifacts
@@ -139,24 +139,25 @@
 
 	[_] Build the Acucobol runtimes
 		   
-	   [_]	Build "acu102_prep_qa"
+	   [_]	Build "acu103_prep_qa"
 	   
-		- Prepares to build the Acucobol 10.2 runtimes 
+		- Prepares to build the Acucobol 10.3 runtimes 
 
 		WISP
-		- Copy all the needed files into a build area(src\acu\acu102\acu102_prep_qa\acu_lib_wisp)
+		- Copy all the needed files into a build area(src\acu\acu103\acu103_prep_qa\acu_lib_wisp)
 		- The files from ${ACUDIR)\lib will be copied from the Acucobol install area
 		- The WISP files will be copied from the ship kit build area (src\kit\wisp)
 
 		KCSI
-		- Copy all the needed files into a build area(src\acu\acu102\acu102_prep_qa\acu_lib_kcsi)
+		- Copy all the needed files into a build area(src\acu\acu103\acu103_prep_qa\acu_lib_kcsi)
 		- The files from ${ACUDIR)\lib will be copied from the Acucobol install area
 		- The KCSI files will be copied from the ship kit build area (src\kit\kcsiacu)
 	   
-	   [_]  Open folder src\acu\acu102\acu102_prep_qa and build each of 
+	   [_]  Open folder src\acu\acu103\acu103_prep_qa and build each of 
 		the Acucobol runtimes 
 		
-		- For each solution file open it to open Visual Studio 2017.
+		- For each solution file open it to open Visual Studio 2019
+		- Allow Visual Studio to upgrade the Solution.
 		- Change the configuration from Debug to Release
 		- Right-click on the solution and "Rebuild Solution"
 		

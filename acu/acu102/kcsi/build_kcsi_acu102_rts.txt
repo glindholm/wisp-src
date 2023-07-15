@@ -3,7 +3,7 @@ Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 
 Title:          Build WISP with KCSI for Acucobol 10.2 Runtime (WIN32)
 
-Document:       build_kcsi_acu101_rts.txt
+Document:       build_kcsi_acu102_rts.txt
 Last Updated:   2018-12-10
 Products:       KCSI/WIN32
 Versions:       4.2.01
