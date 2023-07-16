@@ -313,7 +313,8 @@
 
     ___ Test configuration:
 
-        - Run \test\QA\wisp\bin\wdiag.bat
+        - Run   \test\wisp\bin\wdiag.bat
+                \\%COMPUTERNAME%\wisp\bin\wdiag.bat
 
         - Check:
 
@@ -365,7 +366,7 @@
         are serious errors they must be fixed here.
 
         UNIX:  $ wdiag
-        WIN32: double click on WDIAG.BAT (or run from Start menu)
+        WIN32: \\%COMPUTERNAME%\wisp\bin\wdiag.bat
 
 
 +    First check-out general functionality.
@@ -441,11 +442,10 @@
 
     WIN32:
     ___ Create a Shortcut on the desktop using Command line:
-            "C:\WISPxxx\BIN\WPROC \\%COMPUTERNAME%\TESTACU\QASTART"
-            wproc \\%COMPUTERNAME%\TESTACU\qastart
+            \\%COMPUTERNAME%\WISP\bin\wproc.exe \\%COMPUTERNAME%\TESTACU\QASTART
            
         [ ] startqa.bat
-            D:\work\shellstream\WISP\src\test\QA\wisp\bin\wproc.exe \\%COMPUTERNAME%\TESTACU\QASTART
+            \\%COMPUTERNAME%\WISP\bin\wproc.exe \\%COMPUTERNAME%\TESTACU\QASTART
 
     ___ Double click on icon to start.
         
@@ -558,6 +558,7 @@
     WIN32:
         Create a Shortcut on the desktop using Command line:
     ___ "C:\WISPxxx\BIN\WRUN SAMPLE"
+        \\%COMPUTERNAME%\wisp\bin\wrun SAMPLE
 
     ___ Double click on icon to start.
 
