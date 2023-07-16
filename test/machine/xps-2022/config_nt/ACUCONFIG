@@ -1,0 +1,66 @@
+FILE-STATUS-CODES	74
+#CODE_PREFIX		. C:\dev\wisp\src\TEST C:\dev\wisp\src\test\QA\wisp\acu C:\dev\wisp\src\test\QA\kcsiacu
+CODE-PREFIX		. \\XPS-2022\TESTACU \\XPS-2022\QA\wisp\acu \\XPS-2022\QA\kcsiacu
+
+ALTVARV6-VERSION 6
+ALTVARV5-VERSION 5
+ALTVARV4-VERSION 4
+ALTVARV3-VERSION 3
+ALTVARV2-VERSION 2
+
+# On Windows uncomment for improved performance
+#V_LOCK_METHOD 1
+
+#
+# Map the HELP key (^e = 5) to exception code 33
+# Map the pfkey prompt (^f = 6) to exception code 34 
+# Map the escape key (27) to exception code 34
+#
+KEYSTROKE EXCEPTION=33 5
+KEYSTROKE EXCEPTION=34 6
+KEYSTROKE EXCEPTION=34 27
+
+#
+# Map the END key to PF16 and map pfkeys 11 - 32.
+#
+# NOTE: The F10 key cannot be mapped by Acucobol's screen handler
+#       on Windows.  This is an Acucobol screen handler limitation
+#       and is documented in Appendix M of the Acucobol manual.
+#
+KEYSTROKE EXCEPTION=16 KE
+
+KEYSTROKE EXCEPTION=11 U1
+KEYSTROKE EXCEPTION=12 U2
+
+KEYSTROKE EXCEPTION=21 U3
+KEYSTROKE EXCEPTION=22 U4
+
+KEYSTROKE EXCEPTION=21 A1
+KEYSTROKE EXCEPTION=22 A2
+KEYSTROKE EXCEPTION=23 A3
+KEYSTROKE EXCEPTION=24 A4
+KEYSTROKE EXCEPTION=25 A5
+KEYSTROKE EXCEPTION=26 A6
+KEYSTROKE EXCEPTION=27 A7
+KEYSTROKE EXCEPTION=28 A8
+KEYSTROKE EXCEPTION=29 A9
+
+KEYSTROKE EXCEPTION=31 U5
+KEYSTROKE EXCEPTION=32 U6
+
+#
+# This simulates pseudo-blanks.
+#
+SCREEN PROMPT=* PROMPT-ALL=YES
+
+#
+# These options map the field attributes to colors.
+#
+COLOR-TRANS 2
+INTENSITY-FLAGS 38
+COLOR-MAP High=Red Low=Blue Default=Blue Blink=White,Brown
+
+#
+# Disable the Close Button [X]
+#
+QUIT-MODE -2

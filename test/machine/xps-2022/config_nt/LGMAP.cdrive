@@ -1,0 +1,7 @@
+SOURCE c:\dev\wisp\src
+VOLIN  c:\dev\wisp\src\test\volin
+VOLOUT c:\dev\wisp\src\test\volout
+VOLRUN c:\dev\wisp\src\test\volrun
+VOLSPL c:\dev\wisp\src\test\volspl
+VOLWRK c:\dev\wisp\src\test\volwrk
+TEST   c:\dev\wisp\src\test

@@ -1,0 +1,21 @@
+@echo off
+rem
+rem	File:		startqa.bat
+rem
+rem	Usage:		$ startqa.bat
+rem
+rem	Function:	To setup env variables needed to QA WISP and run wproc qastart
+rem
+@echo on
+
+set WISPSERVER=XPS-2022
+set WISPDIR=\\%WISPSERVER%\WISP
+set WISPCONFIG=\\%WISPSERVER%\TESTACU\CONFIG
+set WISPDEBUG=FULL
+set WISPSHAREDIR=\\%WISPSERVER%\TESTACU\message
+set WISPTMPDIR=\\%WISPSERVER%\TESTACU\temp
+set WISPLINKPATH=\\%WISPSERVER%\WISP\bin;\\%WISPSERVER%\WISP\acu;\\%WISPSERVER%\TESTACU;\\%WISPSERVER%\TESTACU\VOLRUN\ONPATH;\\%WISPSERVER%\QA\KCSIACU
+set PATH=\\%WISPDIR%\bin;%PATH%
+rem set VCOLORS=0A0CA0ACEAECBABCA0C00ACAAECEABCB
+
+wproc \\%WISPSERVER%\TESTACU\qastart
