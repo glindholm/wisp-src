@@ -22,6 +22,18 @@ Summary:        Release notes for changes to WISP.
         FAQ   http://www.shellstream.com/faq
 
 
+CHANGES FOR RELEASE 5.1.??
+==========================
+The following items describe corrections and improvements that have
+been made to the WISP toolkit for release 5.1.??.
+
+Support for (Acucobol) Extend 10.3 has been added for Windows 11
+
+This release of WISP on Windows, only supports Extend 10.3 (and later) as 
+it requires Visual Studio 2019 which is incompatible with earlier versions
+of Extend. 
+
+
 CHANGES FOR RELEASE 5.1.21
 ==========================
 The following items describe corrections and improvements that have
