@@ -50,6 +50,13 @@ INQUIRY                   - INQUIRY  utility (ACUCOBOL object file)
 DATENTRY                  - DATENTRY utility (ACUCOBOL object file)
 CREATE                    - CREATE   utility (ACUCOBOL object file)
 
+acu103\build_kcsi_acu103_rts.txt     - Build instructions for ACUCOBOL 10.3.x 
+acu103\build_kcsi_acu103_atm_rts.txt - Build instructions for ACUCOBOL 10.3.x ATM 
+acu103\build_kcsi_acu103_con_rts.txt - Build instructions for ACUCOBOL 10.3.x Console 
+acu103\wrundll.vcxproj               - Project file for ACUCOBOL 10.3.x
+acu103\crun32.vcxproj                - Project file for ACUCOBOL 10.3.x Console
+acu103\run32.vcxproj                 - Project file for ACUCOBOL 10.3.x ATM
+
 acu102\build_kcsi_acu102_rts.txt     - Build instructions for ACUCOBOL 10.2.x 
 acu102\build_kcsi_acu102_atm_rts.txt - Build instructions for ACUCOBOL 10.2.x ATM 
 acu102\build_kcsi_acu102_con_rts.txt - Build instructions for ACUCOBOL 10.2.x Console 
