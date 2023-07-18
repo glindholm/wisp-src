@@ -54,6 +54,7 @@ acu/acu91/Makefile_aix53_32sh.mak
 acu/acu91/Makefile_hpux1123_ia_32sh.mak
 acu/acu102/Makefile_aix71_32sh.mak
 acu/acu102/sub85.c
+acu/acu103/sub85.c
 bin
 bin/bldmf
 bin/display

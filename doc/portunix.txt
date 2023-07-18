@@ -194,6 +194,8 @@
 	[ ] IF NO ACUCOBOL COMPILER 
 		
 		$ ./maketail.sh kcsi_acu_nc	# To build KCSI for ACU	(NO ACUCOBOL COMPILER)
+
+		$ ./maketail.sh rts_acu	    # To build WISP Acucobol RTS
 	
 	[ ] IF MF COMPILER
 	
