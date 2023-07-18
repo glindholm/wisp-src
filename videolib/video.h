@@ -457,7 +457,7 @@ extern int  VL_vcap_init_terminal(void);
 extern void VL_vcap_set_vcapfile(const char *vcappath, const char* termtype);
 
 int VL_vcut (char *string);
-int VL_vedge (register int line);
+int VL_vedge (int line);
 void VL_vexit (void);
 int  VL_vfnkey (int key);
 char VL_vgetc (void);

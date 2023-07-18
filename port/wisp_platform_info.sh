@@ -1,3 +1,4 @@
+#!/bin/bash
 echo 'Platform Info:'
 echo '===================='
 
@@ -30,7 +31,7 @@ result=$(which lsb_release 2>/dev/null)
 if [ "$?" == "0" ]; then
 echo 'lsb_release -a:'
 echo '-------------------'
-lsb_release -a
+lsb_release -a 2>&1
 echo
 fi
 

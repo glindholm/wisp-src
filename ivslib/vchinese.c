@@ -198,7 +198,9 @@ void IVS_xlat_stream(unsigned char *instr, int insz, unsigned char *out, int* ou
 		else
 		{
 			if (!held)                /* only hold bytes that came from input buffer */
+			{
 			  STOREBYTE(ch);
+			}
 			address += ibuf[ch+256*chpos] * mult[chpos];    /* begin computing address */
 			if (++chpos == ssz)       /* finished with a sequence? */
 			{
