@@ -61,9 +61,6 @@
 /*
 **	Globals and Externals
 */
-#ifndef LINUX
-extern char *sys_errlist[];
-#endif
 
 /*
 **	Static data
@@ -337,7 +334,7 @@ char xfile[];
 	{
 		/* this should never happen -- access has been verified by IVS_vlanguage 
                    which calls this function */
-		VL_vre_window("Unable to open file %s: %s",xlatpath,sys_errlist[errno]);
+		VL_vre_window("Unable to open file %s: %s",xlatpath,strerror(errno));
 		return -1;
 	}
 	bytesread=read(xlatfd,&header,sizeof(header));
