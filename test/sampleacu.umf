@@ -23,7 +23,7 @@ WISPFLAGS= -V $(WISPLANG) -I$(WISPDIR)/etc -M
 COBOL = ccbl
 COBFLAGS = -Da4 -Gd -Za -Te 800
 
-ACUQA_TAR_GZ = acuqa.wisp5121.acu1020.tar.gz
+ACUQA_TAR_GZ = acuqa.wisp5120.acu1020.tar.gz
 
 .SUFFIXES: .acu .cob .wcb
 
