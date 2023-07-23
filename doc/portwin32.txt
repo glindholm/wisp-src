@@ -201,7 +201,7 @@
 	[_] Zip wisp_51xx_win32 folder to wisp_51xx_win32.zip
 	[_] copy src\kit\kcsiacu to src\kit\kcsi_acu_42xx_win32
 	[_] Zip kcsi_acu_42xx_win32 folder to kcsi_acu_42xx_win32.zip
-	[_] copy kits to C:\ShellStream\WISP_Shipping
+	[_] copy kits to \ShellStream\WISP_Shipping
 	[_] copy kits to devel.shellstream.net ${HOME}/Shipping
 	
 	
@@ -210,7 +210,7 @@
 	
 	[_] Clean TESTACU
 	[_] Build TESTACU
-	[_] mkdir acuqa.wisp5121.acu1020
+	[_] mkdir acuqa.wisp5130.acu1031
 	[_] copy *.acu to acuqa.wispxxx.acuxxx (expect 72 items)
 	[_] Create tar.gz file from contents
 		- Copy to a UNIX machine
@@ -230,16 +230,11 @@
 	==================
 	
 	[ ]	See src\wispcommon\wcommon.h for WISPVER
-	[ ]	Build the Versions_xxxx.txt file:
-		cd src/port (ON UNIX)
-		versions.sh
-		cvs add -ko Versions_xxxx.txt
-		cvs commit Versions_xxxx.txt
-	[ ]	Tag the release in CVS (e.g. V5_1_XX)
+	[ ]	Tag the release in GIT (e.g. WISP-51xx)
 	[ ]	Build source kit
 		cd tmp (on UNIX)
 		-- checkout git branch --
-		tar -czvf  wisp5150.src.tar.gz
-		copy to C:\ShellStream\WISP_Source
+		tar -czvf  wisp5130.src.tar.gz
+		copy to \ShellStream\WISP_Source
 
 	========================= END OF DOCUMENT ==========================
