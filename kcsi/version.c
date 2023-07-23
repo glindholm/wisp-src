@@ -37,7 +37,7 @@
 #	wisp/src/acu/wrun32wisp_kcsi_acu51.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 */
-#define KCSI_VERSION	4201
+#define KCSI_VERSION	4202
 
 /*
 **	Static data

@@ -5,7 +5,7 @@ Title:          KCSI PACKING LIST
 
 Document:       kcsi_packlist.lis
 Products:       KCSI
-Versions:       4.2.01 [KCSIVER]
+Versions:       4.2.02 [KCSIVER]
 
 Summary:        Packing list for the KCSI utilities shipping kit.
 
