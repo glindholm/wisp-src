@@ -4,7 +4,7 @@ Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 Title:          Build WISP with KCSI for Acucobol 10.3 ATM Runtime (WIN32)
 
 Document:       build_kcsi_acu103_atm_rts.txt
-Last Updated:   2023-07-15
+Last Updated:   2023-07-23
 Products:       KCSI/WIN32
 Versions:       4.2.01
 

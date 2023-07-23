@@ -5,7 +5,7 @@
 	
 	Document:	portwin32.txt
 	Products:	WISP/WIN32 EDE KCSI
-	WISPVER:	5.1.21 and later
+	WISPVER:	5.1.30 and later
 	
 	Summary:	Instructions on re-porting WISP to WIN32
 
