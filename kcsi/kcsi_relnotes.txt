@@ -3,7 +3,7 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 
 Title:          RELEASE NOTES FOR KCSI UTILITIES
 
-Document:       kcsi_relnotes.lis
+Document:       kcsi_relnotes.txt
 Products:       CONTROL, REPORT, INQUIRY, DATENTRY, CREATE
 Version:        4.2.02 [KCSIVER]
 

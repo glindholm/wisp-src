@@ -6,7 +6,7 @@
 
 	Title:          WISPEZMENU Users Guide     
 
-	Document:       WISPEZMENU.LIS
+	Document:       WISPEZMENU.txt
 	Last Updated:   09 JUNE 94
 	Products:       EZTOMNU, EZONEMNU & TEXTMENU        
 	Versions:       V1.1 for WISP 3.3x7 and LATER

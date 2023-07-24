@@ -4,7 +4,7 @@
 	
 	Title:		KCSI/UNIX UTILITIES INSTALLATION
 	
-	Document:	kcsi_install_unix.lis
+	Document:	kcsi_install_unix.txt
 	Last Updated:	15 JUNE 95
 	Products:	CRID, CREATE
 	Versions:	All

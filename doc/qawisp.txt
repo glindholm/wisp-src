@@ -51,7 +51,7 @@
 +    PREREQUESITE
 
     ___ Port WISP to this machine following the steps outlined in
-        the document "doc/portunix.lis".
+        the document "doc/portunix.txt".
 
     ___ Install WISP and build the RTS. This is normally done with
         the "installqa.sh" script but could be done from a WISP
@@ -1639,6 +1639,6 @@
 
     ================================================================
 
-    Return to PORTUNIX.LIS
+    Return to portunix.txt
 
     ================================================================

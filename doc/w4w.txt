@@ -4,7 +4,7 @@
 	
 	Title:		Co*STAR for WISP
 	
-	Document:	W4W.LIS
+	Document:	w4w.txt
 	Products:	Co*STAR for WISP
 	Versions:	2.1
 	
@@ -438,7 +438,7 @@
 	-------------------------
 
 	C:\W4W\W4W.CNF			- Custom config file
-	C:\W4W\W4W.LIS			- This document
+	C:\W4W\W4W.TXT			- This document
 	C:\W4W\COLOR.INI		- Custom color schemes
 
 	C:\W4W\W4W\MOUSE.SCR		- Custom mouse handling script

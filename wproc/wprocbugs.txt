@@ -1,4 +1,4 @@
-								wprocbugs.lis
+								wprocbugs.txt
 
 0002	Key:	SPACING=000
 	Desc:	On RUN stmt ENTER clause the keyword=value for SPACING=000

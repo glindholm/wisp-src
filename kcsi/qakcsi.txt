@@ -4,7 +4,7 @@
 	
 	Title:		KCSI QA Checkllist
 	
-	Document:	qakcsi.lis
+	Document:	qakcsi.txt
 	Last Updated:	$Date:$
 	Products:	KCSI Utilities (CRID, CREATE)
 	
@@ -73,12 +73,12 @@
 +	PREREQUESITE
 
 	___	Port WISP to this machine following the steps outlined in
-		the document "portunix.lis".
+		the document "portunix.txt".
 
 +	---	Setup the required environment
 
 		The environment is setup upon completion of the WISP QA
-		detailed in qawisp.lis
+		detailed in qawisp.txt
 
 
 +	SET UP FOR KCSI QA TESTING.

@@ -645,7 +645,7 @@
       <Filter>LICENSE</Filter>
     </None>
     <None Include="..\doc\portwin32.txt" />
-    <None Include="..\doc\qawisp.lis" />
+    <None Include="..\doc\qawisp.txt" />
     <None Include="sample.umf" />
     <None Include="sampleacu.mak" />
     <None Include="sampleacu.umf" />

@@ -3,7 +3,7 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 
 Title:          KCSI PACKING LIST
 
-Document:       kcsi_packlist.lis
+Document:       kcsi_packlist.txt
 Products:       KCSI
 Versions:       4.2.02 [KCSIVER]
 

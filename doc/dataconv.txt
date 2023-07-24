@@ -4,7 +4,7 @@
 	
 	Title:		WISP DATA CONVERSION
 	
-	Document:	dataconv.lis
+	Document:	dataconv.txt
 	Last Updated:	25 JUNE 93
 	Products:	WISP
 	Versions:	3.2x11 and later

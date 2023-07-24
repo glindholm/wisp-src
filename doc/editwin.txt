@@ -1,4 +1,4 @@
-       						editwin.lis
+       						editwin.txt
 						07/09/93
 
 WISP Vwang Edit Window Documentation          RELEASE NOTES

@@ -4,7 +4,7 @@
 	
 	Title:		AMU - WISP Application Management Utility
 	
-	Document:	AMU.LIS
+	Document:	amu.txt
 	Last Updated:	12 May 97
 	Products:	AMU
 	Versions:	1.1
@@ -44,7 +44,7 @@
 		$ uncompress -c amuXXX.tar.Z|tar -xvpf -
 
 	This will create a directory "amuXXX where XXX is a version
-	number.  This directory will contain two files: Info, amu.lis
+	number.  This directory will contain two files: Info, amu.txt
 	(this document) and three subdirectories: amuamu.XXX, amumf.XXX,
 	and source.  Each kit contains both ACUCOBOL and Micro Focus
 	COBOL distributions as well as the source set to re-build

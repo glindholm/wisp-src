@@ -223,7 +223,7 @@
 	QA TEST WISP
 	------------
 
-	Follow (testacu) doc\qawisp.lis instructions.
+	Follow (testacu) doc\qawisp.txt instructions.
 
 	
 	CUT A WISP RELEASE

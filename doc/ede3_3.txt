@@ -1,4 +1,4 @@
-						ede3_3.lis
+						ede3_3.txt
 						09/27/93
 
   REQUIRED CHANGES TO EDE FOR VERSION 3.3 OF WISP
