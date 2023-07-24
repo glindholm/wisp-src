@@ -109,12 +109,12 @@
     <None Include="wacu.mak" />
     <None Include="wacu.umf" />
     <None Include="WACUDISPLAY.cob" />
-    <None Include="wacuerror.cob" />
-    <None Include="wacufac2screen.cob" />
-    <None Include="wacugetparm.cob" />
-    <None Include="wacugetpfkey.cob" />
-    <None Include="wacuhelp.cob" />
-    <None Include="wacuwsb.cob" />
+    <None Include="WACUERROR.cob" />
+    <None Include="WACUFAC2SCREEN.cob" />
+    <None Include="WACUGETPARM.cob" />
+    <None Include="WACUGETPFKEY.cob" />
+    <None Include="WACUHELP.cob" />
+    <None Include="WACUWSB.cob" />
     <None Include="..\doc\wispacn.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

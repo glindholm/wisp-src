@@ -5,8 +5,8 @@ Title:          RELEASE NOTES FOR WISP VERSION 5.1
 
 Document:       wisp_relnotes.txt
 Products:       WISP for UNIX, WISP for Windows (WIN32)
-WISPVER:        5.1.21
-Updated:        14 Dec 2018
+WISPVER:        5.1.30
+Updated:        2023-07-23
 
 Summary:        Release notes for changes to WISP.
 
@@ -17,14 +17,24 @@ Summary:        Release notes for changes to WISP.
         Oldsmar, FL 34677
         USA
 
-        Voice (813) 425-6344
-        Fax   (813) 425-6344
         Web   www.shellstream.com
         Email wisp@shellstream.com
         FAQ   http://www.shellstream.com/faq
 
 
-CHANGES FOR RELEASE 5.1.21
+CHANGES FOR RELEASE 5.1.30 (2023-07-23)
+==========================
+The following items describe corrections and improvements that have
+been made to the WISP toolkit for release 5.1.30.
+
+Support for (Acucobol) Extend 10.3 has been added for Windows 11
+
+This release of WISP on Windows, only supports Extend 10.3 (and later) as 
+it requires Visual Studio 2019 which is incompatible with earlier versions
+of Extend. 
+
+
+CHANGES FOR RELEASE 5.1.21 (2018-12-14)
 ==========================
 The following items describe corrections and improvements that have
 been made to the WISP toolkit for release 5.1.21.
@@ -38,7 +48,7 @@ it requires Visual Studio 2017 which is incompatible with earlier versions
 of Extend. 
 
 
-CHANGES FOR RELEASE 5.1.12
+CHANGES FOR RELEASE 5.1.12 (2018-07-23)
 ==========================
 The following items describe corrections and improvements that have
 been made to the WISP toolkit for release 5.1.12.
@@ -47,7 +57,7 @@ On Intel (Little-Endian) machines WPROC was returning the wrong value for
 the EXTRACT RECORDS statement.
 
 
-CHANGES FOR RELEASE 5.1.11
+CHANGES FOR RELEASE 5.1.11 (2011-07-08)
 ==========================
 The following items describe corrections and improvements that have
 been made to the WISP toolkit for release 5.1.11.
@@ -3130,10 +3140,13 @@ three part version number.
 
     WISP VERSION      CUTOVER DATE 
     ------------      ------------
-        5.1.21          12/14/18        Support for Acucobol-GT 10.2
-        5.1.11          07/08/11        Patch for READFDR bug on Windows
-        5.1.10          11/05/11        WinSSHD on Windows
-        5.1.00          02/01/10        Shell Stream Software
+        5.1.30          2023-07-23      Support for Acucobol-GT 10.3
+        5.1.21          2018-12-14      Support for Acucobol-GT 10.2
+        5.1.12          2018-07-23      Patch WPROC on Intel machines to fix EXTRACT RECORDS value
+        5.1.11          2011-07-08      Patch for READFDR bug on Windows
+        5.1.10          2011-11-05      WinSSHD on Windows
+        5.1.00          2010-02-01      Shell Stream Software
+
         5.0.01          11/10/03        5.0 Patch 1
         5.0.00          07/09/03        Major Release
         4.4.07          02/14/03        Unix license file changes

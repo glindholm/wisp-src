@@ -3,7 +3,7 @@
 #
 #	Acucobol:  10.2.1 
 #	Platform:  Linux 64-bit (Shared)
-#	WISP:      5.1.20
+#	WISPVER:   5.1.21
 #
 #	This Makefile builds the Shared library version of the Acucobol
 #	runtime. It has been modified to include the WISP runtime routines.
@@ -12,7 +12,7 @@
 #
 #	In these instructions these macros are used as follows:
 #       ${ACUDIR}  - Acucobol-GT 10.2.x directory (e.g. /opt/acu)
-#       ${WISPDIR} - WISP installation directory (e.g. /opt/wisp5120)
+#       ${WISPDIR} - WISP installation directory (e.g. /opt/wisp5121)
 #
 #	The build is performed in the ${ACUDIR}/lib directory. It is 
 #       recommended you save a copy of the original directory.

@@ -61,9 +61,6 @@
 /*
 **	Globals and Externals
 */
-#ifndef LINUX
-extern char *sys_errlist[];
-#endif
 
 /*
 **	Static data
@@ -201,7 +198,9 @@ void IVS_xlat_stream(unsigned char *instr, int insz, unsigned char *out, int* ou
 		else
 		{
 			if (!held)                /* only hold bytes that came from input buffer */
+			{
 			  STOREBYTE(ch);
+			}
 			address += ibuf[ch+256*chpos] * mult[chpos];    /* begin computing address */
 			if (++chpos == ssz)       /* finished with a sequence? */
 			{
@@ -337,7 +336,7 @@ char xfile[];
 	{
 		/* this should never happen -- access has been verified by IVS_vlanguage 
                    which calls this function */
-		VL_vre_window("Unable to open file %s: %s",xlatpath,sys_errlist[errno]);
+		VL_vre_window("Unable to open file %s: %s",xlatpath,strerror(errno));
 		return -1;
 	}
 	bytesread=read(xlatfd,&header,sizeof(header));

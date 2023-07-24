@@ -5,7 +5,7 @@ Title:          WISP for Windows Quick Set-Up Steps
 
 Document:       wispntsetup.txt
 Products:       WISP/WIN32
-WISPVER:        5.1.21
+WISPVER:        5.1.30
 
 Summary:        WISP for Windows installation and setup steps
 
@@ -160,8 +160,8 @@ The Steps
     Follow the build instructions for your version of 
     Acucobol.
 
-       For Acucobol-GT 10.2 see:
-        - C:\WISPxxxx\acu\acu102\build_wisp_acu102_rts.txt
+       For Acucobol-GT 10.3 see:
+        - C:\WISPxxxx\acu\acu103\build_wisp_acu103_rts.txt
 
 
 6) Setup the WISPCONFIG files

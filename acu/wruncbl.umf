@@ -5,12 +5,12 @@
 #
 #	Versions:
 #		Acucobol-GT/Extend  (Statically linked)
-#				10.2, 
+#				10.3, 10.2, 
 #				9.1, 9.0, 
 #				8.1
 #				
-#		WISP		5.1.21  [WISPVER]
-#		KCSI		4.2.01  [KCSIVER]
+#		WISP		5.1.30  [WISPVER]
+#		KCSI		4.2.02  [KCSIVER]
 #
 #	Function:
 #		The UNIX makefile for building the ACUCOBOL runtime

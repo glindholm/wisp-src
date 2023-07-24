@@ -162,6 +162,17 @@
 
 #####################  This page is for WIN32 only  ########################
 
++   WINDOWS CONSOLE
+
+    The WISP console UI is designed to be run in a Windows Console Host Command Prompt.
+
+    Windows 11 introduced a new Terminal which is not compatible. 
+    Configure the Terminal to use:
+        Default profile:                Command Prompt
+        Detault terminal application:   Windows Console Host
+
+    
+
 +    PREREQUESITE
 
     ___ Port WISP to this machine following the steps outlined in
@@ -180,27 +191,27 @@
         %WISPSRC%\test\QA\wisp  as WISP
         %WISPSRC%\TEST          as TESTACU (with write permission)
         %ACUDIR%
-        C:\data\Acucorp\Acucbl1020\AcuGT  as ACUDIR
+        C:\data\Acucorp\Acucbl1031\AcuGT  as ACUDIR
         C:\DEV\WISP                       as WISPDEV
         (D:\work\shellstream\WISP on Blackclaw)
         C:\Users                          as USERS   (with write permission)
     
     ___ "Install" the Acucobol runtime(s)
     
-        WISP + KCSI runtime(s)
+        WISP + KCSI runtime(s) - Pick ONE
         
         Regular runtime
-        ___ Copy \acu\acu102\acu102_prep_qa\acu_lib_wisp\wrun32.dll
+        ___ Copy \acu\acu103\acu103_prep_qa\acu_lib_wisp\wrun32.dll
             to \\SERVER\ACUDIR\bin
         KSCI runtime
-        ___ Copy \acu\acu102\acu102_prep_qa\acu_lib_kcsi\wrun32.dll
+        ___ Copy \acu\acu103\acu103_prep_qa\acu_lib_kcsi\wrun32.dll
             to \\SERVER\ACUDIR\bin
 
         Console runtime
-        ___ Copy \acu\acu102\acu102_prep_qa\acu_lib_kcsi\crun32.exe
+        ___ Copy \acu\acu103\acu103_prep_qa\acu_lib_kcsi\crun32.exe
             to \\SERVER\ACUDIR\bin
         ___ Copy ACU license file:
-            - C:\ProgramData\Micro Focus\extend\10.2.0\x86
+            - C:\ProgramData\Micro Focus\extend\10.3.1\x86
             - cp wrun32.3lc to crun32.3lc
         
         
@@ -220,7 +231,7 @@
              (This is usually done by INSTALL_QA project)
              
 
-+    SETUP ${WISPCONFIG} DIRECTORY
++   SETUP ${WISPCONFIG} DIRECTORY
 
     Copy the config files.
     ___ Copy \test\machine\%COMPUTERNAME%\config_nt to \test\config 
@@ -238,43 +249,93 @@
             - Comment out #UTILSWINDOWS
             - Uncomment CONSOLEACU
 
++   CONFIGURE EITHER THE ENVIRONMENT OR THE REGISTRY
 
-    ___ Run \test\machine\%COMPUTERNAME%\setupqa.bat to setup environment variables (in a console)
+    The WISP Runtime configuration can be configure by either environment variables or by the registry.
+    Environment varibles override (take priority over) registry entries.
+
+    Environment variables can be set locally in a console or globally.
+
+    ___ Configure the Runtime
+    
+        To configure via environment variables locally:
+
+        - Open a console
+        - Run \test\machine\%COMPUTERNAME%\setupqa.bat to setup environment variables locally in a console.
+
+        NOTE: All tests will need to be run from the command line in this console to use the local environment variables.
+        NOTE: Console does not support UNC paths (e.g. \\%COMPUTERNAME%\QA\WISP) as current directories.
+
+            - cd (home)
+            - \\%COMPUTERNAME%\TESTACU\machine\%COMPUTERNAME%\setupqa.bat
+
         
         -- OR --
-    
-        Run WCONFIG \\SERVER\QA\wisp\bin\wconfig.exe (RUN AS ADMINSTRATOR)
+
+        Set the Environment Variables Globally:
+
+        Open the System Properties > Environment Variables and:
+
+        set WISPSERVER=%COMPUTERNAME%
+        set WISPDIR=\\%COMPUTERNAME%\QA\WISP
+        set WISPCONFIG=\\%COMPUTERNAME%\TESTACU\CONFIG
+        set WISPDEBUG=FULL
+        set WISPSHAREDIR=\\%COMPUTERNAME%\TESTACU\message
+        set WISPTMPDIR=\\%COMPUTERNAME%\TESTACU\temp
+        set WISPLINKPATH=\\%COMPUTERNAME%\QA\WISP\bin;\\%COMPUTERNAME%\QA\WISP\acu;\\%COMPUTERNAME%\TESTACU;\\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;\\%COMPUTERNAME%\QA\KCSIACU
+        set PATH=\\%COMPUTERNAME%\bin;%PATH%
+
+
+        -- OR --
+
+        To configure with the Registry:
+
+        - Unset any WISPxxx global environment variables
+        - Run WCONFIG \\SERVER\QA\wisp\bin\wconfig.exe (RUN AS ADMINSTRATOR)
         
-            Import test\config\testacu_%COMPUTERNAME%.reg
-        
-            -- OR --
             
-        SERVER      = \\%COMPUTERNAME%
-        WISP Dir  = \\%COMPUTERNAME%\QA\wisp
+        SERVER    = \\%COMPUTERNAME%
+        WISP Dir  = \\%COMPUTERNAME%\wisp
         ### GENERAL (TAB)
         WISPCONFIG =\\%COMPUTERNAME%\TESTACU\CONFIG 
-        PATH = \\%COMPUTERNAME%\QA\wisp\bin;
-               \\%COMPUTERNAME%\QA\wisp\acu;
+        PATH = \\%COMPUTERNAME%\wisp\bin;
+               \\%COMPUTERNAME%\wisp\acu;
                \\%COMPUTERNAME%\TESTACU;
                \\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;
                \\%COMPUTERNAME%\QA\kcsiacu;
                C:\Windows;
 
-        PATH = \\%COMPUTERNAME%\QA\WISP\bin;\\%COMPUTERNAME%\QA\wisp\acu;\\%COMPUTERNAME%\TESTACU;\\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;\\%COMPUTERNAME%\QA\kcsiacu;
+        PATH = \\%COMPUTERNAME%\WISP\bin;\\%COMPUTERNAME%\wisp\acu;\\%COMPUTERNAME%\TESTACU;\\%COMPUTERNAME%\TESTACU\VOLRUN\ONPATH;\\%COMPUTERNAME%\QA\kcsiacu;
+        PATH = \\XPS-2022\WISP\bin;\\XPS-2022\WISP\acu;\\XPS-2022\TESTACU;\\XPS-2022\TESTACU\VOLRUN\ONPATH;\\XPS-2022\QA\KCSIACU;C:\Windows;
 
         ### MESSAGE (TAB)
         SHAREDIR = \\%COMPUTERNAME%\TESTACU\MESSAGE
 
     ___ Test configuration:
 
-        run \test\QA\wisp\bin\wdiag.bat
+        - Run   \test\wisp\bin\wdiag.bat
+                \\%COMPUTERNAME%\wisp\bin\wdiag.bat
+
+        - Check:
+
+            - COMPNAME      == %COMPUTERNAME%
+            - SERVER        == %COMPUTERNAME%
+            - WISPCONFIG    == \\%COMPUTERNAME%\TESTACU\CONFIG
+            - WISPDIR       == \\%COMPUTERNAME%\wisp
+            - LGMAP         Contains \\%COMPUTERNAME%\TESTACU\volXXX paths
+            - WRUN RUNCBL   == \\%COMPUTERNAME%\ACUDIR\BIN\wrun32.exe
+            - LINKPATH      Contains \\%COMPUTERNAME%\wisp\bin; + 
+            - WSHELL        == \\%COMPUTERNAME%\wisp\bin\wshell.exe
+            - CODE_PREFIX   == \\%COMPUTERNAME%\TESTACU
+            - ACUDIR        == C:\data\Acucorp\acucbl1031\AcuGT
+
 
     
 
 ################  This page is for all platforms  ####################
 
         Windows: Open explorer 
-        to \\%COMPUTERNAME%\qa\wisp\bin\
+        to \\%COMPUTERNAME%\wisp\bin\
         or %WISPSRC%\test\QA\wisp\bin
 
 +    SETUP DEFAULT USAGE CONSTANTS
@@ -292,7 +353,9 @@
         Setup test programs
     ___ (1) RUN Program or Procedure
             PROGRAM = QA0001
-            LIBRARY = TESTxxx
+            LIBRARY = TEST       (WIN - ACU)
+            LIBRARY = TESTACU    (ACU)
+            LIBRARY = TESTMF     (MF)
             VOLUME  = SOURCE
 
     ___ (13) Save environment
@@ -303,7 +366,7 @@
         are serious errors they must be fixed here.
 
         UNIX:  $ wdiag
-        WIN32: double click on WDIAG.BAT (or run from Start menu)
+        WIN32: \\%COMPUTERNAME%\wisp\bin\wdiag.bat
 
 
 +    First check-out general functionality.
@@ -379,10 +442,10 @@
 
     WIN32:
     ___ Create a Shortcut on the desktop using Command line:
-            "C:\WISPxxx\BIN\WPROC \\SERVER\TESTACU\QASTART"
+            \\%COMPUTERNAME%\WISP\bin\wproc.exe \\%COMPUTERNAME%\TESTACU\QASTART
            
         [ ] startqa.bat
-            D:\work\shellstream\WISP\src\test\QA\wisp\bin\wproc.exe \\BLACKCLAW\TESTACU\QASTART
+            \\%COMPUTERNAME%\WISP\bin\wproc.exe \\%COMPUTERNAME%\TESTACU\QASTART
 
     ___ Double click on icon to start.
         
@@ -495,6 +558,7 @@
     WIN32:
         Create a Shortcut on the desktop using Command line:
     ___ "C:\WISPxxx\BIN\WRUN SAMPLE"
+        \\%COMPUTERNAME%\wisp\bin\wrun SAMPLE
 
     ___ Double click on icon to start.
 

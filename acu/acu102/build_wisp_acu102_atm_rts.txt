@@ -3,10 +3,10 @@ Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 
 Title:          Build WISP for Acucobol 10.2 ATM Runtime (WIN32)
 
-Document:       build_wisp_acu101_atm_rts.txt
+Document:       build_wisp_acu102_atm_rts.txt
 Last Updated:   2018-11-13
 Products:       WISP/WIN32
-Versions:       5.1.20
+Versions:       5.1.21
 
 Summary:        Instructions to build Acucobol 10.2 ATM runtime.
 
@@ -24,7 +24,7 @@ In these instructions these macros are used as follows:
 
 ${ACUDIR}     - Acucobol-GT 10.2 directory (C:\....\Micro Focus\extend10.2.0\AcuGT)
 ${ACUBLD}\lib - A copy of ${ACUDIR}\lib for performing the build (e.g. C:\data\acucbl1020\AcuGT\lib)
-${WISPDIR}    - WISP installation directory (C:\WISP5120)
+${WISPDIR}    - WISP installation directory (C:\WISP5121)
 
 This procedure will rebuild ${ACUDIR}\bin\run32.exe the ATM runtime.
 

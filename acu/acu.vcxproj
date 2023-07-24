@@ -106,6 +106,8 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="acu102\sub85.c" />
+    <ClCompile Include="acu103\sub85.c" />
     <ClCompile Include="sub85_acu50.c" />
     <ClCompile Include="sub85_acu51.c" />
     <ClCompile Include="sub85_acu52.c" />
@@ -130,8 +132,8 @@
     <None Include="acu102\Makefile_aix71_32sh.mak" />
     <None Include="acu102\Makefile_linux_32sh.mak" />
     <None Include="acu102\Makefile_linux_64sh.mak" />
-    <None Include="aculink.wcb" />
-    <None Include="acuusing.cob" />
+    <None Include="ACULINK.wcb" />
+    <None Include="ACUUSING.cob" />
     <None Include="W%40FILESTATUSCHECK.cob" />
     <None Include="W%40OPENFILE.cob" />
     <None Include="acu.rules" />
@@ -166,6 +168,14 @@
       <Project>{2c42a6d6-76e3-4530-adbf-d32662b4441c}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="acu103\build_wisp_acu103_atm_rts.txt" />
+    <Text Include="acu103\build_wisp_acu103_con_rts.txt" />
+    <Text Include="acu103\build_wisp_acu103_rts.txt" />
+    <Text Include="acu103\kcsi\build_kcsi_acu103_atm_rts.txt" />
+    <Text Include="acu103\kcsi\build_kcsi_acu103_con_rts.txt" />
+    <Text Include="acu103\kcsi\build_kcsi_acu103_rts.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

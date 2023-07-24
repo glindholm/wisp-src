@@ -16,6 +16,9 @@
     <Filter Include="acu102">
       <UniqueIdentifier>{58ce8c9a-4116-4e2f-be7b-82fa9fe3b68e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="acu103">
+      <UniqueIdentifier>{785f1f74-ba0a-4441-a1ec-c4ee8102dd13}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sub85_acu50.c">
@@ -47,6 +50,12 @@
     </ClCompile>
     <ClCompile Include="wisp_sub85_inc.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="acu102\sub85.c">
+      <Filter>acu102</Filter>
+    </ClCompile>
+    <ClCompile Include="acu103\sub85.c">
+      <Filter>acu103</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -154,5 +163,25 @@
     <None Include="acu102\kcsi\build_kcsi_acu102_rts.txt">
       <Filter>acu102</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="acu103\build_wisp_acu103_rts.txt">
+      <Filter>acu103</Filter>
+    </Text>
+    <Text Include="acu103\build_wisp_acu103_atm_rts.txt">
+      <Filter>acu103</Filter>
+    </Text>
+    <Text Include="acu103\build_wisp_acu103_con_rts.txt">
+      <Filter>acu103</Filter>
+    </Text>
+    <Text Include="acu103\kcsi\build_kcsi_acu103_atm_rts.txt">
+      <Filter>acu103</Filter>
+    </Text>
+    <Text Include="acu103\kcsi\build_kcsi_acu103_con_rts.txt">
+      <Filter>acu103</Filter>
+    </Text>
+    <Text Include="acu103\kcsi\build_kcsi_acu103_rts.txt">
+      <Filter>acu103</Filter>
+    </Text>
   </ItemGroup>
 </Project>

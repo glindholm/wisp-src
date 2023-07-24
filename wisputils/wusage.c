@@ -770,7 +770,7 @@ static void us_flags()
 {
 	char *field();									/* Field packing subroutine.		*/
 	unsigned char *screen;								/* Pointer to working screen routine.	*/
-	unsigned char function, lines, no_mod;	 	      				/* Working variables.			*/
+	unsigned char function, lines, no_mod[2];	 	      				/* Working variables.			*/
 	char yn[2], term[2];
 	int valid;
 	int	pos;									/* position on screen			*/
@@ -919,9 +919,9 @@ disp_flags:
 
 	function = 7;									/* Use display and read altered.	*/
 	lines = 24;
-	vwang(&function,screen,&lines,"0001X",term,&no_mod);				/* Call Wang emulation to fill screen.	*/
+	vwang(&function,screen,&lines,"0001X",term,no_mod);				/* Call Wang emulation to fill screen.	*/
                                                        
-	if ((no_mod == 'M') && !((term[0] == '0') && (term[1] == '1')))			/* Don't write unless they press enter	*/
+	if ((no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')))			/* Don't write unless they press enter	*/
 	{										/* and we they've changed something.	*/
 		valid = 1;
 

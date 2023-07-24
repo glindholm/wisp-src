@@ -5,7 +5,7 @@ Title:          WISP PACKING LIST
 
 Document:       wisp_packlist.lis
 Products:       WISP
-WISPVER:        5.1.21
+WISPVER:        5.1.30
 
 Summary:        Packing list for the WISP shipping kit.
 
@@ -54,6 +54,7 @@ acu/acu91/Makefile_aix53_32sh.mak
 acu/acu91/Makefile_hpux1123_ia_32sh.mak
 acu/acu102/Makefile_aix71_32sh.mak
 acu/acu102/sub85.c
+acu/acu103/sub85.c
 bin
 bin/bldmf
 bin/display
@@ -211,6 +212,15 @@ acu\acu102\run32.vcxproj
 acu\acu102\sub85.c
 acu\acu102\wisp.rc
 acu\acu102\wrundll.vcxproj
+acu\acu103
+acu\acu103\build_wisp_acu103_atm_rts.txt
+acu\acu103\build_wisp_acu103_rts.txt
+acu\acu103\build_wisp_acu103_con_rts.txt
+acu\acu103\crun32.vcxproj
+acu\acu103\run32.vcxproj
+acu\acu103\sub85.c
+acu\acu103\wisp.rc
+acu\acu103\wrundll.vcxproj
 bin
 bin\display.exe
 bin\hexed.exe

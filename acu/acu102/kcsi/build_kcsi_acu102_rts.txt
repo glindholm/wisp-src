@@ -3,7 +3,7 @@ Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 
 Title:          Build WISP with KCSI for Acucobol 10.2 Runtime (WIN32)
 
-Document:       build_kcsi_acu101_rts.txt
+Document:       build_kcsi_acu102_rts.txt
 Last Updated:   2018-12-10
 Products:       KCSI/WIN32
 Versions:       4.2.01
@@ -23,7 +23,7 @@ In these instructions these macros are used as follows:
 
 ${ACUDIR}     - Acucobol-GT 10.2 directory (C:\....\Micro Focus\extend10.2.0\AcuGT)
 ${ACUBLD}\lib - A copy of ${ACUDIR}\lib for performing the build (e.g. C:\data\acucbl1020\AcuGT\lib)
-${WISPDIR}    - WISP installation directory (C:\WISP5120)
+${WISPDIR}    - WISP installation directory (C:\WISP5121)
 ${KCSIDIR}    - KCSI installation directory (C:\KCSIACU4201)
 
 Acucobol 10.2 requires that you rebuild the wrun32.dll file in order 

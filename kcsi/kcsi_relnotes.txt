@@ -5,7 +5,7 @@ Title:          RELEASE NOTES FOR KCSI UTILITIES
 
 Document:       kcsi_relnotes.lis
 Products:       CONTROL, REPORT, INQUIRY, DATENTRY, CREATE
-Version:        4.2.01 [KCSIVER]
+Version:        4.2.02 [KCSIVER]
 
 Summary:        Release notes for changes to CONTROL, REPORT,
                 INQUIRY, DATENTRY, CREATE utilities since initial 
@@ -19,17 +19,21 @@ Summary:        Release notes for changes to CONTROL, REPORT,
         Oldsmar, FL 34677
         USA
 
-        Voice (813) 425-6344
-        Fax   (813) 425-6344
         Web   www.shellstream.com
         Email wisp@shellstream.com
         FAQ   http://www.shellstream.com/faq
 
 
+CHANGES IN 4.2.02
+=================
+Added support for WISP 5.1.30. [WISPVER]
+
+Adds support for Acucobol-GT 10.3.x
+
 
 CHANGES IN 4.2.01
 =================
-Added support for WISP 5.1.21. [WISPVER]
+Added support for WISP 5.1.21.
 
 Adds support for Acucobol-GT 10.2.x
 
@@ -319,6 +323,7 @@ The following table shows the release history.
 
         VERSION          RELEASE DATE
         -------          ------------
+        4.2.02           07/23/2023     Support for Acucobol 10.3
         4.2.01           12/10/2018     Support for Acucobol 10.2
         4.2.00           01/15/2010     Shell Stream Software
         4.0.01           06/11/2003     Acucobol Patch

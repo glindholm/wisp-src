@@ -22,6 +22,7 @@ dist_dir_list= \
 	$(WISPKIT)/acu/acu90 	\
 	$(WISPKIT)/acu/acu91 	\
 	$(WISPKIT)/acu/acu102 	\
+	$(WISPKIT)/acu/acu103 	\
 	$(WISPKIT)/bin 	\
 	$(WISPKIT)/config 	\
 	$(WISPKIT)/config/videocap 	\
@@ -74,6 +75,7 @@ wisp_dist_list=	\
 	$(WISPKIT)/acu/acu91/Makefile_hpux1123_ia_32sh.mak 	\
 	$(WISPKIT)/acu/acu102/sub85.c 	\
 	$(WISPKIT)/acu/acu102/Makefile_aix71_32sh.mak 	\
+	$(WISPKIT)/acu/acu103/sub85.c 	\
 	$(WISPKIT)/bin 	\
 	$(WISPKIT)/bin/bldmf 	\
 	$(WISPKIT)/bin/display 	\
@@ -372,6 +374,10 @@ $(WISPKIT)/acu/acu102/sub85.c \
 $(WISPKIT)/acu/acu102/Makefile_aix71_32sh.mak \
 : 	$(SRCDIR)/acu/acu102/$(@F)
 	$(COPY) $(SRCDIR)/acu/acu102/$(@F) $@
+
+$(WISPKIT)/acu/acu103/sub85.c \
+: 	$(SRCDIR)/acu/acu103/$(@F)
+	$(COPY) $(SRCDIR)/acu/acu103/$(@F) $@
 
 #
 #	$(WISPKIT)/bin

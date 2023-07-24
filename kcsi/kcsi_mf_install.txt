@@ -5,7 +5,7 @@ Title:          Installation of KCSI for Micro Focus COBOL on UNIX
 
 Document:       kcsi_mf_install.txt
 Products:       KCSI Utilities
-Versions:       4.2.01  [KCSIVER]
+Versions:       4.2.02  [KCSIVER]
 
 Summary:        Installation instructions for the KCSI Utilities
                 using the Micro Focus COBOL compiler.

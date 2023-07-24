@@ -1,4 +1,50 @@
 ----------------------------------------------------------------------------
+10.3.1
+----------------------------------------------------------------------------
+
+ACUCOBOL-GT Dev Sys	10.3.1	X86 running XP, Vista, Win 7, 8, 10, Server 2003, 2008 32 Bit
+Serial: 333724
+
+ACUCOBOL-GT Dev Sys	
+Product Code: SAFLWLCYAH2AUCJA
+Product Key: UBK5YNCYAE5E	
+Users/Devs: 1
+
+AcuBench	
+Product Code: 2CAAJ5EAXDEPWJSS
+Product Key: 9RETL7EAXAHK	
+License Type: UPDATE
+Users/Devs: 1
+
+
+AcuSQL Precompiler	
+Product Code: UAFLW4CQAM2EUCJB
+Product Key: SBKMY6CQAJ56	
+License Type: UPDATE
+Users/Devs: 1
+
+--------------------------------------------------------------------------------------------------------------------
+ACUCOBOL-GT Runtime	10.3.1	IBM pSeries running AIX 7.1 32 Bit
+333725	
+
+ACUCOBOL-GT Runtime	
+Product Code: UAFMW4UQAH6CSB3A
+Product Key: T334Y6UQAEK7	
+Users/Devs: 1
+Serial: 333725
+
+--------------------------------------------------------------------------------------------------------------------
+ACUCOBOL-GT Runtime	10.3.1	x64 running Linux (glibc 2.x) 64 Bit
+88446	
+
+ACUCOBOL-GT Runtime	
+Product Code: TBE5ENUNJC2DUAFA
+Product Key: UG2LGLUNJBQK	
+Users/Devs: 2
+Serial: 88446
+
+
+----------------------------------------------------------------------------
 10.2.1
 ----------------------------------------------------------------------------
 
