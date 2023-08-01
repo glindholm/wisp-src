@@ -21,8 +21,6 @@
 **
 **	Project:	wisp/proctran
 **
-**	Purpose:	???
-**
 **	Routines:	
 **	doit()
 **	check_after_bump()	Write COBOL source to output file

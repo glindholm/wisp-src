@@ -23,7 +23,6 @@
 ******************************************************************************
 */
 
-/* insert IDSI copyright notice here	*/
 
 /* pfkey.c : get a AT&T 605 function key F1-F16 */
 

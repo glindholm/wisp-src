@@ -19,10 +19,6 @@
 /*
 **	File:		setprgid.h
 **
-**	Project:	???
-**
-**	Purpose:	???
-**
 */
 
 #ifndef setprgid_H

@@ -18,10 +18,6 @@
 /*
 **	File:		vmodules.h
 **
-**	Project:	???
-**
-**	Purpose:	???
-**
 */
 
 #ifndef vmodules_H

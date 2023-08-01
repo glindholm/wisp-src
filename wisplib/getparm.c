@@ -17,8 +17,6 @@
 **
 **	Project:	wisp/lib
 **
-**	Purpose:	???
-**
 **	Routines:	
 **	GETPARM()
 **	WL_use_last_prb()

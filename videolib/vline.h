@@ -20,8 +20,6 @@
 **
 **	Project:	VIDEO/LIB
 **
-**	Purpose:	???
-**
 */
 
 #ifndef vline_H
