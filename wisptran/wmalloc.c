@@ -18,8 +18,6 @@
 /*
 **	File:		wmalloc.c
 **
-**	Purpose:	To ...
-**
 **	Routines:	
 **
 */

@@ -18,8 +18,6 @@
 /*
 **	File:		wt_procd.h
 **
-**	Purpose:	To ...
-**
 */
 
 #ifndef WT_PROCD_H

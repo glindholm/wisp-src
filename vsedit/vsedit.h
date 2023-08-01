@@ -16,8 +16,6 @@
 /*
 **	File:		vsedit.h
 **
-**	Purpose:	To ...
-**
 */
 
 #ifndef vsedit_H

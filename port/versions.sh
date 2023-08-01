@@ -1,6 +1,4 @@
 #
-#	$Id:$
-#
 #	Usage: version.sh {version}
 #
 SAVEPWD=`pwd`

@@ -20,8 +20,6 @@
 /*
 **	File:		vsemain.c
 **
-**	Purpose:	?
-**
 **	Routines:	
 **	main()
 **	process_args()

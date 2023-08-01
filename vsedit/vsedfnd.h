@@ -17,8 +17,6 @@
 /*
 **	File:		vsedfnd.h
 **
-**	Purpose:	To ...
-**
 */
 
 #ifndef vsedfnd_H

@@ -17,8 +17,6 @@
 /*
 **	File:		vsedel.h
 **
-**	Purpose:	To ...
-**
 */
 
 #ifndef vsedel_H

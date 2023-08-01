@@ -1,7 +1,5 @@
 #
 #	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
-#	$Id:$
-#
 #	File:		libivs.umf
 #
 #	Function:	Generic makefile for the IVS library on all unix platforms.

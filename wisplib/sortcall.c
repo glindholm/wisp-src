@@ -18,8 +18,6 @@
 /*
 **	File:		sortcall.c
 **
-**	Purpose:	To ...
-**
 **	Routines:	
 **	SORTCALL()	Wang VSSUB SORTCALL.
 **

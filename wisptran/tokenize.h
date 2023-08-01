@@ -17,8 +17,6 @@
 /*
 **	File:		tokenize.h
 **
-**	Purpose:	To ...
-**
 */
 
 #ifndef TOKENIZE_H

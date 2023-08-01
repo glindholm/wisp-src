@@ -17,8 +17,6 @@
 /*
 **	File:		keywords.h
 **
-**	Purpose:	To ...
-**
 */
 
 #ifndef KEYWORDS_H

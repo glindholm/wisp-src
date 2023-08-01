@@ -18,8 +18,6 @@
 /*
 **	File:		statment.c
 **
-**	Purpose:	To ...
-**
 **	Routines:	
 **	get_statement()		Load a statement
 **

@@ -20,8 +20,6 @@
 /*
 **	File:		vssort.h
 **
-**	Purpose:	To ...
-**
 */
 
 #ifndef vssort_H

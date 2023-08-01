@@ -1,7 +1,5 @@
 # 
 #	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
-#	$Id:$
-#
 #	File:		wispd.umf
 #
 #	Function:	Generic makefile for the WISP translator on all unix platforms.

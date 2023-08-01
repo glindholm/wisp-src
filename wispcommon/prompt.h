@@ -20,8 +20,6 @@
 /*
 **	File:		prompt.h
 **
-**	Purpose:	To ...
-**
 **
 **	History:
 **	05/27/94	Written by GSL

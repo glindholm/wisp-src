@@ -18,8 +18,6 @@
 /*
 **	File:		vsemov.h
 **
-**	Purpose:	To ...
-**
 */
 
 #ifndef vsemov_H

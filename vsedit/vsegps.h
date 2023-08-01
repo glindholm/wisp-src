@@ -18,8 +18,6 @@
 /*
 **	File:		vsegps.h
 **
-**	Purpose:	To ...
-**
 **
 */
 

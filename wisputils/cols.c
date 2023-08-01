@@ -4,8 +4,6 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id: cols.c,v 1.8 2003/02/04 18:50:26 gsl Exp $
-**
 ** NOTICE:
 ** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
@@ -15,11 +13,6 @@
 ** any means without the written permission of Shell Stream Software LLC
 ** is strictly prohibited.
 ** 
-** CVS
-**
-**
-** $Date: 2003/02/04 18:50:26 $
-** $Revision: 1.8 $
 ******************************************************************************
 */
 

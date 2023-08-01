@@ -17,8 +17,6 @@
 /*
 **	File:		input.h
 **
-**	Purpose:	To ...
-**
 */
 
 #ifndef INPUT_H
