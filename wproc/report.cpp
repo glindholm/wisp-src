@@ -3,7 +3,6 @@
 //
 //	Project:	WPROC
 //	
-//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : report.cpp
 // Author : George Soules
@@ -60,10 +59,10 @@ static char word[max_word + 1];
 static int  word_index = 0;
 
 #if DOS
-const  char truncation_mark  = 'þ';
-const  char left_range_mark  = 'À';
-const  char right_range_mark =  'Ù';
-const  char mid_range_mark   = 'Ä';
+const  char truncation_mark  = 'ï¿½';
+const  char left_range_mark  = 'ï¿½';
+const  char right_range_mark =  'ï¿½';
+const  char mid_range_mark   = 'ï¿½';
 #else
 const  char truncation_mark  = '#';
 const  char left_range_mark  = '+';

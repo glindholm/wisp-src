@@ -3,7 +3,6 @@
 //
 //	Project:	WPROC
 //	
-//// Copyright (c) Lexical Software, 1992.  All rights reserved.
 //
 // Module : p_wang.cpp
 // Author : George Soules

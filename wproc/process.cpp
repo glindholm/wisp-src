@@ -5,7 +5,6 @@
 //	
 //
 
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : process.cpp
 // Author : George Soules

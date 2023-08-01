@@ -3,7 +3,6 @@
 //
 //	Project:	WPROC
 //	
-//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : screen.cpp
 // Author : George Soules
@@ -572,7 +571,7 @@ screen::screen() {
    restrict_option       = true;
 #endif
 #if DOS
-   the_modchar           = 'þ';
+   the_modchar           = 'ï¿½';
 #else
    the_modchar           = '_';
 #endif

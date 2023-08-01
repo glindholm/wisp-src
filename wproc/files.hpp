@@ -3,7 +3,6 @@
 //
 //	Project:	WPROC
 //	
-//// Copyright (c) Lexical Design, 1991
 //
 // Module : files.hpp
 // Author : George Soules

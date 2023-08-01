@@ -3,7 +3,6 @@
 //
 //	Project:	WPROC
 //	
-//// Copyright (c) Lexical Software, 1992.  All rights reserved.
 //
 // Module : network.cpp
 // Author : George Soules

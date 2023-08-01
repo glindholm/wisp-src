@@ -4,7 +4,6 @@
 //	Project:	WPROC
 //	
 //
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : utility.cpp
 // Author : George Soules
