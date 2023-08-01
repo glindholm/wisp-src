@@ -1,10 +1,7 @@
 #!/bin/sh
 ########################################################################
 #
-#               WISP - Wang Interchange Source Pre-processor
-#             Copyright (c) 1988,1989,1990,1991,1992,1993,1994
-#        An unpublished work of International Digital Scientific Inc.
-#                           All rights reserved.
+# 	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 #
 ########################################################################
 #

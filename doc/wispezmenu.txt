@@ -1,6 +1,5 @@
 
-	Copyright (c) 1994 by International Digital Scientific Incorporated.  
-	All Rights Reserved.
+	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 
 	====================================================================
 

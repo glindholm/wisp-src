@@ -17,7 +17,6 @@
   1.  The menu structure has changed.  The new IDSI menu control
       block copybook is as follows:
 
-        * International Digital Scientific Corporation
         * Extended Development Environment
         * COBOL 85 copy member to allocate menu control blocks.
   

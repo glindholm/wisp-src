@@ -31,7 +31,6 @@
  ** 
  ** purpose: clean out wisp work files
  **
- ** Copyright 1990  International Digital Scientific, Inc.
  **
  **/
 #ifdef unix

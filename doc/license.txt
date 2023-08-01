@@ -1,7 +1,7 @@
 	**** COMPANY CONFIDENTIAL ****				license.lis
 								06/02/92
 
-****	Copyright (c) 1992 International Digital Scientific Inc.	****
+
 
 	WISP RUNTIME LICENSE TRACKING
 	=============================
@@ -229,8 +229,6 @@
 $ wauthorize
 
                    **** WISP LICENSE AUTHORIZATION TOOL ****
-         Copyright (c) 1992 by International Digital Scientific Inc.
-
 
 This program will generate WISP license keys and validation codes for use with
 the wlicense program.  This program is for use by IDSI personnel only!
@@ -350,7 +348,6 @@ $
 
 
 
-                 International Digital Scientific Incorporated
 
 
 
@@ -410,8 +407,6 @@ $ wlicense
 
 
                    **** WISP LICENSE INSTALLATION TOOL ****
-         Copyright (c) 1992 by International Digital Scientific Inc.
-                             (805) 295-1155
 
 
 This program will install the WISP runtime license onto this machine.
