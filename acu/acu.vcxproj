@@ -108,12 +108,6 @@
   <ItemGroup>
     <ClCompile Include="acu102\sub85.c" />
     <ClCompile Include="acu103\sub85.c" />
-    <ClCompile Include="sub85_acu50.c" />
-    <ClCompile Include="sub85_acu51.c" />
-    <ClCompile Include="sub85_acu52.c" />
-    <ClCompile Include="sub85_acu60.c" />
-    <ClCompile Include="sub85_acu62.c" />
-    <ClCompile Include="sub85_acu72.c" />
     <ClCompile Include="sub85_acu81.c" />
     <ClCompile Include="sub85_acu90.c" />
     <ClCompile Include="sub85_acu91.c" />
