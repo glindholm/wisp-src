@@ -20,8 +20,6 @@
 /*
 **	File:		vsedit.c
 **
-**	Purpose:	?
-**
 **	Routines:	
 **
 **	vsedit()	The main entry point once the filename is known.

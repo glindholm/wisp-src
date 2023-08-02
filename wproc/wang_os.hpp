@@ -4,7 +4,6 @@
 //	Project:	WPROC
 //	
 //
-// Copyright (c) Lexical Software, 1992.  All rights reserved.
 //
 // Module : wang_os.hpp
 // Author : George Soules

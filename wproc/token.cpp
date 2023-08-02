@@ -3,7 +3,6 @@
 //
 //	Project:	WPROC
 //	
-//// Copyright (c) Lexical Design, 1991
 //
 // Module : token.cpp
 // Author : George Soules

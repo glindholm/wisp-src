@@ -15,15 +15,10 @@
 ** any means without the written permission of Shell Stream Software LLC
 ** is strictly prohibited.
 ** 
-** CVS
-**
-**
-**
 **
 ******************************************************************************
 */
 
-/* insert IDSI copyright notice here	*/
 
 /* pfkey.c : get a AT&T 605 function key F1-F16 */
 

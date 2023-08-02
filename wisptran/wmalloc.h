@@ -18,8 +18,6 @@
 /*
 **	File:		wmalloc.h
 **
-**	Purpose:	To ...
-**
 **
 */
 

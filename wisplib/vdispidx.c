@@ -14,10 +14,6 @@
 ** any means without the written permission of Shell Stream Software LLC
 ** is strictly prohibited.
 ** 
-** CVS
-**
-**
-**
 **
 */
 

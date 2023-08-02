@@ -15,10 +15,6 @@
 ** any means without the written permission of Shell Stream Software LLC
 ** is strictly prohibited.
 ** 
-** CVS
-**
-**
-**
 **
 ******************************************************************************
 */
@@ -31,7 +27,6 @@
  ** 
  ** purpose: clean out wisp work files
  **
- ** Copyright 1990  International Digital Scientific, Inc.
  **
  **/
 #ifdef unix

@@ -3,7 +3,7 @@
 	
 	Title:		WISP PORTING INSTRUCTIONS FOR UNIX
 	
-	Document:	portunix.lis
+	Document:	portunix.txt
 	Products:	WISP/UNIX, EDE, KCSI
 	Versions:	5.1.xx 
 	
@@ -230,7 +230,7 @@
 	then move the modified source files to their appropriate source
 	directories and repeat the above steps starting at the BUILD step.
 
-	[ ]	Follow "doc/qawisp.lis" checklist to test WISP.
+	[ ]	Follow "doc/qawisp.txt" checklist to test WISP.
 
 
 	INSTALL THE NEW WISP

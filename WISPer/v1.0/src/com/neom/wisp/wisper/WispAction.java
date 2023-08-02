@@ -7,7 +7,7 @@ import javax.swing.AbstractAction;
  * Title:        WISPer
  * Description:
  * Copyright:    Copyright (c) 2002
- * Company:      NeoMedia Technologies
+ * Company:      Shell Stream Software LLC
  * @author Kevin Hunter
  * @version 1.0
  */

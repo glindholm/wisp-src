@@ -17,8 +17,6 @@
 /*
 **	File:		wt_datad.h
 **
-**	Purpose:	To ...
-**
 **
 */
 

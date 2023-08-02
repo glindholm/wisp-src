@@ -18,8 +18,6 @@
 /*
 **	File:		vsetxt.h
 **
-**	Purpose:	To ...
-**
 */
 
 #ifndef vsetxt_H

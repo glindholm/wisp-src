@@ -5,7 +5,6 @@
 //	
 //
 
-// Copyright (c) Lexical Software, 1992.  All rights reserved.
 //
 // Module : e_wang.cpp
 // Author : George Soules

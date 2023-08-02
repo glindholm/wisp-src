@@ -4,8 +4,6 @@
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id: wsubmit.c,v 1.18 2003/02/04 21:05:36 gsl Exp $
-**
 ** NOTICE:
 ** Confidential, unpublished property of Shell Stream Software LLC.
 ** Use and distribution limited solely to authorized personnel.
@@ -15,11 +13,6 @@
 ** any means without the written permission of Shell Stream Software LLC
 ** is strictly prohibited.
 ** 
-** CVS
-**
-**
-** $Date: 2003/02/04 21:05:36 $
-** $Revision: 1.18 $
 ******************************************************************************
 */
 

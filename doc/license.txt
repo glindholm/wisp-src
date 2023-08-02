@@ -1,0 +1,462 @@
+	**** COMPANY CONFIDENTIAL ****				license.lis
+								06/02/92
+
+
+
+	WISP RUNTIME LICENSE TRACKING
+	=============================
+
+	This document describes the WISP Runtime license system that
+	will be in place for release 3.2 of WISP.
+
+	In this release only UNIX will be addressed.
+
+
+
+	OVERVIEW
+	========
+
+	IDSI needed a way of tracking and limiting use of the WISP
+	runtime system to only those site which are actually licensed.
+	With the Wang deal and changing business climate we also needed
+	to be able to sell Runtime-Only licenses that are "locked" to
+	a machine serial number.  Additionally we needed to be able
+	to send out "DEMO" versions of WISP that would time-out after a
+	given number of days.
+
+	To solve these issues a WISP Runtime license system has been
+	created.   
+
+	Every WISP kit will be sent out with a LICENSE KEY.  When the
+	user installs WISP he will have to run the program wlicense
+	which will install the WISP license on that machine.  If the
+	machine is not licensed a WARNING message will be displayed
+	that will tell them to run wlicense.  It will NOT prevent them
+	from running.  This is important because we do not want to 
+	cause users undo duress.  They will simply have to press RETURN
+	to continue with their program.
+
+
+
+	DEFINITIONS
+	===========
+
+	LICENSE KEY	A 16 digit string that contains the encoded
+			customer number, platform code, license type,
+			expiration date etc.
+
+	MACHINE ID	The unique identifier for a machine.  On AIX
+			and HP/UX the uname() function returns a
+			"serial number".  On other machines we fake-it
+			by returning the inode of the license file.
+
+	VALIDATION CODE  A 3 digit string that "locks" the LICENSE KEY
+			and MACHINE ID together.
+
+	PLATFORM	The machine/OS combination being used.
+			Eg. AIX RS/6000 is one platform, ULTRIX RISC is
+			a different platform.  There is a unique 2 digit
+			code for each platform.  A LICENSE KEY is tied
+			to a specific platform.
+
+
+	COMPONENTS
+	==========
+
+	wlicense	This is the WISP license installer program
+			that will be distributed as part of the WISP kit.
+
+	wauthorize	This is the IDSI only utility that is used
+			to generate the LICENSE KEY and the VALIDATION
+			CODE.
+
+	/lib/wisp.license
+			The WISP license file.  This is created by
+			wlicense and contains the LICENSE KEY and
+			VALIDATION CODE.
+
+
+
+	TYPES OF LICENSES
+	=================
+
+	SINGLE		A SINGLE machine license.  A LICENSE KEY of this
+			type would require a new VALIDATION CODE for every
+			machine it was to run on.  This type of license
+			would be issued to new users that buy only a
+			SINGLE user license, or who buy a runtime only
+			license.
+
+	UNLIMITED	An UNLIMITED machine license.  This type of
+			LICENSE KEY would be issued to existing customers
+			who have bought an unlimited runtime license.
+			It could be used on any machine of the same
+			platform type.  It does not require a VALIDATION
+			CODE as it is not locked to a MACHINE ID.
+
+	TIMED		A DEMO license that will time-out on a given
+			date.  This will allow the user to run for 30
+			days (or as given) without any warning messages 
+			then it will stop running completely.  It does
+			not require a VALIDATION CODE.
+
+
+
+	SCENARIOS
+	=========
+
+	1)  Existing customer with an UNLIMITED runtime license.
+
+		Eg. Sending out WISP 3.2 to NISSI for the RS6000.
+
+		We run wauthorize and generate an UNLIMITED license
+		for the RS6000.  This gets sent to them with the
+		WISP kit.  They will then run wlicense on their
+		machine to install the license.
+
+		NISSI can then license each of there customer sites
+		by either running the wlicense program at each site
+		using the same LICENSE KEY or they could simply
+		copy the WISP license file /lib/wisp.license to
+		each site.
+
+		Note that they can use this key on any RS6000 because
+		it is an UNLIMITED key but it will not work on an HP 
+		or SUN system, only on the RS6000.
+
+
+	2)  New customer that buys a SINGLE machine license.
+
+		Eg. ABC Company buys a SINGLE machine license for HP/UX.
+
+		We run wauthorize and generate a SINGLE machine license
+		for the HP/UX machine.  This gets sent to them with
+		the WISP kit.  They will then run wlicense on their
+		HP machine to install the license.  The wlicense program
+		will report to them a MACHINE ID and tell them to call
+		IDSI to get the VALIDATION CODE.  
+
+		When we get the call we will run wauthorize again.
+		We will ask them for their LICENSE KEY and MACHINE ID
+		and will generate the VALIDATION CODE.  They will enter
+		the VALIDATION CODE into wlicense to complete the 
+		license installation procedure.
+
+		We will record this into a log to ensure we don't
+		give out VALIDATION CODEs to users who are not licensed.
+
+
+	3)  Customer wants a DEMO license for a different platform.
+
+		Eg. SOTAS wants a DEMO copy of WISP to try out the SUN.
+
+		We run wauthorize and generate a TIMED license that
+		will expire in 30 days.  They install it as above and
+		run with it for 30 days.  When it expires they will have 
+		to buy a real license to continue running on that machine.
+
+		Note that when they buy their real license all they
+		will have to do is run wlicense to install it.  There
+		are no code changes required to run.
+
+	4)  Customer buys 3 runtime licenses for the Wang RISC Series.
+
+		We run wauthorize and generate a SINGLE machine
+		LICENSE KEY.  We then issue 3 VALIDATION CODES.
+
+		Thats 1 LICENSE KEY + 3 VALIDATION CODES.  We do not
+		generate 3 keys.   Again we have to log how many
+		VALIDATION CODES have been issued and only issue what
+		has been bought and paid for.
+	
+	
+
+	WAUTHORIZE
+	==========
+
+	The wauthorize program is for use at IDSI only, it can only be
+	run by a user with a group-id of "idsi".
+
+	It has three main functions:
+		1) Generate a LICENSE KEY
+		2) Generate a VALIDATION CODE
+		3) Test a LICENSE KEY and VALIDATION CODE
+
+	In order to generate a LICENSE KEY you will need the following
+	information:
+
+		CUSTOMER NAME		The name of the customer. This is
+					recorded in the log and written on
+					the LICENSE KEY document.
+
+		CUSTOMER NUMBER		The up to 6 digit customer number.
+					This will be in the customer 
+					database.
+
+		PLATFORM		The 2 digit code for the platform.
+					A table of values will be displayed.
+
+		LICENSE TYPE		SINGLE, UNLIMITED, TIMED
+
+		LICENSE DATE		Defaults to todays date.
+
+		EXPIRATION DATE		Only for TIMED keys, it defaults
+					to one month from today.
+
+	In order to generate a VALIDATION CODE you will need the 
+	following information:
+
+		CUSTOMER NAME		The name of the customer.
+
+		LICENSE KEY		The customer must tell you the
+					LICENSE KEY that was issued to
+					them for this platform.
+
+		MACHINE ID		The unique machine identification.
+					This is displayed to the customer
+					when he runs wlicense.
+
+	If a customer is having trouble installing his WISP license
+	you can use the TEST function of wauthorize to verify that his
+	LICENSE KEY or VALIDATION CODE is valid.  This function will
+	decode the LICENSE KEY and display its values.
+
+
+
+	SAMPLE RUN OF WAUTHORIZE
+	========================	
+
+$ wauthorize
+
+                   **** WISP LICENSE AUTHORIZATION TOOL ****
+
+This program will generate WISP license keys and validation codes for use with
+the wlicense program.  This program is for use by IDSI personnel only!
+
+
+LICENSE KEY        The LICENSE KEY is the code that is sent out with every
+                   WISP kit.  It defines the type of license and contains the
+                   encoded CUSTOMER NUMBER, PLATFORM, LICENSE TYPE, and the
+                   EXPIRATION DATE.
+
+VALIDATION CODE    The VALIDATION CODE is the code that "locks" the LICENSE
+                   KEY to the machine serial number (MACHINE ID).
+
+At any prompt you may type a question mark for help or a period to exit.
+                   ?   HELP on the prompt.
+                   .   EXIT the program.
+
+
+Generate a Key, Validation, or Test (k,v,t) ? k
+
+>>> Generating a LICENSE KEY <<<
+
+CUSTOMER NAME ?          ABC Company Inc.
+CUSTOMER NUMBER ?        123
+PLATFORM [Show values] ? <cr>
+
+ UK - Unknown              AX - AIX RISC             UL - Ultrix (RISC)       
+ HP - HP/UX 9000 RISC      SU - SunOS                DG - DG/UX Aviion        
+ SC - SCO UNIX 386/486     NC - NCR 386/486          NT - NCR Tower/32 68020  
+ MI - Mips R2000           AT - AT&T 3b2             BU - BULL DPX/2          
+ MO - Motorola 88000       US - Unisys 6000 SVR4     SQ - Sequent             
+ AP - AIX PS/2             UV - Ultrix (VAX)         UA - Ultrix (ALPHA)      
+ A3 - AIX 3090             NX - NeXT 68040           HI - HP MPE/iX           
+ SX - Stratus FTX          IC - ICL DRS 6000         AL - ALTOS 68020         
+ CC - CONCURRENT           CD - CONTROL DATA         CV - CONVERGENT          
+ AM - AMIGA 3000UX         NE - NEC                  ND - NIXDORF TARGON      
+ PR - PRIME                PY - PYRAMID              SY - SONY NEWS           
+ WY - WYSE                 VM - VAX/VMS              DS - MS-DOS 386/484      
+ HM - HP MPE               VA - VMS (ALPHA)         
+
+PLATFORM [Show values] ?   AX
+LICENSE TYPE (s,u,t) [s] ? <cr>
+LICENSE DATE [19920528] ?  <cr>
+
+CUSTOMER NAME           ABC Company Inc.
+CUSTOMER NUMBER         000123
+PLATFORM                AX - AIX RISC
+LICENSE TYPE            SINGLE [1]
+LICENSE DATE            19920528
+EXPIRATION DATE         00000000
+
+**** ENSURE THE ABOVE INFOMATION IS CORRECT BEFORE GENERATING THE KEY ****
+
+Generate the LICENSE KEY (y,n) [y] ? <cr>
+
+                        >>>                     <<<
+LICENSE KEY             >>> CX1U-G3Z4-I4M2-YL5C <<<
+                        >>>                     <<<
+
+The above LICENSE KEY decodes to the following values:
+
+CUSTOMER NUMBER         000123
+PLATFORM                AX - AIX RISC
+LICENSE TYPE            SINGLE [1]
+LICENSE DATE            19920528
+EXPIRATION DATE         00000000
+
+**** ENSURE THIS INFOMATION IS CORRECT BEFORE ISSUEING THE KEY ****
+
+*** Printing license doc file doc/000001.AX3 ***
+
+Generate another LICENSE KEY (y,n) [y] ? n
+		
+Restart or Quit (r,q) [r] ? <cr>
+
+Generate a Key, Validation, or Test (k,v,t) ? v
+
+>>> Generating a VALIDATION CODE <<<
+
+CUSTOMER NAME ?  ABC Company Inc.
+LICENSE KEY ?    CX1U-G3Z4-I4M2-YL5C
+
+This LICENSE KEY decodes to the following values:
+
+CUSTOMER NUMBER         000123
+PLATFORM                AX - AIX RISC
+LICENSE TYPE            SINGLE [1]
+LICENSE DATE            19920528
+EXPIRATION DATE         00000000
+
+**** ENSURE THIS INFOMATION IS CORRECT BEFORE CONTINUING ****
+
+Is the information in this LICENSE KEY correct (y,n) [y] ? <cr>
+MACHINE ID ? 000123400
+
+CUSTOMER NAME           ABC Company Inc.
+LICENSE KEY             CX1U-G3Z4-I4M2-YL5C
+MACHINE ID              000123400
+
+**** ENSURE THE ABOVE IS CORRECT BEFORE GENERATING THE VALIDATION CODE ****
+
+Generate the VALIDATION CODE (y,n) [y] ? <cr>
+
+                        >>>     <<<
+VALIDATION CODE         >>> ZQA <<<
+                        >>>     <<<
+
+Generate another VALIDATION CODE (y,n) [y] ? n
+
+Restart or Quit (r,q) [r] ? q
+
+$
+
+
+	SAMPLE LICENSE KEY DOCUMENT
+	===========================
+
+
+
+
+
+
+                              -------------------
+
+                                     WISP
+
+                              Runtime License Key
+
+                              -------------------
+
+
+                        This is an important document,
+                      please keep it in a safe location.
+
+
+                              -------------------
+
+
+                      Licensee  ABC Company Inc.
+
+               Customer Number  000123
+
+                   License Key  CX1U-G3Z4-I4M2-YL5C
+
+                      Platform  AIX RISC
+
+                  License Type  SINGLE
+
+                  License Date  1992/05/28
+
+               Expiration Date  None
+
+		
+                              -------------------
+
+
+
+        To license a machine for the WISP runtime run the program "wlicense"
+        and enter the LICENSE KEY as written above.
+
+
+
+
+
+
+
+        If you have any questions, please contact IDSI technical
+        support at (805) 295-1155.
+
+
+
+	SAMPLE RUN OF WLICENSE
+	======================	
+
+$ wlicense
+
+
+                   **** WISP LICENSE INSTALLATION TOOL ****
+
+
+This program will install the WISP runtime license onto this machine.
+In order to run this program you must be logged on as the root user.
+
+This program will request your WISP software LICENSE KEY.  The LICENSE KEY is
+a 16 digit code that is sent out when you license the WISP product, or when
+you request a demo license.
+
+You will need a LICENSE KEY to continue.  If you are licensed but do not know
+your LICENSE KEY or you would like a 30 day demo license please call the
+above number for assistance.
+
+While this program is running you may get help on any prompt by entering
+a question mark or you may exit the program by entering a period.
+         ?   HELP on the prompt.
+         .   EXIT the program.
+
+Do you wish to continue (y,n) [y] ? <cr>
+
+Enter your company name ? ABC Company Inc.
+
+Enter the LICENSE KEY ? CX1U-G3Z4-I4M2-YL5C
+
+
+In order to install this WISP license you will need a VALIDATION CODE.
+A VALIDATION CODE can be received by calling I.D.S.I at (805) 295-1155 and
+asking for a VALIDATION CODE.  You will be asked for the following information:
+
+       LICENSE KEY:    CX1U-G3Z4-I4M2-YL5C
+       MACHINE ID:     000123400
+
+Please supply the information EXACTLY as written above.
+
+Enter the VALIDATION CODE ? zqa
+
+The WISP license file /lib/wisp.license has been created.
+
+LICENSEE           ABC Company Inc.
+CUSTOMER-NUMBER    000123
+PLATFORM           AX - AIX RISC
+LICENSE-KEY        CX1U-G3Z4-I4M2-YL5C
+LICENSE-TYPE       SINGLE
+LICENSE-DATE       1992/05/28
+EXPIRATION-DATE    None
+MACHINE-ID         000123400
+VALIDATION-CODE    ZQA
+
+$
+
+
+		****   END OF DOCUMENT ****
+

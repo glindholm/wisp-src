@@ -325,12 +325,6 @@ $(WISPKIT)/acu/ACUUSING.cob 	\
 $(WISPKIT)/acu/ACUUSING.acu 	\
 $(WISPKIT)/acu/acu.rules 	\
 $(WISPKIT)/acu/acucobol.include 	\
-$(WISPKIT)/acu/sub85_acu50.c 	\
-$(WISPKIT)/acu/sub85_acu51.c 	\
-$(WISPKIT)/acu/sub85_acu52.c 	\
-$(WISPKIT)/acu/sub85_acu60.c 	\
-$(WISPKIT)/acu/sub85_acu62.c 	\
-$(WISPKIT)/acu/sub85_acu72.c 	\
 $(WISPKIT)/acu/sub85_acu81.c 	\
 $(WISPKIT)/acu/sub85_acu90.c 	\
 $(WISPKIT)/acu/sub85_acu91.c 	\

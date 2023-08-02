@@ -4,8 +4,6 @@
 **	Project:	WPROC
 **	
 **
-** Copyright (c) Lexical Software, 1992.  All rights reserved.
-**
 ** Module : wisp_rts.h
 ** Author : George Soules
 ** Date   : 17 March 1992

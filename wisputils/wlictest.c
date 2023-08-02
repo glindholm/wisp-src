@@ -19,12 +19,8 @@
 /*
 **	File:		wlictest.c
 **
-**	Project:	????
-**
-**	Purpose:	???
-**
 **	Routines:	
-**	wlictest()		???
+**	wlictest()
 */
 
 /*

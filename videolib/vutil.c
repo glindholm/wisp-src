@@ -14,12 +14,6 @@
 ******************************************************************************
 */
 
-			/************************************************************************/
-			/*	      VIDEO - Video Interactive Development Environment		*/
-			/*			 Copyright (c) 1988 - 1991			*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
 
 
 /*					Include required header files.								*/

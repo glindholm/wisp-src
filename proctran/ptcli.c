@@ -21,8 +21,6 @@
 **
 **	Project:	wisp/proctran
 **
-**	Purpose:	???
-**
 **	Routines:	
 **	get_cli()
 **	showflags()

@@ -18,10 +18,6 @@
 /*
 **	File:		vscreen.h
 **
-**	Project:	???
-**
-**	Purpose:	???
-**
 */
 
 #ifndef vscreen_H

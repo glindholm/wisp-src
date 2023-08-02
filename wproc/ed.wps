@@ -1,4 +1,3 @@
-* Copyright (c) 1992 Lexical Software
 procedure ed.wps
    using &initial_filename string = ""
 

@@ -3,7 +3,7 @@ Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 
 Title:          WISP PACKING LIST
 
-Document:       wisp_packlist.lis
+Document:       wisp_packlist.txt
 Products:       WISP
 WISPVER:        5.1.30
 

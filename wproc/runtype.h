@@ -4,8 +4,6 @@
 **	Project:	WPROC
 **	
 **
-** Copyright (c) Lexical Software, 1992.  All rights reserved.
-**
 ** Module : runtype.h
 ** Author : George Soules
 ** Date   : 31 July 1992

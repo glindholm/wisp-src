@@ -23,7 +23,7 @@ import javax.swing.JScrollPane;
  * Description:	A dialog that allows an existing directory to
  * 				be selected.
  * Copyright:   Copyright (c) 2002, 2003
- * Company:     NeoMedia Technologies, Inc.
+ * Company:     Shell Stream Software LLC
  * @author		Kevin Hunter
  * @version	1.0
  */

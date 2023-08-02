@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) Shell Stream Software LLC, All Rights Reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		vwang.c

@@ -3,7 +3,6 @@
 //
 //	Project:	WPROC
 //	
-//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : product.cpp
 // Author : George Soules
@@ -52,14 +51,10 @@ char *product_copyright() {
 #endif
 	/* CHANGE-COPYRIGHT-DATE */
 
-#if DOS
-   strcat(notice, " v2.0x Copyright (c) 1991-1992 Lexical Software. All Rights Reserved.");
-#else
    char wproc_version[80];
    sprintf(wproc_version," version %s (WL=%s) [%s]\n", product_version_str(), wisp_version(), WL_platform_name());
    strcat(notice, wproc_version);
    strcat(notice, "Copyright (c) Shell Stream Software LLC. All Rights Reserved.\n");
-#endif
    return notice;
 }
 

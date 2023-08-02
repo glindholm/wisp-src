@@ -4,8 +4,6 @@
 **	Project:	WPROC
 **	
 **
-** Copyright (c) Lexical Software, 1992.  All rights reserved.
-**
 ** Module : video.h
 ** Author : Janice Kenyon
 ** Date   : 27 May 1992

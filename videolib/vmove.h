@@ -18,10 +18,6 @@
 /*
 **	File:		vmove.h
 **
-**	Project:	???
-**
-**	Purpose:	???
-**
 */
 
 #ifndef vmove_H

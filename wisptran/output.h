@@ -17,8 +17,6 @@
 /*
 **	File:		output.h
 **
-**	Purpose:	To ...
-**
 **
 */
 

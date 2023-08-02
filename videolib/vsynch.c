@@ -14,12 +14,6 @@
 ******************************************************************************
 */
 
-			/************************************************************************/
-			/*	      VIDEO - Video Interactive Development Environment		*/
-			/*			Copyright (c) 1988, 1989, 1990			*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
 
 #include <string.h>
 #include "video.h"									/* Reference all video definitions.	*/

@@ -18,8 +18,6 @@
 /*
 **	File:		wt_disp.h
 **
-**	Purpose:	To ...
-**
 **
 */
 

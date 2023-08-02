@@ -4,8 +4,6 @@
 //	Project:	WPROC
 //	
 //
-// Copyright (c) Lexical Copyright, 1992.  All rights reserved.
-//
 // Module : wang_os.cpp
 // Author : George Soules
 // Date   : 17 March 1992

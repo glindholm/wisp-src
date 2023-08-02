@@ -22,7 +22,7 @@ import javax.swing.tree.TreeSelectionModel;
  * Description: A class to allow selection of a particular directory in the
  *              file system.
  * Copyright:   Copyright (c) 2002, 2003
- * Company:     NeoMedia Technologies, Inc.
+ * Company:     Shell Stream Software LLC
  * @author     Kevin Hunter
  * @version    1.0
  * @see		com.neom.util.gui.DirectoryChooserDialog

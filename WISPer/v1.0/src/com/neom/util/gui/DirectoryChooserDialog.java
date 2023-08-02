@@ -22,7 +22,7 @@ import javax.swing.JScrollPane;
  * Title:
  * Description:
  * Copyright:    Copyright (c) 2002
- * Company:
+ * Company:     Shell Stream Software LLC
  * @author
  * @version 1.0
  */

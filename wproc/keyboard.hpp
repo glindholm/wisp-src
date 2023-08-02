@@ -3,7 +3,6 @@
 //
 //	Project:	WPROC
 //	
-//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 // Derived from IBMKEYS.H, (c) South Mountain Software
 //
 // Module : ibmkeys.hpp

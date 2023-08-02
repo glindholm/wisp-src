@@ -695,8 +695,6 @@ void W4WAPI(char *buff)
 **
 **	ARGUMENTS:	None
 **
-**	GLOBALS:	???
-**
 **	RETURN:		The loaded w4wmap linked list head.
 **
 **	WARNINGS:	None

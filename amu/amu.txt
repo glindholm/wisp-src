@@ -1,0 +1,151 @@
+	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		AMU - WISP Application Management Utility
+	
+	Document:	amu.txt
+	Last Updated:	12 May 97
+	Products:	AMU
+	Versions:	1.1
+	
+	Summary:	Usage notes for amu and amuedit.
+			Known limitations.
+			Revision summary.
+
+	====================================================================
+	
+
+	AMU - WISP APPLICATION MANAGEMENT UTILITY
+	=========================================
+
+	The WISP AMU Utility allows you to run your Wang VS
+	AMU menus in a WISP runtime environment.
+
+	AMU is based on a product by Wang Laboratories, Inc.  It is not,
+	however, a complete 100% emulation.
+
+
+	Distribution & Installation
+	---------------------------
+
+	First install the WISP runtime and setup the WISP runtime
+	environment.  This must be in place before AMU can be used.
+
+	AMU will normally be distributed on diskette or tape as a 
+	compressed tar file named "amuXXX.tar.Z".  Unload this file
+	from the distribution media as follows.
+
+	E.g.	$ tar -xvf /dev/rfd0
+
+	Extract the distribution files from "amuXXXtar.Z" using the 
+	following command:
+
+		$ uncompress -c amuXXX.tar.Z|tar -xvpf -
+
+	This will create a directory "amuXXX where XXX is a version
+	number.  This directory will contain two files: Info, amu.txt
+	(this document) and three subdirectories: amuamu.XXX, amumf.XXX,
+	and source.  Each kit contains both ACUCOBOL and Micro Focus
+	COBOL distributions as well as the source set to re-build
+	either distribution.
+
+
+	For Micro Focus COBOL distribution:
+	-----------------------------------
+	The following files will be created within amumf.XXX.
+
+		AMU.int		- Runtime call driver progam
+		AMUROOT.int	- Runtime root program
+
+		AMUEDIT.int	- Maintenance program
+		AMUMDM.int	- Menu Definition Maintenance subprogram
+		AMUFKM.int	- Function Key Maintenance subprogram
+		AMUUDM.int	- User Definition Maintenance subprogram
+
+		CAMUMENU.int	- Menu conversion program
+
+	Edit configuration or move *.int files to a path on your COBPATH.
+
+	For AcuCOBOL distribution:
+	--------------------------
+	The following files will be created within amuacu.XXX.
+
+		AMU		- Runtime call driver progam
+		AMUROOT		- Runtime root program
+
+		AMUEDIT		- Maintenance program
+		AMUMDM		- Menu Definition Maintenance subprogram
+		AMUFKM		- Function Key Maintenance subprogram
+		AMUUDM		- User Definition Maintenance subprogram
+
+		CAMUMENU	- Menu conversion program
+
+
+	Edit ACUCONFIG or move object files to a path on your CODE-PREFIX.
+
+
+	AMU Usage
+	-----------
+
+	The following shows the usage of AMU:
+
+		$ runtime AMU
+
+
+
+	Using AMU with Wang VS Procedures
+	-----------------------------------
+
+	AMU and WISP recognize the following file extensions as being
+	Wang VS Procedures:
+
+		xxx.wps		Wang Procedure Source
+		xxx.wpr		Wang Procedure Run (compiled)
+
+
+	Environment Variables
+	---------------------
+
+
+
+	Current Limitations
+	-------------------
+
+	This section describes current known limitations of AMU, there 
+	may be other limitations that have not yet been documented.
+
+
+
+	REVISION SUMMARY
+	================
+
+	This section describes the changes that have occurred with each 
+	release plus any reported outstanding issues.
+
+	Release 1.0
+	-----------
+
+	Initial release of the AMU Utility.
+
+
+	Release 1.1
+	-----------
+
+	Modified the way version control was handled.  There is now a
+	copy member version.wcb which contains this information.
+
+
+	Outstanding Issues
+	------------------
+
+	The following issues have been reported and are waiting correction
+	or verification.
+
+
+	There are known issues with cursor control and FAC attributes
+	when using AMUEDIT.  Currently there is no schedule to resolve
+	any problems.  The source is provided for ability to make any
+	time critical modifications yourself.
+
+	========================= END OF DOCUMENT ==========================

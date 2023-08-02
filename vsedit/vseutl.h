@@ -18,8 +18,6 @@
 /*
 **	File:		vseutl.h
 **
-**	Purpose:	To ...
-**
 */
 
 #ifndef vseutl_H

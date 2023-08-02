@@ -14,11 +14,6 @@
 ******************************************************************************
 */
 
-/************************************************************************/
-/*	     VIDEO - Video Interactive Development Environment		*/
-/*			    Copyright (c) 1991				*/
-/*	An unpublished work by Greg L. Adams.  All rights reserved.	*/
-/************************************************************************/
 
 #include <stdio.h>
 #include <string.h>

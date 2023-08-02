@@ -18,10 +18,6 @@
 /*
 **	File:		verase.h
 **
-**	Project:	???
-**
-**	Purpose:	???
-**
 */
 
 #ifndef verase_H

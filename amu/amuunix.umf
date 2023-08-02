@@ -69,7 +69,7 @@ source_all:
 	-@distdir=amu.$(VER)$(REL) ; \
 	shipdir=amu$(VER)$(REL).ship ; \
 	mkdir -p $$shipdir/$$distdir/source ; \
-	cp amu.lis $$shipdir/$$distdir ; \
+	cp amu.txt $$shipdir/$$distdir ; \
 	cp *.wcb *.umf $$shipdir/$$distdir/source ; \
 	cd $$shipdir ; \
 	find . -type f -exec chmod 444 {} \; ; \

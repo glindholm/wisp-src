@@ -7,7 +7,7 @@ import java.io.File;
  * Description: Interface via which a DirectoryChooserTree object notifies
  *              other objects of changes in the selected directory.
  * Copyright:   Copyright (c) 2002
- * Company:     NeoMedia Technologies, Inc.
+ * Company:     Shell Stream Software LLC
  * @author      Kevin Hunter
  * @version     1.0
  */

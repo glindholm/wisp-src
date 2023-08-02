@@ -21,24 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sub85_acu50.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sub85_acu51.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sub85_acu52.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sub85_acu60.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sub85_acu62.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sub85_acu72.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sub85_acu81.c">
       <Filter>Source Files</Filter>
     </ClCompile>

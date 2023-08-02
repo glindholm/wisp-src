@@ -18,10 +18,6 @@
 /*
 **	File:		vprint.h
 **
-**	Project:	???
-**
-**	Purpose:	???
-**
 */
 
 #ifndef vprint_H

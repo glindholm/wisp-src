@@ -18,10 +18,6 @@
 /*
 **	File:		vtrim.h
 **
-**	Project:	???
-**
-**	Purpose:	???
-**
 */
 
 #ifndef vtrim_H

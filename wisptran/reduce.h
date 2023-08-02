@@ -18,8 +18,6 @@
 /*
 **	File:		reduce.h
 **
-**	Purpose:	To ...
-**
 **
 **	History:
 **	09/20/93	Written by GSL
