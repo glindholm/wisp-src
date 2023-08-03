@@ -27,7 +27,8 @@
 +               The items that comprise a mini-test are marked
 +               with a plus sign (+) in column one.
 
-    INSTRUCTIONS:    1) Fill in the above information.
+    INSTRUCTIONS:    
+            1) Fill in the above information.
 
             2) Do each action in sequence and check it off
                as it is done.
@@ -75,11 +76,9 @@
             $ export WISPGID=$$
             $ export WISPSRC=${HOME}/work/wisp/src
             
-            $ export ACUDIR=${HOME}/work/acu/acu1020
+            $ export ACUDIR=${HOME}/work/acu/acu1031
             $ export A_TERMCAP=${ACUDIR}/etc/a_termcap
 
-
-            $ export COBDIR=/disk1/mfcobol
 
     ___ Copy the "test" directory  based on the COBOL you are using.
 

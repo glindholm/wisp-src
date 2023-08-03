@@ -1,22 +1,21 @@
 #/***********************************************************************/
-#/*									*/
-#/*	        WISP - Wang Interchange Source Processor		*/
-#/*									*/
+#/*                                                                     */
+#/*	        WISP - Wang Interchange Source Processor                    */
+#/*	                                                                    */
 #/***********************************************************************/
 #
 #	Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 #
 #	File		make.include	
 #
-#	Function	Standard make include file for WISP & OPEN3K.
+#	Function	Standard make include file for WISP.
 #
-#	Description:	This file is included into all WISP & OPEN3K makefiles.
+#	Description:	This file is included into all WISP makefiles.
 #			It defines all system specific options.
 #			Uncomment the SYSTEM defines for this system.
 #			Also ensure no other SYSTEM defines are uncommented.
 #
-#	Input:		$(WISPSRC)	points to WISP source directory
-#			$(OPEN3K)	points to OPEN3K base directory
+#	Input:	$(WISPSRC)	points to WISP source directory
 #			$(L_WISP)	the wisp library base name (usually "wisp")
 #			$(L_VIDEO)	the video library base name (usually "video")
 #			$(L_EDE)	the ede library base name (usually "ede")
@@ -49,9 +48,9 @@
 #			$(STD_INC_DIR)	standard place to put <include> files
 #
 #
-#			$(WISP_LIB)	The WISP archieve library  (eg. libwisp.a)
+#			$(WISP_LIB)	    The WISP archieve library  (eg. libwisp.a)
 #			$(VIDEO_LIB)	The VIDEO archieve library (eg. libvideo.a)
-#			$(EDE_LIB)	The EDE archieve library   (eg. libede.a)
+#			$(EDE_LIB)	    The EDE archieve library   (eg. libede.a)
 #
 #			$(WISP_LIB_PATH) The WISP_LIB path  (eg. /usr/local/lib/libwisp.a)
 #			$(VIDEO_LIB_PATH)The VIDEO_LIB path (eg. /usr/local/lib/libvideo.a)
@@ -59,7 +58,7 @@
 #
 #			$(WISP_LINK)	The WISP library link flag  (eg. -lwisp)
 #			$(VIDEO_LINK)	The VIDEO library link flag (eg. -lvideo)
-#			$(EDE_LINK)	The EDE library link flag   (eg. -lede)
+#			$(EDE_LINK)	    The EDE library link flag   (eg. -lede)
 #
 #			$(VIDEO_INC_DIR)	The location of video header files
 #			$(WISP_LIBS_LINK)	The WISP + VIDEO libraries link flags
@@ -74,7 +73,7 @@
 #			CC_ANSI		The ANSI CC command
 #			CC_STD_FLAGS	C standard non-system dependent flags
 #			CC_SYS_FLAGS	C system dependent flags
-#			CC_SYS_LINK	C system dependent flags for linking
+#			CC_SYS_LINK	    C system dependent flags for linking
 #			CC_OPT_FLAGS	C Special options flags
 #			CCC_STD_FLAGS	C++ standard non-system dependent flags
 #			CCC_SYS_FLAGS	C++ system dependent flags

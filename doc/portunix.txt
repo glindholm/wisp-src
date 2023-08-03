@@ -25,7 +25,7 @@
 
 	The following components are required to port WISP.
 
-	[ ] Acucobol COBOL compiler
+	[ ] Acucobol COBOL compiler or runtime (or renamed as Micro Focus Extend)
 		
 	[ ] C and C++ compiler
 
@@ -50,7 +50,7 @@
 
 	If COBOL is not already on the system then install it.
 
-	[ ] Install ACUCOBOL.
+	[ ] Install ACUCOBOL (a.k.a. Micro Focus Extend)
 	
 		- upload the setup_acucob* file
 		
@@ -146,6 +146,10 @@
 
 	[ ]	${WISPSRC}/port/make.include
 		- Uncomment the correct system flags.
+		- For example: Search for the section named "LINUX (64-bit)"
+		- Each system type starts with a 'SYSDEF =' variable
+		- Uncomment all the variables for that system type
+		- Ensure that no other systems are uncommented
 
 	[ ] Verify version of ACUCOBOL
 	    $ ${ACUDIR}/bin/runcbl -v
@@ -199,7 +203,7 @@
 	
 		$ ./maketail.sh all_mf		# WISP, EDE, KCSI/MF		
 
-	[ ]	$ vi make.err			# ensure no errors
+	[ ]	$ vi make.err				# ensure no errors
 
 	On any error you will have to fix the problem and re-issue the
 	above command.
