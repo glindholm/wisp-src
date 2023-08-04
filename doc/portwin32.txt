@@ -34,6 +34,8 @@
 
 	Visual Studio 2019 Community
 	----------------------------
+	Install Visual Studio 2019 Community edition.
+
 	- Desktop Developement with C++
 		Add
 		- C++ MFC for latest (x86 and x64)
@@ -44,7 +46,7 @@
 	- You also need the 'Win32.Mak' file from the Windows SDK v7.0A (preloaded into acu/ folder)
 
 
-	Install the lastest Acucobol Extend
+	Install the lastest Acucobol Extend (a.k.a Micro Focus Extend)
 	-----------------------------------
 
 	[_] Select the installation folder
@@ -55,6 +57,8 @@
 		- The spaces in the path confuse the NMake utility
 		- The default location needs admin rights to modify
 
+
+		Later we will set these variables:
 		${ACUDIR}     - Acucobol-GT 10.3 directory (C:\data\Acucorp\Acucbl1031\AcuGT)
 		${ACUBLD}\lib - A copy of ${ACUDIR}\lib for performing the build (e.g. C:\data\Acucorp\acucbl1031\AcuGT\lib)
 
@@ -87,6 +91,11 @@
 
 	Collect Acucobol Extend Artifacts (when upgrading to support a new version)
 	---------------------------------
+	Thre are a number of files that come with the Acucobol distribution that are
+	needed to rebuild the runtime system. Save the originals so that you can compare
+	the files with previous versions and modified versions to determine what changes
+	are needed to include the WISP runtime library when rebuilding the Acucobol
+	runtime.
 
 	[_] Create directory for artifacts
 
@@ -102,6 +111,7 @@
 		wrundll.rc
 		ver.inc
 
+	These will be used later.
 
 	Set Up The Project
 	------------------
@@ -124,7 +134,7 @@
 	
 	Build the Project
 	-----------------
-	Open  wisp project solution	file "wisp\src\wisp.sln"  in MS Visual Stusion 2019.
+	Open wisp project solution file "wisp\src\wisp.sln" in MS Visual Studio 2019.
 
 
 	[_] Build "SHIPKITWISP - Release - Win32" 
