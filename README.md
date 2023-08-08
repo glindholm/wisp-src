@@ -2,7 +2,7 @@
 
 This repo contains the source for building WISP.
 
-WISP (Wang Interchange Source Processor) is a product for migrating 
+WISP (Wang Interchange Source Processor) is a product for migrating
 Wang VS Cobol applications to Linux/Unix or Windows with Acucobol or
 Micro Focus Cobol.
 
@@ -14,11 +14,17 @@ Build instructions for Unix/Linux are here: [portunix.txt](doc/portunix.txt)
 
 Build instructions for Windows are here: [portwin32.txt](doc/portwin32.txt)
 
+If you need to update the build procedure to support a new release
+of Acucbol (Micro Focus) Extend, instructions can be found
+here: [README Acucobol New Releases](acu/README_Acucobol_New_Releases.md)
+
 ## Organization
+
+The WISP source is organized in to this folder structure:
 
 | Folder     | Description                                                    |
 | ---------- | -------------------------------------------------------------- |
-| acu        | Acucobol files                                                 |
+| acu        | Acucobol Extend files                                          |
 | amu        | WISP Application Management Utility                            |
 | costar     | Co\*Star and W4W                                               |
 | doc        | Source documentation                                           |
