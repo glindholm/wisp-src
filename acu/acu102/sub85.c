@@ -1,11 +1,8 @@
 /*
-**	File:	sub85_acu102.c		
+**	File:	acu102/sub85.c		
 **
 **	This is the WISP compatible version of sub85.c for use with 
 **	Acucobol 10.2 
-**
-**	If you are using Acucobol 10.2 you will need to copy
-**	and rename this file to sub85.c.
 **
 **	All of the WISP added code is enclosed in
 **	"#ifdef WISP" statements.
