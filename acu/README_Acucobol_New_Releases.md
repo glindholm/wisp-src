@@ -1,3 +1,5 @@
+Copyright (c) Shell Stream Software LLC. All Rights Reserved.
+
 # Acucobol Extend - New Releases
 
 When a new version of Acucobol (Micro Focus) Extend is released,

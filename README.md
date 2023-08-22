@@ -1,3 +1,5 @@
+Copyright (c) Shell Stream Software LLC. All Rights Reserved.
+
 # WISP Source
 
 This repo contains the source for building WISP.
