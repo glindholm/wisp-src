@@ -1,262 +1,267 @@
-	Copyright (c) Shell Stream Software LLC. All Rights Reserved. 
-	====================================================================
-	
-	Title:		WISP PORTING INSTRUCTIONS FOR UNIX
-	
-	Document:	portunix.txt
-	Products:	WISP/UNIX, EDE, KCSI
-	Versions:	5.1.xx 
-	
-	Summary:	How it port WISP (and others) for unix.
-			Building a shipping kit.
+Copyright (c) Shell Stream Software LLC. All Rights Reserved. 
+====================================================================
 
-	====================================================================
-	
+Title:      WISP PORTING INSTRUCTIONS FOR UNIX
 
-	WISP PORTING INSTRUCTIONS FOR UNIX
-	==================================
-
-	This document describes the action needed to port WISP to a
-	UNIX platform.
+Document:   portunix.txt
+Products:   WISP/UNIX, EDE, KCSI
+Versions:   5.1.xx 
 
+Summary:    How it port WISP (and others) for unix.
+            Building a shipping kit.
 
-	NEEDED COMPONENTS
-	=================
+====================================================================
 
-	The following components are required to port WISP.
 
-	[ ] Acucobol COBOL compiler or runtime (or renamed as Micro Focus Extend)
-		
-	[ ] C and C++ compiler
+WISP PORTING INSTRUCTIONS FOR UNIX
+==================================
 
-		Ubuntu:
-			cat /etc/os-release
-			lsb_release -a
-			sudo apt-get update
-			sudo apt-get install build-essential
-			sudo apt-get install ncurses-dev
-			sudo apt-get install bison flex
-			sudo apt-get install ncompress
-			
-		Centos 7 (64-bit)
-			cat /etc/os-release
-			sudo yum groupinstall 'Development Tools'
-			sudo yum install ncurses-devel
-			sudo yum install ncompress
+This document describes the action needed to port WISP to a
+UNIX platform.
 
 
-	INSTALL THE COBOL
-	=================
+NEEDED COMPONENTS
+=================
 
-	If COBOL is not already on the system then install it.
+The following components are required to port WISP.
 
-	[ ] Install ACUCOBOL (a.k.a. Micro Focus Extend)
-	
-		- upload the setup_acucob* file
-		
-			export ACUDIR=$HOME/work/acu/acuXXXX
-			mkdir -p $ACUDIR
-			# upload setup_acucob* $HOME/work/acu
-			chmod +x setup_acucob*
-			./setup_acucob* -d $ACUDIR
-			$ACUDIR/bin/activator
-	
+[ ] Acucobol COBOL compiler or runtime (or renamed as Micro Focus Extend)
+    
+[ ] C and C++ compiler
 
-	[ ] Find version of ACUCOBOL
-		$ $ACUDIR/bin/runcbl -v
-	
-	LOAD THE WISP SOURCE KIT
-	========================
+    Ubuntu:
+        cat /etc/os-release
+        lsb_release -a
+        sudo apt-get update
+        sudo apt-get install build-essential
+        sudo apt-get install ncurses-dev
+        sudo apt-get install bison flex
+        sudo apt-get install ncompress
+        
+    Centos 7 (64-bit)
+        cat /etc/os-release
+        sudo yum groupinstall 'Development Tools'
+        sudo yum install ncurses-devel
+        sudo yum install ncompress
 
-	[ ]	CREATE THE WISP DIRECTORY
 
-		Make a base WISP directory to hold all the WISP related
-		files. (If a WISP directory already exists don't recreate.)
+INSTALL THE COBOL
+=================
 
-		Example:
-			$ mkdir -p ~/work/wisp
+If COBOL is not already on the system then install it.
 
-	[ ]	DELETE or RENAME THE OLD SOURCE DIRECTORY
+[ ] Install ACUCOBOL (a.k.a. Micro Focus Extend)
 
-		If a previous port of WISP exists on this machine then
-		rename or delete the old source directory.
+    - upload the setup_acucob* file
+    
+        export ACUDIR=$HOME/work/acu/acuXXXX
+        mkdir -p $ACUDIR
+        # upload setup_acucob* $HOME/work/acu
+        chmod +x setup_acucob*
+        ./setup_acucob* -d $ACUDIR
+        $ACUDIR/bin/activator
 
-			$ mv src src.old
 
-	[ ]	LOAD THE NEW SOURCE KIT
+[ ] Find version of ACUCOBOL
+    $ $ACUDIR/bin/runcbl -v
 
-	 	Load the source kit from external media using tar.
-		Then uncompress it and un-tar it to create the "src"
-		directory.
+LOAD THE WISP SOURCE KIT
+========================
 
-		cd  ~/work/wisp
+[ ] CREATE THE WISP DIRECTORY
 
-		From git:
-
-			$ git clone git@bitbucket.org:glindholm/wisp-src-main.git src
-            $ cd src
-            $ git branch -r
-            $ git checkout {BRANCH}
-
-		From tar.gz:
-
-		    $ tar -xzvf wispXXXX.src.tar.gz
-		
-		From cpio.Z
-		    $ uncompress -c wispXXXX.src.cpio.Z | cpio -icvd
-			
-			
-
-	[ ]	SET ENVIRONMENT VARIABLES
-
-		Create a startup file to set ACUDIR to the ACUCOBOL directory.
+    Make a base WISP directory to hold all the WISP related
+    files. (If a WISP directory already exists don't recreate.)
 
-			$ vi ~/startup_xxx.sh
-				export ACUDIR=~/work/acu/acuXXXX
-				export WISPDIR=~/work/wisp/src
-	
-			$ chmod +x ~/startup*.sh
-			$ . ~/startup_xxx.sh
+    Example:
+        $ mkdir -p ~/work/wisp
 
+[ ] DELETE or RENAME THE OLD SOURCE DIRECTORY
 
-		Change directory to the wisp/src/port and run portenvs.sh
-		to set the WISPSRC and WISPDIR variables.
-
-			$ cd $WISPDIR/port
-			$ ./portenvs.sh
+    If a previous port of WISP exists on this machine then
+    rename or delete the old source directory.
 
-		This will set the variables WISPSRC and WISPDIR.
+        $ mv src src.old
 
-				*** IMPORTANT *** 
-		You will need the variable WISPSRC set for the whole porting 
-		process.  Alway ensure that it is set correctly.
+[ ] LOAD THE NEW SOURCE KIT
 
-			$ WISPSRC=${HOME}/work/wisp/src 
-			$ WISPDIR=${WISPSRC}
-			$ ACUDIR=/usr/local/acucobol
-			$ export WISPSRC WISPDIR ACUDIR
+    Load the source kit from external media using tar.
+    Then uncompress it and un-tar it to create the "src"
+    directory.
 
+    cd  ~/work/wisp
 
-	MODIFIY WISP SYSTEM DEPENDENT FILES
-	===================================
+    From git:
 
-	There are a couple of files which will have to change when you
-	do a port, these contain system dependent information.
+        # Private BitBucket
+        $ git clone git@bitbucket.org:glindholm/wisp-src-main.git src
+        --or--
+        # Public GitHub
+        $ git clone git@github.com:glindholm/wisp-src.git
 
+        $ cd src
+        $ git branch -r
+        $ git checkout {BRANCH}
 
-	[ ]	${WISPSRC}/port/make.include
-		- Uncomment the correct system flags.
-		- For example: Search for the section named "LINUX (64-bit)"
-		- Each system type starts with a 'SYSDEF =' variable
-		- Uncomment all the variables for that system type
-		- Ensure that no other systems are uncommented
+    From tar.gz:
 
-	[ ] Verify version of ACUCOBOL
-	    $ ${ACUDIR}/bin/runcbl -v
-		
-	[ ]	${WISPSRC}/acu/acucobol.include
-		- Search for:
-		  "****  CHANGE PLATFORM SETTINGS HERE ****"
-		  ACUOTHER=
-		  SYSCCFLAGS=
-		  "****  CHANGE ACUCOBOL VERSION SETTINGS HERE ****"
+        $ tar -xzvf wispXXXX.src.tar.gz
+    
+    From cpio.Z
+        $ uncompress -c wispXXXX.src.cpio.Z | cpio -icvd
+        
+        
 
-	The following are only done on a port to a new platform. You
-	will probably need to get everything else working first before
-	modifying these files.
+[ ] SET ENVIRONMENT VARIABLES
 
-	[ ]	${WISPSRC}/wisplib/isexec.c		** NEW PORT **
-		Add a system dependent EXECMAGIC entry.
+    Create a startup file to set ACUDIR to the ACUCOBOL directory.
 
-	[ ]	${WISPSRC}/wisputils/wsysconf.c		** NEW PORT **
-		Add system configuration device info.
+        $ vi ~/startup_xxx.sh
+            export ACUDIR=~/work/acu/acuXXXX
+            export WISPDIR=~/work/wisp/src
 
+        $ chmod +x ~/startup*.sh
+        $ . ~/startup_xxx.sh
 
-	BUILD ALL WISP COMPONENTS
-	=========================
 
-	Change to the port directory and start the super-make that will
-	start all the makefiles to build all the components.  This however
-	does not build the COBOL runtime systems or SAMPLE.
+    Change directory to the wisp/src/port and run portenvs.sh
+    to set the WISPSRC and WISPDIR variables.
 
-	[ ]	$ cd ${WISPSRC}/port
-		$ ./maketail.sh clean		# remove previous builds and make.err
-									# Ctrl-C to exit from maketail.sh
-			
-		$ ./maketail.sh shipkit		# build WISP & EDE
-									# Ctrl-C to exit from maketail.sh
-		
-		
-	[ ] IF ACUCOBOL COMPILER 
-		
-		$ ./maketail.sh kcsi_acu	# To build KCSI for ACU		
-		
-		$ ./maketail.sh all_acu		# WISP, EDE, KCSI/ACU		
-		
-	[ ] IF NO ACUCOBOL COMPILER 
-		
-		$ ./maketail.sh kcsi_acu_nc	# To build KCSI for ACU	(NO ACUCOBOL COMPILER)
+        $ cd $WISPDIR/port
+        $ ./portenvs.sh
 
-		$ ./maketail.sh rts_acu	    # To build WISP Acucobol RTS
-	
-	[ ] IF MF COMPILER
-	
-		$ ./maketail.sh all_mf		# WISP, EDE, KCSI/MF		
+    This will set the variables WISPSRC and WISPDIR.
 
-	[ ]	$ vi make.err				# ensure no errors
+    *** IMPORTANT *** 
+    You will need the variable WISPSRC set for the whole porting 
+    process.  Alway ensure that it is set correctly.
 
-	On any error you will have to fix the problem and re-issue the
-	above command.
+        $ WISPSRC=${HOME}/work/wisp/src 
+        $ WISPDIR=${WISPSRC}
+        $ ACUDIR=/usr/local/acucobol
+        $ export WISPSRC WISPDIR ACUDIR
 
 
-	INSTALL WISP (QA)
-	=================
+MODIFIY WISP SYSTEM DEPENDENT FILES
+===================================
 
-	Install the new version of WISP so you can test in an installed
-	environment.  We will install under the name ${WISPSRC}/QA so as 
-	not to disturb others who are using the currently installed version.
+There are a couple of files which will have to change when you
+do a port, these contain system dependent information.
 
-	[ ]	*** Install to ${WISPSRC}/QA ***
-		$ cd ${WISPSRC}/port
-		$ ./installqa.sh
-		
-		*** You may need to export CC ***
-		$ export CC=gcc
 
+[ ] ${WISPSRC}/port/make.include
+    - Uncomment the correct system flags.
+    - For example: Search for the section named "LINUX (64-bit)"
+    - Each system type starts with a 'SYSDEF =' variable
+    - Uncomment all the variables for that system type
+    - Ensure that no other systems are uncommented
 
-	QA TEST WISP
-	============
+[ ] Verify version of ACUCOBOL
+    $ ${ACUDIR}/bin/runcbl -v
+    
+[ ] ${WISPSRC}/acu/acucobol.include
+    - Search for:
+      "****  CHANGE PLATFORM SETTINGS HERE ****"
+      ACUOTHER=
+      SYSCCFLAGS=
+      "****  CHANGE ACUCOBOL VERSION SETTINGS HERE ****"
 
-	Perform the QA testing of WISP through the building and running
-	of the program SAMPLE.  If any errors are found and corrected
-	then move the modified source files to their appropriate source
-	directories and repeat the above steps starting at the BUILD step.
+The following are only done on a port to a new platform. You
+will probably need to get everything else working first before
+modifying these files.
 
-	[ ]	Follow "doc/qawisp.txt" checklist to test WISP.
+[ ] ${WISPSRC}/wisplib/isexec.c             ** NEW PORT **
+    Add a system dependent EXECMAGIC entry.
 
+[ ] ${WISPSRC}/wisputils/wsysconf.c         ** NEW PORT **
+    Add system configuration device info.
 
-	INSTALL THE NEW WISP
-	====================
 
-	Install the new fully QA'ed version of WISP.
-	Write protect everything.
+BUILD ALL WISP COMPONENTS
+=========================
 
-	[ ]	$ cd ${WISPSRC}/QA
-		$ mv wisp_XXXX /usr/local/wisp_XXXX
-		$ ln -s /usr/local/wisp_XXXX /usr/local/wisp
+Change to the port directory and start the super-make that will
+start all the makefiles to build all the components.  This however
+does not build the COBOL runtime systems or SAMPLE.
 
+[ ] $ cd ${WISPSRC}/port
+    $ ./maketail.sh clean           # remove previous builds and make.err
+                                    # Ctrl-C to exit from maketail.sh
+        
+    $ ./maketail.sh shipkit         # build WISP & EDE
+                                    # Ctrl-C to exit from maketail.sh
+    
+    
+[ ] IF ACUCOBOL COMPILER 
+    
+    $ ./maketail.sh kcsi_acu        # To build KCSI for ACU        
+    
+    $ ./maketail.sh all_acu         # WISP, EDE, KCSI/ACU        
+    
+[ ] IF NO ACUCOBOL COMPILER 
+    
+    $ ./maketail.sh kcsi_acu_nc     # To build KCSI for ACU    (NO ACUCOBOL COMPILER)
 
-	MOVE SHIPPING KITS
-	==================
+    $ ./maketail.sh rts_acu         # To build WISP Acucobol RTS
 
-	Move the shipping kits into the shipping area on DEVEL.
-	There are 3 ship kits:
+[ ] IF MF COMPILER
 
-	[ ]	 ${WISPSRC}/wisp_XXXX.ship
-	[ ]	 ${WISPSRC}/kcsi/kcsi_acu_XXXX.ship
-	[ ]	 ${WISPSRC}/kcsi/kcsi_mf_XXXX.ship
+    $ ./maketail.sh all_mf          # WISP, EDE, KCSI/MF        
 
-	[_] copy ship kits to Shipping
+[ ] $ vi make.err                   # ensure no errors
 
+On any error you will have to fix the problem and re-issue the
+above command.
 
-	========================= END OF DOCUMENT ==========================
+
+INSTALL WISP (QA)
+=================
+
+Install the new version of WISP so you can test in an installed
+environment.  We will install under the name ${WISPSRC}/QA so as 
+not to disturb others who are using the currently installed version.
+
+[ ] *** Install to ${WISPSRC}/QA ***
+    $ cd ${WISPSRC}/port
+    $ ./installqa.sh
+    
+    *** You may need to export CC ***
+    $ export CC=gcc
+
+
+QA TEST WISP
+============
+
+Perform the QA testing of WISP through the building and running
+of the program SAMPLE.  If any errors are found and corrected
+then move the modified source files to their appropriate source
+directories and repeat the above steps starting at the BUILD step.
+
+[ ] Follow "doc/qawisp.txt" checklist to test WISP.
+
+
+INSTALL THE NEW WISP
+====================
+
+Install the new fully QA'ed version of WISP.
+Write protect everything.
+
+[ ] $ cd ${WISPSRC}/QA
+    $ mv wisp_XXXX /usr/local/wisp_XXXX
+    $ ln -s /usr/local/wisp_XXXX /usr/local/wisp
+
+
+MOVE SHIPPING KITS
+==================
+
+Move the shipping kits into the shipping area on DEVEL.
+There are 3 ship kits:
+
+[ ] ${WISPSRC}/wisp_XXXX.ship
+[ ] ${WISPSRC}/kcsi/kcsi_acu_XXXX.ship
+[ ] ${WISPSRC}/kcsi/kcsi_mf_XXXX.ship
+
+[_] copy ship kits to Shipping
+
+
+========================= END OF DOCUMENT ==========================
